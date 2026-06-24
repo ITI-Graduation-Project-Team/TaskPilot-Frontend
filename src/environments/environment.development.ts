@@ -1,9 +1,9 @@
 export const environment = {
   production: false,
-  
+
   // Backend Core API
-  apiUrl: 'https://localhost:7209/api',
-  
+  apiUrl: 'https://taskpilotapi.runasp.net/api',
+
   // Authentication Settings
   auth: {
     tokenKey: 'taskPilotJwtToken',
