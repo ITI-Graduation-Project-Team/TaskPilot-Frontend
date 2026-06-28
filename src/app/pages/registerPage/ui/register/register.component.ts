@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, Inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { authApi, RegisterPayload, extractApiError } from '../../../../shared/api/auth.api';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export type RegisterRole = 'Employee' | 'ProjectManager';
 type PageState = 'idle' | 'loading' | 'success' | 'error';
@@ -11,7 +12,7 @@ type Step = 'role' | 'form';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
 })
@@ -30,8 +31,29 @@ export class RegisterComponent {
   showConfirm    = signal(false);
   state          = signal<PageState>('idle');
   errorMessage   = signal('');
+  
+  currentLang = signal('en');
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private translate: TranslateService,
+    @Inject(DOCUMENT) private document: Document
+  ) {
+    const savedLang = localStorage.getItem('app_lang') || 'en';
+    this.currentLang.set(savedLang);
+    this.translate.use(savedLang);
+    this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = savedLang;
+  }
+
+  toggleLanguage() {
+    const newLang = this.currentLang() === 'en' ? 'ar' : 'en';
+    this.currentLang.set(newLang);
+    localStorage.setItem('app_lang', newLang);
+    this.translate.use(newLang);
+    this.document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = newLang;
+  }
 
   get isLoading() { return this.state() === 'loading'; }
   get isSuccess()  { return this.state() === 'success'; }

@@ -1,4 +1,15 @@
 <section class="relative min-h-screen bg-brandLight flex items-center justify-center px-4 py-12 overflow-hidden font-sans">
+  
+  <!-- Language Toggle -->
+  <div class="absolute top-6 right-6 z-50">
+    <button (click)="toggleLanguage()"
+            class="flex items-center gap-2 px-3 py-1.5 bg-slate-950 text-teal-400 rounded-full border border-teal-400/30 hover:bg-slate-900 transition-colors">
+      <span class="text-sm font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- Background blobs -->
   <div class="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-brandPrimary/8 blur-3xl pointer-events-none"></div>
@@ -21,8 +32,8 @@
     </div>
 
     <!-- Heading -->
-    <h1 class="text-4xl font-extrabold text-brandSecondary tracking-tight mb-2">Welcome to TaskPilot</h1>
-    <p class="text-base text-gray-500 mb-10">Which best describes you?</p>
+    <h1 class="text-4xl font-extrabold text-brandSecondary tracking-tight mb-2">{{ 'register.welcome' | translate }}</h1>
+    <p class="text-base text-gray-500 mb-10">{{ 'register.describe' | translate }}</p>
 
     <!-- Role Cards -->
     <div class="grid grid-cols-2 gap-5 w-full max-w-[540px] mb-10 max-[500px]:grid-cols-1">
@@ -47,11 +58,11 @@
         </div>
         <!-- Label -->
         <div class="px-4 pb-5 pt-3">
-          <p class="text-[1.0625rem] font-bold text-brandSecondary">
-            Employee
-            <span class="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+          <p class="text-[1.0625rem] font-bold text-brandSecondary" [class.flex]="currentLang() === 'ar'" [class.items-center]="currentLang() === 'ar'" [class.gap-1]="currentLang() === 'ar'">
+            {{ 'register.employee' | translate }}
+            <span class="inline-block transition-transform duration-200" [ngClass]="currentLang() === 'ar' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'">{{ currentLang() === 'ar' ? '←' : '→' }}</span>
           </p>
-          <p class="text-[0.8125rem] text-gray-500 mt-0.5">Complete tasks &amp; collaborate</p>
+          <p class="text-[0.8125rem] text-gray-500 mt-0.5">{{ 'register.employeeDesc' | translate }}</p>
         </div>
       </button>
 
@@ -76,11 +87,11 @@
         </div>
         <!-- Label -->
         <div class="px-4 pb-5 pt-3">
-          <p class="text-[1.0625rem] font-bold text-brandSecondary">
-            Project Manager
-            <span class="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+          <p class="text-[1.0625rem] font-bold text-brandSecondary" [class.flex]="currentLang() === 'ar'" [class.items-center]="currentLang() === 'ar'" [class.gap-1]="currentLang() === 'ar'">
+            {{ 'register.projectManager' | translate }}
+            <span class="inline-block transition-transform duration-200" [ngClass]="currentLang() === 'ar' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'">{{ currentLang() === 'ar' ? '←' : '→' }}</span>
           </p>
-          <p class="text-[0.8125rem] text-gray-500 mt-0.5">Lead projects &amp; manage teams</p>
+          <p class="text-[0.8125rem] text-gray-500 mt-0.5">{{ 'register.pmDesc' | translate }}</p>
         </div>
       </button>
 
@@ -88,8 +99,8 @@
 
     <!-- Footer -->
     <p class="text-sm text-gray-500">
-      Already have an account?
-      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity ml-1">Sign In</a>
+      {{ 'register.alreadyHaveAccount' | translate }}
+      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity" [class.ml-1]="currentLang() === 'en'" [class.mr-1]="currentLang() === 'ar'">{{ 'register.signIn' | translate }}</a>
     </p>
   </div>
 
@@ -105,7 +116,7 @@
                      bg-transparent text-brandSecondary cursor-pointer shrink-0
                      hover:bg-brandPrimary/5 hover:border-brandPrimary hover:text-brandPrimary transition-colors duration-150">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [ngClass]="currentLang() === 'ar' ? 'rotate-180' : ''">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
       </button>
@@ -135,13 +146,13 @@
       <svg *ngIf="selectedRole() === 'ProjectManager'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
       </svg>
-      {{ selectedRole() === 'ProjectManager' ? 'Project Manager' : 'Employee' }}
+      {{ selectedRole() === 'ProjectManager' ? ('register.projectManager' | translate) : ('register.employee' | translate) }}
     </div>
 
     <!-- Heading -->
     <div class="mb-6">
-      <h1 class="text-[1.5rem] font-bold text-brandSecondary tracking-tight mb-1">Create your account</h1>
-      <p class="text-[0.9375rem] text-gray-500">Fill in your details to get started.</p>
+      <h1 class="text-[1.5rem] font-bold text-brandSecondary tracking-tight mb-1">{{ 'register.createAccount' | translate }}</h1>
+      <p class="text-[0.9375rem] text-gray-500">{{ 'register.fillDetails' | translate }}</p>
     </div>
 
     <!-- Success -->
@@ -154,8 +165,8 @@
         </svg>
       </div>
       <div>
-        <p class="font-bold text-[0.9375rem] text-brandSecondary mb-0.5">Account Created!</p>
-        <p class="text-sm text-gray-500">Redirecting to email verification…</p>
+        <p class="font-bold text-[0.9375rem] text-brandSecondary mb-0.5">{{ 'register.accountCreated' | translate }}</p>
+        <p class="text-sm text-gray-500">{{ 'register.redirecting' | translate }}</p>
       </div>
     </div>
 
@@ -165,7 +176,7 @@
       <!-- English name row -->
       <div class="grid grid-cols-2 gap-3">
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-brandSecondary" for="firstNameEn">First Name (EN)</label>
+          <label class="text-sm font-semibold text-brandSecondary" for="firstNameEn">{{ 'register.firstNameEn' | translate }}</label>
           <input id="firstNameEn" name="firstNameEn" type="text"
                  [ngModel]="firstNameEn()" (ngModelChange)="firstNameEn.set($event)"
                  [disabled]="isLoading" placeholder="John"
@@ -175,7 +186,7 @@
                         focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
         </div>
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-brandSecondary" for="lastNameEn">Last Name (EN)</label>
+          <label class="text-sm font-semibold text-brandSecondary" for="lastNameEn">{{ 'register.lastNameEn' | translate }}</label>
           <input id="lastNameEn" name="lastNameEn" type="text"
                  [ngModel]="lastNameEn()" (ngModelChange)="lastNameEn.set($event)"
                  [disabled]="isLoading" placeholder="Doe"
@@ -189,7 +200,7 @@
       <!-- Arabic name row -->
       <div class="grid grid-cols-2 gap-3">
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-brandSecondary" for="firstNameAr">الاسم الأول</label>
+          <label class="text-sm font-semibold text-brandSecondary" for="firstNameAr">{{ 'register.firstNameAr' | translate }}</label>
           <input id="firstNameAr" name="firstNameAr" type="text" dir="rtl"
                  [ngModel]="firstNameAr()" (ngModelChange)="firstNameAr.set($event)"
                  [disabled]="isLoading" placeholder="محمد"
@@ -199,7 +210,7 @@
                         focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
         </div>
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-brandSecondary" for="lastNameAr">اسم العائلة</label>
+          <label class="text-sm font-semibold text-brandSecondary" for="lastNameAr">{{ 'register.lastNameAr' | translate }}</label>
           <input id="lastNameAr" name="lastNameAr" type="text" dir="rtl"
                  [ngModel]="lastNameAr()" (ngModelChange)="lastNameAr.set($event)"
                  [disabled]="isLoading" placeholder="أحمد"
@@ -212,9 +223,9 @@
 
       <!-- Email -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-brandSecondary" for="reg-email">Email Address</label>
+        <label class="text-sm font-semibold text-brandSecondary" for="reg-email">{{ 'register.emailLabel' | translate }}</label>
         <div class="relative">
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none">
+          <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none" [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/>
@@ -223,18 +234,19 @@
           <input id="reg-email" name="email" type="email"
                  [ngModel]="email()" (ngModelChange)="email.set($event)"
                  [disabled]="isLoading" placeholder="you@example.com" autocomplete="email"
-                 class="w-full pl-11 pr-4 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
+                 class="w-full py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
                         text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                         placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
+                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"
+                 [ngClass]="currentLang() === 'ar' ? 'pr-11 pl-4' : 'pl-11 pr-4'"/>
         </div>
       </div>
 
       <!-- Password -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-brandSecondary" for="reg-password">Password</label>
+        <label class="text-sm font-semibold text-brandSecondary" for="reg-password">{{ 'register.passwordLabel' | translate }}</label>
         <div class="relative">
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none">
+          <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none" [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -243,14 +255,15 @@
           <input id="reg-password" name="password"
                  [type]="showPassword() ? 'text' : 'password'"
                  [ngModel]="password()" (ngModelChange)="password.set($event)"
-                 [disabled]="isLoading" placeholder="Min. 8 characters" autocomplete="new-password"
-                 class="w-full pl-11 pr-11 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
+                 [disabled]="isLoading" placeholder="******" autocomplete="new-password"
+                 class="w-full px-11 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
                         text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                         placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
                         focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
           <button type="button" (click)="togglePassword()" tabindex="-1"
-                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
-                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer">
+                  class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
+                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer"
+                  [class.left-3.5]="currentLang() === 'ar'" [class.right-3.5]="currentLang() === 'en'">
             <svg *ngIf="!showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg *ngIf="showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
@@ -274,9 +287,9 @@
 
       <!-- Confirm Password -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-brandSecondary" for="reg-confirm">Confirm Password</label>
+        <label class="text-sm font-semibold text-brandSecondary" for="reg-confirm">{{ 'register.confirmPassword' | translate }}</label>
         <div class="relative">
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none">
+          <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none" [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -285,22 +298,23 @@
           <input id="reg-confirm" name="confirmPassword"
                  [type]="showConfirm() ? 'text' : 'password'"
                  [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)"
-                 [disabled]="isLoading" placeholder="Repeat your password" autocomplete="new-password"
-                 class="w-full pl-11 pr-11 py-3 bg-brandLight border-[1.5px] rounded-[10px]
+                 [disabled]="isLoading" placeholder="******" autocomplete="new-password"
+                 class="w-full px-11 py-3 bg-brandLight border-[1.5px] rounded-[10px]
                         text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                         placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
                         focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"
                  [class.border-brandAccent]="!(confirmPassword() && password() !== confirmPassword())"
                  [class.border-brandPrimary]="confirmPassword() && password() !== confirmPassword()"/>
           <button type="button" (click)="toggleConfirm()" tabindex="-1"
-                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
-                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer">
+                  class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
+                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer"
+                  [class.left-3.5]="currentLang() === 'ar'" [class.right-3.5]="currentLang() === 'en'">
             <svg *ngIf="!showConfirm()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg *ngIf="showConfirm()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           </button>
         </div>
         <p *ngIf="confirmPassword() && password() !== confirmPassword()"
-           class="text-[0.8125rem] font-medium text-brandPrimary">Passwords don't match</p>
+           class="text-[0.8125rem] font-medium text-brandPrimary">{{ 'register.passwordsNoMatch' | translate }}</p>
       </div>
 
       <!-- Global error -->
@@ -317,16 +331,16 @@
                      disabled:opacity-65 disabled:cursor-not-allowed disabled:transform-none">
         <span *ngIf="isLoading"
               class="w-[18px] h-[18px] rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0"></span>
-        <span>{{ isLoading ? 'Creating Account…' : 'Create Account' }}</span>
+        <span>{{ isLoading ? ('register.creatingAccount' | translate) : ('register.createAccountBtn' | translate) }}</span>
       </button>
 
     </form>
 
     <!-- Footer -->
     <p class="text-center mt-5 text-sm text-gray-500">
-      Already have an account?
-      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity duration-200 ml-1">
-        Sign In
+      {{ 'register.alreadyHaveAccount' | translate }}
+      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity duration-200" [class.ml-1]="currentLang() === 'en'" [class.mr-1]="currentLang() === 'ar'">
+        {{ 'register.signIn' | translate }}
       </a>
     </p>
 

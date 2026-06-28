@@ -1,0 +1,41 @@
+{
+  "login": {
+    "welcomeBack": "مرحباً بعودتك",
+    "signInDesc": "سجل الدخول للمتابعة إلى مساحة عملك.",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "rememberMe": "تذكرني",
+    "signIn": "تسجيل الدخول",
+    "signingIn": "جاري تسجيل الدخول…",
+    "noAccount": "ليس لديك حساب؟",
+    "createOne": "أنشئ حساباً",
+    "signedIn": "تم تسجيل الدخول!",
+    "orContinueWith": "أو تابع عبر",
+    "continueWithGoogle": "المتابعة عبر جوجل"
+  },
+  "register": {
+    "welcome": "مرحباً بك في تاسك بايلوت",
+    "describe": "أيهما يصفك بشكل أفضل؟",
+    "employee": "موظف",
+    "employeeDesc": "إنجاز المهام والتعاون",
+    "projectManager": "مدير مشروع",
+    "pmDesc": "إدارة المشاريع وفرق العمل",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "signIn": "تسجيل الدخول",
+    "createAccount": "أنشئ حسابك",
+    "fillDetails": "أدخل بياناتك للبدء.",
+    "firstNameEn": "الاسم الأول (إنجليزي)",
+    "lastNameEn": "اسم العائلة (إنجليزي)",
+    "firstNameAr": "الاسم الأول",
+    "lastNameAr": "اسم العائلة",
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordsNoMatch": "كلمات المرور غير متطابقة",
+    "createAccountBtn": "إنشاء الحساب",
+    "creatingAccount": "جاري إنشاء الحساب…",
+    "accountCreated": "تم إنشاء الحساب!",
+    "redirecting": "جاري التوجيه لتأكيد البريد الإلكتروني…"
+  }
+}

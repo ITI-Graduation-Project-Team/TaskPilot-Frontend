@@ -1,0 +1,41 @@
+{
+  "login": {
+    "welcomeBack": "Welcome Back",
+    "signInDesc": "Sign in to continue to your workspace.",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
+    "signIn": "Sign In",
+    "signingIn": "Signing In…",
+    "noAccount": "Don't have an account?",
+    "createOne": "Create one",
+    "signedIn": "Signed In!",
+    "orContinueWith": "or continue with",
+    "continueWithGoogle": "Continue with Google"
+  },
+  "register": {
+    "welcome": "Welcome to TaskPilot",
+    "describe": "Which best describes you?",
+    "employee": "Employee",
+    "employeeDesc": "Complete tasks & collaborate",
+    "projectManager": "Project Manager",
+    "pmDesc": "Lead projects & manage teams",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "createAccount": "Create your account",
+    "fillDetails": "Fill in your details to get started.",
+    "firstNameEn": "First Name (EN)",
+    "lastNameEn": "Last Name (EN)",
+    "firstNameAr": "الاسم الأول",
+    "lastNameAr": "اسم العائلة",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "confirmPassword": "Confirm Password",
+    "passwordsNoMatch": "Passwords don't match",
+    "createAccountBtn": "Create Account",
+    "creatingAccount": "Creating Account…",
+    "accountCreated": "Account Created!",
+    "redirecting": "Redirecting to email verification…"
+  }
+}
