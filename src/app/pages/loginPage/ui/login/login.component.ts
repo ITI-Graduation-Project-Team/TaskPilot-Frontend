@@ -1,16 +1,14 @@
-import { Component, signal, AfterViewInit, NgZone, inject } from '@angular/core';
+import { Component, signal, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
 import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
-import { TranslateService } from '@ngx-translate/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { CookieService } from 'ngx-cookie-service';
 import { environment } from '../../../../../environments/environment';
-
-declare const google: any;
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -29,16 +27,17 @@ export class LoginComponent implements AfterViewInit {
   state = signal<PageState>('idle');
   errorMessage = signal('');
   successMessage = signal('');
+
   currentLang = signal('en');
 
-  private router = inject(Router);
-  private translate = inject(TranslateService);
-  private authService = inject(AuthService);
-  private cookieService = inject(CookieService);
-  private ngZone = inject(NgZone);
-  private document = inject(DOCUMENT);
-
-  constructor() {
+  constructor(
+    private router: Router,
+    private translate: TranslateService,
+    private authService: AuthService,
+    private cookieService: CookieService,
+    private ngZone: NgZone,
+    @Inject(DOCUMENT) private document: Document
+  ) {
     const savedLang = localStorage.getItem('app_lang') || 'en';
     this.currentLang.set(savedLang);
     this.translate.use(savedLang);
@@ -61,7 +60,7 @@ export class LoginComponent implements AfterViewInit {
       callback: this.handleGoogleCredential.bind(this)
     });
 
-    const buttonContainer = this.document.getElementById('google-btn-container');
+    const buttonContainer = document.getElementById('google-btn-container');
     if (buttonContainer) {
       google.accounts.id.renderButton(buttonContainer, {
         theme: 'outline',
@@ -80,13 +79,10 @@ export class LoginComponent implements AfterViewInit {
       this.authService.googleLogin(response.credential).subscribe({
         next: (res) => {
           if (res.succeeded && res.data) {
-            if (!res.data.roles || res.data.roles.length === 0) {
-              this.state.set('error');
-              this.errorMessage.set('This Google account is not registered in the system. Please register first.');
-              return;
-            }
             this.cookieService.set(environment.auth.tokenKey, res.data.token, 7, '/');
-            localStorage.setItem('userRole', res.data.roles[0]);
+            if (res.data.roles && res.data.roles.length > 0) {
+              localStorage.setItem('userRole', res.data.roles[0]);
+            }
             this.successMessage.set(res.message || 'Signed in successfully! Redirecting…');
             this.state.set('success');
             setTimeout(() => this.router.navigate(['/']), 1800);
@@ -142,7 +138,7 @@ export class LoginComponent implements AfterViewInit {
       if (data.succeeded === false) {
         this.state.set('error');
         this.errorMessage.set(
-          data.errors?.map((e: any) => e.description).join(' ') || data.message
+          data.errors?.map((e) => e.description).join(' ') || data.message
         );
         return;
       }
@@ -154,7 +150,6 @@ export class LoginComponent implements AfterViewInit {
       if (accessToken && refreshToken) {
         saveTokens(accessToken, refreshToken);
       }
-
       this.successMessage.set(data.message || 'Signed in successfully! Redirecting…');
       this.state.set('success');
       setTimeout(() => this.router.navigate(['/']), 1800);
