@@ -146,9 +146,13 @@ export class LoginComponent implements AfterViewInit {
       const tokenData = data.data as any;
       const accessToken = tokenData?.accessToken || tokenData?.token;
       const refreshToken = tokenData?.refreshToken;
-
       if (accessToken && refreshToken) {
         saveTokens(accessToken, refreshToken);
+      }
+
+      // Save the user role for the guard to verify
+      if (tokenData?.roles && tokenData.roles.length > 0) {
+        localStorage.setItem('userRole', tokenData.roles[0]);
       }
       this.successMessage.set(data.message || 'Signed in successfully! Redirecting…');
       this.state.set('success');
