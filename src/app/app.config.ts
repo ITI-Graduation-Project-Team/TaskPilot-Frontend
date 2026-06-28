@@ -23,15 +23,16 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([
         loadingInterceptor,
-        languageInterceptor
+        languageInterceptor,
       ])
     ),
+
     provideTranslateService({
-      fallbackLang: 'en'
+      fallbackLang: 'en',
+      loader: provideTranslateHttpLoader({
+        prefix: './i18n/',
+        suffix: '.json',
+      }),
     }),
-    provideTranslateHttpLoader({
-      prefix: './i18n/',
-      suffix: '.json'
-    })
-  ]
+  ],
 };

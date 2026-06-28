@@ -36,7 +36,7 @@ export interface ResetPasswordPayload {
 
 /** Extract a human-readable error string from the API response */
 export function extractApiError(err: any): string {
-  const data = err?.response?.data as ApiResponse | undefined;
+  const data = (err?.response?.data || err?.error) as ApiResponse | undefined;
   if (data?.errors?.length) {
     return data.errors.map((e) => e.description).join(' ');
   }

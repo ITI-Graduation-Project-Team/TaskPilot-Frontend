@@ -17,21 +17,21 @@ type Step = 'role' | 'form';
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
-  step           = signal<Step>('role');
-  selectedRole   = signal<RegisterRole | null>(null);
+  step = signal<Step>('role');
+  selectedRole = signal<RegisterRole | null>(null);
 
-  firstNameEn    = signal('');
-  lastNameEn     = signal('');
-  firstNameAr    = signal('');
-  lastNameAr     = signal('');
-  email          = signal('');
-  password       = signal('');
+  firstNameEn = signal('');
+  lastNameEn = signal('');
+  firstNameAr = signal('');
+  lastNameAr = signal('');
+  email = signal('');
+  password = signal('');
   confirmPassword = signal('');
-  showPassword   = signal(false);
-  showConfirm    = signal(false);
-  state          = signal<PageState>('idle');
-  errorMessage   = signal('');
-  
+  showPassword = signal(false);
+  showConfirm = signal(false);
+  state = signal<PageState>('idle');
+  errorMessage = signal('');
+
   currentLang = signal('en');
 
   constructor(
@@ -56,7 +56,7 @@ export class RegisterComponent {
   }
 
   get isLoading() { return this.state() === 'loading'; }
-  get isSuccess()  { return this.state() === 'success'; }
+  get isSuccess() { return this.state() === 'success'; }
 
   get passwordStrength(): 'weak' | 'medium' | 'strong' | null {
     const p = this.password();
@@ -79,14 +79,14 @@ export class RegisterComponent {
   }
 
   togglePassword() { this.showPassword.update((v) => !v); }
-  toggleConfirm()  { this.showConfirm.update((v) => !v); }
+  toggleConfirm() { this.showConfirm.update((v) => !v); }
 
   async onSubmit() {
     const p = this.password();
     const cp = this.confirmPassword();
 
     if (!this.firstNameEn() || !this.lastNameEn() || !this.firstNameAr() ||
-        !this.lastNameAr() || !this.email() || !p || !cp) {
+      !this.lastNameAr() || !this.email() || !p || !cp) {
       this.state.set('error');
       this.errorMessage.set('All fields are required.');
       return;
@@ -107,11 +107,11 @@ export class RegisterComponent {
 
     const payload: RegisterPayload = {
       firstNameEn: this.firstNameEn().trim(),
-      lastNameEn:  this.lastNameEn().trim(),
+      lastNameEn: this.lastNameEn().trim(),
       firstNameAr: this.firstNameAr().trim(),
-      lastNameAr:  this.lastNameAr().trim(),
-      email:       this.email().trim(),
-      password:    p,
+      lastNameAr: this.lastNameAr().trim(),
+      email: this.email().trim(),
+      password: p,
     };
 
     const role = this.selectedRole()!;
