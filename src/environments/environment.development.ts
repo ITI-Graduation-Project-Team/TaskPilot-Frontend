@@ -9,6 +9,7 @@ export const environment = {
     tokenKey: 'taskPilotJwtToken',
     refreshTokenKey: 'taskPilotRefreshToken',
   },
+  googleClientId: '586738650387-koc3m0suvmmc1bsndim8mqls2rpvj9td.apps.googleusercontent.com',
 
   // Third-Party Integrations
   cloudinary: {

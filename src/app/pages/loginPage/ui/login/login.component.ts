@@ -1,20 +1,25 @@
-import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, AfterViewInit, NgZone } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
 import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { AuthService } from '../../../../shared/api/auth.service';
+import { CookieService } from 'ngx-cookie-service';
+import { environment } from '../../../../../environments/environment';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent {
+export class LoginComponent implements AfterViewInit {
   email = signal('');
   password = signal('');
   showPassword = signal(false);
@@ -22,8 +27,92 @@ export class LoginComponent {
   state = signal<PageState>('idle');
   errorMessage = signal('');
   successMessage = signal('');
+  
+  currentLang = signal('en');
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private translate: TranslateService,
+    private authService: AuthService,
+    private cookieService: CookieService,
+    private ngZone: NgZone,
+    @Inject(DOCUMENT) private document: Document
+  ) { 
+    const savedLang = localStorage.getItem('app_lang') || 'en';
+    this.currentLang.set(savedLang);
+    this.translate.use(savedLang);
+    this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = savedLang;
+  }
+
+  ngAfterViewInit() {
+    this.initializeGoogleSignIn();
+  }
+
+  private initializeGoogleSignIn() {
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+      setTimeout(() => this.initializeGoogleSignIn(), 200);
+      return;
+    }
+
+    google.accounts.id.initialize({
+      client_id: environment.googleClientId || '586738650387-koc3m0suvmmc1bsndim8mqls2rpvj9td.apps.googleusercontent.com',
+      callback: this.handleGoogleCredential.bind(this)
+    });
+
+    const buttonContainer = document.getElementById('google-btn-container');
+    if (buttonContainer) {
+      google.accounts.id.renderButton(buttonContainer, {
+        theme: 'outline',
+        size: 'large',
+        width: buttonContainer.offsetWidth || 300,
+        text: 'continue_with'
+      });
+    }
+  }
+
+  handleGoogleCredential(response: any) {
+    this.ngZone.run(() => {
+      this.state.set('loading');
+      this.errorMessage.set('');
+      
+      this.authService.googleLogin(response.credential).subscribe({
+        next: (res) => {
+          if (res.succeeded && res.data) {
+            this.cookieService.set(environment.auth.tokenKey, res.data.token, 7, '/');
+            if (res.data.roles && res.data.roles.length > 0) {
+              localStorage.setItem('userRole', res.data.roles[0]);
+            }
+            this.successMessage.set(res.message || 'Signed in successfully! Redirecting…');
+            this.state.set('success');
+            setTimeout(() => this.router.navigate(['/']), 1800);
+          } else {
+            this.state.set('error');
+            this.errorMessage.set(res.message || 'Google Sign-In failed');
+          }
+        },
+        error: (err) => {
+          this.state.set('error');
+          this.errorMessage.set(extractApiError(err) || 'Google Sign-In failed');
+        }
+      });
+    });
+  }
+
+  onGoogleSignIn() {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      google.accounts.id.prompt();
+    }
+  }
+
+  toggleLanguage() {
+    const newLang = this.currentLang() === 'en' ? 'ar' : 'en';
+    this.currentLang.set(newLang);
+    localStorage.setItem('app_lang', newLang);
+    this.translate.use(newLang);
+    this.document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = newLang;
+  }
 
   get isLoading() { return this.state() === 'loading'; }
   get isSuccess() { return this.state() === 'success'; }
