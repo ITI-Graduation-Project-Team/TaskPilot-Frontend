@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from './shared/guards/role.guard';
 
 export const routes: Routes = [
+
   { path: '', redirectTo: 'register', pathMatch: 'full' },
   {
     path: 'register',
