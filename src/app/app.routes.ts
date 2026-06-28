@@ -39,6 +39,5 @@ export const routes: Routes = [
       import('./pages/confirmEmailPage/ui/confirm-email/confirm-email.component').then(
         (m) => m.ConfirmEmailComponent
       ),
->>>>>>> 9cae2d79928e755e371af8bb6724a397b250fbbd
   },
 ];
