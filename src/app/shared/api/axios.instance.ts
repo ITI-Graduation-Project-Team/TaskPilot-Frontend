@@ -1,0 +1,145 @@
+import axios, {
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  AxiosError,
+} from 'axios';
+import { Injector } from '@angular/core';
+import { environment } from '../../../environments/environment';
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  saveTokens,
+} from '../lib/auth/cookie.helper';
+import { LoadingService } from '../services/loading.service';
+
+// Lazily resolved so we never call inject() outside an injection context.
+let _injector: Injector | null = null;
+export function setAxiosInjector(injector: Injector) { _injector = injector; }
+function getLoadingService(): LoadingService | null {
+  return _injector ? _injector.get(LoadingService) : null;
+}
+
+
+let refreshPromise: Promise<string> | null = null;
+
+export const apiClient: AxiosInstance = axios.create({
+  baseURL: environment.apiUrl,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    getLoadingService()?.show();
+    const token = getAccessToken();
+
+    if (token) {
+      config.headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return config;
+  },
+  (error) => {
+    getLoadingService()?.hide();
+    return Promise.reject(error);
+  }
+);
+
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = getRefreshToken();
+
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const { data } = await axios.post<{
+    accessToken: string;
+    refreshToken: string;
+  }>(
+    `${environment.apiUrl}/auth/refresh`,
+    { refreshToken },
+    {
+      withCredentials: true,
+    }
+  );
+
+  saveTokens(data.accessToken, data.refreshToken);
+
+  return data.accessToken;
+}
+
+apiClient.interceptors.response.use(
+  (response) => {
+    getLoadingService()?.hide();
+    return response;
+  },
+
+  async (error: AxiosError) => {
+    getLoadingService()?.hide();
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    const status = error.response?.status;
+
+    // Public auth endpoints — never attempt token refresh on these.
+    // A 401 here means wrong credentials, not an expired session.
+    const PUBLIC_AUTH_URLS = [
+      '/Auth/login',
+      '/Auth/register',
+      '/Auth/forgot-password',
+      '/Auth/reset-password',
+      '/Auth/confirm-email',
+    ];
+    const isPublicAuth = PUBLIC_AUTH_URLS.some((path) =>
+      originalRequest.url?.includes(path)
+    );
+    if (isPublicAuth) {
+      return Promise.reject(error);
+    }
+
+    // The refresh endpoint itself failing means the session is truly gone.
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      clearTokens();
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+
+    if (status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken()
+          .finally(() => {
+            refreshPromise = null;
+          });
+      }
+
+      const newAccessToken = await refreshPromise;
+
+      originalRequest.headers.set(
+        'Authorization',
+        `Bearer ${newAccessToken}`
+      );
+
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      clearTokens();
+
+      window.location.href = '/login';
+
+      return Promise.reject(refreshError);
+    }
+  }
+);
