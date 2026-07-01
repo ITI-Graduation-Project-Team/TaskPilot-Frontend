@@ -18,12 +18,11 @@ export const environment = {
   },
 
   // Payment Gateways (Only Publishable/Client Keys!)
-  stripe: {
-    publishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxx',
-  },
-  paypal: {
-    clientId: 'sb_xxxxxxxxxxxxxxxxxxxxxxxx',
-  },
+  // Replace with your actual key from https://dashboard.stripe.com/apikeys
+  stripePublishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxx',
+
+  // PayPal
+  paypalClientId: 'pk_paypal_placeholder',
 
   // AI & RAG Microservices
   aiServices: {

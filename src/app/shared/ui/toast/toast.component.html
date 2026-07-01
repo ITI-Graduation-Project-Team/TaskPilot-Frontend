@@ -1,0 +1,84 @@
+<div
+  *ngIf="toast$ | async as toast"
+  role="alert"
+  class="fixed bottom-6 right-6 z-50 flex items-start gap-3 p-4 rounded-xl shadow-lg border animate-[fadeUp_0.3s_ease_both]"
+  [ngClass]="{
+    'bg-green-50 border-green-200': toast.type === 'success',
+    'bg-brandPrimary/5 border-brandPrimary/30': toast.type === 'error'
+  }"
+>
+  <div
+    class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full"
+    [ngClass]="{
+      'bg-green-100 text-green-600': toast.type === 'success',
+      'bg-brandPrimary/10 text-brandPrimary': toast.type === 'error'
+    }"
+  >
+    <!-- Success Icon -->
+    <svg
+      *ngIf="toast.type === 'success'"
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+
+    <!-- Error Icon -->
+    <svg
+      *ngIf="toast.type === 'error'"
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  </div>
+
+  <div class="flex-grow pt-1">
+    <p
+      class="text-sm font-medium leading-relaxed"
+      [ngClass]="{
+        'text-green-800': toast.type === 'success',
+        'text-brandPrimary': toast.type === 'error'
+      }"
+    >
+      {{ toast.message }}
+    </p>
+  </div>
+
+  <button
+    (click)="close()"
+    class="shrink-0 p-1 -mt-1 -mr-1 rounded-full opacity-60 hover:opacity-100 transition-opacity"
+    [ngClass]="{
+      'text-green-800 hover:bg-green-100': toast.type === 'success',
+      'text-brandPrimary hover:bg-brandPrimary/10': toast.type === 'error'
+    }"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-4 h-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  </button>
+</div>

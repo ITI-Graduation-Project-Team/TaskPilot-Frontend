@@ -5,6 +5,29 @@ export const routes: Routes = [
 
   { path: '', redirectTo: 'register', pathMatch: 'full' },
   {
+    path: 'dashboard',
+    loadComponent: () =>
+      import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
+        (m) => m.DashboardComponent
+      ),
+  },
+  {
+    path: 'subscription',
+    loadComponent: () =>
+      import('./pages/subscriptionPage/ui/subscription-plans/subscription-plans.component').then(
+        (m) => m.SubscriptionPlansComponent
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['ProjectManager'] }
+  },
+  {
+    path: 'payment/callback',
+    loadComponent: () =>
+      import('./pages/paymentCallbackPage/ui/payment-callback/payment-callback.component').then(
+        (m) => m.PaymentCallbackComponent
+      )
+  },
+  {
     path: 'register',
     loadComponent: () =>
       import('./pages/registerPage/ui/register/register.component').then(

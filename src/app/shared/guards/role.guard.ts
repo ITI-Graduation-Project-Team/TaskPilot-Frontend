@@ -12,13 +12,15 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   if (!authService.isLoggedIn()) {
     console.warn('Access Denied: User is not logged in.');
+    router.navigate(['/login']);
     return false;
   }
 
   if (expectedRoles && currentRole && expectedRoles.includes(currentRole)) {
-    return true; 
+    return true;
   } else {
     console.warn(`Access Denied: User role '${currentRole}' is not authorized.`);
-    return false; 
+    router.navigate(['/login']);
+    return false;
   }
 };

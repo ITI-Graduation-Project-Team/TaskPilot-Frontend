@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
 
 import { LoaderComponent } from './shared/ui/loader/loader';
+import { ToastComponent } from './shared/ui/toast/toast.component';
 import { LoadingService } from './shared/services/loading.service';
 import { setAxiosInjector } from './shared/api/axios.instance';
 
@@ -12,6 +13,7 @@ import { setAxiosInjector } from './shared/api/axios.instance';
   imports: [
     RouterOutlet,
     LoaderComponent,
+    ToastComponent,
     AsyncPipe
   ],
   template: `
@@ -20,6 +22,7 @@ import { setAxiosInjector } from './shared/api/axios.instance';
     }
 
     <router-outlet />
+    <app-toast />
   `,
 })
 export class AppComponent {
