@@ -39,6 +39,7 @@ export interface UserSubscriptionDto {
   isTrial: boolean;
   /** ISO 8601 date-time string, or null if not a trial. */
   trialEndDate: string | null;
+  cancelAtPeriodEnd: boolean;
   /** 
    * Multi-purpose field for payment confirmation:
    * - Stripe: The Stripe Payment Intent client secret.
@@ -46,6 +47,7 @@ export interface UserSubscriptionDto {
    * Null for free/trial plans.
    */
   clientSecret: string | null;
+  isSetupIntent: boolean;
 }
 
 // ── Request DTOs ─────────────────────────────────────────────────────────────
@@ -62,4 +64,6 @@ export interface CreateUserSubscriptionDto {
   returnUrl?: string;
   /** PayPal cancel URL for aborted payment */
   cancelUrl?: string;
+  /** True when the user wants to start a free trial instead of paying immediately. */
+  isTrial?: boolean;
 }
