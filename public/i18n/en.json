@@ -37,5 +37,27 @@
     "creatingAccount": "Creating Account…",
     "accountCreated": "Account Created!",
     "redirecting": "Redirecting to email verification…"
+  },
+  "PROFILE": {
+    "UPLOAD_TITLE": "Complete Your Profile",
+    "UPLOAD_SUBTITLE": "Let our AI extract your skills from your CV to get you started faster.",
+    "DRAG_DROP": "Click or drag & drop",
+    "SUPPORTED_FILES": "PDF or DOCX files up to 10MB",
+    "AI_PROCESSING": "AI is extracting skills from your CV...",
+    "ANALYZING": "Analyzing Document",
+    "REVIEW_SKILLS": "Extracted Skills",
+    "SKILLS_FOUND": "skills found",
+    "NO_SKILLS_EXTRACTED": "No skills found. Try adding them manually below.",
+    "ADD_SKILL_PLACEHOLDER": "Add another skill...",
+    "ADD_BTN": "Add",
+    "CONFIRM_SAVE_BTN": "Confirm & Save Profile",
+    "PAYLOAD_PREVIEW": "Payload Preview (Debug):",
+    "READY_TO_SEND": "Ready to send",
+    "NO_SKILLS_ERROR": "Please add at least one skill before confirming.",
+    "JOB_TITLE": "Job Title",
+    "SENIORITY_LEVEL": "Seniority Level",
+    "TOTAL_YEARS": "Total Years of Experience",
+    "LEVEL": "Level",
+    "YEARS": "Years"
   }
 }

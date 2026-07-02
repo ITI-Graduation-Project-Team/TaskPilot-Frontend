@@ -1,0 +1,158 @@
+<section class="relative min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 py-12 overflow-hidden font-sans text-slate-300">
+  
+  <!-- Language Toggle -->
+  <div class="absolute top-6 right-6 z-50" [class.right-6]="currentLang() === 'en'" [class.left-6]="currentLang() === 'ar'">
+    <button (click)="toggleLanguage()"
+            class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-teal-400 rounded-full border border-teal-500/30 hover:bg-slate-800 transition-colors">
+      <span class="text-sm font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- Background blobs -->
+  <div class="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none"></div>
+  <div class="absolute -bottom-24 -right-20 w-80 h-80 rounded-full bg-indigo-500/10 blur-[100px] pointer-events-none"></div>
+
+  <div class="relative z-10 w-full max-w-2xl bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-10 shadow-2xl animate-[fadeUp_0.45s_ease_both]">
+    
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-teal-500/10 text-teal-400 rounded-xl mb-4 border border-teal-500/20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">{{ 'PROFILE.UPLOAD_TITLE' | translate }}</h1>
+      <p class="text-slate-400">{{ 'PROFILE.UPLOAD_SUBTITLE' | translate }}</p>
+    </div>
+
+    <!-- Error banner -->
+    <div *ngIf="uploadState() === 'error'"
+         class="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl mb-6">
+      <div class="shrink-0 flex items-center justify-center w-8 h-8 bg-red-500/20 rounded-full text-red-400 mt-0.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <p class="text-sm font-medium text-red-400 leading-relaxed">{{ errorMessage() }}</p>
+    </div>
+
+    <!-- Phase 1: Upload -->
+    <div *ngIf="uploadState() === 'idle' || uploadState() === 'dragging' || uploadState() === 'error'"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)"
+         (click)="triggerFileInput()"
+         class="group relative w-full flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300"
+         [ngClass]="uploadState() === 'dragging' ? 'border-teal-400 bg-teal-400/5' : 'border-slate-700 bg-slate-800/30 hover:border-teal-500/50 hover:bg-slate-800/80'">
+      
+      <input type="file" #fileInput (change)="onFileSelected($event)" accept=".pdf,.docx" class="hidden" />
+      
+      <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4 group-hover:scale-110 group-hover:text-teal-400 transition-all duration-300 shadow-lg border border-slate-700 group-hover:border-teal-500/30">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      
+      <h3 class="text-lg font-bold text-white mb-1 group-hover:text-teal-400 transition-colors">{{ 'PROFILE.DRAG_DROP' | translate }}</h3>
+      <p class="text-sm text-slate-400 text-center">{{ 'PROFILE.SUPPORTED_FILES' | translate }}</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="uploadState() === 'loading'" class="w-full flex flex-col items-center justify-center py-16 animate-pulse">
+      <div class="relative w-20 h-20 mb-6">
+        <div class="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
+        <div class="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-teal-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">{{ 'PROFILE.ANALYZING' | translate }}</h3>
+      <p class="text-slate-400">{{ 'PROFILE.AI_PROCESSING' | translate }}</p>
+    </div>
+
+    <!-- Phase 2: Review & Edit -->
+    <div *ngIf="uploadState() === 'success'" class="w-full animate-[fadeUp_0.4s_ease_both]">
+      
+      <!-- Metadata Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="p-4 bg-slate-800/40 border border-slate-700/50 rounded-xl">
+          <label class="block text-xs font-semibold text-teal-400 mb-1 uppercase tracking-wider">{{ 'PROFILE.JOB_TITLE' | translate }}</label>
+          <input type="text" [ngModel]="jobTitle()" (ngModelChange)="jobTitle.set($event)"
+                 class="w-full bg-transparent text-white font-medium outline-none border-b border-transparent focus:border-teal-500 transition-colors" />
+        </div>
+        <div class="p-4 bg-slate-800/40 border border-slate-700/50 rounded-xl">
+          <label class="block text-xs font-semibold text-teal-400 mb-1 uppercase tracking-wider">{{ 'PROFILE.SENIORITY_LEVEL' | translate }}</label>
+          <input type="text" [ngModel]="seniorityLevel()" (ngModelChange)="seniorityLevel.set($event)"
+                 class="w-full bg-transparent text-white font-medium outline-none border-b border-transparent focus:border-teal-500 transition-colors" />
+        </div>
+        <div class="p-4 bg-slate-800/40 border border-slate-700/50 rounded-xl">
+          <label class="block text-xs font-semibold text-teal-400 mb-1 uppercase tracking-wider">{{ 'PROFILE.TOTAL_YEARS' | translate }}</label>
+          <input type="number" [ngModel]="totalYearsOfExperience()" (ngModelChange)="totalYearsOfExperience.set($event)"
+                 class="w-full bg-transparent text-white font-medium outline-none border-b border-transparent focus:border-teal-500 transition-colors" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-white">{{ 'PROFILE.REVIEW_SKILLS' | translate }}</h3>
+        <span class="text-xs font-semibold px-2.5 py-1 bg-teal-500/10 text-teal-400 rounded-full border border-teal-500/20">
+          {{ skills().length }} {{ 'PROFILE.SKILLS_FOUND' | translate }}
+        </span>
+      </div>
+
+      <!-- Skills Container -->
+      <div class="flex flex-col gap-3 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl mb-6 min-h-[100px] max-h-[300px] overflow-y-auto">
+        <div *ngIf="skills().length === 0" class="w-full text-center py-4 text-slate-500">
+          {{ 'PROFILE.NO_SKILLS_EXTRACTED' | translate }}
+        </div>
+        
+        <div *ngFor="let skill of skills(); let i = index"
+             class="group flex items-center justify-between p-3 bg-slate-800 text-slate-200 border border-slate-600 rounded-lg shadow-sm hover:border-teal-500/50 hover:bg-slate-700/50 transition-all">
+          <div class="flex flex-col">
+            <span class="text-sm font-bold text-white mb-0.5">{{ skill.name }}</span>
+            <div class="flex items-center gap-3 text-xs text-slate-400">
+              <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>{{ skill.level }}</span>
+              <span>{{ skill.yearsOfExperience }} {{ 'PROFILE.YEARS' | translate }}</span>
+            </div>
+          </div>
+          <button (click)="removeSkill(i)" class="p-2 text-slate-400 hover:text-red-400 transition-colors outline-none focus:text-red-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Add New Skill -->
+      <div class="flex gap-3 mb-8">
+        <input type="text" [ngModel]="newSkill()" (ngModelChange)="newSkill.set($event)" (keyup.enter)="addSkill()"
+               [placeholder]="'PROFILE.ADD_SKILL_PLACEHOLDER' | translate"
+               class="flex-1 px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white outline-none placeholder:text-slate-500 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all"/>
+        <button (click)="addSkill()" [disabled]="!newSkill().trim()"
+                class="px-5 py-3 bg-slate-800 text-white font-semibold rounded-xl border border-slate-700 hover:bg-slate-700 hover:border-slate-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+          {{ 'PROFILE.ADD_BTN' | translate }}
+        </button>
+      </div>
+
+      <!-- Submit -->
+      <button (click)="confirmAndSave()"
+              class="w-full flex items-center justify-center py-3.5 bg-teal-500 text-slate-950 rounded-xl text-base font-bold shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:shadow-[0_0_25px_rgba(20,184,166,0.5)] hover:-translate-y-0.5 transition-all active:translate-y-0">
+        {{ 'PROFILE.CONFIRM_SAVE_BTN' | translate }}
+      </button>
+
+      <!-- Payload Preview (Debugging) -->
+      <div *ngIf="showFinalArray" class="mt-6 p-4 bg-slate-900 border border-slate-700 rounded-xl" dir="ltr">
+        <h4 class="text-sm font-semibold text-teal-400 mb-2">{{ 'PROFILE.PAYLOAD_PREVIEW' | translate }}</h4>
+        <pre class="text-xs text-slate-300 overflow-x-auto"><code>{{ { jobTitle: jobTitle(), seniorityLevel: seniorityLevel(), totalYearsOfExperience: totalYearsOfExperience(), skills: skills() } | json }}</code></pre>
+        <div class="mt-2 text-right text-xs text-green-400 font-medium">{{ 'PROFILE.READY_TO_SEND' | translate }}</div>
+      </div>
+    </div>
+
+  </div>
+</section>

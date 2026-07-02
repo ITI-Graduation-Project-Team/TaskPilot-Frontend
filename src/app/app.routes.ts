@@ -40,4 +40,11 @@ export const routes: Routes = [
         (m) => m.ConfirmEmailComponent
       ),
   },
+  {
+    path: 'complete-profile',
+    loadComponent: () =>
+      import('./pages/completeProfilePage/ui/complete-profile/complete-profile.component').then(
+        (m) => m.CompleteProfileComponent
+      ),
+  },
 ];
