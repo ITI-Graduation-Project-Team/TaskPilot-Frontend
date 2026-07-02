@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { getAccessToken } from '../lib/auth/cookie.helper';
+import { getAccessToken, getRoleFromToken } from '../lib/auth/cookie.helper';
 export interface AuthResponse {
   succeeded: boolean;
   message: string;
@@ -22,7 +22,7 @@ export class AuthService {
   constructor(private http: HttpClient) { }
 
   getUserRole(): string | null {
-    return localStorage.getItem('userRole') || null;
+    return getRoleFromToken(); // reads the actual JWT, not localStorage
   }
 
   isLoggedIn(): boolean {
@@ -31,5 +31,7 @@ export class AuthService {
   googleLogin(idToken: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { idToken });
   }
+
+
 }
 

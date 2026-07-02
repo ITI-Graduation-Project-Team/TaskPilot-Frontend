@@ -3,7 +3,7 @@ import { roleGuard } from './shared/guards/role.guard';
 
 export const routes: Routes = [
 
-  { path: '', redirectTo: 'register', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -63,4 +63,21 @@ export const routes: Routes = [
         (m) => m.ConfirmEmailComponent
       ),
   },
+  {
+    path: 'company-setup',
+    canActivate: [roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/companySetupPage/ui/company-setup/company-setup').then(
+        (m) => m.CompanySetupComponent
+      ),
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () =>
+      import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
+        (m) => m.DashboardComponent
+      ),
+  },
 ];
+

@@ -9,6 +9,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { CookieService } from 'ngx-cookie-service';
 import { environment } from '../../../../../environments/environment';
+import { getRedirectForRole } from '../../../../shared/lib/auth/role-redirect';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -79,13 +80,15 @@ export class LoginComponent implements AfterViewInit {
       this.authService.googleLogin(response.credential).subscribe({
         next: (res) => {
           if (res.succeeded && res.data) {
+            // Save token to cookie — AuthService will decode role from it
             this.cookieService.set(environment.auth.tokenKey, res.data.token, 7, '/');
-            if (res.data.roles && res.data.roles.length > 0) {
-              localStorage.setItem('userRole', res.data.roles[0]);
-            }
+
             this.successMessage.set(res.message || 'Signed in successfully! Redirecting…');
             this.state.set('success');
-            setTimeout(() => this.router.navigate(['/']), 1800);
+
+            // Role is now read from the JWT itself via AuthService
+            const role = this.authService.getUserRole();
+            setTimeout(() => this.router.navigate([getRedirectForRole(role)]), 1800);
           } else {
             this.state.set('error');
             this.errorMessage.set(res.message || 'Google Sign-In failed');
@@ -138,7 +141,7 @@ export class LoginComponent implements AfterViewInit {
       if (data.succeeded === false) {
         this.state.set('error');
         this.errorMessage.set(
-          data.errors?.map((e) => e.description).join(' ') || data.message
+          data.errors?.map((e: any) => e.description).join(' ') || data.message
         );
         return;
       }
@@ -146,17 +149,17 @@ export class LoginComponent implements AfterViewInit {
       const tokenData = data.data as any;
       const accessToken = tokenData?.accessToken || tokenData?.token;
       const refreshToken = tokenData?.refreshToken;
+
       if (accessToken && refreshToken) {
         saveTokens(accessToken, refreshToken);
       }
 
-      // Save the user role for the guard to verify
-      if (tokenData?.roles && tokenData.roles.length > 0) {
-        localStorage.setItem('userRole', tokenData.roles[0]);
-      }
       this.successMessage.set(data.message || 'Signed in successfully! Redirecting…');
       this.state.set('success');
-      setTimeout(() => this.router.navigate(['/']), 1800);
+
+      // Role is decoded from the saved JWT — no localStorage needed
+      const role = this.authService.getUserRole();
+      setTimeout(() => this.router.navigate([getRedirectForRole(role)]), 1800);
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));

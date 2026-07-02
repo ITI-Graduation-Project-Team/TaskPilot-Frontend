@@ -1,0 +1,431 @@
+<div
+  class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-zinc-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 text-slate-800 font-sans"
+  [dir]="isArabic ? 'rtl' : 'ltr'">
+  <div
+    class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col md:flex-row border border-slate-100/80 backdrop-blur-md min-h-[680px]">
+
+    <!-- Sidebar: Dynamic Checklist & Progress -->
+    <div
+      class="bg-slate-900 text-slate-100 p-8 md:p-12 md:w-2/5 flex flex-col justify-between relative overflow-hidden">
+      <!-- Decorative background glow -->
+      <div
+        class="absolute -top-40 -left-40 w-80 h-80 bg-indigo-500 rounded-full blur-[100px] opacity-20 pointer-events-none">
+      </div>
+      <div
+        class="absolute -bottom-40 -right-40 w-80 h-80 bg-emerald-500 rounded-full blur-[100px] opacity-15 pointer-events-none">
+      </div>
+
+      <div class="relative z-10">
+        <!-- Logo Header -->
+        <div class="flex items-center gap-3 mb-8">
+          <span
+            class="bg-gradient-to-tr from-indigo-500 to-violet-600 text-white rounded-2xl p-2.5 shadow-lg shadow-indigo-500/30 flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+              </path>
+            </svg>
+          </span>
+          <span
+            class="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">{{
+            'COMPANY_SETUP.LOGO' | translate }}</span>
+        </div>
+
+        <h2 class="text-xl font-bold mb-2">{{ 'COMPANY_SETUP.SIDEBAR.TITLE' | translate }}</h2>
+        <p class="text-slate-400 text-sm leading-relaxed mb-8">
+          {{ 'COMPANY_SETUP.DESCRIPTION' | translate }}
+        </p>
+
+        <!-- Progress Section -->
+        <div class="bg-slate-800/50 border border-slate-700/30 rounded-2xl p-5 mb-8 backdrop-blur-sm">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{
+              'COMPANY_SETUP.SIDEBAR.PROGRESS' | translate }}</span>
+            <span class="text-sm font-bold text-indigo-400">{{ setupProgress }}%</span>
+          </div>
+          <div class="w-full bg-slate-700/50 h-2.5 rounded-full overflow-hidden">
+            <div
+              class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-500 ease-out"
+              [style.width.%]="setupProgress"></div>
+          </div>
+        </div>
+
+        <!-- Dynamic Step Checklist -->
+        <div class="space-y-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ 'COMPANY_SETUP.SIDEBAR.STEPS' |
+            translate }}</h4>
+
+          <!-- Step 1 Link -->
+          <div (click)="goToStep(1)"
+            class="flex items-center gap-3 text-sm cursor-pointer transition-all duration-300 group"
+            [class.text-indigo-400]="currentStep === 1" [class.text-slate-400]="currentStep !== 1">
+            <span
+              class="w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-xs font-bold"
+              [class.border-indigo-500]="currentStep === 1 || hasCompanyName" [class.bg-indigo-500]="hasCompanyName"
+              [class.text-white]="hasCompanyName" [class.border-slate-700]="currentStep !== 1 && !hasCompanyName"
+              [class.text-indigo-400]="currentStep === 1 && !hasCompanyName">
+              <svg class="w-3.5 h-3.5" *ngIf="hasCompanyName" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span *ngIf="!hasCompanyName">1</span>
+            </span>
+            <span [class.font-bold]="currentStep === 1" [class.text-slate-200]="currentStep === 1 || hasCompanyName"
+              class="group-hover:text-slate-200">{{ 'COMPANY_SETUP.SIDEBAR.STEP1' | translate }}</span>
+          </div>
+
+          <!-- Step 2 Link -->
+          <div (click)="goToStep(2)" class="flex items-center gap-3 text-sm transition-all duration-300 group"
+            [class.cursor-pointer]="canGoToStep(2)" [class.cursor-not-allowed]="!canGoToStep(2)"
+            [class.text-indigo-400]="currentStep === 2" [class.text-slate-400]="currentStep !== 2">
+            <span
+              class="w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-xs font-bold"
+              [class.border-indigo-500]="currentStep === 2 || hasPolicies" [class.bg-indigo-500]="hasPolicies"
+              [class.text-white]="hasPolicies" [class.border-slate-700]="currentStep !== 2 && !hasPolicies"
+              [class.text-indigo-400]="currentStep === 2 && !hasPolicies">
+              <svg class="w-3.5 h-3.5" *ngIf="hasPolicies" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span *ngIf="!hasPolicies">2</span>
+            </span>
+            <span [class.font-bold]="currentStep === 2" [class.text-slate-200]="currentStep === 2 || hasPolicies"
+              [class.group-hover:text-slate-200]="canGoToStep(2)">{{ 'COMPANY_SETUP.SIDEBAR.STEP2' | translate }}</span>
+          </div>
+
+          <!-- Step 3 Link -->
+          <div (click)="goToStep(3)" class="flex items-center gap-3 text-sm transition-all duration-300 group"
+            [class.cursor-pointer]="canGoToStep(3)" [class.cursor-not-allowed]="!canGoToStep(3)"
+            [class.text-indigo-400]="currentStep === 3" [class.text-slate-400]="currentStep !== 3">
+            <span
+              class="w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-xs font-bold"
+              [class.border-indigo-500]="currentStep === 3 || hasDocument" [class.bg-indigo-500]="hasDocument"
+              [class.text-white]="hasDocument" [class.border-slate-700]="currentStep !== 3 && !hasDocument"
+              [class.text-indigo-400]="currentStep === 3 && !hasDocument">
+              <svg class="w-3.5 h-3.5" *ngIf="hasDocument" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span *ngIf="!hasDocument">3</span>
+            </span>
+            <span [class.font-bold]="currentStep === 3" [class.text-slate-200]="currentStep === 3 || hasDocument"
+              [class.group-hover:text-slate-200]="canGoToStep(3)">{{ 'COMPANY_SETUP.SIDEBAR.STEP3' | translate }}</span>
+          </div>
+
+          <!-- Step 4 Link -->
+          <div (click)="goToStep(4)" class="flex items-center gap-3 text-sm transition-all duration-300 group"
+            [class.cursor-pointer]="canGoToStep(4)" [class.cursor-not-allowed]="!canGoToStep(4)"
+            [class.text-indigo-400]="currentStep === 4" [class.text-slate-400]="currentStep !== 4">
+            <span
+              class="w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-xs font-bold"
+              [class.border-indigo-500]="currentStep === 4 || hasInvites" [class.bg-indigo-500]="hasInvites"
+              [class.text-white]="hasInvites" [class.border-slate-700]="currentStep !== 4 && !hasInvites"
+              [class.text-indigo-400]="currentStep === 4 && !hasInvites">
+              <svg class="w-3.5 h-3.5" *ngIf="hasInvites" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span *ngIf="!hasInvites">4</span>
+            </span>
+            <span [class.font-bold]="currentStep === 4" [class.text-slate-200]="currentStep === 4 || hasInvites"
+              [class.group-hover:text-slate-200]="canGoToStep(4)">{{ 'COMPANY_SETUP.SIDEBAR.STEP4' | translate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="relative z-10 text-xs text-slate-500 mt-12 md:mt-0">
+        {{ 'COMPANY_SETUP.SIDEBAR.COPYRIGHT' | translate }}
+      </div>
+    </div>
+
+    <!-- Form Area -->
+    <div class="p-8 sm:p-12 md:w-3/5 flex flex-col justify-between bg-white relative overflow-hidden">
+      <div class="flex flex-col h-full justify-between flex-1">
+
+        <!-- Headers -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">
+              {{ 'COMPANY_SETUP.HEADER.STEP' | translate }} {{ currentStep }} {{ 'COMPANY_SETUP.HEADER.OF' | translate
+              }} {{ maxStep }}
+            </span>
+            <span class="text-xs text-slate-400">{{ 'COMPANY_SETUP.HEADER.CONFIGURATION' | translate }}</span>
+          </div>
+          <h3 class="text-2xl font-bold text-slate-900 tracking-tight mt-1">
+            <ng-container [ngSwitch]="currentStep">
+              <span *ngSwitchCase="1">{{ 'COMPANY_SETUP.STEP1.TITLE' | translate }}</span>
+              <span *ngSwitchCase="2">{{ 'COMPANY_SETUP.STEP2.TITLE' | translate }}</span>
+              <span *ngSwitchCase="3">{{ 'COMPANY_SETUP.STEP3.TITLE' | translate }}</span>
+              <span *ngSwitchCase="4">{{ 'COMPANY_SETUP.STEP4.TITLE' | translate }}</span>
+            </ng-container>
+          </h3>
+        </div>
+
+        <!-- Alerts -->
+        <div *ngIf="submitError"
+          class="mb-4 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-3 animate-fade-in">
+          <svg class="w-5 h-5 text-rose-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clip-rule="evenodd"></path>
+          </svg>
+          <div>
+            <p class="font-semibold">{{ 'COMPANY_SETUP.ALERTS.FAILED' | translate }}</p>
+            <p class="text-xs text-rose-600/90 mt-0.5">{{ submitError }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="submitSuccess"
+          class="mb-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-start gap-3 animate-fade-in">
+          <svg class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"></path>
+          </svg>
+          <div>
+            <p class="font-semibold">{{ 'COMPANY_SETUP.ALERTS.SUCCESS' | translate }}</p>
+            <p class="text-xs text-emerald-600/90 mt-0.5">{{ 'COMPANY_SETUP.ALERTS.SUCCESS_DESCRIPTION' | translate }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Form with horizontal steps slider -->
+        <form [formGroup]="setupForm" (ngSubmit)="onSubmit()"
+          class="flex-1 flex flex-col justify-between min-h-[360px]">
+
+          <!-- Slider Viewport -->
+          <div class="overflow-hidden w-full flex-1 py-2">
+            <div class="flex h-full transition-transform duration-500 ease-out"
+              [style.transform]="isArabic ? 'translateX(' + ((currentStep - 1) * 100) + '%)' : 'translateX(-' + ((currentStep - 1) * 100) + '%)'">
+
+              <!-- STEP 1: Company Identity -->
+              <div class="w-full shrink-0 px-1 space-y-4">
+                <p class="text-slate-500 text-sm">{{ 'COMPANY_SETUP.STEP1.DESCRIPTION' | translate }}</p>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{
+                    'COMPANY_SETUP.STEP1.LABEL' | translate }}</label>
+                  <div class="relative">
+                    <input type="text" formControlName="CompanyName"
+                      class="w-full rounded-xl border border-slate-200 bg-slate-50/50 shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all p-3.5 outline-none text-slate-800 placeholder-slate-400 text-sm"
+                      [class.pl-11]="!isArabic" [class.pr-11]="isArabic"
+                      [placeholder]="'COMPANY_SETUP.STEP1.PLACEHOLDER' | translate">
+                    <span class="absolute top-1/2 -translate-y-1/2 text-slate-400" [class.left-4]="!isArabic"
+                      [class.right-4]="isArabic">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                        </path>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 2: Policies -->
+              <div class="w-full shrink-0 px-1 space-y-4 overflow-y-auto max-h-[350px] pr-2">
+                <p class="text-slate-500 text-sm">{{ 'COMPANY_SETUP.STEP2.DESCRIPTION' | translate }}</p>
+
+                <div class="grid grid-cols-1 gap-4">
+                  <!-- English Policy Card -->
+                  <div class="space-y-3 p-4 rounded-xl bg-indigo-50/20 border border-indigo-100/50">
+                    <div class="flex items-center gap-2 border-b border-indigo-100/50 pb-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                      <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900">{{
+                        'COMPANY_SETUP.STEP2.ENGLISH_POLICY' | translate }}</h4>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-indigo-950 mb-1">{{
+                        'COMPANY_SETUP.STEP2.TITLE_LABEL' | translate }}</label>
+                      <input type="text" formControlName="PolicyTitleEn"
+                        class="w-full rounded-lg border border-slate-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 p-2.5 text-xs outline-none placeholder-slate-400 transition-all"
+                        [placeholder]="'COMPANY_SETUP.STEP2.TITLE_PLACEHOLDER' | translate">
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-indigo-950 mb-1">{{
+                        'COMPANY_SETUP.STEP2.CONTENT_LABEL' | translate }}</label>
+                      <textarea formControlName="PolicyContentEn" rows="2"
+                        class="w-full rounded-lg border border-slate-200 bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 p-2.5 text-xs outline-none placeholder-slate-400 transition-all resize-none"
+                        [placeholder]="'COMPANY_SETUP.STEP2.CONTENT_PLACEHOLDER' | translate"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Arabic Policy Card -->
+                  <div class="space-y-3 p-4 rounded-xl bg-emerald-50/20 border border-emerald-100/50">
+                    <div class="flex items-center gap-2 border-b border-emerald-100/50 pb-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-900">{{
+                        'COMPANY_SETUP.STEP2.ARABIC_POLICY' | translate }}</h4>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-emerald-950 mb-1">{{
+                        'COMPANY_SETUP.STEP2.AR_TITLE_LABEL' | translate }}</label>
+                      <input type="text" formControlName="PolicyTitleAr" dir="rtl"
+                        class="w-full rounded-lg border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 p-2.5 text-xs outline-none placeholder-slate-400 transition-all"
+                        [placeholder]="'COMPANY_SETUP.STEP2.AR_TITLE_PLACEHOLDER' | translate">
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-emerald-950 mb-1">{{
+                        'COMPANY_SETUP.STEP2.AR_CONTENT_LABEL' | translate }}</label>
+                      <textarea formControlName="PolicyContentAr" rows="2" dir="rtl"
+                        class="w-full rounded-lg border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 p-2.5 text-xs outline-none placeholder-slate-400 transition-all resize-none"
+                        [placeholder]="'COMPANY_SETUP.STEP2.AR_CONTENT_PLACEHOLDER' | translate"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 3: Document Upload -->
+              <div class="w-full shrink-0 px-1 space-y-4">
+                <p class="text-slate-500 text-sm">{{ 'COMPANY_SETUP.STEP3.DESCRIPTION' | translate }}</p>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{
+                    'COMPANY_SETUP.STEP3.LABEL' | translate }}</label>
+
+                  <!-- Drag & Drop Container when empty -->
+                  <div *ngIf="!selectedFile"
+                    class="relative border-2 border-dashed rounded-xl p-6 transition-all duration-300 flex flex-col items-center justify-center min-h-[140px]"
+                    [class.border-indigo-400]="isDragOver" [class.bg-indigo-50/50]="isDragOver"
+                    [class.border-slate-200]="!isDragOver" [class.hover:border-indigo-400]="!isDragOver"
+                    (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+
+                    <input type="file" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                      (change)="onFileSelected($event)" accept=".pdf">
+
+                    <div class="text-center space-y-2 pointer-events-none">
+                      <div
+                        class="mx-auto w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </div>
+                      <div class="text-sm font-medium text-slate-700">
+                        <span class="text-indigo-600 hover:text-indigo-700">{{ 'COMPANY_SETUP.STEP3.UPLOAD' | translate
+                          }}</span> {{ 'COMPANY_SETUP.STEP3.OR' | translate }}
+                      </div>
+                      <p class="text-xs text-slate-400">{{ 'COMPANY_SETUP.STEP3.HELP' | translate }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Uploaded File Details View -->
+                  <div *ngIf="selectedFile"
+                    class="border rounded-xl p-4 bg-slate-50/80 border-slate-200 flex items-center justify-between transition-all duration-300 animate-fade-in">
+                    <div class="flex items-center space-x-3" [class.space-x-reverse]="isArabic">
+                      <div
+                        class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd"
+                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                            clip-rule="evenodd" />
+                        </svg>
+                      </div>
+                      <div class="truncate max-w-[200px] sm:max-w-xs">
+                        <p class="text-sm font-semibold text-slate-800 truncate">{{ selectedFile.name }}</p>
+                        <p class="text-xs text-slate-500">{{ (selectedFile.size / 1024 / 1024) | number:'1.1-2' }} MB
+                        </p>
+                      </div>
+                    </div>
+                    <button type="button" (click)="removeFile()"
+                      class="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Upload validation error -->
+                  <p *ngIf="fileError" class="mt-1.5 text-xs text-rose-600 flex items-center gap-1 animate-pulse">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd"></path>
+                    </svg>
+                    {{ fileError }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- STEP 4: Invite Team -->
+              <div class="w-full shrink-0 px-1 space-y-4">
+                <p class="text-slate-500 text-sm">{{ 'COMPANY_SETUP.STEP4.DESCRIPTION' | translate }}</p>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{
+                    'COMPANY_SETUP.STEP4.LABEL' | translate }}</label>
+                  <div
+                    class="p-2 border border-slate-200 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-500 flex flex-wrap gap-2 items-center bg-slate-50/50 min-h-[50px] transition-all">
+                    <span *ngFor="let email of employeeEmails"
+                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 border border-indigo-100 text-indigo-700 animate-scale-up">
+                      {{ email }}
+                      <button type="button" (click)="removeEmail(email)"
+                        class="inline-flex items-center justify-center w-4 h-4 rounded-full text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600 focus:outline-none"
+                        [class.ml-1.5]="!isArabic" [class.mr-1.5]="isArabic">
+                        <span class="sr-only">{{ 'COMPANY_SETUP.STEP4.REMOVE_EMAIL' | translate }}</span>
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd"></path>
+                        </svg>
+                      </button>
+                    </span>
+                    <input type="email" [(ngModel)]="currentEmail" [ngModelOptions]="{standalone: true}"
+                      (keydown.enter)="addEmail($event)"
+                      class="flex-1 min-w-[150px] outline-none border-none p-1.5 text-xs bg-transparent placeholder-slate-400 text-slate-800"
+                      [placeholder]="'COMPANY_SETUP.STEP4.PLACEHOLDER' | translate">
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Navigation Footer -->
+          <div class="flex items-center justify-between border-t border-slate-100 pt-5 mt-auto bg-white z-20">
+            <!-- Back Button -->
+            <button type="button" *ngIf="currentStep > 1" (click)="prevStep()"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 active:scale-95 transition-all">
+              <svg class="w-3.5 h-3.5" [class.rotate-180]="!isArabic" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              {{ 'COMPANY_SETUP.BUTTONS.BACK' | translate }}
+            </button>
+            <div *ngIf="currentStep === 1"></div>
+
+            <!-- Next Button -->
+            <button type="button" *ngIf="currentStep < maxStep" (click)="nextStep()"
+              [disabled]="!isStepValid(currentStep)"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all">
+              {{ 'COMPANY_SETUP.BUTTONS.NEXT' | translate }}
+              <svg class="w-3.5 h-3.5" [class.rotate-180]="isArabic" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+
+            <!-- Complete Setup Button -->
+            <button type="submit" *ngIf="currentStep === maxStep"
+              [disabled]="setupForm.invalid || !selectedFile || isSubmitting"
+              class="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-xs font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all">
+              <svg *ngIf="isSubmitting" class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+              {{ isSubmitting ? ('COMPANY_SETUP.BUTTONS.CONFIGURING' | translate) : ('COMPANY_SETUP.BUTTONS.COMPLETE' |
+              translate) }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>

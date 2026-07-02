@@ -37,5 +37,70 @@
     "creatingAccount": "Creating Account…",
     "accountCreated": "Account Created!",
     "redirecting": "Redirecting to email verification…"
+  },
+  "COMPANY_SETUP": {
+    "DESCRIPTION": "Set up your workspace and bring your team on board to start managing tasks seamlessly.",
+    "LOGO": "TaskPilot",
+    "SIDEBAR": {
+      "TITLE": "Configure Workspace",
+      "PROGRESS": "Setup Progress",
+      "STEPS": "Steps to complete",
+      "STEP1": "Company Identity",
+      "STEP2": "Policies & Terms",
+      "STEP3": "Upload Document",
+      "STEP4": "Invite Team",
+      "COPYRIGHT": "© 2026 TaskPilot Inc. All rights reserved."
+    },
+    "HEADER": {
+      "STEP": "Step",
+      "OF": "of",
+      "CONFIGURATION": "Company Configuration"
+    },
+    "STEP1": {
+      "TITLE": "What's your company name?",
+      "DESCRIPTION": "Every workspace needs a name. Choose something your team recognizes.",
+      "LABEL": "Company Name",
+      "PLACEHOLDER": "e.g. Acme Corp"
+    },
+    "STEP2": {
+      "TITLE": "Establish policies",
+      "DESCRIPTION": "Write down your main company guidelines for your workspace users in both English and Arabic.",
+      "ENGLISH_POLICY": "English Policy",
+      "ARABIC_POLICY": "Arabic Policy",
+      "TITLE_LABEL": "Title",
+      "CONTENT_LABEL": "Content",
+      "TITLE_PLACEHOLDER": "e.g. Workspace Policy",
+      "CONTENT_PLACEHOLDER": "Describe policies in English...",
+      "AR_TITLE_LABEL": "العنوان (Title)",
+      "AR_CONTENT_LABEL": "المحتوى (Content)",
+      "AR_TITLE_PLACEHOLDER": "شروط العمل ومبادئه",
+      "AR_CONTENT_PLACEHOLDER": "أدخل تفاصيل الشروط باللغة العربية..."
+    },
+    "STEP3": {
+      "TITLE": "Provide workspace document",
+      "DESCRIPTION": "Upload the official, signed Policy Document that team members will need to review.",
+      "LABEL": "Policy Document (PDF)",
+      "UPLOAD": "Click to upload",
+      "OR": "or drag & drop PDF",
+      "HELP": "PDF documents only, up to 10MB"
+    },
+    "STEP4": {
+      "TITLE": "Bring your team on board",
+      "DESCRIPTION": "Add email addresses of team members you want to invite immediately. You can also skip this and invite them later.",
+      "LABEL": "Invite Team (Emails)",
+      "PLACEHOLDER": "Type email and press Enter",
+      "REMOVE_EMAIL": "Remove email"
+    },
+    "ALERTS": {
+      "FAILED": "Setup failed",
+      "SUCCESS": "Workspace Configured Successfully!",
+      "SUCCESS_DESCRIPTION": "Navigating to your dashboard..."
+    },
+    "BUTTONS": {
+      "BACK": "Back",
+      "NEXT": "Next",
+      "COMPLETE": "Complete Setup",
+      "CONFIGURING": "Configuring..."
+    }
   }
 }
