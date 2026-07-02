@@ -222,7 +222,7 @@
           </div>
 
           <!-- Action Button -->
-          <button *ngIf="!isCurrentPlan(plan.id)" 
+          <button *ngIf="showChoosePlanButton(plan)" 
                   (click)="choosePlan(plan)"
                   class="w-full py-3.5 rounded-xl font-bold transition-all duration-200"
                   [ngClass]="plans().length === 3 && i === 1 ? 'bg-brandPrimary text-brandWhite hover:bg-red-700' : 'bg-brandPrimary/10 text-brandPrimary hover:bg-brandPrimary hover:text-brandWhite'">

@@ -98,6 +98,8 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
     this.pageState.set('loading');
 
     try {
+      let noSubscription = false;
+
       // 1. Load current sub (404 is fine, means no sub)
       try {
         const subRes = await userSubscriptionApi.getCurrent();
@@ -105,16 +107,48 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
           this.currentSub.set(subRes.data.data);
         }
       } catch (err: any) {
-        if (err.response?.status !== 404) {
+        if (err.response?.status === 404) {
+          noSubscription = true;
+        } else {
           console.error('Error fetching current subscription:', err);
         }
-        // 404 just means no active subscription, proceed
+        // Proceed even if no subscription
       }
 
       // 2. Load plans
       const plansRes = await subscriptionPlanApi.getAll();
       if (plansRes.data.succeeded && plansRes.data.data) {
-        this.plans.set(plansRes.data.data);
+        const loadedPlans = plansRes.data.data;
+        this.plans.set(loadedPlans);
+
+        // Auto-enroll if no subscription
+        if (noSubscription) {
+          const freePlan = loadedPlans.find(
+            p => p.monthlyPrice === 0 && p.annualPrice === 0
+          );
+          if (freePlan) {
+            try {
+              await userSubscriptionApi.subscribe({
+                subscriptionPlanId: freePlan.id,
+                billingCycle: 'Monthly',
+                autoRenew: false,
+                gateway: undefined as any,
+                paymentMethodId: undefined,
+                returnUrl: undefined,
+                cancelUrl: undefined
+              });
+              
+              // Refetch current sub after successful auto-enrollment
+              const newSubRes = await userSubscriptionApi.getCurrent();
+              if (newSubRes.data.succeeded && newSubRes.data.data) {
+                this.currentSub.set(newSubRes.data.data);
+              }
+            } catch (autoErr) {
+              console.error('Failed to auto-enroll in Free plan:', autoErr);
+            }
+          }
+        }
+
         this.pageState.set('loaded');
       } else {
         this.pageState.set('error_generic');
@@ -138,6 +172,26 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
     const sub = this.currentSub();
     return !!sub && sub.subscriptionPlanId === planId &&
       (sub.status === 'Active' || sub.status === 'Trialing' || sub.status === 'Pending');
+  }
+
+  canDowngradeToFree(): boolean {
+    const sub = this.currentSub();
+    if (!sub) return false;
+    const currentPlan = this.plans().find(p => p.id === sub.subscriptionPlanId);
+    if (!currentPlan) return false;
+    return currentPlan.monthlyPrice > 0 || currentPlan.annualPrice > 0;
+  }
+
+  showChoosePlanButton(plan: SubscriptionPlanDto): boolean {
+    if (this.isCurrentPlan(plan.id)) return false;
+    
+    // For free plan, only show if we can downgrade
+    if (plan.monthlyPrice === 0 && plan.annualPrice === 0) {
+      return this.canDowngradeToFree();
+    }
+    
+    // For paid plans, always show if not current
+    return true;
   }
 
   getSavingsPercentage(plan: SubscriptionPlanDto): number {
