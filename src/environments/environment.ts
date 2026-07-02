@@ -12,5 +12,5 @@ export const environment = {
 
   // PayPal
   // TODO: replace with live PayPal client ID before production deployment
-  paypalClientId: 'pk_paypal_placeholder',
+  paypalClientId: 'AS4sejisdmPGTz9maE5LcVCpZuarDUKG_Sk4okxRFTaPb7JKcEIjRXxMR5nCBgNB9r1MunhHTEldOvn7',
 };
