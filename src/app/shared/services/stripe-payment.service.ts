@@ -111,4 +111,35 @@ export class StripePaymentService {
 
     return {};
   }
+
+  /**
+   * Confirms a Stripe card setup using the client secret returned by the backend
+   * for trial subscriptions. This saves the card WITHOUT charging it.
+   * Stripe will auto-charge when the trial period ends.
+   *
+   * IMPORTANT: This is NOT the same as confirmPayment (confirmCardPayment).
+   * Trial → confirmCardSetup (saves card, $0 charge)
+   * Paid  → confirmCardPayment (charges card now)
+   *
+   * @param clientSecret The `clientSecret` from the `POST api/usersubscriptions` response (SetupIntent).
+   * @param card The mounted StripeCardElement.
+   * @returns An object with an optional `error` string if card setup failed.
+   */
+  async confirmCardSetup(
+    clientSecret: string,
+    card: StripeCardElement
+  ): Promise<{ error?: string }> {
+    const stripe = await this.getStripe();
+    if (!stripe) return { error: 'Stripe could not be initialized.' };
+
+    const result = await stripe.confirmCardSetup(clientSecret, {
+      payment_method: { card },
+    });
+
+    if (result.error) {
+      return { error: result.error.message ?? 'Card setup failed.' };
+    }
+
+    return {};
+  }
 }
