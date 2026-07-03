@@ -71,8 +71,8 @@
       "CONTENT_LABEL": "Content",
       "TITLE_PLACEHOLDER": "e.g. Workspace Policy",
       "CONTENT_PLACEHOLDER": "Describe policies in English...",
-      "AR_TITLE_LABEL": "العنوان (Title)",
-      "AR_CONTENT_LABEL": "المحتوى (Content)",
+      "AR_TITLE_LABEL": "العنوان",
+      "AR_CONTENT_LABEL": "المحتوى",
       "AR_TITLE_PLACEHOLDER": "شروط العمل ومبادئه",
       "AR_CONTENT_PLACEHOLDER": "أدخل تفاصيل الشروط باللغة العربية..."
     },
