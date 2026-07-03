@@ -73,6 +73,11 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
   }
 
   onDigitKeydown(index: number, event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.onSubmit();
+      return;
+    }
     if (event.key === 'Backspace') {
       const d = [...this.digits()];
       if (d[index]) {
