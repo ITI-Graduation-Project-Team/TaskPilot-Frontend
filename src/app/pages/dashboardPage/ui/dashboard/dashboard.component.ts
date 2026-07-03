@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard';
 
@@ -58,10 +58,10 @@ import { BoardComponent } from '../../../../widgets/taskBoard';
 
           <div class="flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-colors duration-200">
             <div class="w-9 h-9 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
-              Y
+              {{ userInitial() }}
             </div>
             <div class="min-w-0">
-              <h4 class="text-xs font-bold text-text-primary truncate">Yasser Sofian</h4>
+              <h4 class="text-xs font-bold text-text-primary truncate">{{ userName() }}</h4>
               <p class="text-[10px] text-text-secondary truncate">Full Stack Developer</p>
             </div>
           </div>
@@ -110,6 +110,8 @@ import { BoardComponent } from '../../../../widgets/taskBoard';
 export class DashboardComponent implements OnInit {
   isDark = signal(false);
   currentDate = '';
+  userName = signal('Guest User');
+  userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   ngOnInit() {
     this.currentDate = new Date().toLocaleDateString('en-US', {
@@ -126,6 +128,14 @@ export class DashboardComponent implements OnInit {
       this.isDark.set(isDarkSet);
       if (isDarkSet) {
         document.documentElement.classList.add('dark');
+      }
+    }
+
+    // Load actual user name from login response saved in localStorage
+    if (typeof localStorage !== 'undefined') {
+      const storedName = localStorage.getItem('userFullName');
+      if (storedName) {
+        this.userName.set(storedName);
       }
     }
   }

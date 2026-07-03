@@ -93,6 +93,10 @@ export class LoginComponent implements AfterViewInit {
             if (role) {
               localStorage.setItem('userRole', role);
             }
+            const fullName = (res.data as any).fullName;
+            if (fullName) {
+              localStorage.setItem('userFullName', fullName);
+            }
             const isProfileCompleted = (res.data as any).isProfileCompleted === true;
             const route = (role === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(role)];
             this.router.navigate(route);
@@ -166,6 +170,9 @@ export class LoginComponent implements AfterViewInit {
       }
       if (role) {
         localStorage.setItem('userRole', role);
+      }
+      if (tokenData?.fullName) {
+        localStorage.setItem('userFullName', tokenData.fullName);
       }
 
       const userRole = this.authService.getUserRole() || role;
