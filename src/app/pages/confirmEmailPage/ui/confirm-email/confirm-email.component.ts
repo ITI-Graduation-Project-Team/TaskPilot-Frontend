@@ -42,27 +42,47 @@ export class ConfirmEmailComponent implements OnInit {
   /** Called when a digit box changes */
   onDigitInput(index: number, event: Event) {
     const input = event.target as HTMLInputElement;
-    const val = input.value.replace(/\D/g, '').slice(-1);
+    let val = input.value.replace(/\D/g, '');
+    if (val.length > 0) {
+      val = val.substring(val.length - 1);
+    }
+    
     const d = [...this.digits()];
     d[index] = val;
     this.digits.set(d);
     this.otp.set(d.join(''));
 
-    // Auto-focus next box
+    // Explicitly set the input value to prevent double character display
+    input.value = val;
+
+    // Auto-focus next box using setTimeout to prevent key event bleeding
     if (val && index < 5) {
-      const next = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
-      next?.focus();
+      setTimeout(() => {
+        const next = document.getElementById(`otp-${index + 1}`) as HTMLInputElement;
+        next?.focus();
+        next?.select();
+      }, 0);
     }
   }
 
   onDigitKeydown(index: number, event: KeyboardEvent) {
-    if (event.key === 'Backspace' && !this.digits()[index] && index > 0) {
-      const prev = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
-      prev?.focus();
+    if (event.key === 'Backspace') {
       const d = [...this.digits()];
-      d[index - 1] = '';
-      this.digits.set(d);
-      this.otp.set(d.join(''));
+      if (d[index]) {
+        d[index] = '';
+        this.digits.set(d);
+        this.otp.set(d.join(''));
+        event.preventDefault();
+      } else if (index > 0) {
+        d[index - 1] = '';
+        this.digits.set(d);
+        this.otp.set(d.join(''));
+        setTimeout(() => {
+          const prev = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
+          prev?.focus();
+        }, 0);
+        event.preventDefault();
+      }
     }
   }
 
@@ -74,10 +94,13 @@ export class ConfirmEmailComponent implements OnInit {
     this.digits.set(d);
     this.otp.set(d.join(''));
     event.preventDefault();
-    // Focus last filled or last box
+    
+    // Focus last filled or last box using setTimeout
     const lastIdx = Math.min(nums.length, 5);
-    const el = document.getElementById(`otp-${lastIdx}`) as HTMLInputElement;
-    el?.focus();
+    setTimeout(() => {
+      const el = document.getElementById(`otp-${lastIdx}`) as HTMLInputElement;
+      el?.focus();
+    }, 0);
   }
 
   async onSubmit() {
