@@ -202,9 +202,11 @@
     <form *ngIf="!isSuccess" class="flex flex-col gap-4" (ngSubmit)="onSubmit()" novalidate>
 
       <!-- English name row -->
-      <div class="grid grid-cols-2 gap-3" dir="ltr">
-        <div class="flex flex-col gap-1.5 text-left">
-          <label class="text-sm font-semibold text-brandSecondary" for="firstNameEn">{{ 'register.firstNameEn' | translate }}</label>
+      <div class="grid grid-cols-2 gap-3" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+          <label class="text-sm font-semibold text-brandSecondary" for="firstNameEn">
+            {{ currentLang() === 'ar' ? 'الاسم الأول (إنجليزي)' : 'First Name' }}
+          </label>
           <input id="firstNameEn" name="firstNameEn" type="text"
                  [ngModel]="firstNameEn()" (ngModelChange)="firstNameEn.set($event)"
                  [disabled]="isLoading" placeholder="John"
@@ -213,8 +215,10 @@
                         placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
                         focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
         </div>
-        <div class="flex flex-col gap-1.5 text-left">
-          <label class="text-sm font-semibold text-brandSecondary" for="lastNameEn">{{ 'register.lastNameEn' | translate }}</label>
+        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+          <label class="text-sm font-semibold text-brandSecondary" for="lastNameEn">
+            {{ currentLang() === 'ar' ? 'اسم العائلة (إنجليزي)' : 'Last Name' }}
+          </label>
           <input id="lastNameEn" name="lastNameEn" type="text"
                  [ngModel]="lastNameEn()" (ngModelChange)="lastNameEn.set($event)"
                  [disabled]="isLoading" placeholder="Doe"
@@ -226,10 +230,12 @@
       </div>
 
       <!-- Arabic name row -->
-      <div class="grid grid-cols-2 gap-3" dir="rtl">
-        <div class="flex flex-col gap-1.5 text-right">
-          <label class="text-sm font-semibold text-brandSecondary" for="firstNameAr">{{ 'register.firstNameAr' | translate }}</label>
-          <input id="firstNameAr" name="firstNameAr" type="text"
+      <div class="grid grid-cols-2 gap-3" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+          <label class="text-sm font-semibold text-brandSecondary" for="firstNameAr">
+            {{ currentLang() === 'ar' ? 'الاسم الأول (عربي)' : 'First Name (ar)' }}
+          </label>
+          <input id="firstNameAr" name="firstNameAr" type="text" dir="rtl"
                  [ngModel]="firstNameAr()" (ngModelChange)="firstNameAr.set($event)"
                  [disabled]="isLoading" placeholder="محمد"
                  class="w-full px-3.5 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
@@ -237,9 +243,11 @@
                         placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
                         focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
         </div>
-        <div class="flex flex-col gap-1.5 text-right">
-          <label class="text-sm font-semibold text-brandSecondary" for="lastNameAr">{{ 'register.lastNameAr' | translate }}</label>
-          <input id="lastNameAr" name="lastNameAr" type="text"
+        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+          <label class="text-sm font-semibold text-brandSecondary" for="lastNameAr">
+            {{ currentLang() === 'ar' ? 'اسم العائلة (عربي)' : 'Last Name (ar)' }}
+          </label>
+          <input id="lastNameAr" name="lastNameAr" type="text" dir="rtl"
                  [ngModel]="lastNameAr()" (ngModelChange)="lastNameAr.set($event)"
                  [disabled]="isLoading" placeholder="أحمد"
                  class="w-full px-3.5 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
