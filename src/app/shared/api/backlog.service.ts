@@ -113,13 +113,14 @@ export class BacklogService {
     return data.data;
   }
 
-  async createProject(nameEn: string, nameAr: string, descriptionEn: string, companyId: string): Promise<ProjectDto> {
+  async createProject(nameEn: string, nameAr: string, descriptionEn: string, companyId: string, managerId: string): Promise<ProjectDto> {
     const { data } = await apiClient.post<any>('/Projects', {
       nameEn,
       nameAr,
       descriptionEn,
       descriptionAr: descriptionEn,
       companyId,
+      managerId,
     });
     return data.data;
   }

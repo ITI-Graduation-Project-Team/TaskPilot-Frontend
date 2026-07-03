@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, signal, OnInit, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -96,6 +97,20 @@ import { apiClient } from '../../../../shared/api/axios.instance';
           </div>
 
           <div class="flex items-center gap-4">
+            <!-- Project selector for Project Manager / Employee -->
+            @if (projectState.projects().length > 0) {
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-text-secondary uppercase hidden md:inline">Project:</span>
+                <select [value]="projectState.selectedProjectId()" 
+                        (change)="onProjectSelect($event)" 
+                        class="bg-background border border-border text-sm font-semibold rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
+                  @for (p of projectState.projects(); track p.id) {
+                    <option [value]="p.id">{{ p.nameEn }}</option>
+                  }
+                </select>
+              </div>
+            }
+
             <!-- Dark mode toggle -->
             <button (click)="toggleDarkMode()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-border transition-colors">
               @if (isDark()) {
@@ -175,6 +190,20 @@ export class DashboardComponent implements OnInit {
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
 
+  public projectState = inject(ProjectStateService);
+
+  constructor() {
+    // Reactively update sprint name whenever selected project ID changes
+    effect(() => {
+      const projId = this.projectState.selectedProjectId();
+      if (projId) {
+        this.loadActiveSprint(projId);
+      } else {
+        this.activeSprintName.set('No Active Sprint');
+      }
+    });
+  }
+
   ngOnInit() {
     this.currentDate = new Date().toLocaleDateString('en-US', {
       weekday: 'short',
@@ -195,17 +224,7 @@ export class DashboardComponent implements OnInit {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light-mode');
         }
-      } else {
-        const isDarkSet = document.documentElement.classList.contains('dark') || 
-                         (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        this.isDark.set(isDarkSet);
-        if (isDarkSet) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.add('light-mode');
-        }
       }
-
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
         this.userName.set(storedName);
@@ -222,18 +241,6 @@ export class DashboardComponent implements OnInit {
       if (profileData) {
         this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
         this.userJobTitle.set(profileData.jobTitle || '');
-
-        // Find assigned project to get active sprint dynamically
-        const allProjectsResponse = await apiClient.get<any>('/Projects');
-        const projects = allProjectsResponse.data?.data || [];
-        for (const p of projects) {
-          const teamResponse = await apiClient.get<any>(`/Projects/${p.id}/employees`);
-          const employeesList = teamResponse.data?.data || [];
-          if (employeesList.some((e: any) => e.employeeId === profileData.id)) {
-            await this.loadActiveSprint(p.id);
-            break;
-          }
-        }
       }
     } catch (e) {
       console.warn('Failed to load profile details for sidebar:', e);
@@ -253,6 +260,11 @@ export class DashboardComponent implements OnInit {
       console.warn('Failed to load active sprint info:', e);
       this.activeSprintName.set('No Active Sprint');
     }
+  }
+
+  onProjectSelect(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.projectState.setSelectedProject(select.value);
   }
 
   toggleDarkMode() {

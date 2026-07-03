@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -12,6 +12,7 @@ import {
 } from '../../../../shared/api/backlog.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 interface Task {
   id: string;
@@ -416,6 +417,7 @@ interface Task {
 })
 export class BoardComponent implements OnInit {
   private backlogService = inject(BacklogService);
+  public projectState = inject(ProjectStateService);
 
   // Loading and assignment status signals
   isLoading = signal(true);
@@ -451,52 +453,35 @@ export class BoardComponent implements OnInit {
 
   private originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
 
-  async ngOnInit() {
-    try {
+  constructor() {
+    // Automatically trigger reload when the active selected project changes
+    effect(() => {
+      const projId = this.projectState.selectedProjectId();
       this.isLoading.set(true);
-      await this.loadWorkspaceData();
-    } catch (err) {
-      console.error('Error loading backlog data:', err);
-    } finally {
-      this.isLoading.set(false);
-    }
+      this.loadWorkspaceData()
+        .catch(err => console.error('Error loading backlog data:', err))
+        .finally(() => this.isLoading.set(false));
+    });
   }
 
-  private async loadWorkspaceData() {
-    const currentUserId = getUserIdFromToken();
-    if (!currentUserId) {
-      throw new Error('User not logged in.');
-    }
+  async ngOnInit() {}
 
-    // 1. Fetch all projects
-    const allProjects = await this.backlogService.getProjects();
-    let userProject = null;
-
-    // 2. Scan projects to check where this employee is a member
-    for (const project of allProjects) {
-      try {
-        const teamResponse = await apiClient.get<any>(`/Projects/${project.id}/employees`);
-        const employeesList = teamResponse.data?.data || [];
-        const isMember = employeesList.some((e: any) => e.employeeId === currentUserId);
-        
-        if (isMember) {
-          userProject = project;
-          break; // Found the project assigned to this user!
-        }
-      } catch (e) {
-        console.warn(`Failed to check membership for project ${project.id}:`, e);
-      }
-    }
-
-    // 3. If employee is not assigned to any project, show warning
-    if (!userProject) {
+  public async loadWorkspaceData() {
+    const projectId = this.projectState.selectedProjectId();
+    if (!projectId) {
       this.isAssignedToProject.set(false);
+      this.todo.set([]);
+      this.inProgress.set([]);
+      this.review.set([]);
+      this.done.set([]);
       return;
     }
 
     this.isAssignedToProject.set(true);
-    this.activeProjectId = userProject.id;
-    this.projectName.set(userProject.nameEn || 'Project');
+    this.activeProjectId = projectId;
+    
+    const projectInfo = this.projectState.projects().find(p => p.id === projectId);
+    this.projectName.set(projectInfo?.nameEn || 'Project');
 
     // 4. Load backlog
     let backlog = await this.backlogService.getBacklog(this.activeProjectId);

@@ -1,25 +1,64 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BacklogService, BacklogDto, UserStoryDto, TaskItemDto } from '../../../../shared/api/backlog.service';
-import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
-import { apiClient } from '../../../../shared/api/axios.instance';
+import { FormsModule } from '@angular/forms';
+import { BacklogService, BacklogDto, UserStoryDto } from '../../../../shared/api/backlog.service';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 @Component({
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="space-y-6">
       
-      @if (isLoading()) {
+      @if (projectState.loading() || isLoading()) {
         <div class="flex items-center justify-center p-12 bg-surface border border-border rounded-2xl shadow-sm">
           <div class="flex flex-col items-center gap-3">
             <div class="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
             <span class="text-sm font-semibold text-text-secondary">Loading backlog...</span>
           </div>
         </div>
+      } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
+        <!-- PM First Project Creation Screen -->
+        <div class="bg-surface border border-border p-8 rounded-2xl shadow-lg max-w-xl mx-auto my-8 animate-[fadeUp_0.3s_ease_both]">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
+              <p class="text-text-secondary text-xs mt-0.5">Let's set up a workspace for your team.</p>
+            </div>
+          </div>
+
+          <form (submit)="onCreateProject($event)" class="space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+              <input type="text" name="projNameEn" required placeholder="e.g. E-Commerce Platform" 
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+              <input type="text" name="projNameAr" required placeholder="مثال: منصة التجارة الإلكترونية" dir="rtl"
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
+              <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
+                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-3.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0">
+              Create Project
+            </button>
+          </form>
+        </div>
       } @else if (!isAssigned()) {
+        <!-- Warning for unassigned employees -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
           <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -27,17 +66,31 @@ import { apiClient } from '../../../../shared/api/axios.instance';
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-text-primary">No Project Backlog</h3>
+            <h3 class="text-xl font-bold text-text-primary">No Project Assigned</h3>
             <p class="text-text-secondary text-sm mt-2 max-w-md">
-              Please contact your administrator to be assigned to a project in order to access the product backlog.
+              Please contact your Project Manager or Admin to assign you to a project to view the backlog.
             </p>
           </div>
         </div>
       } @else {
         
-        <div>
-          <h2 class="text-2xl font-bold text-text-primary">Product Backlog</h2>
-          <p class="text-text-secondary text-sm">Sprint User Stories & Task Breakdown structure.</p>
+        <!-- Header Actions -->
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-text-primary">Product Backlog</h2>
+            <p class="text-text-secondary text-sm">Sprint User Stories & Task Breakdown structure.</p>
+          </div>
+
+          @if (projectState.isProjectManager()) {
+            <button (click)="isStoryModalOpen.set(true)" 
+                    class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
+                           shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add User Story
+            </button>
+          }
         </div>
 
         <div class="space-y-4">
@@ -104,53 +157,123 @@ import { apiClient } from '../../../../shared/api/axios.instance';
         </div>
       }
     </div>
+
+    <!-- Add User Story Modal -->
+    @if (isStoryModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-text-primary">Add New User Story</h3>
+            <button (click)="isStoryModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-border rounded-full transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <form (submit)="onAddUserStory($event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Title / Name</label>
+              <input type="text" name="storyTitle" required placeholder="e.g. As a user, I want to authenticate via Google" 
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Description / Details</label>
+              <textarea name="storyDesc" placeholder="Provide detailed acceptance criteria or description..." rows="4" required
+                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Priority</label>
+              <select name="storyPriority" class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3">
+              <button type="button" (click)="isStoryModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-border font-semibold text-sm transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
+                Add Story
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `
 })
 export class BacklogViewComponent implements OnInit {
   private backlogService = inject(BacklogService);
+  public projectState = inject(ProjectStateService);
 
-  isLoading = signal(true);
+  isLoading = signal(false);
   isAssigned = signal(false);
   backlog = signal<BacklogDto | null>(null);
+  isStoryModalOpen = signal(false);
 
-  async ngOnInit() {
+  constructor() {
+    // Automatically trigger reload when the active selected project changes
+    effect(() => {
+      const projId = this.projectState.selectedProjectId();
+      if (projId) {
+        this.fetchBacklog(projId);
+      } else {
+        this.backlog.set(null);
+        this.isAssigned.set(false);
+      }
+    });
+  }
+
+  ngOnInit() {}
+
+  async fetchBacklog(projectId: string) {
+    this.isLoading.set(true);
+    this.isAssigned.set(true);
     try {
-      this.isLoading.set(true);
-      await this.loadBacklog();
+      const data = await this.backlogService.getBacklog(projectId);
+      this.backlog.set(data);
     } catch (e) {
-      console.error('Error loading backlog page:', e);
+      console.error('Failed to fetch backlog:', e);
+      this.backlog.set(null);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  private async loadBacklog() {
-    const currentUserId = getUserIdFromToken();
-    if (!currentUserId) return;
+  async onCreateProject(event: Event) {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
+    const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
+    const desc = (form.elements.namedItem('projDesc') as HTMLTextAreaElement).value;
 
-    const projects = await this.backlogService.getProjects();
-    let assignedProject = null;
-
-    for (const p of projects) {
-      try {
-        const teamResponse = await apiClient.get<any>(`/Projects/${p.id}/employees`);
-        const employeesList = teamResponse.data?.data || [];
-        if (employeesList.some((e: any) => e.employeeId === currentUserId)) {
-          assignedProject = p;
-          break;
-        }
-      } catch (e) {
-        console.warn('Failed to check project membership for backlog view:', e);
-      }
+    const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
+    if (success) {
+      form.reset();
     }
+  }
 
-    if (!assignedProject) {
-      this.isAssigned.set(false);
-      return;
+  async onAddUserStory(event: Event) {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const title = (form.elements.namedItem('storyTitle') as HTMLInputElement).value;
+    const desc = (form.elements.namedItem('storyDesc') as HTMLTextAreaElement).value;
+    const priority = (form.elements.namedItem('storyPriority') as HTMLSelectElement).value;
+    
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+
+    try {
+      this.isLoading.set(true);
+      await this.backlogService.createUserStory(projId, title, desc, priority);
+      this.isStoryModalOpen.set(false);
+      // Reload backlog
+      await this.fetchBacklog(projId);
+    } catch (e) {
+      console.error('Failed to create user story:', e);
+    } finally {
+      this.isLoading.set(false);
     }
-
-    this.isAssigned.set(true);
-    const data = await this.backlogService.getBacklog(assignedProject.id);
-    this.backlog.set(data);
   }
 }
