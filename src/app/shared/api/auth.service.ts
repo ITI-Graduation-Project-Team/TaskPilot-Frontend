@@ -19,7 +19,7 @@ export interface AuthResponse {
 export class AuthService {
   private apiUrl = environment.apiUrl + '/Auth';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getUserRole(): string | null {
     return getRoleFromToken(); // reads the actual JWT, not localStorage
@@ -28,10 +28,8 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!getAccessToken();
   }
+
   googleLogin(idToken: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { idToken });
   }
-
-
 }
-

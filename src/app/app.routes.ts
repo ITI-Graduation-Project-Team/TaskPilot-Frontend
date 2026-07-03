@@ -73,10 +73,10 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'dashboard',
+    path: 'complete-profile',
     loadComponent: () =>
-      import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
-        (m) => m.DashboardComponent
+      import('./pages/completeProfilePage/ui/complete-profile/complete-profile.component').then(
+        (m) => m.CompleteProfileComponent
       ),
   },
 ];

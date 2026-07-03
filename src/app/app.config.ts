@@ -13,6 +13,10 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { loadingInterceptor } from '../app/shared/api/interceptors/loading-interceptor';
 import { languageInterceptor } from '../app/shared/api/interceptors/language-interceptor';
+
+// 👈 هذا هو السطر الذي كان مفقوداً
+import { authInterceptor } from '../app/shared/api/interceptors/auth.interceptor'; 
+
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 
@@ -22,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withInterceptors([
+        authInterceptor,   // الآن سيتعرف عليها Angular بلا مشاكل
         loadingInterceptor,
         languageInterceptor,
       ])

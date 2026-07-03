@@ -30,6 +30,7 @@ export class LoginComponent implements AfterViewInit {
   successMessage = signal('');
 
   currentLang = signal('en');
+  private googleInitialized = false;
 
   constructor(
     private router: Router,
@@ -51,11 +52,14 @@ export class LoginComponent implements AfterViewInit {
   }
 
   private initializeGoogleSignIn() {
+    if (this.googleInitialized) return;
+
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
       setTimeout(() => this.initializeGoogleSignIn(), 200);
       return;
     }
 
+    this.googleInitialized = true;
     google.accounts.id.initialize({
       client_id: environment.googleClientId || '586738650387-koc3m0suvmmc1bsndim8mqls2rpvj9td.apps.googleusercontent.com',
       callback: this.handleGoogleCredential.bind(this)
@@ -80,15 +84,20 @@ export class LoginComponent implements AfterViewInit {
       this.authService.googleLogin(response.credential).subscribe({
         next: (res) => {
           if (res.succeeded && res.data) {
-            // Save token to cookie — AuthService will decode role from it
+            localStorage.removeItem('userRole');
             this.cookieService.set(environment.auth.tokenKey, res.data.token, 7, '/');
+            // Ensure it's in localStorage so the new profile.service.ts can read it
+            localStorage.setItem(environment.auth.tokenKey, res.data.token);
 
             this.successMessage.set(res.message || 'Signed in successfully! Redirecting…');
             this.state.set('success');
 
-            // Role is now read from the JWT itself via AuthService
             const role = this.authService.getUserRole();
-            setTimeout(() => this.router.navigate([getRedirectForRole(role)]), 1800);
+            if (role) {
+              localStorage.setItem('userRole', role);
+            }
+            const route = role === 'Employee' ? ['/complete-profile'] : [getRedirectForRole(role)];
+            setTimeout(() => this.router.navigate(route), 1800);
           } else {
             this.state.set('error');
             this.errorMessage.set(res.message || 'Google Sign-In failed');
@@ -146,20 +155,28 @@ export class LoginComponent implements AfterViewInit {
         return;
       }
 
+      localStorage.removeItem('userRole');
+
       const tokenData = data.data as any;
       const accessToken = tokenData?.accessToken || tokenData?.token;
       const refreshToken = tokenData?.refreshToken;
+      const role = tokenData?.roles?.[0] || tokenData?.role || '';
 
       if (accessToken && refreshToken) {
         saveTokens(accessToken, refreshToken);
+        // Ensure it's in localStorage so the new profile.service.ts can read it
+        localStorage.setItem(environment.auth.tokenKey, accessToken);
+      }
+      if (role) {
+        localStorage.setItem('userRole', role);
       }
 
       this.successMessage.set(data.message || 'Signed in successfully! Redirecting…');
       this.state.set('success');
 
-      // Role is decoded from the saved JWT — no localStorage needed
-      const role = this.authService.getUserRole();
-      setTimeout(() => this.router.navigate([getRedirectForRole(role)]), 1800);
+      const userRole = this.authService.getUserRole() || role;
+      const route = userRole === 'Employee' ? ['/complete-profile'] : [getRedirectForRole(userRole)];
+      setTimeout(() => this.router.navigate(route), 1800);
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));
