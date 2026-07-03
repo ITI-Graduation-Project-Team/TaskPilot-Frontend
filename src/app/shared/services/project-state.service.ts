@@ -78,9 +78,9 @@ export class ProjectStateService {
           .filter(p => p.managerId === userId)
           .map(p => ({
             id: p.id,
-            name: p.name || p.nameEn,
-            nameEn: p.nameEn,
-            nameAr: p.nameAr,
+            name: p.name || p.nameEn || '',
+            nameEn: p.nameEn || p.name || '',
+            nameAr: p.nameAr || p.name || '',
             description: p.descriptionEn || p.description || '',
             companyId: p.companyId,
             managerId: p.managerId
@@ -94,9 +94,9 @@ export class ProjectStateService {
             if (employeesList.some((e: any) => e.employeeId === userId)) {
               filtered.push({
                 id: p.id,
-                name: p.name || p.nameEn,
-                nameEn: p.nameEn,
-                nameAr: p.nameAr,
+                name: p.name || p.nameEn || '',
+                nameEn: p.nameEn || p.name || '',
+                nameAr: p.nameAr || p.name || '',
                 description: p.descriptionEn || p.description || '',
                 companyId: p.companyId,
                 managerId: p.managerId

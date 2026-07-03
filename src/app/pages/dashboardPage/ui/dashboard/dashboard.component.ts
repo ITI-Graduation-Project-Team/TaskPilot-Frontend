@@ -105,7 +105,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
                         (change)="onProjectSelect($event)" 
                         class="bg-background border border-border text-sm font-semibold rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
                   @for (p of projectState.projects(); track p.id) {
-                    <option [value]="p.id">{{ p.nameEn }}</option>
+                    <option [value]="p.id">{{ p.name }}</option>
                   }
                 </select>
               </div>
