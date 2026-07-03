@@ -89,16 +89,13 @@ export class LoginComponent implements AfterViewInit {
             // Ensure it's in localStorage so the new profile.service.ts can read it
             localStorage.setItem(environment.auth.tokenKey, res.data.token);
 
-            this.successMessage.set(res.message || 'Signed in successfully! Redirecting…');
-            this.state.set('success');
-
             const role = this.authService.getUserRole();
             if (role) {
               localStorage.setItem('userRole', role);
             }
             const isProfileCompleted = (res.data as any).isProfileCompleted === true;
             const route = (role === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(role)];
-            setTimeout(() => this.router.navigate(route), 1800);
+            this.router.navigate(route);
           } else {
             this.state.set('error');
             this.errorMessage.set(res.message || 'Google Sign-In failed');
@@ -128,7 +125,6 @@ export class LoginComponent implements AfterViewInit {
   }
 
   get isLoading() { return this.state() === 'loading'; }
-  get isSuccess() { return this.state() === 'success'; }
 
   togglePassword() { this.showPassword.update((v) => !v); }
 
@@ -172,13 +168,10 @@ export class LoginComponent implements AfterViewInit {
         localStorage.setItem('userRole', role);
       }
 
-      this.successMessage.set(data.message || 'Signed in successfully! Redirecting…');
-      this.state.set('success');
-
       const userRole = this.authService.getUserRole() || role;
       const isProfileCompleted = tokenData?.isProfileCompleted === true;
       const route = (userRole === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(userRole)];
-      setTimeout(() => this.router.navigate(route), 1800);
+      this.router.navigate(route);
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));

@@ -36,22 +36,6 @@
       <p class="text-[0.9375rem] text-gray-500 leading-relaxed">{{ 'login.signInDesc' | translate }}</p>
     </div>
 
-    <!-- Success banner -->
-    <div *ngIf="isSuccess"
-         class="flex items-start gap-3.5 p-4 bg-brandPrimary/5 border border-brandPrimary/25 rounded-xl mb-6
-                animate-[fadeUp_0.4s_ease_both]">
-      <div class="shrink-0 flex items-center justify-center w-9 h-9 bg-brandPrimary rounded-full text-brandWhite">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </div>
-      <div>
-        <p class="font-bold text-[0.9375rem] text-brandSecondary mb-0.5">{{ 'login.signedIn' | translate }}</p>
-        <p class="text-sm text-gray-500">{{ successMessage() }}</p>
-      </div>
-    </div>
-
     <!-- Error banner -->
     <div *ngIf="state() === 'error'"
          class="flex items-center gap-3 p-4 bg-brandPrimary/5 border border-brandPrimary/30 rounded-xl mb-5
@@ -68,7 +52,7 @@
     </div>
 
     <!-- Form -->
-    <form class="flex flex-col gap-5" (ngSubmit)="onSubmit()" *ngIf="!isSuccess" novalidate>
+    <form class="flex flex-col gap-5" (ngSubmit)="onSubmit()" novalidate>
 
       <!-- Email -->
       <div class="flex flex-col gap-1.5">
