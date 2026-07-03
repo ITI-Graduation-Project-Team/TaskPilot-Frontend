@@ -98,7 +98,14 @@ export class LoginComponent implements AfterViewInit {
               localStorage.setItem('userFullName', fullName);
             }
             const isProfileCompleted = (res.data as any).isProfileCompleted === true;
-            const route = (role === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(role)];
+            let route = ['/dashboard'];
+            if (role === 'Employee') {
+              route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
+            } else if (role === 'ProjectManager') {
+              route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
+            } else {
+              route = [getRedirectForRole(role)];
+            }
             this.router.navigate(route);
           } else {
             this.state.set('error');
@@ -177,7 +184,14 @@ export class LoginComponent implements AfterViewInit {
 
       const userRole = this.authService.getUserRole() || role;
       const isProfileCompleted = tokenData?.isProfileCompleted === true;
-      const route = (userRole === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(userRole)];
+      let route = ['/dashboard'];
+      if (userRole === 'Employee') {
+        route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
+      } else if (userRole === 'ProjectManager') {
+        route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
+      } else {
+        route = [getRedirectForRole(userRole)];
+      }
       this.router.navigate(route);
     } catch (err: any) {
       this.state.set('error');
