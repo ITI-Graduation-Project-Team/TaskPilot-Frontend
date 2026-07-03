@@ -40,6 +40,44 @@ interface Task {
             <span class="text-sm font-semibold text-text-secondary">Loading Workspace Backlog...</span>
           </div>
         </div>
+      } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
+        <!-- PM First Project Creation Screen on Board -->
+        <div class="bg-surface border border-border p-8 rounded-2xl shadow-lg max-w-xl mx-auto my-8 animate-[fadeUp_0.3s_ease_both]">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
+              <p class="text-text-secondary text-xs mt-0.5">Let's set up a workspace for your team.</p>
+            </div>
+          </div>
+
+          <form (submit)="onCreateProject($event)" class="space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+              <input type="text" name="projNameEn" required placeholder="e.g. E-Commerce Platform" 
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+              <input type="text" name="projNameAr" required placeholder="مثال: منصة التجارة الإلكترونية" dir="rtl"
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
+              <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
+                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-3.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0">
+              Create Project
+            </button>
+          </form>
+        </div>
       } @else if (!isAssignedToProject()) {
         <!-- Warning Panel for unassigned employee -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
@@ -648,6 +686,19 @@ export class BoardComponent implements OnInit {
       } finally {
         this.isLoading.set(false);
       }
+    }
+  }
+
+  async onCreateProject(event: Event) {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
+    const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
+    const desc = (form.elements.namedItem('projDesc') as HTMLTextAreaElement).value;
+
+    const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
+    if (success) {
+      form.reset();
     }
   }
 }
