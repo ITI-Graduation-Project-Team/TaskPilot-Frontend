@@ -133,7 +133,7 @@ import { apiClient } from '../../../../shared/api/axios.instance';
                 class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                 [ngClass]="currentTab() === 'sprint' ? 'text-primary scale-105' : 'text-text-secondary'">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
           <span class="text-[9px] font-bold">Sprint</span>
         </button>
@@ -180,16 +180,29 @@ export class DashboardComponent implements OnInit {
       year: 'numeric'
     });
     
-    if (typeof document !== 'undefined') {
-      const isDarkSet = document.documentElement.classList.contains('dark') || 
-                       (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      this.isDark.set(isDarkSet);
-      if (isDarkSet) {
-        document.documentElement.classList.add('dark');
-      }
-    }
-
     if (typeof localStorage !== 'undefined') {
+      const savedTheme = localStorage.getItem('selectedTheme');
+      if (savedTheme) {
+        const isDarkTheme = savedTheme === 'dark';
+        this.isDark.set(isDarkTheme);
+        if (isDarkTheme) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light-mode');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light-mode');
+        }
+      } else {
+        const isDarkSet = document.documentElement.classList.contains('dark') || 
+                         (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        this.isDark.set(isDarkSet);
+        if (isDarkSet) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.add('light-mode');
+        }
+      }
+
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
         this.userName.set(storedName);
@@ -217,9 +230,11 @@ export class DashboardComponent implements OnInit {
     if (this.isDark()) {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light-mode');
+      localStorage.setItem('selectedTheme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light-mode');
+      localStorage.setItem('selectedTheme', 'light');
     }
   }
 }
