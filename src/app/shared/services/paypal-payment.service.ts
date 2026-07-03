@@ -19,7 +19,8 @@ export class PaypalPaymentService {
       const options: PayPalScriptOptions = {
         clientId: environment.paypalClientId,
         currency: 'USD', // Adjust this to match your system currency if necessary
-        intent: 'subscription'
+        intent: 'subscription',
+        vault: true
       };
       this.paypalPromise = loadScript(options);
     }

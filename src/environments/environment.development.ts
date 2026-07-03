@@ -22,7 +22,7 @@ export const environment = {
   stripePublishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxx',
 
   // PayPal
-  paypalClientId: 'pk_paypal_placeholder',
+  paypalClientId: 'AS4sejisdmPGTz9maE5LcVCpZuarDUKG_Sk4okxRFTaPb7JKcEIjRXxMR5nCBgNB9r1MunhHTEldOvn7',
 
   // AI & RAG Microservices
   aiServices: {
