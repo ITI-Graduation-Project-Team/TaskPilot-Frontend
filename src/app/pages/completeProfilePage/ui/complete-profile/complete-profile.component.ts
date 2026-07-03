@@ -2,10 +2,17 @@ import { Component, signal, ViewChild, ElementRef, Inject } from '@angular/core'
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ProfileService, SkillDetails, CvExtractionData } from '../../../../shared/api/profile.service';
+import { 
+  ProfileService, 
+  SkillDetails, 
+  CvExtractionData,
+  mapSeniorityLevelToBackend,
+  mapSeniorityLevelToFrontend,
+  mapSkillLevelToBackend,
+  mapSkillLevelToFrontend
+} from '../../../../shared/api/profile.service';
 import { extractApiError } from '../../../../shared/api/auth.api';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { take } from 'rxjs/operators';
 
 type UploadState = 'idle' | 'dragging' | 'loading' | 'success' | 'error';
 
@@ -19,7 +26,7 @@ export class CompleteProfileComponent {
   uploadState = signal<UploadState>('idle');
   errorMessage = signal<string>('');
   jobTitle = signal<string>('');
-  seniorityLevel = signal<string>('');
+  seniorityLevel = signal<string>('MidLevel');
   totalYearsOfExperience = signal<number>(0);
   skills = signal<SkillDetails[]>([]);
   newSkill = signal<string>('');
@@ -102,9 +109,17 @@ export class CompleteProfileComponent {
       next: (res) => {
         if (res.succeeded && res.data) {
           this.jobTitle.set(res.data.jobTitle || '');
-          this.seniorityLevel.set(res.data.seniorityLevel || '');
+          this.seniorityLevel.set(mapSeniorityLevelToFrontend(res.data.seniorityLevel));
           this.totalYearsOfExperience.set(res.data.totalYearsOfExperience || 0);
-          this.skills.set(res.data.skills || []);
+          
+          const mapped = (res.data.skills || []).map(s => ({
+            name: s.name,
+            level: mapSkillLevelToFrontend(s.level),
+            yearsOfExperience: s.yearsOfExperience || 1,
+            confidenceScore: s.confidenceScore || 1.0,
+            isPrimary: s.isPrimary || false
+          }));
+          this.skills.set(mapped);
           this.uploadState.set('success');
         } else {
           this.uploadState.set('error');
@@ -135,7 +150,8 @@ export class CompleteProfileComponent {
             name: skillName,
             level: 'Intermediate',
             yearsOfExperience: 1,
-            confidenceScore: 1.0
+            confidenceScore: 1.0,
+            isPrimary: false
           };
           return [...current, newSkillDetail];
         }
@@ -147,14 +163,34 @@ export class CompleteProfileComponent {
 
   confirmAndSave() {
     if (this.skills().length === 0) {
-      alert(this.translate.instant('PROFILE.NO_SKILLS_ERROR'));
+      alert('Please add at least one skill.');
       return;
     }
 
-    // NOTE: The C# backend automatically parses, normalizes, and saves the CV data and skills
-    // directly to the employee profile in the database during the `uploadCV` request.
-    // Calling bulk skills or project-confirm endpoints here is redundant and fails with 403/400.
-    alert('Profile saved successfully!');
-    this.router.navigate(['/dashboard']);
+    this.uploadState.set('loading');
+
+    const payload = {
+      jobTitle: this.jobTitle(),
+      seniorityLevel: mapSeniorityLevelToBackend(this.seniorityLevel()),
+      totalYearsOfExperience: this.totalYearsOfExperience(),
+      skills: this.skills().map(s => ({
+        name: s.name,
+        level: mapSkillLevelToBackend(s.level),
+        yearsOfExperience: s.yearsOfExperience,
+        isPrimary: s.isPrimary || false
+      }))
+    };
+
+    this.profileService.confirmProfile(payload).subscribe({
+      next: (res) => {
+        localStorage.setItem('isProfileCompleted', 'true');
+        alert('Profile saved successfully!');
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.uploadState.set('error');
+        this.errorMessage.set(extractApiError(err) || 'Failed to save profile. Please check fields.');
+      }
+    });
   }
 }
