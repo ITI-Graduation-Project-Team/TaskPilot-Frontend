@@ -39,3 +39,19 @@ export function getRoleFromToken(): string | null {
     return null;
   }
 }
+
+export function getUserIdFromToken(): string | null {
+  const token = getAccessToken();
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return (
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+      ?? payload['nameid']
+      ?? null
+    );
+  } catch {
+    return null;
+  }
+}

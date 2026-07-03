@@ -11,6 +11,7 @@ import {
   mapStatusToBackend 
 } from '../../../../shared/api/backlog.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
+import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 
 interface Task {
   id: string;
@@ -30,12 +31,27 @@ interface Task {
   template: `
     <div class="space-y-6">
       
-      <!-- Loading indicator -->
       @if (isLoading()) {
+        <!-- Loading indicator -->
         <div class="flex items-center justify-center p-12 bg-surface border border-border rounded-2xl shadow-sm">
           <div class="flex flex-col items-center gap-3">
             <div class="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
             <span class="text-sm font-semibold text-text-secondary">Loading Workspace Backlog...</span>
+          </div>
+        </div>
+      } @else if (!isAssignedToProject()) {
+        <!-- Warning Panel for unassigned employee -->
+        <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
+          <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-text-primary">No Project Assignment</h3>
+            <p class="text-text-secondary text-sm mt-2 max-w-md">
+              You are currently not assigned to any projects. Please ask your Project Manager or Admin to assign you to a project to start viewing and executing tasks.
+            </p>
           </div>
         </div>
       } @else {
@@ -95,7 +111,7 @@ interface Task {
         <!-- Action buttons & Board Title -->
         <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
           <div>
-            <h2 class="text-2xl font-bold text-text-primary">Sprint Active Workspace</h2>
+            <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
             <p class="text-text-secondary text-sm">Drag and drop tasks to update their current progress state.</p>
           </div>
           
@@ -401,29 +417,28 @@ interface Task {
 export class BoardComponent implements OnInit {
   private backlogService = inject(BacklogService);
 
-  // Loading indicator
+  // Loading and assignment status signals
   isLoading = signal(true);
+  isAssignedToProject = signal(false);
+  projectName = signal('');
   
-  // Real active projectId and userStoryId
+  // Real active ids
   activeProjectId = '';
   activeUserStoryId = '';
 
-  // Task column signals
+  // Task columns
   todo = signal<Task[]>([]);
   inProgress = signal<Task[]>([]);
   review = signal<Task[]>([]);
   done = signal<Task[]>([]);
 
-  // Total counter
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
   });
 
-  // Modal controls
   showModal = signal(false);
   isEditing = signal(false);
   
-  // Modal model payload
   modalTask = signal<Task>({
     id: '',
     userStoryId: '',
@@ -448,48 +463,60 @@ export class BoardComponent implements OnInit {
   }
 
   private async loadWorkspaceData() {
-    // 1. Fetch available projects
-    let projects = await this.backlogService.getProjects();
-    let selectedProject = projects[0];
-
-    // 2. If no project exists, create a default workspace
-    if (!selectedProject) {
-      // Find a company to assign the project to
-      const companiesResponse = await apiClient.get('/Companies');
-      const companyId = companiesResponse.data?.data?.[0]?.id;
-      if (!companyId) {
-        throw new Error('No company found in database to link workspace.');
-      }
-      
-      selectedProject = await this.backlogService.createProject(
-        'TaskPilot Workspace',
-        'مساحة عمل تاسك بايلوت',
-        'Task management system workspace for active sprint tracking.',
-        companyId
-      );
+    const currentUserId = getUserIdFromToken();
+    if (!currentUserId) {
+      throw new Error('User not logged in.');
     }
 
-    this.activeProjectId = selectedProject.id;
+    // 1. Fetch all projects
+    const allProjects = await this.backlogService.getProjects();
+    let userProject = null;
 
-    // 3. Load backlog
+    // 2. Scan projects to check where this employee is a member
+    for (const project of allProjects) {
+      try {
+        const teamResponse = await apiClient.get<any>(`/Projects/${project.id}/employees`);
+        const employeesList = teamResponse.data?.data || [];
+        const isMember = employeesList.some((e: any) => e.employeeId === currentUserId);
+        
+        if (isMember) {
+          userProject = project;
+          break; // Found the project assigned to this user!
+        }
+      } catch (e) {
+        console.warn(`Failed to check membership for project ${project.id}:`, e);
+      }
+    }
+
+    // 3. If employee is not assigned to any project, show warning
+    if (!userProject) {
+      this.isAssignedToProject.set(false);
+      return;
+    }
+
+    this.isAssignedToProject.set(true);
+    this.activeProjectId = userProject.id;
+    this.projectName.set(userProject.nameEn || 'Project');
+
+    // 4. Load backlog
     let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-    
-    // 4. Ensure we have at least one UserStory to assign tasks to
     let userStory = backlog?.userStories?.[0];
+    
+    // Automatically create a user story if somehow missing
     if (!userStory) {
       userStory = await this.backlogService.createUserStory(
         this.activeProjectId,
-        'Active Sprint Development',
-        'Sprint task stories generated automatically for employee execution.'
+        'Sprint Backlog Story',
+        'Auto generated story for managing project tasks.'
       );
     }
     this.activeUserStoryId = userStory.id;
 
-    // Refresh backlog to get tasks inside the user story
+    // Refresh backlog tasks
     backlog = await this.backlogService.getBacklog(this.activeProjectId);
     const tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
 
-    // 5. Clear and populate task columns from real data
+    // 5. Populate task columns from real data
     const todoList: Task[] = [];
     const inProgressList: Task[] = [];
     const reviewList: Task[] = [];
@@ -530,16 +557,14 @@ export class BoardComponent implements OnInit {
         event.currentIndex
       );
 
-      // Find the dragged task and the destination column
       const task = event.container.data[event.currentIndex];
-      const targetColumnId = event.container.id; // 'todo-list', 'in-progress-list', etc.
+      const targetColumnId = event.container.id;
       
       let newStatus = 'todo';
       if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
       else if (targetColumnId === 'review-list') newStatus = 'review';
       else if (targetColumnId === 'done-list') newStatus = 'done';
 
-      // Call API to persist the task status update
       try {
         await this.backlogService.updateTask(task.id, {
           titleEn: task.title,
@@ -554,7 +579,6 @@ export class BoardComponent implements OnInit {
       }
     }
 
-    // Trigger change detection updates in signals
     this.todo.set([...this.todo()]);
     this.inProgress.set([...this.inProgress()]);
     this.review.set([...this.review()]);
@@ -600,7 +624,6 @@ export class BoardComponent implements OnInit {
     try {
       this.isLoading.set(true);
       if (this.isEditing()) {
-        // Persist update in backend
         await this.backlogService.updateTask(taskData.id, {
           titleEn: taskData.title,
           descriptionEn: taskData.description,
@@ -610,7 +633,6 @@ export class BoardComponent implements OnInit {
           status: this.originalColumn
         });
       } else {
-        // Create new task in TODO list in backend
         await this.backlogService.createTask(this.activeUserStoryId, {
           titleEn: taskData.title,
           descriptionEn: taskData.description,
@@ -621,7 +643,7 @@ export class BoardComponent implements OnInit {
         });
       }
       this.closeModal();
-      await this.loadWorkspaceData(); // Reload list to fetch updated persisted ids/states
+      await this.loadWorkspaceData();
     } catch (err) {
       console.error('Error saving task:', err);
     } finally {
