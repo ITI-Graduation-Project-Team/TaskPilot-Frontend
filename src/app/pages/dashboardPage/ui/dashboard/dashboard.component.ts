@@ -166,7 +166,7 @@ export class DashboardComponent implements OnInit {
   isDark = signal(false);
   currentDate = '';
   userName = signal('Guest User');
-  userJobTitle = signal('Team Member');
+  userJobTitle = signal('');
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
@@ -221,7 +221,7 @@ export class DashboardComponent implements OnInit {
       const profileData = data.data || data;
       if (profileData) {
         this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
-        this.userJobTitle.set(profileData.jobTitle || 'Team Member');
+        this.userJobTitle.set(profileData.jobTitle || '');
 
         // Find assigned project to get active sprint dynamically
         const allProjectsResponse = await apiClient.get<any>('/Projects');
