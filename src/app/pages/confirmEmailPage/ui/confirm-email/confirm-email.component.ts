@@ -1,5 +1,4 @@
-import { Component, signal, OnInit, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
@@ -9,7 +8,8 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule, RouterLink],
   templateUrl: './confirm-email.component.html',
   styleUrls: ['./confirm-email.component.scss'],
 })

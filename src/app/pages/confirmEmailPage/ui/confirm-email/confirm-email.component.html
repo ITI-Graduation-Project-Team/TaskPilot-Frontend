@@ -21,20 +21,19 @@
     </div>
 
     <!-- ── SUCCESS STATE ── -->
-    <div *ngIf="isSuccess" class="flex flex-col items-center gap-4 py-4 animate-[fadeUp_0.4s_ease_both]">
-      <div class="flex items-center justify-center w-20 h-20 rounded-full bg-brandPrimary text-brandWhite shadow-xl shadow-brandPrimary/30">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
+    @if (isSuccess) {
+      <div class="flex flex-col items-center gap-4 py-4 animate-[fadeUp_0.4s_ease_both]">
+        <div class="flex items-center justify-center w-20 h-20 rounded-full bg-brandPrimary text-brandWhite shadow-xl shadow-brandPrimary/30">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h1 class="text-[1.625rem] font-bold text-brandSecondary tracking-tight">Email Verified!</h1>
+        <p class="text-[0.9375rem] text-gray-500">Your account has been confirmed.<br>Redirecting to login…</p>
       </div>
-      <h1 class="text-[1.625rem] font-bold text-brandSecondary tracking-tight">Email Verified!</h1>
-      <p class="text-[0.9375rem] text-gray-500">Your account has been confirmed.<br>Redirecting to login…</p>
-    </div>
-
-    <!-- ── VERIFY FORM ── -->
-    <ng-container *ngIf="!isSuccess">
-
+    } @else {
+      <!-- ── VERIFY FORM ── -->
       <!-- Envelope icon -->
       <div class="flex items-center justify-center w-20 h-20 rounded-2xl
                   bg-gradient-to-br from-brandPrimary/10 to-brandAccent/30
@@ -55,38 +54,40 @@
 
       <!-- OTP boxes -->
       <div class="flex gap-2.5 justify-center mb-6" (paste)="onDigitPaste($event)">
-        <input *ngFor="let d of digits(); let i = index"
-               [id]="'otp-' + i"
-               type="text"
-               inputmode="numeric"
-               maxlength="1"
-               [value]="d"
-               [disabled]="isLoading"
-               (input)="onDigitInput(i, $event)"
-               (keydown)="onDigitKeydown(i, $event)"
-               autocomplete="one-time-code"
-               [attr.aria-label]="'OTP digit ' + (i + 1)"
-               class="w-12 h-14 border-[2px] rounded-xl bg-brandLight text-center text-[1.375rem] font-bold
-                      text-brandSecondary outline-none transition-all duration-200 caret-brandPrimary
-                      disabled:opacity-60 disabled:cursor-not-allowed"
-               [class.border-brandAccent]="!d"
-               [class.border-brandPrimary]="!!d"
-               [class.bg-brandPrimary]="false"
-               [class.bg-brandWhite]="!!d"
-               [class.text-brandPrimary]="!!d"/>
+        @for (d of digits(); track $index; let i = $index) {
+          <input [id]="'otp-' + i"
+                 type="text"
+                 inputmode="numeric"
+                 maxlength="1"
+                 [value]="d"
+                 [disabled]="isLoading"
+                 (input)="onDigitInput(i, $event)"
+                 (keydown)="onDigitKeydown(i, $event)"
+                 autocomplete="one-time-code"
+                 [attr.aria-label]="'OTP digit ' + (i + 1)"
+                 class="w-12 h-14 border-[2px] rounded-xl bg-brandLight text-center text-[1.375rem] font-bold
+                        text-brandSecondary outline-none transition-all duration-200 caret-brandPrimary
+                        disabled:opacity-60 disabled:cursor-not-allowed"
+                 [class.border-brandAccent]="!d"
+                 [class.border-brandPrimary]="!!d"
+                 [class.bg-brandPrimary]="false"
+                 [class.bg-brandWhite]="!!d"
+                 [class.text-brandPrimary]="!!d"/>
+        }
       </div>
 
       <!-- Error -->
-      <div *ngIf="state() === 'error'"
-           class="w-full flex items-center gap-2 text-sm font-medium text-brandPrimary
-                  bg-brandPrimary/5 border border-brandPrimary/20 rounded-lg px-3.5 py-2.5 mb-4
-                  animate-[fadeUp_0.3s_ease_both]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        {{ errorMessage() }}
-      </div>
+      @if (state() === 'error') {
+        <div class="w-full flex items-center gap-2 text-sm font-medium text-brandPrimary
+                    bg-brandPrimary/5 border border-brandPrimary/20 rounded-lg px-3.5 py-2.5 mb-4
+                    animate-[fadeUp_0.3s_ease_both]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ errorMessage() }}
+        </div>
+      }
 
       <!-- Submit -->
       <button type="button" id="submit-otp" [disabled]="isLoading" (click)="onSubmit()"
@@ -94,8 +95,9 @@
                      rounded-[10px] text-base font-semibold transition-all duration-200
                      hover:opacity-[0.88] hover:-translate-y-px active:translate-y-0
                      disabled:opacity-65 disabled:cursor-not-allowed disabled:transform-none mb-5">
-        <span *ngIf="isLoading"
-              class="w-[18px] h-[18px] rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0"></span>
+        @if (isLoading) {
+          <span class="w-[18px] h-[18px] rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0"></span>
+        }
         <span>{{ isLoading ? 'Verifying…' : 'Verify Email' }}</span>
       </button>
 
@@ -106,8 +108,7 @@
           Try registering again
         </a>
       </p>
-
-    </ng-container>
+    }
 
   </div>
 
