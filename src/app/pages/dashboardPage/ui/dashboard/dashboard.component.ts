@@ -90,7 +90,7 @@ import { apiClient } from '../../../../shared/api/axios.instance';
             </h1>
             @if (currentTab() === 'sprint') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full">
-                Sprint 2 Active
+                {{ activeSprintName() }}
               </span>
             }
           </div>
@@ -172,6 +172,9 @@ export class DashboardComponent implements OnInit {
   // Active navigation tab signal
   currentTab = signal<'sprint' | 'backlog' | 'profile'>('sprint');
 
+  // Active Sprint badge details
+  activeSprintName = signal('No Active Sprint');
+
   ngOnInit() {
     this.currentDate = new Date().toLocaleDateString('en-US', {
       weekday: 'short',
@@ -219,9 +222,36 @@ export class DashboardComponent implements OnInit {
       if (profileData) {
         this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
         this.userJobTitle.set(profileData.jobTitle || 'Team Member');
+
+        // Find assigned project to get active sprint dynamically
+        const allProjectsResponse = await apiClient.get<any>('/Projects');
+        const projects = allProjectsResponse.data?.data || [];
+        for (const p of projects) {
+          const teamResponse = await apiClient.get<any>(`/Projects/${p.id}/employees`);
+          const employeesList = teamResponse.data?.data || [];
+          if (employeesList.some((e: any) => e.employeeId === profileData.id)) {
+            await this.loadActiveSprint(p.id);
+            break;
+          }
+        }
       }
     } catch (e) {
       console.warn('Failed to load profile details for sidebar:', e);
+    }
+  }
+
+  async loadActiveSprint(projectId: string) {
+    try {
+      const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
+      const sprintData = data.data;
+      if (sprintData) {
+        this.activeSprintName.set(`${sprintData.titleEn} Active`);
+      } else {
+        this.activeSprintName.set('No Active Sprint');
+      }
+    } catch (e) {
+      console.warn('Failed to load active sprint info:', e);
+      this.activeSprintName.set('No Active Sprint');
     }
   }
 
