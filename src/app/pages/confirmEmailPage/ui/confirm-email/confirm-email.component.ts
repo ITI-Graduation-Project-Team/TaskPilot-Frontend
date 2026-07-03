@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,7 +13,7 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
   templateUrl: './confirm-email.component.html',
   styleUrls: ['./confirm-email.component.scss'],
 })
-export class ConfirmEmailComponent implements OnInit {
+export class ConfirmEmailComponent implements OnInit, AfterViewInit {
   email        = signal('');
   otp          = signal('');
   state        = signal<PageState>('idle');
@@ -28,6 +28,13 @@ export class ConfirmEmailComponent implements OnInit {
   ngOnInit() {
     const email = this.route.snapshot.queryParamMap.get('email') ?? '';
     this.email.set(email);
+  }
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      const firstInput = document.getElementById('otp-0') as HTMLInputElement;
+      firstInput?.focus();
+    }, 100);
   }
 
   get isLoading()  { return this.state() === 'loading'; }
