@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
+import { apiClient } from '../../../../shared/api/axios.instance';
 
 @Component({
   selector: 'app-dashboard',
@@ -70,7 +71,7 @@ import { ProfileViewComponent } from '../profile-view/profile-view.component';
             </div>
             <div class="min-w-0">
               <h4 class="text-xs font-bold text-text-primary truncate">{{ userName() }}</h4>
-              <p class="text-[10px] text-text-secondary truncate">Full Stack Developer</p>
+              <p class="text-[10px] text-text-secondary truncate">{{ userJobTitle() }}</p>
             </div>
           </div>
         </div>
@@ -138,6 +139,7 @@ export class DashboardComponent implements OnInit {
   isDark = signal(false);
   currentDate = '';
   userName = signal('Guest User');
+  userJobTitle = signal('Team Member');
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
@@ -165,6 +167,21 @@ export class DashboardComponent implements OnInit {
       if (storedName) {
         this.userName.set(storedName);
       }
+    }
+
+    this.loadUserProfile();
+  }
+
+  async loadUserProfile() {
+    try {
+      const { data } = await apiClient.get<any>('/employees/profile');
+      const profileData = data.data || data;
+      if (profileData) {
+        this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
+        this.userJobTitle.set(profileData.jobTitle || 'Team Member');
+      }
+    } catch (e) {
+      console.warn('Failed to load profile details for sidebar:', e);
     }
   }
 
