@@ -151,33 +151,35 @@ export class CompleteProfileComponent {
       return;
     }
 
-    // 1. Extract only skill names as strings
-    const skillNames = this.skills().map(s => s.name);
+    // 1. Sanitize the Skills Array
+    // Map to strictly match backend requirements and ensure exactly one IsPrimary: true
+    // Remove confidenceScore and any other extraneous fields
+    const sanitizedSkills = this.skills().map((skill, index) => {
+      return {
+        name: skill.name,
+        level: skill.level,
+        yearsOfExperience: skill.yearsOfExperience,
+        isPrimary: index === 0 // Ensure exactly one skill (the first one) is primary
+      };
+    });
 
-    // 2. Prepare Profile Data object
-    const profileData = {
+    // 2. Prepare Profile Data Payload
+    const payload = {
       jobTitle: this.jobTitle(),
       seniorityLevel: this.seniorityLevel(),
-      totalYearsOfExperience: this.totalYearsOfExperience()
+      totalYearsOfExperience: this.totalYearsOfExperience(),
+      skills: sanitizedSkills
     };
 
-    // 3. Call APIs sequentially with take(1) to prevent memory leaks/loops
-    this.profileService.saveSkills(skillNames).pipe(take(1)).subscribe({
+    // 3. Call the single confirmCv API
+    this.profileService.confirmCv(payload).pipe(take(1)).subscribe({
       next: () => {
-        this.profileService.saveProfileData(profileData).pipe(take(1)).subscribe({
-          next: () => {
-            alert('Profile saved successfully!');
-            // Optional: Redirect the user, e.g., this.router.navigate(['/dashboard']);
-          },
-          error: (err) => {
-            console.error('Error saving profile data:', err);
-            alert('Failed to save profile metadata.');
-          }
-        });
+        alert('Profile saved successfully!');
+        // Optional: Redirect the user, e.g., this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        console.error('Error saving skills:', err);
-        alert('Failed to save skills.');
+        console.error('Error confirming CV data:', err);
+        alert('Failed to save profile details.');
       }
     });
   }

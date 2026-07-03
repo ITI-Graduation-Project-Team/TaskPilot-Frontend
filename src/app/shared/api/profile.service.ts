@@ -59,17 +59,11 @@ export class ProfileService {
     formData.append('File', file, file.name);
     
     // Note: Do not set Content-Type header manually for multipart/form-data. Let the browser set the boundary automatically.
-    return this.http.post<ProfileResponse>(this.apiUrl, formData, { headers: this.getHeaders() });
+    return this.http.post<ProfileResponse>(`${this.apiUrl}/extract`, formData, { headers: this.getHeaders() });
   }
 
-  saveSkills(skills: string[]): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/Skills/bulk`, skills, {
-      headers: this.getHeaders()
-    });
-  }
-
-  saveProfileData(data: any): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/AiProject/confirm`, data, {
+  confirmCv(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/confirm`, payload, {
       headers: this.getHeaders()
     });
   }
