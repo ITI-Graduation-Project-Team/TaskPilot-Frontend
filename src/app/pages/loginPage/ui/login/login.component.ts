@@ -96,7 +96,8 @@ export class LoginComponent implements AfterViewInit {
             if (role) {
               localStorage.setItem('userRole', role);
             }
-            const route = role === 'Employee' ? ['/complete-profile'] : [getRedirectForRole(role)];
+            const isProfileCompleted = (res.data as any).isProfileCompleted === true;
+            const route = (role === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(role)];
             setTimeout(() => this.router.navigate(route), 1800);
           } else {
             this.state.set('error');
@@ -175,7 +176,8 @@ export class LoginComponent implements AfterViewInit {
       this.state.set('success');
 
       const userRole = this.authService.getUserRole() || role;
-      const route = userRole === 'Employee' ? ['/complete-profile'] : [getRedirectForRole(userRole)];
+      const isProfileCompleted = tokenData?.isProfileCompleted === true;
+      const route = (userRole === 'Employee' && !isProfileCompleted) ? ['/complete-profile'] : [getRedirectForRole(userRole)];
       setTimeout(() => this.router.navigate(route), 1800);
     } catch (err: any) {
       this.state.set('error');
