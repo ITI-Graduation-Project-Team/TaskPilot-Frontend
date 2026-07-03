@@ -151,34 +151,10 @@ export class CompleteProfileComponent {
       return;
     }
 
-    // 1. Extract only skill names as strings
-    const skillNames = this.skills().map(s => s.name);
-
-    // 2. Prepare Profile Data object
-    const profileData = {
-      jobTitle: this.jobTitle(),
-      seniorityLevel: this.seniorityLevel(),
-      totalYearsOfExperience: this.totalYearsOfExperience()
-    };
-
-    // 3. Call APIs sequentially with take(1) to prevent memory leaks/loops
-    this.profileService.saveSkills(skillNames).pipe(take(1)).subscribe({
-      next: () => {
-        this.profileService.saveProfileData(profileData).pipe(take(1)).subscribe({
-          next: () => {
-            alert('Profile saved successfully!');
-            // Optional: Redirect the user, e.g., this.router.navigate(['/dashboard']);
-          },
-          error: (err) => {
-            console.error('Error saving profile data:', err);
-            alert('Failed to save profile metadata.');
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Error saving skills:', err);
-        alert('Failed to save skills.');
-      }
-    });
+    // NOTE: The C# backend automatically parses, normalizes, and saves the CV data and skills
+    // directly to the employee profile in the database during the `uploadCV` request.
+    // Calling bulk skills or project-confirm endpoints here is redundant and fails with 403/400.
+    alert('Profile saved successfully!');
+    this.router.navigate(['/dashboard']);
   }
 }
