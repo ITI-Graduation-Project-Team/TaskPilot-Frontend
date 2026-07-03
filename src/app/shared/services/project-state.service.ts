@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { apiClient } from '../api/axios.instance';
-import { getUserIdFromToken } from '../lib/auth/cookie.helper';
+import { getUserIdFromToken, getRoleFromToken } from '../lib/auth/cookie.helper';
 
 export interface ProjectInfo {
   id: string;
@@ -44,12 +44,15 @@ export class ProjectStateService {
       if (!currentUserId) return;
       this._userId.set(currentUserId);
 
+      const role = getRoleFromToken();
+      const isPM = role === 'ProjectManager';
+
       // Fetch user profile to detect role and company ID
       const { data } = await apiClient.get<any>('/employees/profile');
       const profile = data.data || data;
       if (profile) {
-        this._isProjectManager.set(!profile.isEmployee);
-        const companyId = profile.companyId || null;
+        this._isProjectManager.set(isPM || !profile.isEmployee);
+        const companyId = profile.companyId || profile.CompanyId || null;
         this._userCompanyId.set(companyId);
 
         await this.loadProjects();
