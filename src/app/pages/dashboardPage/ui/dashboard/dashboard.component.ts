@@ -108,7 +108,20 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
                     <option [value]="p.id">{{ p.name }}</option>
                   }
                 </select>
+                @if (projectState.isProjectManager()) {
+                  <button (click)="isCreateProjectModalOpen.set(true)"
+                          title="Create New Project"
+                          class="p-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all flex items-center justify-center">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                  </button>
+                }
               </div>
+            } @else if (projectState.isProjectManager()) {
+              <button (click)="isCreateProjectModalOpen.set(true)"
+                      class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                Create Project
+              </button>
             }
 
             <!-- Dark mode toggle -->
@@ -175,6 +188,47 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
       </div>
 
     </div>
+
+    <!-- Create Project Modal -->
+    @if (isCreateProjectModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-text-primary">Create New Project</h3>
+            <button (click)="isCreateProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-border rounded-full transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <form (submit)="onCreateProjectSubmit($event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+              <input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" 
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+              <input type="text" name="projNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
+                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
+              <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
+                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3">
+              <button type="button" (click)="isCreateProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-border font-semibold text-sm transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
+                Create Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `
 })
 export class DashboardComponent implements OnInit {
@@ -189,6 +243,8 @@ export class DashboardComponent implements OnInit {
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
+
+  isCreateProjectModalOpen = signal(false);
 
   public projectState = inject(ProjectStateService);
 
@@ -265,6 +321,20 @@ export class DashboardComponent implements OnInit {
   onProjectSelect(event: Event) {
     const select = event.target as HTMLSelectElement;
     this.projectState.setSelectedProject(select.value);
+  }
+
+  async onCreateProjectSubmit(event: Event) {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
+    const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
+    const desc = (form.elements.namedItem('projDesc') as HTMLTextAreaElement).value;
+
+    const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
+    if (success) {
+      this.isCreateProjectModalOpen.set(false);
+      form.reset();
+    }
   }
 
   toggleDarkMode() {
