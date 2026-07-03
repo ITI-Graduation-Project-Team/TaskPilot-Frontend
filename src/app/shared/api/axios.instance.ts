@@ -56,19 +56,29 @@ async function refreshAccessToken(): Promise<string> {
   }
 
   const { data } = await axios.post<{
-    accessToken: string;
-    refreshToken: string;
+    succeeded: boolean;
+    data: {
+      token: string;
+      refreshToken: string;
+    };
   }>(
-    `${environment.apiUrl}/auth/refresh`,
+    `${environment.apiUrl}/Auth/refresh-token`,
     { refreshToken },
     {
       withCredentials: true,
     }
   );
 
-  saveTokens(data.accessToken, data.refreshToken);
+  const token = data.data?.token;
+  const newRefreshToken = data.data?.refreshToken;
 
-  return data.accessToken;
+  if (!token || !newRefreshToken) {
+    throw new Error('Failed to parse refresh tokens');
+  }
+
+  saveTokens(token, newRefreshToken);
+
+  return token;
 }
 
 apiClient.interceptors.response.use(
@@ -106,7 +116,7 @@ apiClient.interceptors.response.use(
     }
 
     // The refresh endpoint itself failing means the session is truly gone.
-    if (originalRequest.url?.includes('/auth/refresh')) {
+    if (originalRequest.url?.includes('/Auth/refresh-token') || originalRequest.url?.includes('/auth/refresh')) {
       clearTokens();
       window.location.href = '/login';
       return Promise.reject(error);
