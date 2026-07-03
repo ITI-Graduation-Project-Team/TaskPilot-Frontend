@@ -1,12 +1,14 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard';
+import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
+import { ProfileViewComponent } from '../profile-view/profile-view.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, BoardComponent],
+  imports: [CommonModule, BoardComponent, BacklogViewComponent, ProfileViewComponent],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200">
       
@@ -25,19 +27,25 @@ import { BoardComponent } from '../../../../widgets/taskBoard';
 
         <!-- Navigation Links -->
         <nav class="flex-1 space-y-1">
-          <a class="cursor-pointer flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary font-semibold rounded-xl transition-all duration-200">
+          <a (click)="currentTab.set('sprint')"
+             [ngClass]="currentTab() === 'sprint' ? 'bg-primary/10 text-primary font-semibold' : 'text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium'"
+             class="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
             Active Sprint
           </a>
-          <a class="cursor-pointer flex items-center gap-3 px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium rounded-xl transition-all duration-200">
+          <a (click)="currentTab.set('backlog')"
+             [ngClass]="currentTab() === 'backlog' ? 'bg-primary/10 text-primary font-semibold' : 'text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium'"
+             class="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
             Backlog
           </a>
-          <a class="cursor-pointer flex items-center gap-3 px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium rounded-xl transition-all duration-200">
+          <a (click)="currentTab.set('profile')"
+             [ngClass]="currentTab() === 'profile' ? 'bg-primary/10 text-primary font-semibold' : 'text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium'"
+             class="cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
@@ -56,7 +64,7 @@ import { BoardComponent } from '../../../../widgets/taskBoard';
             </button>
           </div>
 
-          <div class="flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-colors duration-200">
+          <div (click)="currentTab.set('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-colors duration-200 hover:border-primary/30">
             <div class="w-9 h-9 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
               {{ userInitial() }}
             </div>
@@ -74,10 +82,16 @@ import { BoardComponent } from '../../../../widgets/taskBoard';
         <!-- Header -->
         <header class="h-16 border-b border-border bg-surface flex items-center justify-between px-6 md:px-8 transition-colors duration-200">
           <div class="flex items-center gap-3">
-            <h1 class="text-lg font-bold text-text-primary">Dashboard</h1>
-            <span class="px-2.5 py-0.5 text-xs font-medium bg-success/10 text-success rounded-full">
-              Sprint 2 Active
-            </span>
+            <h1 class="text-lg font-bold text-text-primary">
+              @if (currentTab() === 'sprint') { Active Sprint }
+              @else if (currentTab() === 'backlog') { Product Backlog }
+              @else { My Profile }
+            </h1>
+            @if (currentTab() === 'sprint') {
+              <span class="px-2.5 py-0.5 text-xs font-medium bg-success/10 text-success rounded-full">
+                Sprint 2 Active
+              </span>
+            }
           </div>
 
           <div class="flex items-center gap-4">
@@ -94,13 +108,26 @@ import { BoardComponent } from '../../../../widgets/taskBoard';
               }
             </button>
 
+            <!-- Mobile Navigation Triggers -->
+            <div class="flex items-center gap-1.5 md:hidden border-l border-border pl-3">
+              <button (click)="currentTab.set('sprint')" [ngClass]="currentTab() === 'sprint' ? 'text-primary' : 'text-text-secondary'" class="p-1 text-xs font-bold">Sprint</button>
+              <button (click)="currentTab.set('backlog')" [ngClass]="currentTab() === 'backlog' ? 'text-primary' : 'text-text-secondary'" class="p-1 text-xs font-bold">Backlog</button>
+              <button (click)="currentTab.set('profile')" [ngClass]="currentTab() === 'profile' ? 'text-primary' : 'text-text-secondary'" class="p-1 text-xs font-bold">Profile</button>
+            </div>
+
             <span class="text-sm font-semibold text-text-secondary hidden sm:inline">{{ currentDate }}</span>
           </div>
         </header>
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
-          <app-board></app-board>
+          @if (currentTab() === 'sprint') {
+            <app-board></app-board>
+          } @else if (currentTab() === 'backlog') {
+            <app-backlog-view></app-backlog-view>
+          } @else if (currentTab() === 'profile') {
+            <app-profile-view></app-profile-view>
+          }
         </main>
       </div>
 
@@ -113,6 +140,9 @@ export class DashboardComponent implements OnInit {
   userName = signal('Guest User');
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
+  // Active navigation tab signal
+  currentTab = signal<'sprint' | 'backlog' | 'profile'>('sprint');
+
   ngOnInit() {
     this.currentDate = new Date().toLocaleDateString('en-US', {
       weekday: 'short',
@@ -121,7 +151,6 @@ export class DashboardComponent implements OnInit {
       year: 'numeric'
     });
     
-    // Auto-detect system preference or previous setting
     if (typeof document !== 'undefined') {
       const isDarkSet = document.documentElement.classList.contains('dark') || 
                        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -131,7 +160,6 @@ export class DashboardComponent implements OnInit {
       }
     }
 
-    // Load actual user name from login response saved in localStorage
     if (typeof localStorage !== 'undefined') {
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
