@@ -81,10 +81,12 @@ interface EmployeeProfile {
               <span class="text-text-primary font-semibold">{{ profile()?.seniorityLevel || 'N/A' }}</span>
             </div>
 
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-text-secondary font-medium">Experience (Years)</span>
-              <span class="text-text-primary font-semibold">{{ profile()?.totalYearsOfExperience || 0 }} Years</span>
-            </div>
+            @if (profile()?.isEmployee) {
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-text-secondary font-medium">Experience (Years)</span>
+                <span class="text-text-primary font-semibold">{{ profile()?.totalYearsOfExperience || 0 }} Years</span>
+              </div>
+            }
           </div>
 
           <!-- Skills Card -->
@@ -139,11 +141,13 @@ interface EmployeeProfile {
                 </select>
               </div>
 
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Years of Exp</label>
-                <input type="number" [(ngModel)]="editForm().totalYearsOfExperience" 
-                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-              </div>
+              @if (profile()?.isEmployee) {
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Years of Exp</label>
+                  <input type="number" [(ngModel)]="editForm().totalYearsOfExperience" 
+                         class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+                </div>
+              }
             </div>
 
             <!-- Skills Editor -->
