@@ -1,0 +1,351 @@
+<div class="min-h-screen bg-brandLight font-sans flex flex-col items-center">
+  <!-- Header / Navigation (Simple minimal header for standalone page, or assuming it's part of dashboard?) -->
+  <!-- We'll build a self-contained header here just in case, but link back to Dashboard -->
+  <nav
+    class="w-full bg-brandWhite border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center gap-3 cursor-pointer" routerLink="/dashboard">
+      <div
+        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brandBlue to-brandTeal flex items-center justify-center text-brandWhite font-extrabold text-xl shadow-md">
+        T
+      </div>
+      <span class="text-2xl font-bold text-brandNavy tracking-tight">TaskPilot</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <button routerLink="/dashboard"
+        class="text-sm font-semibold text-slate-500 hover:text-brandPrimary transition-colors">
+        Back to Dashboard
+      </button>
+      <button (click)="openInviteModal()"
+        class="py-2.5 px-5 rounded-xl font-bold bg-brandPrimary hover:bg-blue-700 text-brandWhite shadow-lg shadow-blue-500/30 flex items-center gap-2 text-sm transition-transform hover:-translate-y-0.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+        Invite Employees
+      </button>
+    </div>
+  </nav>
+
+  <main class="w-full max-w-6xl mx-auto p-8 mt-4 flex flex-col gap-8">
+
+    <!-- Page Title & Tabs -->
+    <div class="flex flex-col gap-6">
+      <div>
+        <h1 class="text-4xl font-extrabold text-brandNavy tracking-tight mb-2">Company Directory</h1>
+        <p class="text-slate-500 text-lg">Manage your team members and oversee pending invitations.</p>
+      </div>
+
+      <!-- Custom Tabs -->
+      <div class="flex gap-4 border-b border-slate-200">
+        <button (click)="activeTab.set('active')" [class.border-brandPrimary]="activeTab() === 'active'"
+          [class.text-brandPrimary]="activeTab() === 'active'" [class.border-transparent]="activeTab() !== 'active'"
+          [class.text-slate-500]="activeTab() !== 'active'"
+          class="pb-4 px-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors hover:text-brandPrimary">
+          Active Employees
+        </button>
+        <button (click)="activeTab.set('invitations')" [class.border-brandPrimary]="activeTab() === 'invitations'"
+          [class.text-brandPrimary]="activeTab() === 'invitations'"
+          [class.border-transparent]="activeTab() !== 'invitations'"
+          [class.text-slate-500]="activeTab() !== 'invitations'"
+          class="pb-4 px-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors hover:text-brandPrimary">
+          Pending Invitations
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Employees Tab -->
+    <section *ngIf="activeTab() === 'active'" class="flex flex-col gap-6 animate-fade-in">
+      <div class="flex items-center justify-between bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div class="relative w-full max-w-md">
+          <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" [ngModel]="localSearchQuery()" (ngModelChange)="localSearchQuery.set($event)" placeholder="Filter employees by name or email..."
+            class="w-full pl-12 pr-4 py-3 bg-brandLight border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brandPrimary/20 focus:border-brandPrimary transition-all">
+        </div>
+      </div>
+
+      <div class="bg-brandWhite rounded-3xl p-1 shadow-sm border border-slate-100 relative min-h-[300px]">
+        <div *ngIf="isLoadingEmployees()"
+          class="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+          <svg class="animate-spin h-8 w-8 text-brandPrimary" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Employee</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Email</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let emp of filteredEmployees"
+                class="group border-b border-slate-50 last:border-0 hover:bg-brandLight/50 transition-colors">
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="w-10 h-10 rounded-full bg-gradient-to-tr from-brandTeal to-brandBlue flex items-center justify-center text-brandWhite font-bold shadow-sm">
+                      {{ emp.email ? emp.email[0].toUpperCase() : 'U' }}
+                    </div>
+                    <div>
+                      <div class="font-bold text-brandNavy">TaskPilot Member</div>
+                      <div class="text-xs text-slate-400">Joined {{ emp.invitedAt | date:'mediumDate' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-sm text-slate-600 font-medium">{{ emp.email }}</td>
+                <td class="py-4 px-6">
+                  <span
+                    class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="!isLoadingEmployees() && filteredEmployees.length === 0">
+                <td colspan="3" class="py-12 text-center text-slate-400">
+                  <div class="flex flex-col items-center gap-2">
+                    <svg class="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <p>No employees found.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination for Active Employees -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100"
+          *ngIf="totalActiveEmployees() > 0">
+          <span class="text-sm text-slate-500">Showing page <span class="font-bold text-brandNavy">{{
+              activeEmployeesPage() }}</span></span>
+          <div class="flex gap-2">
+            <button (click)="prevActivePage()" [disabled]="activeEmployeesPage() === 1"
+              class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button (click)="nextActivePage()" [disabled]="activeEmployeesPage() * pageSize() >= totalActiveEmployees()"
+              class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Invitations Tab -->
+    <section *ngIf="activeTab() === 'invitations'" class="flex flex-col gap-6 animate-fade-in">
+      <div class="flex items-center justify-between bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-slate-500 mr-2">Filter by Status:</span>
+          <button (click)="onFilterStatus('')" [class.bg-slate-800]="invitationStatus() === ''"
+            [class.text-white]="invitationStatus() === ''" [class.bg-slate-100]="invitationStatus() !== ''"
+            class="px-4 py-2 text-xs font-bold rounded-lg transition-colors">All</button>
+          <button (click)="onFilterStatus('pending')" [class.bg-amber-500]="invitationStatus() === 'pending'"
+            [class.text-white]="invitationStatus() === 'pending'"
+            [class.bg-slate-100]="invitationStatus() !== 'pending'"
+            class="px-4 py-2 text-xs font-bold rounded-lg transition-colors">Pending</button>
+          <button (click)="onFilterStatus('expired')" [class.bg-red-500]="invitationStatus() === 'expired'"
+            [class.text-white]="invitationStatus() === 'expired'"
+            [class.bg-slate-100]="invitationStatus() !== 'expired'"
+            class="px-4 py-2 text-xs font-bold rounded-lg transition-colors">Expired</button>
+        </div>
+      </div>
+
+      <div class="bg-brandWhite rounded-3xl p-1 shadow-sm border border-slate-100 relative min-h-[300px]">
+        <div *ngIf="isLoadingInvitations()"
+          class="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+          <svg class="animate-spin h-8 w-8 text-brandPrimary" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Email</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Invited At</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Expires At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let inv of invitations()"
+                class="group border-b border-slate-50 last:border-0 hover:bg-brandLight/50 transition-colors">
+                <td class="py-4 px-6 font-semibold text-brandNavy">{{ inv.email }}</td>
+                <td class="py-4 px-6">
+                  <span *ngIf="inv.accepted"
+                    class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Accepted
+                  </span>
+                  <span *ngIf="!inv.accepted"
+                    class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                  </span>
+                </td>
+                <td class="py-4 px-6 text-sm text-slate-500">{{ inv.invitedAt | date:'mediumDate' }}</td>
+                <td class="py-4 px-6 text-sm text-slate-500">{{ inv.expiresAt | date:'mediumDate' }}</td>
+              </tr>
+              <tr *ngIf="!isLoadingInvitations() && invitations().length === 0">
+                <td colspan="4" class="py-12 text-center text-slate-400">
+                  <div class="flex flex-col items-center gap-2">
+                    <svg class="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <p>No invitations found.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100"
+          *ngIf="totalInvitations() > 0">
+          <span class="text-sm text-slate-500">Showing page <span class="font-bold text-brandNavy">{{ currentPage()
+              }}</span></span>
+          <div class="flex gap-2">
+            <button (click)="prevPage()" [disabled]="currentPage() === 1"
+              class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button (click)="nextPage()" [disabled]="currentPage() * pageSize() >= totalInvitations()"
+              class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Search & Invite System Users Modal -->
+<div *ngIf="isInviteModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in">
+  <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm transition-opacity" (click)="closeInviteModal()"></div>
+
+  <div
+    class="relative bg-brandWhite w-full max-w-xl rounded-3xl shadow-2xl p-6 flex flex-col gap-4 transform transition-all mt-[-10vh]">
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-bold text-brandNavy">Invite Team Members</h3>
+      <button (click)="closeInviteModal()"
+        class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Live Search Input -->
+    <div class="relative">
+      <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-brandPrimary" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input type="text" [ngModel]="systemSearchQuery()" (ngModelChange)="systemSearchQuery.set($event); onSystemSearchChange()"
+        placeholder="Type an email address or name to search TaskPilot..."
+        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brandPrimary/30 focus:border-brandPrimary transition-all shadow-inner"
+        [disabled]="isInviting()">
+      <div *ngIf="isSearchingSystem()" class="absolute right-4 top-1/2 -translate-y-1/2">
+        <svg class="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Search Results Area -->
+    <div class="mt-2 flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
+
+      <!-- Initial State (No query) -->
+      <div *ngIf="!systemSearchQuery().trim()" class="py-8 text-center flex flex-col items-center gap-3">
+        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+          <svg class="w-8 h-8 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+        <p class="text-sm text-slate-500 font-medium">Search for existing users or invite new ones by email.</p>
+      </div>
+
+      <!-- Users Found -->
+      <ng-container *ngIf="searchResults().length > 0">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-2 mt-2">Users Found in System</h4>
+        <div *ngFor="let user of searchResults()"
+          class="flex items-center justify-between p-3 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all group">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-brandPrimary to-brandAccent flex items-center justify-center text-white font-bold shadow-sm">
+              {{ user.firstNameEn ? user.firstNameEn[0] : user.email[0].toUpperCase() }}
+            </div>
+            <div>
+              <div class="text-sm font-bold text-brandNavy flex items-center gap-2">
+                {{ user.firstNameEn || 'TaskPilot User' }} {{ user.lastNameEn }}
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" title="Available"></span>
+              </div>
+              <div class="text-xs text-slate-500">{{ user.email }}</div>
+            </div>
+          </div>
+          <button *ngIf="!isUserInCompany(user.email)" (click)="inviteEmail(user.email)" [disabled]="isInviting()"
+            class="px-4 py-2 text-xs font-bold text-brandPrimary bg-blue-50 hover:bg-brandPrimary hover:text-white rounded-lg transition-colors shadow-sm disabled:opacity-50">
+            Invite
+          </button>
+          <span *ngIf="isUserInCompany(user.email)"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg">
+            Already in company
+          </span>
+        </div>
+      </ng-container>
+
+      <!-- Email Fallback Option -->
+      <div *ngIf="systemSearchQuery().trim() && !isSearchingSystem()" class="mt-4 border-t border-slate-100 pt-4">
+        <div class="flex items-center justify-between p-4 bg-brandLight rounded-xl border border-blue-100">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-bold text-brandNavy">Invite via Email</span>
+            <span class="text-xs text-slate-500 break-all">{{ systemSearchQuery() }}</span>
+          </div>
+          <button (click)="inviteEmail(systemSearchQuery())" [disabled]="isInviting()"
+            class="px-5 py-2.5 rounded-xl font-bold bg-brandPrimary hover:bg-blue-700 text-brandWhite shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 text-sm disabled:opacity-50">
+            <svg *ngIf="isInviting()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+            Send Invite
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

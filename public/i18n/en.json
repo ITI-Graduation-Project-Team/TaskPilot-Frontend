@@ -124,5 +124,32 @@
     "TOTAL_YEARS": "Total Years of Experience",
     "LEVEL": "Level",
     "YEARS": "Years"
+  },
+  "landing": {
+    "title1": "Navigate Your Projects",
+    "title2": "with",
+    "title3": "Ultimate Clarity",
+    "subtitle": "TaskPilot is the clean, fast, and intelligent way to manage your daily tasks, team projects, and focus time. All in one beautiful workspace.",
+    "getStarted": "Get Started for Free",
+    "exploreFeatures": "Explore Features",
+    "goToDashboard": "Go to Dashboard",
+    "featuresTitle": "Everything you need to work faster",
+    "featuresSubtitle": "Designed with a minimalist flat UI to eliminate distractions and boost your productivity.",
+    "aiTitle": "AI-Powered Assistant",
+    "aiDesc": "Chat directly with our intelligent assistant to summarize tasks, generate project ideas, and organize your day instantly.",
+    "timeTitle": "Smart Time Tracking",
+    "timeDesc": "Monitor your focus time effortlessly. Keep track of how much time goes into each task and optimize your workflow.",
+    "workspaceTitle": "Clean Workspace",
+    "workspaceDesc": "A distraction-free, beautifully crafted flat UI with seamless light and dark modes to keep your eyes rested.",
+    "aboutUs": "About Us",
+    "ourStory": "Our Story",
+    "team": "Team",
+    "careers": "Careers",
+    "contactUs": "Contact Us",
+    "support": "Support",
+    "sales": "Sales",
+    "followUs": "Follow Us",
+    "copyright": "© 2026 TaskPilot. All rights reserved."
+  }
   }
 }

@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+// Fade in entrance animation for the landing page elements
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+section {
+  animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+// Custom styling to adjust scroll margin offset for features anchor link
+#features {
+  scroll-margin-top: 5rem;
+}
