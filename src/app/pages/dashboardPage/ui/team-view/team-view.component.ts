@@ -107,7 +107,7 @@ interface ProjectEmployee {
                         class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none cursor-pointer">
                   <option value="">-- Choose Member --</option>
                   @for (emp of companyEmployees(); track emp.id) {
-                    <option [value]="emp.id">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.email }})</option>
+                    <option [value]="emp.id">{{ emp.firstNameEn || emp.firstName || '' }} {{ emp.lastNameEn || emp.lastName || '' }} ({{ emp.email }})</option>
                   }
                 </select>
               </div>
