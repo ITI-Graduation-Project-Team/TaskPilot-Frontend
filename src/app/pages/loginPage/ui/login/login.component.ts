@@ -104,6 +104,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
             // Ensure it's in localStorage so the new profile.service.ts can read it
             localStorage.setItem(environment.auth.tokenKey, token);
 
+            const role = this.authService.getUserRole();
             if (role) {
               localStorage.setItem('userRole', role);
             }
@@ -181,6 +182,9 @@ export class LoginComponent implements AfterViewInit, OnInit {
         return;
       }
 
+      const tokenData = data.data as any;
+      const accessToken = tokenData?.accessToken || tokenData?.token;
+      const refreshToken = tokenData?.refreshToken;
       const role = tokenData?.roles?.[0] || tokenData?.role || '';
 
       if (accessToken && refreshToken) {
@@ -220,13 +224,13 @@ export class LoginComponent implements AfterViewInit, OnInit {
     }
   }
 
-  getRouteForRole(role: string, isProfileCompleted: boolean): string[] {
+  getRouteForRole(role: string | null, isProfileCompleted: boolean): string[] {
     let route = ['/dashboard'];
     if (role === 'Employee') {
       route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
     } else if (role === 'ProjectManager') {
       route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
-    } else {
+    } else if (role) {
       route = [getRedirectForRole(role)];
     }
     return route;
