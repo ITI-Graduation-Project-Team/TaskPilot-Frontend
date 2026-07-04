@@ -85,9 +85,15 @@ export class LoginComponent implements AfterViewInit {
         next: (res) => {
           if (res.succeeded && res.data) {
             localStorage.removeItem('userRole');
-            this.cookieService.set(environment.auth.tokenKey, res.data.token, 7, '/');
+            const token = res.data.token;
+            const refreshToken = res.data.refreshToken;
+            if (token && refreshToken) {
+              saveTokens(token, refreshToken);
+            } else if (token) {
+              this.cookieService.set(environment.auth.tokenKey, token, 7, '/');
+            }
             // Ensure it's in localStorage so the new profile.service.ts can read it
-            localStorage.setItem(environment.auth.tokenKey, res.data.token);
+            localStorage.setItem(environment.auth.tokenKey, token);
 
             const role = this.authService.getUserRole();
             if (role) {

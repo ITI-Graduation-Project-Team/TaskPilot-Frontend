@@ -13,6 +13,8 @@ import {
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 
 interface Task {
   id: string;
@@ -28,7 +30,7 @@ interface Task {
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent],
   template: `
     <div class="space-y-6">
       
@@ -154,11 +156,19 @@ interface Task {
             <p class="text-text-secondary text-sm">Drag and drop tasks to update their current progress state.</p>
           </div>
           
-          <button (click)="openAddModal()" 
-                  class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
-                         shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0">
-            + Add Custom Task
-          </button>
+          <div class="flex items-center gap-3">
+            @if (projectState.isProjectManager() && activeSprintId()) {
+              <button (click)="isRetroModalOpen.set(true)" 
+                      class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                📋 Sprint Retro
+              </button>
+            }
+            <button (click)="openAddModal()" 
+                    class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
+                           shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 text-sm">
+              + Add Custom Task
+            </button>
+          </div>
         </div>
 
         <!-- Kanban columns -->
@@ -451,10 +461,16 @@ interface Task {
         </div>
       </div>
     }
+
+    <!-- Retrospective Modal -->
+    @if (isRetroModalOpen() && activeSprintId()) {
+      <app-retrospective-modal [sprintId]="activeSprintId()!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
+    }
   `
 })
 export class BoardComponent implements OnInit {
   private backlogService = inject(BacklogService);
+  private sprintService = inject(SprintPlanningService);
   public projectState = inject(ProjectStateService);
 
   // Loading and assignment status signals
@@ -465,6 +481,8 @@ export class BoardComponent implements OnInit {
   // Real active ids
   activeProjectId = '';
   activeUserStoryId = '';
+  activeSprintId = signal<string | null>(null);
+  isRetroModalOpen = signal(false);
 
   // Task columns
   todo = signal<Task[]>([]);
@@ -520,6 +538,19 @@ export class BoardComponent implements OnInit {
     
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
+
+    // Fetch active sprint to enable retrospectives
+    try {
+      const activeSprintRes = await this.sprintService.getActiveSprint(projectId);
+      const activeSprint = activeSprintRes?.data || activeSprintRes;
+      if (activeSprint && activeSprint.id) {
+        this.activeSprintId.set(activeSprint.id);
+      } else {
+        this.activeSprintId.set(null);
+      }
+    } catch (e) {
+      this.activeSprintId.set(null);
+    }
 
     // 4. Load backlog
     let backlog = await this.backlogService.getBacklog(this.activeProjectId);

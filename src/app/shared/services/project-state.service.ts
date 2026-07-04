@@ -26,6 +26,8 @@ export class ProjectStateService {
   readonly projects = this._projects.asReadonly();
   readonly selectedProjectId = this._selectedProjectId.asReadonly();
   readonly isProjectManager = this._isProjectManager.asReadonly();
+  readonly userCompanyId = this._userCompanyId.asReadonly();
+  readonly userId = this._userId.asReadonly();
   readonly loading = this._loading.asReadonly();
 
   readonly selectedProject = computed(() => {

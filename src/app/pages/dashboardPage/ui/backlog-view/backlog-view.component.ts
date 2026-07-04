@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BacklogService, BacklogDto, UserStoryDto } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
+import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-planning-modal.component';
 
 @Component({
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent],
   template: `
     <div class="space-y-6">
       
@@ -81,16 +83,25 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
             <p class="text-text-secondary text-sm">Sprint User Stories & Task Breakdown structure.</p>
           </div>
 
-          @if (projectState.isProjectManager()) {
-            <button (click)="isStoryModalOpen.set(true)" 
-                    class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
-                           shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 flex items-center gap-1.5">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-              </svg>
-              Add User Story
-            </button>
-          }
+          <div class="flex items-center gap-3">
+            @if (projectState.isProjectManager() && backlog()?.userStories?.length) {
+              <button (click)="isSprintPlanningModalOpen.set(true)" 
+                      class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl
+                             shadow-md shadow-indigo-500/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                AI Sprint Planner
+              </button>
+            }
+
+            @if (projectState.isProjectManager()) {
+              <button (click)="isStoryModalOpen.set(true)" 
+                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
+                             shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                Add User Story
+              </button>
+            }
+          </div>
         </div>
 
         <div class="space-y-4">
@@ -150,8 +161,30 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
               </div>
             </div>
           } @empty {
-            <div class="bg-surface border border-border p-12 text-center rounded-2xl text-text-secondary">
-              No user stories found in the product backlog.
+            <div class="bg-surface border border-border p-12 text-center rounded-2xl flex flex-col items-center justify-center space-y-4">
+              <svg class="w-12 h-12 text-text-secondary opacity-40 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+              <div class="space-y-1">
+                <h4 class="text-base font-bold text-text-primary">Empty Product Backlog</h4>
+                <p class="text-xs text-text-secondary max-w-sm mx-auto">There are no user stories in this project yet. You can write them manually, or use AI WBS Generator to automatically build a breakdown structure.</p>
+              </div>
+              
+              @if (projectState.isProjectManager()) {
+                <div class="flex items-center gap-3 justify-center">
+                  <button (click)="isStoryModalOpen.set(true)" class="px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-border transition-colors">
+                    Add Story Manually
+                  </button>
+                  <button (click)="generateWbs()" 
+                          [disabled]="isGeneratingWbs()"
+                          class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50">
+                    @if (isGeneratingWbs()) {
+                      <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      Generating Backlog...
+                    } @else {
+                      🤖 Generate WBS with AI
+                    }
+                  </button>
+                </div>
+              }
             </div>
           }
         </div>
@@ -201,16 +234,24 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
         </div>
       </div>
     }
+
+    <!-- AI Sprint Planning Modal -->
+    @if (isSprintPlanningModalOpen()) {
+      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
+    }
   `
 })
 export class BacklogViewComponent implements OnInit {
   private backlogService = inject(BacklogService);
+  private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);
 
   isLoading = signal(false);
   isAssigned = signal(false);
   backlog = signal<BacklogDto | null>(null);
   isStoryModalOpen = signal(false);
+  isSprintPlanningModalOpen = signal(false);
+  isGeneratingWbs = signal(false);
 
   constructor() {
     // Automatically trigger reload when the active selected project changes
@@ -238,6 +279,27 @@ export class BacklogViewComponent implements OnInit {
       this.backlog.set(null);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  onSprintPlanningModalClose() {
+    this.isSprintPlanningModalOpen.set(false);
+  }
+
+  async generateWbs() {
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+
+    this.isGeneratingWbs.set(true);
+    try {
+      await this.aiRequirementsService.generateWbs(projId);
+      alert('AI WBS user stories and task items generated successfully!');
+      await this.fetchBacklog(projId);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate WBS. Check backend API logs.');
+    } finally {
+      this.isGeneratingWbs.set(false);
     }
   }
 

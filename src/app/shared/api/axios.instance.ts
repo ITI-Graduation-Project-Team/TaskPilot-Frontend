@@ -40,6 +40,9 @@ apiClient.interceptors.request.use(
       config.headers.set('Authorization', `Bearer ${token}`);
     }
 
+    const lang = (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang')) || 'en';
+    config.headers.set('lang', lang);
+
     return config;
   },
   (error) => {
@@ -55,13 +58,7 @@ async function refreshAccessToken(): Promise<string> {
     throw new Error('No refresh token available');
   }
 
-  const { data } = await axios.post<{
-    succeeded: boolean;
-    data: {
-      token: string;
-      refreshToken: string;
-    };
-  }>(
+  const { data } = await axios.post<any>(
     `${environment.apiUrl}/Auth/refresh-token`,
     { refreshToken },
     {
@@ -69,14 +66,18 @@ async function refreshAccessToken(): Promise<string> {
     }
   );
 
-  const token = data.data?.token;
-  const newRefreshToken = data.data?.refreshToken;
+  const token = data?.data?.token || data?.data?.Token || data?.token || data?.Token;
+  const newRefreshToken = data?.data?.refreshToken || data?.data?.RefreshToken || data?.refreshToken || data?.RefreshToken;
 
   if (!token || !newRefreshToken) {
     throw new Error('Failed to parse refresh tokens');
   }
 
   saveTokens(token, newRefreshToken);
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(environment.auth.tokenKey, token);
+  }
 
   return token;
 }
