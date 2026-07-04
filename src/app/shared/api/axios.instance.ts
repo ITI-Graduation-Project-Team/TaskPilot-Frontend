@@ -108,9 +108,10 @@ apiClient.interceptors.response.use(
       '/Auth/forgot-password',
       '/Auth/reset-password',
       '/Auth/confirm-email',
+      '/Auth/invitation'
     ];
     const isPublicAuth = PUBLIC_AUTH_URLS.some((path) =>
-      originalRequest.url?.includes(path)
+      originalRequest.url?.toLowerCase().includes(path.toLowerCase())
     );
     if (isPublicAuth) {
       return Promise.reject(error);

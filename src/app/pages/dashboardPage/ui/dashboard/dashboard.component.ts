@@ -32,13 +32,7 @@ import { AuthService } from '../../../../shared/api/auth.service';
       <aside class="w-64 bg-sidebar border-r border-border hidden md:flex flex-col p-6 transition-colors duration-200 shrink-0">
         <!-- Logo -->
         <div class="flex items-center gap-2.5 mb-8">
-          <div class="flex items-center justify-center w-9 h-9 bg-primary rounded-xl text-white shadow-md shadow-primary/20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3L22 4" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-            </svg>
-          </div>
-          <span class="text-xl font-bold tracking-tight text-text-primary">TaskPilot</span>
+          <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="h-9 transition-transform hover:scale-105" />
         </div>
 
         <!-- Navigation Links -->
@@ -124,11 +118,11 @@ import { AuthService } from '../../../../shared/api/auth.service';
             @if (projectState.projects().length > 0) {
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-text-secondary uppercase hidden md:inline">Project:</span>
-                <select [value]="projectState.selectedProjectId()" 
+                <select [value]="projectState.selectedProjectId() || ''" 
                         (change)="onProjectSelect($event)" 
                         class="bg-background border border-border text-sm font-semibold rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
                   @for (p of projectState.projects(); track p.id) {
-                    <option [value]="p.id">{{ p.name }}</option>
+                    <option [value]="p.id" [selected]="p.id === projectState.selectedProjectId()">{{ p.nameEn }}</option>
                   }
                 </select>
                 @if (projectState.isProjectManager()) {
@@ -425,9 +419,7 @@ export class DashboardComponent implements OnInit {
 
   onDraftGenerated(event: { draft: any, chatId: string }) {
     this.isAiChatOpen.set(false);
-    this.aiDraft.set(event.draft);
-    this.chatId.set(event.chatId);
-    this.isDraftReviewOpen.set(true);
+    // Project draft and backlog are generated and saved. Reload completed.
   }
 
   onProjectSaved() {

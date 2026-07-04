@@ -4,7 +4,13 @@ import { authRedirectGuard } from './shared/guards/auth-redirect.guard';
 
 export const routes: Routes = [
 
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./pages/landingPage/ui/landing/landing.component').then(
+        (m) => m.LandingComponent
+      ),
+  },
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -59,6 +65,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'accept-invitation',
+    loadComponent: () =>
+      import('./pages/acceptInvitationPage/ui/accept-invitation/accept-invitation').then(
+        (m) => m.AcceptInvitationComponent
+      ),
+  },
+  {
     path: 'confirm-email',
     loadComponent: () =>
       import('./pages/confirmEmailPage/ui/confirm-email/confirm-email.component').then(
@@ -79,6 +92,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/completeProfilePage/ui/complete-profile/complete-profile.component').then(
         (m) => m.CompleteProfileComponent
+      ),
+  },
+  {
+    path: 'employees',
+    canActivate: [roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/employeesPage/ui/employees/employees').then(
+        (m) => m.EmployeesComponent
       ),
   },
 ];

@@ -1,0 +1,53 @@
+<div class="min-h-screen flex items-center justify-center bg-slate-50 p-6 font-sans">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.05)] p-10 text-center">
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-blue-500 m-0 tracking-tight">TaskPilot</h2>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="state() === 'loading'" class="flex flex-col items-center animate-pulse">
+      <div class="w-12 h-12 border-4 border-slate-100 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+      <p class="text-slate-500 font-medium">Processing your invitation...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="state() === 'error'" class="flex flex-col items-center transition-all duration-500 ease-out">
+      <div class="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-red-50 text-red-500 shadow-sm">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+      <h3 class="text-xl text-slate-800 font-semibold mb-2">Invalid or Expired Invitation</h3>
+      <p class="text-slate-500 leading-relaxed mb-8">{{ errorMessage() }}</p>
+      <button class="w-full py-3.5 px-4 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg focus:ring-4 focus:ring-blue-100" routerLink="/login">Go to Login</button>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="state() === 'success'" class="flex flex-col items-center transition-all duration-500 ease-out">
+      <div class="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-green-50 text-green-500 shadow-sm">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h3 class="text-xl text-slate-800 font-semibold mb-2">Welcome to the team!</h3>
+      <p class="text-slate-500 leading-relaxed mb-6">You have successfully joined <span class="font-semibold text-slate-700">{{ companyName() }}</span>. Redirecting to dashboard...</p>
+    </div>
+
+    <!-- Valid State (Not Logged In) -->
+    <div *ngIf="state() === 'valid'" class="flex flex-col items-center transition-all duration-500 ease-out">
+      <h3 class="text-2xl text-slate-800 font-semibold mb-3">You've been invited!</h3>
+      <p class="text-slate-500 leading-relaxed mb-1">You have been invited to join <strong class="text-slate-700">{{ companyName() }}</strong> on TaskPilot.</p>
+      <p class="text-sm text-slate-400 mb-8" *ngIf="email()">Invited email: {{ email() }}</p>
+      
+      <div class="flex flex-col gap-3 w-full">
+        <button class="w-full py-3.5 px-4 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md hover:shadow-lg focus:ring-4 focus:ring-blue-100" [routerLink]="['/register']" [queryParams]="{email: email()}">
+          I'm New Here (Register)
+        </button>
+        <button class="w-full py-3.5 px-4 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all hover:text-slate-800 focus:ring-4 focus:ring-slate-50" [routerLink]="['/login']" [queryParams]="{email: email()}">
+          I Have an Account (Login)
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

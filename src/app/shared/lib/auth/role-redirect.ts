@@ -1,8 +1,6 @@
-const ROLE_MAP: Record<string, string> = {
-    ProjectManager: '/company-setup',
-    Employee: '/dashboard',
-};
-
-export function getRedirectForRole(role: string | null): string {
-    return role ? (ROLE_MAP[role] ?? '/dashboard') : '/dashboard';
+export function getRedirectForRole(role: string | null, isProfileCompleted?: boolean): string {
+    if (role === 'ProjectManager') {
+        return isProfileCompleted ? '/dashboard' : '/company-setup';
+    }
+    return '/dashboard'; // Default for Employee or unknown roles
 }

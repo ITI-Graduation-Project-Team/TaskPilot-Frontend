@@ -1,8 +1,9 @@
-import { Component, signal, Inject } from '@angular/core';
+import { Component, signal, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { authApi, RegisterPayload, extractApiError } from '../../../../shared/api/auth.api';
+import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export type RegisterRole = 'Employee' | 'ProjectManager';
@@ -16,7 +17,7 @@ type Step = 'role' | 'form';
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   step = signal<Step>('role');
   selectedRole = signal<RegisterRole | null>(null);
 
@@ -44,6 +45,20 @@ export class RegisterComponent {
     this.translate.use(savedLang);
     this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
     this.document.documentElement.lang = savedLang;
+  }
+
+  private route = inject(ActivatedRoute);
+
+  ngOnInit() {
+    const emailParam = this.route.snapshot.queryParamMap.get('email');
+    if (emailParam) {
+      this.email.set(emailParam);
+      // Pre-select employee role for invitations by default if we have an email
+      if (sessionStorage.getItem('invitationToken')) {
+        this.selectedRole.set('Employee');
+        this.step.set('form');
+      }
+    }
   }
 
   toggleLanguage() {
@@ -126,6 +141,17 @@ export class RegisterComponent {
         return;
       }
       this.state.set('success');
+      
+      const tokenData = data.data as any;
+      const accessToken = tokenData?.accessToken || tokenData?.token;
+      const refreshToken = tokenData?.refreshToken;
+
+      if (accessToken && refreshToken) {
+        saveTokens(accessToken, refreshToken);
+      } else if (accessToken) {
+        saveTokens(accessToken, '');
+      }
+
       setTimeout(() =>
         this.router.navigate(['/confirm-email'], {
           queryParams: { email: this.email().trim() },

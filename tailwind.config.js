@@ -26,12 +26,17 @@ module.exports = {
         error: 'var(--error)',
         info: 'var(--info)',
 
-        // Backward compatibility mappings
+        // abdelhay-branch branding & colors
         brandPrimary: 'var(--primary)',
         brandSecondary: 'var(--text-primary)',
         brandLight: 'var(--background)',
         brandWhite: 'var(--surface)',
-        brandAccent: 'var(--border)'
+        brandAccent: 'var(--border)',
+        brandNavy: '#0B1329',
+        brandBlue: '#2563EB',
+        brandTeal: '#0EA5E9',
+        brandCardLight: '#F8FAFC',
+        brandCardDark: '#1E293B'
       }
     },
   },
