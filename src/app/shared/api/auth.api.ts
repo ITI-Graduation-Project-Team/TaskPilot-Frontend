@@ -62,4 +62,11 @@ export const authApi = {
 
   resetPassword: (payload: ResetPasswordPayload) =>
     apiClient.post<ApiResponse>('/Auth/reset-password', payload, NO_CREDS),
+
+  getInvitation: (token: string) =>
+    apiClient.get<ApiResponse>(`/Auth/invitation/${token}`, NO_CREDS),
+
+  completeInvitation: (token: string) =>
+    apiClient.post<ApiResponse>('/Auth/complete-invitation', { token }),
 };
+

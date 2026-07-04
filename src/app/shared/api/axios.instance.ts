@@ -97,16 +97,17 @@ apiClient.interceptors.response.use(
       '/Auth/forgot-password',
       '/Auth/reset-password',
       '/Auth/confirm-email',
+      '/Auth/invitation'
     ];
     const isPublicAuth = PUBLIC_AUTH_URLS.some((path) =>
-      originalRequest.url?.includes(path)
+      originalRequest.url?.toLowerCase().includes(path.toLowerCase())
     );
     if (isPublicAuth) {
       return Promise.reject(error);
     }
 
     // The refresh endpoint itself failing means the session is truly gone.
-    if (originalRequest.url?.includes('/auth/refresh')) {
+    if (originalRequest.url?.toLowerCase().includes('/auth/refresh')) {
       clearTokens();
       window.location.href = '/login';
       return Promise.reject(error);

@@ -3,7 +3,13 @@ import { roleGuard } from './shared/guards/role.guard';
 
 export const routes: Routes = [
 
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./pages/landingPage/ui/landing/landing.component').then(
+        (m) => m.LandingComponent
+      ),
+  },
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -57,6 +63,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'accept-invitation',
+    loadComponent: () =>
+      import('./pages/acceptInvitationPage/ui/accept-invitation/accept-invitation').then(
+        (m) => m.AcceptInvitationComponent
+      ),
+  },
+  {
     path: 'confirm-email',
     loadComponent: () =>
       import('./pages/confirmEmailPage/ui/confirm-email/confirm-email.component').then(
@@ -77,6 +90,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
+      ),
+  },
+  {
+    path: 'employees',
+    canActivate: [roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/employeesPage/ui/employees/employees').then(
+        (m) => m.EmployeesComponent
       ),
   },
 ];

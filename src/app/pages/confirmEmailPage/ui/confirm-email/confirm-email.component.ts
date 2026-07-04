@@ -106,7 +106,24 @@ export class ConfirmEmailComponent implements OnInit {
         return;
       }
       this.state.set('success');
-      setTimeout(() => this.router.navigate(['/login']), 2000);
+      
+      const invToken = sessionStorage.getItem('invitationToken');
+      if (invToken) {
+        try {
+          const completeRes = await authApi.completeInvitation(invToken);
+          if (completeRes.data?.succeeded === false) {
+            console.error('Failed to complete invitation:', completeRes.data?.message);
+          }
+          sessionStorage.removeItem('invitationToken');
+          setTimeout(() => this.router.navigate(['/dashboard']), 2000);
+        } catch (e) {
+          console.error('Failed to complete invitation', e);
+          // Still redirect to dashboard as they are verified
+          setTimeout(() => this.router.navigate(['/dashboard']), 2000);
+        }
+      } else {
+        setTimeout(() => this.router.navigate(['/login']), 2000);
+      }
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));

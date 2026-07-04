@@ -1,8 +1,8 @@
-import { Component, signal, AfterViewInit, NgZone } from '@angular/core';
+import { Component, signal, AfterViewInit, NgZone, OnInit, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
 import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -20,7 +20,7 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent implements AfterViewInit {
+export class LoginComponent implements AfterViewInit, OnInit {
   email = signal('');
   password = signal('');
   showPassword = signal(false);
@@ -44,6 +44,15 @@ export class LoginComponent implements AfterViewInit {
     this.translate.use(savedLang);
     this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
     this.document.documentElement.lang = savedLang;
+  }
+
+  private route = inject(ActivatedRoute);
+
+  ngOnInit() {
+    const emailParam = this.route.snapshot.queryParamMap.get('email');
+    if (emailParam) {
+      this.email.set(emailParam);
+    }
   }
 
   ngAfterViewInit() {
@@ -88,7 +97,20 @@ export class LoginComponent implements AfterViewInit {
 
             // Role is now read from the JWT itself via AuthService
             const role = this.authService.getUserRole();
-            setTimeout(() => this.router.navigate([getRedirectForRole(role)]), 1800);
+            const isProfileCompleted = (res.data as any).isProfileCompleted;
+            
+            const invToken = sessionStorage.getItem('invitationToken');
+            if (invToken) {
+              authApi.completeInvitation(invToken).then(() => {
+                sessionStorage.removeItem('invitationToken');
+                setTimeout(() => this.router.navigate(['/dashboard']), 1800);
+              }).catch(e => {
+                console.error("Failed to complete invitation", e);
+                setTimeout(() => this.router.navigate([getRedirectForRole(role, isProfileCompleted)]), 1800);
+              });
+            } else {
+              setTimeout(() => this.router.navigate([getRedirectForRole(role, isProfileCompleted)]), 1800);
+            }
           } else {
             this.state.set('error');
             this.errorMessage.set(res.message || 'Google Sign-In failed');
@@ -149,6 +171,7 @@ export class LoginComponent implements AfterViewInit {
       const tokenData = data.data as any;
       const accessToken = tokenData?.accessToken || tokenData?.token;
       const refreshToken = tokenData?.refreshToken;
+      const isProfileCompleted = tokenData?.isProfileCompleted;
 
       if (accessToken && refreshToken) {
         saveTokens(accessToken, refreshToken);
@@ -159,7 +182,20 @@ export class LoginComponent implements AfterViewInit {
 
       // Role is decoded from the saved JWT — no localStorage needed
       const role = this.authService.getUserRole();
-      setTimeout(() => this.router.navigate([getRedirectForRole(role)]), 1800);
+      
+      const invToken = sessionStorage.getItem('invitationToken');
+      if (invToken) {
+        try {
+          await authApi.completeInvitation(invToken);
+          sessionStorage.removeItem('invitationToken');
+          setTimeout(() => this.router.navigate(['/dashboard']), 1800);
+        } catch (e) {
+          console.error("Failed to complete invitation", e);
+          setTimeout(() => this.router.navigate([getRedirectForRole(role, isProfileCompleted)]), 1800);
+        }
+      } else {
+        setTimeout(() => this.router.navigate([getRedirectForRole(role, isProfileCompleted)]), 1800);
+      }
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));
