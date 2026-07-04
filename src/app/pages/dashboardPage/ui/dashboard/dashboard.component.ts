@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
+import { TeamViewComponent } from '../team-view/team-view.component';
+import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
+import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
@@ -10,7 +13,15 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
   selector: 'app-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, BoardComponent, BacklogViewComponent, ProfileViewComponent],
+  imports: [
+    CommonModule, 
+    BoardComponent, 
+    BacklogViewComponent, 
+    ProfileViewComponent, 
+    TeamViewComponent,
+    AiChatModalComponent,
+    DraftReviewModalComponent
+  ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0">
       
@@ -45,6 +56,14 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
             </svg>
             Backlog
           </a>
+          @if (projectState.isProjectManager()) {
+            <a (click)="currentTab.set('team')"
+               [ngClass]="currentTab() === 'team' ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium'"
+               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              Project Team
+            </a>
+          }
           <a (click)="currentTab.set('profile')"
              [ngClass]="currentTab() === 'profile' ? 'bg-primary/10 text-primary font-bold shadow-sm' : 'text-text-secondary hover:text-text-primary hover:bg-primary/5 font-medium'"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
@@ -87,6 +106,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
             <h1 class="text-lg font-extrabold text-text-primary">
               @if (currentTab() === 'sprint') { Active Sprint }
               @else if (currentTab() === 'backlog') { Product Backlog }
+              @else if (currentTab() === 'team') { Team Management }
               @else { My Profile }
             </h1>
             @if (currentTab() === 'sprint') {
@@ -147,13 +167,15 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
             <app-board></app-board>
           } @else if (currentTab() === 'backlog') {
             <app-backlog-view></app-backlog-view>
+          } @else if (currentTab() === 'team') {
+            <app-team-view></app-team-view>
           } @else if (currentTab() === 'profile') {
             <app-profile-view></app-profile-view>
           }
         </main>
       </div>
 
-      <!-- Mobile Bottom Navigation Bar (Floating blurring pill layout) -->
+      <!-- Mobile Bottom Navigation Bar -->
       <div class="fixed bottom-4 left-4 right-4 z-40 bg-surface/75 backdrop-blur-xl border border-border flex items-center justify-around py-2.5 md:hidden rounded-2xl shadow-xl transition-all duration-300">
         
         <!-- Sprint Tab -->
@@ -176,6 +198,16 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
           <span class="text-[9px] font-bold">Backlog</span>
         </button>
 
+        <!-- Mobile Team Tab -->
+        @if (projectState.isProjectManager()) {
+          <button (click)="currentTab.set('team')" 
+                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
+                  [ngClass]="currentTab() === 'team' ? 'text-primary scale-105' : 'text-text-secondary'">
+            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span class="text-[9px] font-bold">Team</span>
+          </button>
+        }
+
         <!-- Profile Tab -->
         <button (click)="currentTab.set('profile')" 
                 class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
@@ -189,45 +221,80 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 
     </div>
 
-    <!-- Create Project Modal -->
+    <!-- Create Project Modal Choice / Manual Form -->
     @if (isCreateProjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-bold text-text-primary">Create New Project</h3>
-            <button (click)="isCreateProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-border rounded-full transition-colors">
+            <button (click)="isCreateProjectModalOpen.set(false); showManualForm.set(false)" class="p-1.5 text-text-secondary hover:bg-border rounded-full transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
 
-          <form (submit)="onCreateProjectSubmit($event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
-              <input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" 
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
-              <input type="text" name="projNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
-              <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
-                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
-            </div>
+          @if (!showManualForm()) {
+            <!-- Selector Options -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <!-- AI Option -->
+              <button (click)="isCreateProjectModalOpen.set(false); isAiChatOpen.set(true)"
+                      class="flex flex-col items-center text-center p-6 bg-sidebar border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-md group">
+                <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <h4 class="text-sm font-bold text-text-primary">AI Requirements Flow</h4>
+                <p class="text-[11px] text-text-secondary mt-1">Chat with AI to define requirements, analyze scopes, and build structured backlogs automatically.</p>
+              </button>
 
-            <div class="flex justify-end gap-3 pt-3">
-              <button type="button" (click)="isCreateProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-border font-semibold text-sm transition-colors">
-                Cancel
-              </button>
-              <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
-                Create Project
+              <!-- Manual Option -->
+              <button (click)="showManualForm.set(true)"
+                      class="flex flex-col items-center text-center p-6 bg-sidebar border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-md group">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </div>
+                <h4 class="text-sm font-bold text-text-primary">Manual Configuration</h4>
+                <p class="text-[11px] text-text-secondary mt-1">Directly fill names and description forms to construct your workspace manually.</p>
               </button>
             </div>
-          </form>
+          } @else {
+            <form (submit)="onCreateProjectSubmit($event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+                <input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" 
+                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+                <input type="text" name="projNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
+                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
+                <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
+                          class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+              </div>
+
+              <div class="flex justify-end gap-3 pt-3">
+                <button type="button" (click)="showManualForm.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-border font-semibold text-sm transition-colors">
+                  Back
+                </button>
+                <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
+                  Create Project
+                </button>
+              </div>
+            </form>
+          }
         </div>
       </div>
+    }
+
+    <!-- AI Requirement Chat modal -->
+    @if (isAiChatOpen()) {
+      <app-ai-chat-modal (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
+    }
+
+    <!-- Project Draft Review modal -->
+    @if (isDraftReviewOpen()) {
+      <app-draft-review-modal [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
     }
   `
 })
@@ -239,12 +306,19 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-  currentTab = signal<'sprint' | 'backlog' | 'profile'>('sprint');
+  currentTab = signal<'sprint' | 'backlog' | 'team' | 'profile'>('sprint');
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
 
   isCreateProjectModalOpen = signal(false);
+  showManualForm = signal(false);
+
+  // AI Project creation signals
+  isAiChatOpen = signal(false);
+  isDraftReviewOpen = signal(false);
+  aiDraft = signal<any>(null);
+  chatId = signal<string>('');
 
   public projectState = inject(ProjectStateService);
 
@@ -323,6 +397,21 @@ export class DashboardComponent implements OnInit {
     this.projectState.setSelectedProject(select.value);
   }
 
+  onAiChatClose() {
+    this.isAiChatOpen.set(false);
+  }
+
+  onDraftGenerated(event: { draft: any, chatId: string }) {
+    this.isAiChatOpen.set(false);
+    this.aiDraft.set(event.draft);
+    this.chatId.set(event.chatId);
+    this.isDraftReviewOpen.set(true);
+  }
+
+  onProjectSaved() {
+    this.isDraftReviewOpen.set(false);
+  }
+
   async onCreateProjectSubmit(event: Event) {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
@@ -333,6 +422,7 @@ export class DashboardComponent implements OnInit {
     const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
     if (success) {
       this.isCreateProjectModalOpen.set(false);
+      this.showManualForm.set(false);
       form.reset();
     }
   }

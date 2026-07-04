@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://taskpilotapi.runasp.net/api',
+  apiUrl: 'http://localhost:5157/api',
   auth: {
     tokenKey: 'taskpilot_token',
     refreshTokenKey: 'taskpilot_refreshToken',
