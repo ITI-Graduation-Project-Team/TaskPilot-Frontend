@@ -58,3 +58,8 @@ body {
   @apply bg-brandLight text-brandSecondary dark:bg-brandSecondary dark:text-slate-100 m-0 p-0 font-sans transition-colors duration-300;
 }
 
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
