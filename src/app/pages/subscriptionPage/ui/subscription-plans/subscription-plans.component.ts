@@ -41,6 +41,11 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
     return max;
   });
   currentSub = signal<UserSubscriptionDto | null>(null);
+  hasPendingSubscription = computed(() => this.currentSub()?.status === 'Pending');
+  pendingSubscription = computed(() => {
+    const sub = this.currentSub();
+    return sub?.status === 'Pending' ? sub : null;
+  });
 
   // UI State
   billingCycle = signal<BillingCycle>('Monthly');
@@ -61,6 +66,10 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
   // Cancel Form State
   showCancelConfirm = signal(false);
   isCanceling = signal(false);
+
+  // Start Over State
+  showStartOverConfirm = signal(false);
+  isStartingOver = signal(false);
 
   // Trial State
   selectedPlanForTrial: number | null = null;
@@ -109,6 +118,7 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       } catch (err: any) {
         if (err.response?.status === 404) {
           noSubscription = true;
+          this.currentSub.set(null);
         } else {
           console.error('Error fetching current subscription:', err);
         }
@@ -171,7 +181,7 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
   isCurrentPlan(planId: number): boolean {
     const sub = this.currentSub();
     return !!sub && sub.subscriptionPlanId === planId &&
-      (sub.status === 'Active' || sub.status === 'Trialing' || sub.status === 'Pending');
+      (sub.status === 'Active' || sub.status === 'Trialing');
   }
 
   canDowngradeToFree(): boolean {
@@ -294,40 +304,54 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
 
       const plan = this.selectedPlan()!;
       const trialActive = this.isTrialSelected(plan);
+      const pending = this.pendingSubscription();
+      const isResuming = pending && pending.subscriptionPlanId === plan.id;
 
-      // 1. Call our backend to create the subscription
-      const subRes = await userSubscriptionApi.subscribe({
-        subscriptionPlanId: plan.id,
-        billingCycle: this.billingCycle(),
-        autoRenew: this.autoRenew(),
-        gateway: this.selectedGateway(),
-        paymentMethodId: null,
-        returnUrl,
-        cancelUrl,
-        isTrial: trialActive
-      });
+      let clientSecret: string | null = null;
+      let isSetupIntent = false;
+      let gateway = this.selectedGateway();
 
-      if (!subRes.data.succeeded) {
-        // Track "already used trial" at session level
-        if (trialActive && subRes.data.message?.includes('already used the free trial')) {
-          this.usedTrialPlanIds.add(plan.id);
-          this.selectedPlanForTrial = null;
+      if (isResuming && pending?.clientSecret) {
+        clientSecret = pending.clientSecret;
+        isSetupIntent = pending.isSetupIntent;
+        gateway = pending.gateway || 'Stripe';
+      } else {
+        // 1. Call our backend to create the subscription
+        const subRes = await userSubscriptionApi.subscribe({
+          subscriptionPlanId: plan.id,
+          billingCycle: this.billingCycle(),
+          autoRenew: this.autoRenew(),
+          gateway: this.selectedGateway(),
+          paymentMethodId: null,
+          returnUrl,
+          cancelUrl,
+          isTrial: trialActive
+        });
+
+        if (!subRes.data.succeeded) {
+          // Track "already used trial" at session level
+          if (trialActive && subRes.data.message?.includes('already used the free trial')) {
+            this.usedTrialPlanIds.add(plan.id);
+            this.selectedPlanForTrial = null;
+          }
+          this.paymentError.set(subRes.data.message || 'Subscription failed.');
+          this.isPaying.set(false);
+          return;
         }
-        this.paymentError.set(subRes.data.message || 'Subscription failed.');
-        this.isPaying.set(false);
-        return;
+
+        const newSub = subRes.data.data;
+        clientSecret = newSub?.clientSecret || null;
+        isSetupIntent = newSub?.isSetupIntent || false;
       }
 
-      const newSub = subRes.data.data;
-
-      if (this.selectedGateway() === 'Stripe') {
-        if (newSub?.clientSecret && this.cardElement) {
+      if (gateway === 'Stripe') {
+        if (clientSecret && this.cardElement) {
           // ── Critical branching: Trial vs Paid Stripe confirmation ──
           // Trial  → confirmCardSetup  (saves card, $0 charge today)
           // Paid   → confirmCardPayment (charges card immediately)
-          if (newSub.isSetupIntent) {
+          if (isSetupIntent) {
             // Trial flow — save card without charging
-            const setupRes = await this.stripeService.confirmCardSetup(newSub.clientSecret, this.cardElement);
+            const setupRes = await this.stripeService.confirmCardSetup(clientSecret, this.cardElement);
             if (setupRes.error) {
               this.paymentError.set(setupRes.error);
               this.isPaying.set(false);
@@ -335,7 +359,7 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
             }
           } else {
             // Normal paid flow — charge card now
-            const stripeRes = await this.stripeService.confirmPayment(newSub.clientSecret, this.cardElement);
+            const stripeRes = await this.stripeService.confirmPayment(clientSecret, this.cardElement);
             if (stripeRes.error) {
               this.paymentError.set(stripeRes.error);
               this.isPaying.set(false);
@@ -386,8 +410,8 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
           }
         }, 3000);
 
-      } else if (this.selectedGateway() === 'PayPal') {
-        const approvalUrl = newSub?.clientSecret; // For PayPal, clientSecret contains the approval URL
+      } else if (gateway === 'PayPal') {
+        const approvalUrl = clientSecret; // For PayPal, clientSecret contains the approval URL
         if (!approvalUrl) {
           this.toastService.show('PayPal approval URL not received. Please try again.', 'error');
           this.isPaying.set(false);
@@ -448,6 +472,79 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       this.toastService.show(err.response?.data?.message || 'Failed to cancel subscription.', 'error');
     } finally {
       this.isCanceling.set(false);
+    }
+  }
+
+  // --- Resume / Start Over Flow ---
+  
+  resumePayment() {
+    const pending = this.pendingSubscription();
+    
+    if (!pending) {
+      this.toastService.show(
+        'No pending subscription found.', 'error');
+      return;
+    }
+    
+    if (!pending.clientSecret) {
+      this.toastService.show(
+        'Payment session expired. Please start a ' +
+        'new subscription.', 'error');
+      return;
+    }
+    
+    if (!pending.gateway) {
+      this.toastService.show(
+        'Unable to determine payment method. ' +
+        'Please start a new subscription.', 'error');
+      return;
+    }
+    
+    if (pending.gateway === 'PayPal') {
+      window.location.href = pending.clientSecret;
+      return;
+    }
+
+    const plan = this.plans().find(p => p.id === pending.subscriptionPlanId);
+    if (!plan) return;
+
+    this.selectedPlan.set(plan);
+    this.selectedGateway.set('Stripe');
+    this.showPaymentForm.set(true);
+    this.showFreeConfirm.set(null);
+    this.paymentError.set(null);
+    this.isPaying.set(false);
+    this.autoRenew.set(pending.autoRenew);
+    if (pending.isTrial) {
+      this.selectedPlanForTrial = plan.id;
+    }
+    this.mountStripe();
+  }
+
+  startOver() {
+    this.showStartOverConfirm.set(true);
+  }
+
+  abortStartOver() {
+    this.showStartOverConfirm.set(false);
+  }
+
+  async confirmStartOver() {
+    const pending = this.pendingSubscription();
+    if (!pending || this.isStartingOver()) return;
+
+    this.isStartingOver.set(true);
+    try {
+      await userSubscriptionApi.cancel(pending.id);
+      this.showStartOverConfirm.set(false);
+      this.currentSub.set(null);
+      await this.loadData();
+      this.toastService.show(
+        'Payment cancelled successfully.', 'success');
+    } catch (err: any) {
+      this.toastService.show(err.response?.data?.message || 'Failed to cancel pending subscription.', 'error');
+    } finally {
+      this.isStartingOver.set(false);
     }
   }
 

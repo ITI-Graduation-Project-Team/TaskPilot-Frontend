@@ -48,6 +48,7 @@ export interface UserSubscriptionDto {
    */
   clientSecret: string | null;
   isSetupIntent: boolean;
+  gateway?: PaymentGateway;
 }
 
 // ── Request DTOs ─────────────────────────────────────────────────────────────
