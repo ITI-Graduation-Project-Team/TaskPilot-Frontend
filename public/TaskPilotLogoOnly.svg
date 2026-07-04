@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Beautiful Gradient Background Drop -->
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <drop-shadow dx="0" dy="16" stdDeviation="24" flood-color="#3b82f6" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Modern Rounded Icon Container -->
+  <rect width="460" height="460" x="26" y="26" rx="100" fill="#ffffff" filter="url(#glow)"/>
+  
+  <!-- Outer Styled Ring -->
+  <rect width="450" height="450" x="31" y="31" rx="95" fill="none" stroke="url(#iconGrad)" stroke-width="20" stroke-opacity="0.15"/>
+
+  <!-- Inside Icon Graphic (Pilot Compass T-Shape Concept) -->
+  <g transform="translate(66, 66)">
+    <!-- Main Styled Pilot T-Wings -->
+    <path d="M60,100 L320,100 C340,100 350,115 340,130 L220,290 C200,315 180,315 160,290 L40,130 C30,115 40,100 60,100 Z" fill="url(#iconGrad)" />
+    <!-- Dynamic Compass Arrow Cutout -->
+    <path d="M190,40 L300,100 L190,140 L190,90 Z" fill="#ffffff" opacity="0.9" />
+    <!-- Center Core Point -->
+    <circle cx="190" cy="190" r="45" fill="url(#iconGrad)" stroke="#ffffff" stroke-width="12" />
+    <!-- Vertical Anchor -->
+    <path d="M170,190 L210,190 L190,340 Z" fill="url(#iconGrad)" />
+  </g>
+</svg>
