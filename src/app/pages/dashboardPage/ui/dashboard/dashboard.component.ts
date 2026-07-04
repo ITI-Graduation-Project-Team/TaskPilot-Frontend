@@ -32,8 +32,8 @@ import { AuthService } from '../../../../shared/api/auth.service';
       <!-- Desktop Sidebar Navigation -->
       <aside class="w-64 bg-sidebar border-r border-border hidden md:flex flex-col p-6 transition-colors duration-200 shrink-0">
         <!-- Logo -->
-        <div class="flex items-center gap-2.5 mb-8">
-          <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="h-9 transition-transform hover:scale-105" />
+        <div class="flex items-center gap-2.5 mb-8 bg-white dark:bg-[#020114] p-3 rounded-2xl border border-border/40 shadow-sm transition-all duration-200">
+          <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="h-8 transition-transform hover:scale-105" />
         </div>
 
         <!-- Navigation Links -->
