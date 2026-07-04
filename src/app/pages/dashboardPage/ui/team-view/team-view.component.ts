@@ -112,8 +112,8 @@ interface ProjectEmployee {
                 <div (click)="isDropdownOpen.set(!isDropdownOpen())"
                      class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all">
                   @if (selectedEmployeeId) {
-                    @for (emp of companyEmployees(); track (emp.employeeId || emp.id)) {
-                      @if ((emp.employeeId || emp.id) === selectedEmployeeId) {
+                    @for (emp of companyEmployees(); track emp.employeeId) {
+                      @if (emp.employeeId === selectedEmployeeId) {
                         <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
                              [style.background]="getAvatarColor(emp.email)">
                           {{ getInitials(emp.fullName, emp.email) }}
@@ -140,10 +140,10 @@ interface ProjectEmployee {
                 <!-- Dropdown List -->
                 @if (isDropdownOpen()) {
                   <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
-                    @for (emp of companyEmployees(); track (emp.employeeId || emp.id)) {
-                      <div (click)="selectEmployee(emp.employeeId || emp.id)"
+                    @for (emp of companyEmployees(); track emp.employeeId) {
+                      <div (click)="selectEmployee(emp.employeeId)"
                            class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-sidebar transition-colors"
-                           [class.bg-primary/10]="(emp.employeeId || emp.id) === selectedEmployeeId">
+                           [class.bg-primary/10]="emp.employeeId === selectedEmployeeId">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
                              [style.background]="getAvatarColor(emp.email)">
                           {{ getInitials(emp.fullName, emp.email) }}
@@ -156,7 +156,7 @@ interface ProjectEmployee {
                             <span class="text-sm font-semibold text-text-primary truncate">{{ emp.email }}</span>
                           }
                         </div>
-                        @if ((emp.employeeId || emp.id) === selectedEmployeeId) {
+                        @if (emp.employeeId === selectedEmployeeId) {
                           <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                           </svg>
