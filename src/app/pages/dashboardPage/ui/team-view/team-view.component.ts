@@ -43,14 +43,33 @@ interface ProjectEmployee {
           
           <form (submit)="onSendInvitations($event)" class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Emails (Comma separated)</label>
-              <textarea [(ngModel)]="invitationEmails" name="emails" required rows="4" 
-                        placeholder="e.g. employee1&#64;company.com, employee2&#64;company.com"
-                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Emails</label>
+              
+              <!-- Chips Container simulating a textarea/input box -->
+              <div class="flex flex-wrap gap-2 w-full bg-background border border-border rounded-xl p-3 min-h-[110px] items-start align-content-start focus-within:ring-2 focus-within:ring-primary/20 transition-all cursor-text"
+                   (click)="emailField.focus()">
+                
+                @for (email of emailsList(); track email; let idx = $index) {
+                  <span class="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-3 py-1 rounded-full text-xs font-semibold animate-[scaleUp_0.15s_ease_both]">
+                    <span>{{ email }}</span>
+                    <button type="button" (click)="removeEmail(idx); $event.stopPropagation()"
+                            class="hover:bg-primary/20 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold transition-all">
+                      ✕
+                    </button>
+                  </span>
+                }
+                
+                <input type="email" [value]="currentEmailInput()" (input)="currentEmailInput.set(emailField.value)" #emailField
+                       (keydown)="onEmailInputKeydown($event)" (blur)="addEmail(emailField.value)"
+                       placeholder="e.g. employee&#64;company.com"
+                       class="flex-1 min-w-[180px] bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-text-secondary/50 py-1"
+                       autocomplete="off">
+              </div>
+              <p class="text-[10px] text-text-secondary mt-1.5">Press <kbd class="px-1 bg-border rounded text-text-primary text-[9px] font-mono">Enter</kbd>, <kbd class="px-1 bg-border rounded text-text-primary text-[9px] font-mono">Space</kbd> or <kbd class="px-1 bg-border rounded text-text-primary text-[9px] font-mono">Comma</kbd> to add the email.</p>
             </div>
             
             <button type="submit" 
-                    [disabled]="isInviting() || !invitationEmails.trim()"
+                    [disabled]="isInviting() || (emailsList().length === 0 && !currentEmailInput().trim())"
                     class="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50">
               @if (isInviting()) {
                 Sending Invites...
@@ -154,7 +173,8 @@ export class TeamViewComponent implements OnInit {
   private teamService = inject(TeamCollaborationService);
   public projectState = inject(ProjectStateService);
 
-  invitationEmails = '';
+  emailsList = signal<string[]>([]);
+  currentEmailInput = signal('');
   isInviting = signal(false);
 
   companyEmployees = signal<CompanyEmployee[]>([]);
@@ -215,20 +235,51 @@ export class TeamViewComponent implements OnInit {
     }
   }
 
+  onEmailInputKeydown(event: KeyboardEvent) {
+    const input = this.currentEmailInput().trim();
+    if ((event.key === 'Enter' || event.key === ' ' || event.key === ',') && input) {
+      event.preventDefault();
+      this.addEmail(input);
+    } else if (event.key === 'Backspace' && !input && this.emailsList().length > 0) {
+      this.removeEmail(this.emailsList().length - 1);
+    }
+  }
+
+  addEmail(email: string) {
+    const cleanEmail = email.trim().replace(/,$/, '');
+    if (!cleanEmail) return;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailRegex.test(cleanEmail)) {
+      if (!this.emailsList().includes(cleanEmail)) {
+        this.emailsList.update(list => [...list, cleanEmail]);
+      }
+      this.currentEmailInput.set('');
+    }
+  }
+
+  removeEmail(index: number) {
+    this.emailsList.update(list => list.filter((_, i) => i !== index));
+  }
+
   async onSendInvitations(event: Event) {
     event.preventDefault();
-    if (!this.invitationEmails.trim()) return;
+    
+    // Add any remaining text in the input field as an email if valid
+    const remaining = this.currentEmailInput().trim();
+    if (remaining) {
+      this.addEmail(remaining);
+    }
 
-    const emails = this.invitationEmails
-      .split(',')
-      .map(e => e.trim())
-      .filter(e => e.length > 0);
+    const emails = this.emailsList();
+    if (emails.length === 0) return;
 
     this.isInviting.set(true);
     try {
       await this.teamService.inviteEmployees(emails);
       alert('Invitations sent successfully to invited members!');
-      this.invitationEmails = '';
+      this.emailsList.set([]);
+      this.currentEmailInput.set('');
       
       const compId = this.projectState.userCompanyId();
       if (compId) {
