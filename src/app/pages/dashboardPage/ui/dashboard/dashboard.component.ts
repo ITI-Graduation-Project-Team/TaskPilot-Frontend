@@ -8,6 +8,8 @@ import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../../shared/api/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +17,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, 
+    RouterLink,
     BoardComponent, 
     BacklogViewComponent, 
     ProfileViewComponent, 
@@ -137,6 +140,20 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
                 Create Project
               </button>
             }
+
+            <!-- Subscription button -->
+            <a routerLink="/subscription"
+               class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              Subscription
+            </a>
+
+            <!-- Logout button -->
+            <button (click)="logout()"
+                    class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              Logout
+            </button>
 
             <!-- Dark mode toggle -->
             <button (click)="toggleDarkMode()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-border transition-colors">
@@ -315,6 +332,11 @@ export class DashboardComponent implements OnInit {
   chatId = signal<string>('');
 
   public projectState = inject(ProjectStateService);
+  private authService = inject(AuthService);
+
+  logout(): void {
+    this.authService.logout();
+  }
 
   constructor() {
     // Reactively update sprint name whenever selected project ID changes

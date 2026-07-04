@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './shared/guards/role.guard';
+import { authRedirectGuard } from './shared/guards/auth-redirect.guard';
 
 export const routes: Routes = [
 
@@ -42,6 +43,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [authRedirectGuard],
     loadComponent: () =>
       import('./pages/loginPage/ui/login/login.component').then(
         (m) => m.LoginComponent
