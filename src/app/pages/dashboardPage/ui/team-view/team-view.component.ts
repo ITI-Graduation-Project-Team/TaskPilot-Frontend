@@ -106,8 +106,11 @@ interface ProjectEmployee {
                 <select [(ngModel)]="selectedEmployeeId" name="assignEmp" required
                         class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none cursor-pointer">
                   <option value="">-- Choose Member --</option>
-                  @for (emp of companyEmployees(); track emp.employeeId) {
-                    <option [value]="emp.employeeId">{{ emp.fullName }} ({{ emp.jobTitle || 'No title' }})</option>
+                  @for (emp of companyEmployees(); track (emp.employeeId || emp.id)) {
+                    <option [value]="emp.employeeId || emp.id">
+                      {{ emp.fullName || emp.firstName || emp.email || 'Unnamed Member' }} 
+                      ({{ emp.jobTitle || emp.email || 'No Title' }})
+                    </option>
                   }
                 </select>
               </div>
@@ -209,7 +212,9 @@ export class TeamViewComponent implements OnInit {
   async loadCompanyEmployees(companyId: string) {
     try {
       const res = await this.teamService.getCompanyEmployees(companyId);
-      this.companyEmployees.set(res.data || res || []);
+      console.log('DEBUG [getCompanyEmployees response]:', res);
+      const list = res.data || res || [];
+      this.companyEmployees.set(list);
     } catch (e) {
       console.warn('Failed to load company employees:', e);
     }
