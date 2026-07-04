@@ -8,6 +8,7 @@ import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ThemeService } from '../../../../shared/services/theme.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -293,7 +294,8 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
   `
 })
 export class DashboardComponent implements OnInit {
-  isDark = signal(false);
+  themeService = inject(ThemeService);
+  get isDark() { return this.themeService.isDark; }
   currentDate = '';
   userName = signal('Guest User');
   userJobTitle = signal('');
@@ -337,18 +339,6 @@ export class DashboardComponent implements OnInit {
     });
     
     if (typeof localStorage !== 'undefined') {
-      const savedTheme = localStorage.getItem('selectedTheme');
-      if (savedTheme) {
-        const isDarkTheme = savedTheme === 'dark';
-        this.isDark.set(isDarkTheme);
-        if (isDarkTheme) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light-mode');
-        } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light-mode');
-        }
-      }
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
         this.userName.set(storedName);
@@ -420,15 +410,6 @@ export class DashboardComponent implements OnInit {
   }
 
   toggleDarkMode() {
-    this.isDark.update(v => !v);
-    if (this.isDark()) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light-mode');
-      localStorage.setItem('selectedTheme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light-mode');
-      localStorage.setItem('selectedTheme', 'light');
-    }
+    this.themeService.toggle();
   }
 }

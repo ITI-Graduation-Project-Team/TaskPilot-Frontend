@@ -2,6 +2,7 @@ import { Component, signal, OnInit, Inject, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ThemeService } from '../../../../shared/services/theme.service';
 
 @Component({
   selector: 'app-landing',
@@ -11,7 +12,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
   styleUrls: ['./landing.component.scss'],
 })
 export class LandingComponent implements OnInit {
-  theme = signal<'light' | 'dark'>('light');
+  themeService = inject(ThemeService);
   currentLang = signal('en');
 
   private router = inject(Router);
@@ -27,28 +28,20 @@ export class LandingComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Theme initialization
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-
-    this.theme.set(initialTheme as 'light' | 'dark');
-    this.applyTheme(initialTheme);
+    // ThemeService handles initialization automatically
   }
 
   toggleTheme() {
-    const newTheme = this.theme() === 'light' ? 'dark' : 'light';
-    this.theme.set(newTheme);
-    localStorage.setItem('theme', newTheme);
-    this.applyTheme(newTheme);
+    this.themeService.toggle();
   }
 
-  private applyTheme(theme: string) {
-    if (theme === 'dark') {
-      this.document.documentElement.classList.add('dark');
-    } else {
-      this.document.documentElement.classList.remove('dark');
-    }
+  // Expose for template binding - returns 'dark' | 'light' compatible with existing HTML
+  theme(): 'light' | 'dark' {
+    return this.themeService.isDark() ? 'dark' : 'light';
+  }
+
+  get isDark(): boolean {
+    return this.themeService.isDark();
   }
 
   toggleLanguage() {

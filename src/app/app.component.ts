@@ -6,6 +6,7 @@ import { LoaderComponent } from './shared/ui/loader/loader';
 import { ToastComponent } from './shared/ui/toast/toast.component';
 import { LoadingService } from './shared/services/loading.service';
 import { setAxiosInjector } from './shared/api/axios.instance';
+import { ThemeService } from './shared/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -28,6 +29,9 @@ import { setAxiosInjector } from './shared/api/axios.instance';
 export class AppComponent {
   private loadingService = inject(LoadingService);
   private injector = inject(Injector);
+  // Injecting ThemeService here ensures it initializes and applies the
+  // persisted theme immediately when the app starts, before any page loads.
+  private themeService = inject(ThemeService);
 
   loading$ = this.loadingService.loading$;
 
