@@ -125,13 +125,14 @@ interface ChatMessage {
             }
           </div>
 
-          <form (submit)="onSendMessage($event)" class="flex gap-2">
-            <input type="text" [(ngModel)]="messageInput" name="message" required autocomplete="off"
-                   placeholder="e.g. A food delivery app with real-time tracking, written in Flutter..." 
-                   class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+          <form (submit)="onSendMessage($event)" class="flex gap-2 items-end">
+            <textarea [(ngModel)]="messageInput" name="message" required autocomplete="off" rows="2"
+                    (keydown)="onKeyDown($event)"
+                    placeholder="e.g. A food delivery app with real-time tracking, written in Flutter..." 
+                    class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"></textarea>
             <button type="submit" 
                     [disabled]="isLoading() || !messageInput.trim()"
-                    class="px-5 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center disabled:opacity-50">
+                    class="px-5 py-3 h-[46px] bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center disabled:opacity-50 shrink-0">
               @if (isLoading()) {
                 <div class="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
               } @else {
@@ -140,6 +141,44 @@ interface ChatMessage {
             </button>
           </form>
         </div>
+
+        <!-- Custom Beautiful Naming Modal -->
+        @if (showNamePrompt()) {
+          <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-[fadeIn_0.2s_ease_both]">
+            <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4 animate-[scaleUp_0.25s_ease_both]">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-lg font-bold">📂</div>
+                <div>
+                  <h4 class="text-sm font-bold text-text-primary">Name Your Project</h4>
+                  <p class="text-xs text-text-secondary">Provide a custom name for this generated workspace.</p>
+                </div>
+              </div>
+              
+              <div>
+                <input type="text" [value]="projectNameInput()" (input)="projectNameInput.set(nameField.value)" #nameField
+                       [disabled]="isGeneratingDraft()"
+                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"
+                       placeholder="e.g. E-Commerce App, Marketing Dashboard..." (keyup.enter)="!isGeneratingDraft() && submitFinalization()">
+              </div>
+              
+              <div class="flex items-center justify-end gap-2.5 mt-2">
+                <button (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
+                        class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
+                  Cancel
+                </button>
+                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim()"
+                        class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[120px] justify-center">
+                  @if (isGeneratingDraft()) {
+                    <div class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                    Generating...
+                  } @else {
+                    Confirm & Save
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
 
       </div>
     </div>
@@ -180,6 +219,13 @@ export class AiChatModalComponent implements AfterViewChecked {
     try {
       this.chatScrollContainer.nativeElement.scrollTop = this.chatScrollContainer.nativeElement.scrollHeight;
     } catch(err) { }
+  }
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.onSendMessage(event);
+    }
   }
 
   async onSendMessage(event: Event) {
@@ -287,23 +333,52 @@ export class AiChatModalComponent implements AfterViewChecked {
     }
   }
 
-  async onGenerateDraft() {
+  showNamePrompt = signal(false);
+  projectNameInput = signal('My Awesome AI Project');
+
+  onGenerateDraft() {
     const activeChatId = this.chatId();
     const companyId = this.projectState.userCompanyId();
     const managerId = this.projectState.userId();
 
     if (!activeChatId || !companyId || !managerId) return;
+    
+    // Open custom name input dialog
+    this.projectNameInput.set('My Awesome AI Project');
+    this.showNamePrompt.set(true);
+  }
+
+  async submitFinalization() {
+    const activeChatId = this.chatId();
+    const companyId = this.projectState.userCompanyId();
+    const managerId = this.projectState.userId();
+    const name = this.projectNameInput().trim();
+
+    if (!activeChatId || !companyId || !managerId || !name) return;
 
     this.isGeneratingDraft.set(true);
+    
     try {
+      // Step 1: Finalize session and save project draft with user-defined name
       const res = await this.aiRequirements.finalizeSession(activeChatId, {
-        projectNameEn: 'AI Project',
+        projectNameEn: name,
         companyId,
         managerId
       });
-      const draft = res.data || res;
-      if (draft) {
-        this.draftGenerated.emit({ draft, chatId: activeChatId });
+      const finalizeResult = res.data || res;
+      
+      if (finalizeResult && finalizeResult.projectId) {
+        // Step 2: Automatically generate and persist WBS/Backlog
+        await this.aiRequirements.generateWbs(finalizeResult.projectId);
+        
+        // Refresh project state to display the newly created project
+        await this.projectState.loadProjects();
+        
+        // Hide modal only on success
+        this.showNamePrompt.set(false);
+        
+        // Notify parent that project creation is complete
+        this.draftGenerated.emit({ draft: finalizeResult, chatId: activeChatId });
       }
     } catch (err: any) {
       console.error(err);
