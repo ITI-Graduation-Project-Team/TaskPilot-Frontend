@@ -108,8 +108,11 @@ interface ProjectEmployee {
                   <option value="">-- Choose Member --</option>
                   @for (emp of companyEmployees(); track (emp.employeeId || emp.id)) {
                     <option [value]="emp.employeeId || emp.id">
-                      {{ emp.fullName || emp.firstName || emp.email || 'Unnamed Member' }} 
-                      ({{ emp.jobTitle || emp.email || 'No Title' }})
+                      @if (emp.fullName && emp.fullName !== emp.email) {
+                        {{ emp.fullName }} ({{ emp.email }})
+                      } @else {
+                        {{ emp.email }}
+                      }
                     </option>
                   }
                 </select>
