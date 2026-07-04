@@ -5,11 +5,16 @@ import { TeamCollaborationService, EmployeeAssignmentDto } from '../../../../sha
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 interface CompanyEmployee {
-  id: string;
-  firstName: string;
-  lastName: string;
+  employeeId: string;
+  id?: string;
+  fullName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   jobTitle: string;
+  seniorityLevel?: string;
+  availabilityStatus?: string;
+  skills?: string[];
 }
 
 interface ProjectEmployee {
