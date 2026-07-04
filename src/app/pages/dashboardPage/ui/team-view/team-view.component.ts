@@ -106,8 +106,8 @@ interface ProjectEmployee {
                 <select [(ngModel)]="selectedEmployeeId" name="assignEmp" required
                         class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none cursor-pointer">
                   <option value="">-- Choose Member --</option>
-                  @for (emp of companyEmployees(); track emp.id) {
-                    <option [value]="emp.id">{{ emp.firstNameEn || emp.firstName || '' }} {{ emp.lastNameEn || emp.lastName || '' }} ({{ emp.email }})</option>
+                  @for (emp of companyEmployees(); track emp.employeeId) {
+                    <option [value]="emp.employeeId">{{ emp.fullName }} ({{ emp.jobTitle || 'No title' }})</option>
                   }
                 </select>
               </div>
