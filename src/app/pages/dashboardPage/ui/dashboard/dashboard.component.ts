@@ -121,11 +121,11 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
             @if (projectState.projects().length > 0) {
               <div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-text-secondary uppercase hidden md:inline">Project:</span>
-                <select [value]="projectState.selectedProjectId()" 
+                <select [value]="projectState.selectedProjectId() || ''" 
                         (change)="onProjectSelect($event)" 
                         class="bg-background border border-border text-sm font-semibold rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
                   @for (p of projectState.projects(); track p.id) {
-                    <option [value]="p.id">{{ p.name }}</option>
+                    <option [value]="p.id" [selected]="p.id === projectState.selectedProjectId()">{{ p.nameEn }}</option>
                   }
                 </select>
                 @if (projectState.isProjectManager()) {
@@ -403,9 +403,7 @@ export class DashboardComponent implements OnInit {
 
   onDraftGenerated(event: { draft: any, chatId: string }) {
     this.isAiChatOpen.set(false);
-    this.aiDraft.set(event.draft);
-    this.chatId.set(event.chatId);
-    this.isDraftReviewOpen.set(true);
+    // Project draft and backlog are generated and saved. Reload completed.
   }
 
   onProjectSaved() {
