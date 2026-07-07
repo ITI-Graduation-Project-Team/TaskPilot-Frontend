@@ -21,7 +21,6 @@
     "@ngx-translate/core": "^18.0.0",
     "@ngx-translate/http-loader": "^18.0.0",
     "@paypal/paypal-js": "^10.0.1",
-    "@stripe/stripe-js": "^9.8.0",
     "axios": "^1.18.1",
     "js-cookie": "^3.0.8",
     "ngx-cookie-service": "^21.3.1",

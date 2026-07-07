@@ -23,7 +23,7 @@ export const userSubscriptionApi = {
   /**
    * `POST api/usersubscriptions`
    * Creates a new subscription. Returns a `clientSecret` in the response
-   * data when Stripe payment confirmation is required.
+   * data when payment confirmation is required.
    */
   subscribe: (dto: CreateUserSubscriptionDto) =>
     apiClient.post<ApiResponse<UserSubscriptionDto>>(
