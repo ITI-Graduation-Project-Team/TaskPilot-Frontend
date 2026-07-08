@@ -3,7 +3,7 @@
 
 export type BillingCycle = 'Monthly' | 'Annually';
 export type SubscriptionStatus = 'Active' | 'Expired' | 'Canceled' | 'Trialing' | 'Pending';
-export type PaymentGateway = 'Stripe' | 'PayPal' | 'Fawry' | 'VodafoneCash';
+export type PaymentGateway = 'Paymob' | 'PayPal';
 
 // ── Response DTOs ────────────────────────────────────────────────────────────
 
@@ -42,12 +42,11 @@ export interface UserSubscriptionDto {
   cancelAtPeriodEnd: boolean;
   /** 
    * Multi-purpose field for payment confirmation:
-   * - Stripe: The Stripe Payment Intent client secret.
+   * - Paymob: The iframe URL.
    * - PayPal: The PayPal approval URL to redirect to.
    * Null for free/trial plans.
    */
   clientSecret: string | null;
-  isSetupIntent: boolean;
   gateway?: PaymentGateway;
 }
 
@@ -59,12 +58,10 @@ export interface CreateUserSubscriptionDto {
   billingCycle: BillingCycle;
   autoRenew: boolean;
   gateway: PaymentGateway;
-  /** Stripe PaymentMethod ID — pass null when using the card element flow. */
+  /** PaymentMethod ID */
   paymentMethodId?: string | null;
   /** PayPal return URL for successful payment approval */
   returnUrl?: string;
   /** PayPal cancel URL for aborted payment */
   cancelUrl?: string;
-  /** True when the user wants to start a free trial instead of paying immediately. */
-  isTrial?: boolean;
 }

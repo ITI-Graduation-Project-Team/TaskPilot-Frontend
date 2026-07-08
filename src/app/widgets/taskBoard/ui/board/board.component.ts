@@ -15,6 +15,8 @@ import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
+import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
+import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
 
 interface Task {
   id: string;
@@ -30,7 +32,7 @@ interface Task {
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent],
   template: `
     <div class="space-y-6">
       
@@ -442,6 +444,22 @@ interface Task {
               <input type="number" [(ngModel)]="modalTask().hours" 
                      class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
             </div>
+
+            <!-- Agile Coach Features (only for existing tasks) -->
+            @if (isEditing()) {
+              <app-agile-coach-summary
+                [taskItemId]="modalTask().id"
+                [lang]="currentLang"
+                (openChat)="isChatOpen.set(true)"
+              />
+
+              <app-agile-coach-chat
+                [taskItemId]="modalTask().id"
+                [lang]="currentLang"
+                [isOpen]="isChatOpen()"
+                (closed)="isChatOpen.set(false)"
+              />
+            }
           </div>
 
           <!-- Buttons -->
@@ -483,6 +501,11 @@ export class BoardComponent implements OnInit {
   activeUserStoryId = '';
   activeSprintId = signal<string | null>(null);
   isRetroModalOpen = signal(false);
+  isChatOpen = signal(false);
+
+  get currentLang(): string {
+    return localStorage?.getItem('app_lang') || 'en';
+  }
 
   // Task columns
   todo = signal<Task[]>([]);
@@ -654,6 +677,7 @@ export class BoardComponent implements OnInit {
   }
 
   openEditModal(task: Task) {
+    this.isChatOpen.set(false);
     this.isEditing.set(true);
     if (this.todo().some(t => t.id === task.id)) this.originalColumn = 'todo';
     else if (this.inProgress().some(t => t.id === task.id)) this.originalColumn = 'inProgress';
@@ -665,6 +689,7 @@ export class BoardComponent implements OnInit {
   }
 
   closeModal() {
+    this.isChatOpen.set(false);
     this.showModal.set(false);
   }
 

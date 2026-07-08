@@ -17,9 +17,7 @@ export const environment = {
     uploadPreset: 'taskPilot_dev_preset',
   },
 
-  // Payment Gateways (Only Publishable/Client Keys!)
-  // Replace with your actual key from https://dashboard.stripe.com/apikeys
-  stripePublishableKey: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxx',
+
 
   // PayPal
   paypalClientId: 'AS4sejisdmPGTz9maE5LcVCpZuarDUKG_Sk4okxRFTaPb7JKcEIjRXxMR5nCBgNB9r1MunhHTEldOvn7',

@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { userSubscriptionApi } from '../../../../shared/api/user-subscription.api';
 import { subscriptionPlanApi } from '../../../../shared/api/subscription-plan.api';
-import { StripePaymentService } from '../../../../shared/services/stripe-payment.service';
+import { PaymobPaymentService } from '../../../../shared/services/paymob-payment.service';
 import { PaypalPaymentService } from '../../../../shared/services/paypal-payment.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { SubscriptionPlanDto, UserSubscriptionDto, BillingCycle, PaymentGateway } from '../../../../shared/api/subscription.models';
-import { StripeCardElement } from '@stripe/stripe-js';
 import { ActivatedRoute, Router } from '@angular/router';
 
 type PageState = 'loading' | 'loaded' | 'error_403' | 'error_generic';
@@ -20,7 +19,7 @@ type PageState = 'loading' | 'loaded' | 'error_403' | 'error_generic';
   styleUrls: ['./subscription-plans.component.scss']
 })
 export class SubscriptionPlansComponent implements OnInit, OnDestroy {
-  private stripeService = inject(StripePaymentService);
+  private paymobPaymentService = inject(PaymobPaymentService);
   private paypalService = inject(PaypalPaymentService);
   private toastService = inject(ToastService);
   private route = inject(ActivatedRoute);
@@ -51,7 +50,7 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
   billingCycle = signal<BillingCycle>('Monthly');
   selectedPlan = signal<SubscriptionPlanDto | null>(null);
   showPaymentForm = signal(false);
-  selectedGateway = signal<PaymentGateway>('Stripe');
+  selectedGateway = signal<PaymentGateway>('Paymob');
 
   // Payment Form State
   autoRenew = signal(true);
@@ -70,14 +69,6 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
   // Start Over State
   showStartOverConfirm = signal(false);
   isStartingOver = signal(false);
-
-  // Trial State
-  selectedPlanForTrial: number | null = null;
-  usedTrialPlanIds = new Set<number>();
-
-  // Stripe
-  @ViewChild('cardElementContainer', { static: false }) cardContainer!: ElementRef;
-  private cardElement: StripeCardElement | null = null;
 
   ngOnInit() {
     this.loadData();
@@ -215,35 +206,15 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       this.showFreeConfirm.set(plan);
       this.showPaymentForm.set(false);
       this.selectedPlan.set(null);
-      this.unmountStripe();
       return;
     }
 
     this.selectedPlan.set(plan);
-    this.selectedGateway.set('Stripe'); // Default to Stripe
+    this.selectedGateway.set('Paymob'); // Default to Paymob
     this.showPaymentForm.set(true);
     this.showFreeConfirm.set(null);
     this.paymentError.set(null);
     this.isPaying.set(false);
-
-    // If trial is selected for this plan, force auto-renew on
-    if (this.isTrialSelected(plan)) {
-      this.autoRenew.set(true);
-    }
-
-    this.mountStripe();
-  }
-
-  toggleTrial(planId: number) {
-    if (this.selectedPlanForTrial === planId) {
-      this.selectedPlanForTrial = null;
-    } else {
-      this.selectedPlanForTrial = planId;
-    }
-  }
-
-  isTrialSelected(plan: SubscriptionPlanDto): boolean {
-    return plan.hasTrial && plan.trialDays > 0 && this.selectedPlanForTrial === plan.id;
   }
 
   selectGateway(gateway: PaymentGateway) {
@@ -251,45 +222,11 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
 
     this.selectedGateway.set(gateway);
     this.paymentError.set(null);
-
-    if (gateway === 'PayPal') {
-      this.unmountStripe();
-    } else if (gateway === 'Stripe') {
-      this.mountStripe();
-    }
-  }
-
-  private mountStripe() {
-    setTimeout(async () => {
-      if (this.cardContainer) {
-        const result = await this.stripeService.createAndMountCard(this.cardContainer.nativeElement);
-        if (result) {
-          this.cardElement = result.card;
-
-          // Listen for validation errors
-          this.cardElement.on('change', (event) => {
-            if (event.error) {
-              this.paymentError.set(event.error.message);
-            } else {
-              this.paymentError.set(null);
-            }
-          });
-        }
-      }
-    }, 50);
   }
 
   cancelPayment() {
     this.showPaymentForm.set(false);
     this.selectedPlan.set(null);
-    this.unmountStripe();
-  }
-
-  private unmountStripe() {
-    if (this.cardElement) {
-      this.cardElement.destroy();
-      this.cardElement = null;
-    }
   }
 
   async processPayment() {
@@ -303,18 +240,15 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       const cancelUrl = `${window.location.origin}/subscription`;
 
       const plan = this.selectedPlan()!;
-      const trialActive = this.isTrialSelected(plan);
       const pending = this.pendingSubscription();
       const isResuming = pending && pending.subscriptionPlanId === plan.id;
 
       let clientSecret: string | null = null;
-      let isSetupIntent = false;
       let gateway = this.selectedGateway();
 
       if (isResuming && pending?.clientSecret) {
         clientSecret = pending.clientSecret;
-        isSetupIntent = pending.isSetupIntent;
-        gateway = pending.gateway || 'Stripe';
+        gateway = pending.gateway || 'Paymob';
       } else {
         // 1. Call our backend to create the subscription
         const subRes = await userSubscriptionApi.subscribe({
@@ -324,16 +258,10 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
           gateway: this.selectedGateway(),
           paymentMethodId: null,
           returnUrl,
-          cancelUrl,
-          isTrial: trialActive
+          cancelUrl
         });
 
         if (!subRes.data.succeeded) {
-          // Track "already used trial" at session level
-          if (trialActive && subRes.data.message?.includes('already used the free trial')) {
-            this.usedTrialPlanIds.add(plan.id);
-            this.selectedPlanForTrial = null;
-          }
           this.paymentError.set(subRes.data.message || 'Subscription failed.');
           this.isPaying.set(false);
           return;
@@ -341,75 +269,19 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
 
         const newSub = subRes.data.data;
         clientSecret = newSub?.clientSecret || null;
-        isSetupIntent = newSub?.isSetupIntent || false;
       }
 
-      if (gateway === 'Stripe') {
-        if (clientSecret && this.cardElement) {
-          // ── Critical branching: Trial vs Paid Stripe confirmation ──
-          // Trial  → confirmCardSetup  (saves card, $0 charge today)
-          // Paid   → confirmCardPayment (charges card immediately)
-          if (isSetupIntent) {
-            // Trial flow — save card without charging
-            const setupRes = await this.stripeService.confirmCardSetup(clientSecret, this.cardElement);
-            if (setupRes.error) {
-              this.paymentError.set(setupRes.error);
-              this.isPaying.set(false);
-              return;
-            }
-          } else {
-            // Normal paid flow — charge card now
-            const stripeRes = await this.stripeService.confirmPayment(clientSecret, this.cardElement);
-            if (stripeRes.error) {
-              this.paymentError.set(stripeRes.error);
-              this.isPaying.set(false);
-              return;
-            }
-          }
+      if (gateway === 'Paymob') {
+        if (!clientSecret) {
+          this.toastService.show(
+            'Payment URL not received. Please try again.',
+            'error');
+          this.isPaying.set(false);
+          return;
         }
-
-        // Success — begin polling
-        this.cancelPayment();
-        let attempts = 0;
-        const maxAttempts = 10;
-        this.pollInterval = setInterval(async () => {
-          attempts++;
-          try {
-            const subRes = await userSubscriptionApi.getCurrent();
-            const status = subRes.data.data?.status;
-            
-            if (status === 'Trialing') {
-              // Trial started successfully
-              clearInterval(this.pollInterval);
-              this.toastService.show(
-                `🎉 Your ${plan.trialDays}-day free trial has started! Enjoy ${plan.name}.`,
-                'success'
-              );
-              await this.loadData();
-            } else if (status === 'Active') {
-              // Normal paid subscription activated
-              clearInterval(this.pollInterval);
-              this.toastService.show('Payment confirmed successfully!', 'success');
-              await this.loadData();
-            } else if (status === 'Expired' || status === 'Canceled') {
-              clearInterval(this.pollInterval);
-              this.toastService.show('Payment failed or was canceled.', 'error');
-              this.isPaying.set(false);
-              await this.loadData();
-            } else if (attempts >= maxAttempts) {
-              clearInterval(this.pollInterval);
-              this.toastService.show('Your payment is processing — this page will update automatically', 'success');
-              this.isPaying.set(false);
-              await this.loadData();
-            }
-          } catch (err) {
-            if (attempts >= maxAttempts) {
-              clearInterval(this.pollInterval);
-              await this.loadData();
-            }
-          }
-        }, 3000);
-
+        this.paymobPaymentService.initiatePayment(clientSecret);
+        // Page redirects — no further logic runs
+        return;
       } else if (gateway === 'PayPal') {
         const approvalUrl = clientSecret; // For PayPal, clientSecret contains the approval URL
         if (!approvalUrl) {
@@ -427,11 +299,6 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
 
     } catch (err: any) {
       const msg = err.response?.data?.message || 'An error occurred during payment.';
-      // Track "already used trial" at session level (from error response)
-      if (this.selectedPlan() && msg.includes('already used the free trial')) {
-        this.usedTrialPlanIds.add(this.selectedPlan()!.id);
-        this.selectedPlanForTrial = null;
-      }
       this.paymentError.set(msg);
       this.isPaying.set(false);
     }
@@ -500,25 +367,16 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       return;
     }
     
-    if (pending.gateway === 'PayPal') {
+    // Both Paymob and PayPal use redirect flow
+    if (pending.gateway === 'Paymob' || 
+        pending.gateway === 'PayPal') {
       window.location.href = pending.clientSecret;
       return;
     }
-
-    const plan = this.plans().find(p => p.id === pending.subscriptionPlanId);
-    if (!plan) return;
-
-    this.selectedPlan.set(plan);
-    this.selectedGateway.set('Stripe');
-    this.showPaymentForm.set(true);
-    this.showFreeConfirm.set(null);
-    this.paymentError.set(null);
-    this.isPaying.set(false);
-    this.autoRenew.set(pending.autoRenew);
-    if (pending.isTrial) {
-      this.selectedPlanForTrial = plan.id;
-    }
-    this.mountStripe();
+    
+    this.toastService.show(
+      'Unable to resume payment. Please start over.',
+      'error');
   }
 
   startOver() {
