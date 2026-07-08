@@ -391,6 +391,15 @@ export class TeamViewComponent implements OnInit {
     const projId = this.projectState.selectedProjectId();
     if (!projId || !this.selectedEmployeeId) return;
 
+    // Check if employee is already assigned
+    const isAlreadyAssigned = this.projectTeam().some(
+      member => member.employeeId === this.selectedEmployeeId
+    );
+    if (isAlreadyAssigned) {
+      this.toastService.show('This member is already assigned to this project.', 'error');
+      return;
+    }
+
     this.isAssigning.set(true);
     try {
       const assignment: EmployeeAssignmentDto = {
