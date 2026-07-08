@@ -17,6 +17,8 @@ import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 
 interface Task {
   id: string;
@@ -490,6 +492,8 @@ export class BoardComponent implements OnInit {
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   public projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   // Loading and assignment status signals
   isLoading = signal(true);
@@ -696,7 +700,7 @@ export class BoardComponent implements OnInit {
   async saveTask() {
     const taskData = this.modalTask();
     if (!taskData.title.trim()) {
-      alert('Task title is required.');
+      this.toastService.show('Task title is required.', 'error');
       return;
     }
 
@@ -731,14 +735,23 @@ export class BoardComponent implements OnInit {
   }
 
   async deleteTask() {
-    if (confirm('Are you sure you want to delete this task?')) {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Delete Task',
+      message: 'Are you sure you want to delete this task? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      type: 'danger'
+    });
+    if (confirmed) {
       try {
         this.isLoading.set(true);
         await this.backlogService.deleteTask(this.modalTask().id);
+        this.toastService.show('Task deleted successfully.', 'success');
         this.closeModal();
         await this.loadWorkspaceData();
       } catch (err) {
         console.error('Error deleting task:', err);
+        this.toastService.show('Failed to delete task. Please try again.', 'error');
       } finally {
         this.isLoading.set(false);
       }

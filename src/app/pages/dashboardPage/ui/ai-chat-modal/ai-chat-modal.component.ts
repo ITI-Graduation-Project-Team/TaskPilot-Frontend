@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 interface ChatMessage {
   text: string;
@@ -197,6 +198,7 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   private aiRequirements = inject(AiRequirementsService);
   private projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
 
   chatId = signal<string | null>(null);
   completenessScore = signal(0);
@@ -383,7 +385,7 @@ export class AiChatModalComponent implements AfterViewChecked {
     } catch (err: any) {
       console.error(err);
       const backendError = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Please check and try again.';
-      alert(`Failed to finalize requirements: ${backendError}`);
+      this.toastService.show(`Failed to finalize requirements: ${backendError}`, 'error');
     } finally {
       this.isGeneratingDraft.set(false);
     }

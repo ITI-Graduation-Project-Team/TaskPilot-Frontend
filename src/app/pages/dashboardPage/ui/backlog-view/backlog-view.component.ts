@@ -5,6 +5,7 @@ import { BacklogService, BacklogDto, UserStoryDto } from '../../../../shared/api
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-planning-modal.component';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-backlog-view',
@@ -245,6 +246,7 @@ export class BacklogViewComponent implements OnInit {
   private backlogService = inject(BacklogService);
   private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
 
   isLoading = signal(false);
   isAssigned = signal(false);
@@ -293,11 +295,11 @@ export class BacklogViewComponent implements OnInit {
     this.isGeneratingWbs.set(true);
     try {
       await this.aiRequirementsService.generateWbs(projId);
-      alert('AI WBS user stories and task items generated successfully!');
+      this.toastService.show('✅ AI WBS user stories and task items generated successfully!', 'success');
       await this.fetchBacklog(projId);
     } catch (e) {
       console.error(e);
-      alert('Failed to generate WBS. Check backend API logs.');
+      this.toastService.show('Failed to generate WBS. Check backend API logs.', 'error');
     } finally {
       this.isGeneratingWbs.set(false);
     }

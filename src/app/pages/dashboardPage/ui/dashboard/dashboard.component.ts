@@ -14,6 +14,8 @@ import { ThemeService } from '../../../../shared/services/theme.service';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -556,6 +558,8 @@ export class DashboardComponent implements OnInit {
 
   public projectState = inject(ProjectStateService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   logout(): void {
     this.authService.logout();
@@ -764,11 +768,20 @@ export class DashboardComponent implements OnInit {
   async deleteProject(projectId: string) {
     const proj = this.projectState.projects().find(p => p.id === projectId);
     if (proj) {
-      const confirmDelete = confirm(`Are you sure you want to delete project "${proj.nameEn}"? This action cannot be undone.`);
-      if (confirmDelete) {
+      const confirmed = await this.confirmDialog.confirm({
+        title: 'Delete Project',
+        message: `Are you sure you want to delete "${proj.nameEn}"? This action cannot be undone.`,
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        type: 'danger'
+      });
+      if (confirmed) {
         const success = await this.projectState.deleteProject(projectId);
         if (success) {
+          this.toastService.show(`Project "${proj.nameEn}" deleted successfully.`, 'success');
           this.loadAllProjectStats();
+        } else {
+          this.toastService.show('Failed to delete project. Please try again.', 'error');
         }
       }
     }

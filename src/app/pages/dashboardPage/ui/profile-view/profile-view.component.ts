@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { 
   mapSeniorityLevelToBackend, 
@@ -176,6 +177,7 @@ export class ProfileViewComponent implements OnInit {
   isLoading = signal(true);
   profile = signal<EmployeeProfile | null>(null);
   userInitial = signal('U');
+  private toastService = inject(ToastService);
 
   // Modal Signals
   showModal = signal(false);
@@ -230,7 +232,7 @@ export class ProfileViewComponent implements OnInit {
   async saveProfile() {
     const form = this.editForm();
     if (!form.jobTitle.trim()) {
-      alert('Job title is required.');
+      this.toastService.show('Job title is required.', 'error');
       return;
     }
 
@@ -241,7 +243,7 @@ export class ProfileViewComponent implements OnInit {
       .filter(s => s.length > 0);
 
     if (skillNames.length === 0) {
-      alert('Please enter at least one skill.');
+      this.toastService.show('Please enter at least one skill.', 'error');
       return;
     }
 
@@ -264,9 +266,10 @@ export class ProfileViewComponent implements OnInit {
       await apiClient.post('/employees/cv/confirm', payload);
       this.closeModal();
       await this.loadProfile();
+      this.toastService.show('🎉 Profile updated successfully!', 'success');
     } catch (err) {
       console.error('Failed to update profile settings:', err);
-      alert('Failed to update profile details.');
+      this.toastService.show('Failed to update profile details.', 'error');
     } finally {
       this.isLoading.set(false);
     }
