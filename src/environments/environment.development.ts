@@ -2,7 +2,7 @@ export const environment = {
   production: false,
 
   // Backend Core API
-  apiUrl: 'https://taskpilotapi.runasp.net/api',
+  apiUrl: 'http://127.0.0.1:5800/api',
 
   // Authentication Settings
   auth: {
