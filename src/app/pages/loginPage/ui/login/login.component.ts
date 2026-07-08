@@ -10,6 +10,7 @@ import { AuthService } from '../../../../shared/api/auth.service';
 import { CookieService } from 'ngx-cookie-service';
 import { environment } from '../../../../../environments/environment';
 import { getRedirectForRole } from '../../../../shared/lib/auth/role-redirect';
+import { LoadingService } from '../../../../shared/services/loading.service';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -48,6 +49,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
   }
 
   private route = inject(ActivatedRoute);
+  private loadingService = inject(LoadingService);
 
   ngOnInit() {
     const emailParam = this.route.snapshot.queryParamMap.get('email');
@@ -89,6 +91,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
     this.ngZone.run(() => {
       this.state.set('loading');
       this.errorMessage.set('');
+      this.loadingService.show();
 
       this.authService.googleLogin(response.credential).subscribe({
         next: (res) => {
@@ -118,22 +121,24 @@ export class LoginComponent implements AfterViewInit, OnInit {
             if (invToken) {
               authApi.completeInvitation(invToken).then(() => {
                 sessionStorage.removeItem('invitationToken');
-                this.router.navigate(['/dashboard']);
+                this.router.navigate(['/dashboard']).then(() => this.loadingService.hide());
               }).catch(e => {
                 console.error("Failed to complete invitation", e);
-                this.router.navigate(this.getRouteForRole(role, isProfileCompleted));
+                this.router.navigate(this.getRouteForRole(role, isProfileCompleted)).then(() => this.loadingService.hide());
               });
             } else {
-              this.router.navigate(this.getRouteForRole(role, isProfileCompleted));
+              this.router.navigate(this.getRouteForRole(role, isProfileCompleted)).then(() => this.loadingService.hide());
             }
           } else {
             this.state.set('error');
             this.errorMessage.set(res.message || 'Google Sign-In failed');
+            this.loadingService.hide();
           }
         },
         error: (err) => {
           this.state.set('error');
           this.errorMessage.set(extractApiError(err) || 'Google Sign-In failed');
+          this.loadingService.hide();
         }
       });
     });
@@ -167,6 +172,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
 
     this.state.set('loading');
     this.errorMessage.set('');
+    this.loadingService.show();
 
     try {
       const { data } = await authApi.login({
@@ -179,6 +185,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
         this.errorMessage.set(
           data.errors?.map((e: any) => e.description).join(' ') || data.message
         );
+        this.loadingService.hide();
         return;
       }
 
@@ -210,17 +217,18 @@ export class LoginComponent implements AfterViewInit, OnInit {
         try {
           await authApi.completeInvitation(invToken);
           sessionStorage.removeItem('invitationToken');
-          setTimeout(() => this.router.navigate(['/dashboard']), 1800);
+          this.router.navigate(['/dashboard']).then(() => this.loadingService.hide());
         } catch (e) {
           console.error("Failed to complete invitation", e);
-          setTimeout(() => this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)), 1800);
+          this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)).then(() => this.loadingService.hide());
         }
       } else {
-        setTimeout(() => this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)), 1800);
+        this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)).then(() => this.loadingService.hide());
       }
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));
+      this.loadingService.hide();
     }
   }
 
