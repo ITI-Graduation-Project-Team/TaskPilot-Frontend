@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamCollaborationService, EmployeeAssignmentDto } from '../../../../shared/api/team-collaboration.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 interface CompanyEmployee {
   employeeId: string;
@@ -227,6 +228,7 @@ interface ProjectEmployee {
 export class TeamViewComponent implements OnInit {
   private teamService = inject(TeamCollaborationService);
   public projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
 
   emailsList = signal<string[]>([]);
   currentEmailInput = signal('');
@@ -368,7 +370,7 @@ export class TeamViewComponent implements OnInit {
     this.isInviting.set(true);
     try {
       await this.teamService.inviteEmployees(emails);
-      alert('Invitations sent successfully to invited members!');
+      this.toastService.show('🎉 Invitations sent successfully to invited members!', 'success');
       this.emailsList.set([]);
       this.currentEmailInput.set('');
       
@@ -378,7 +380,7 @@ export class TeamViewComponent implements OnInit {
       }
     } catch (e) {
       console.error(e);
-      alert('Failed to send invitations. Ensure emails are formatted correctly.');
+      this.toastService.show('Failed to send invitations. Ensure emails are formatted correctly.', 'error');
     } finally {
       this.isInviting.set(false);
     }
@@ -396,11 +398,12 @@ export class TeamViewComponent implements OnInit {
         role: this.assignedRole
       };
       await this.teamService.assignEmployees(projId, [assignment]);
+      this.toastService.show('🎉 Member assigned successfully to the project!', 'success');
       this.selectedEmployeeId = '';
       await this.loadProjectTeam(projId);
     } catch (e) {
       console.error(e);
-      alert('Failed to assign team member. Make sure they are not already assigned.');
+      this.toastService.show('Failed to assign team member. Make sure they are not already assigned.', 'error');
     } finally {
       this.isAssigning.set(false);
     }
