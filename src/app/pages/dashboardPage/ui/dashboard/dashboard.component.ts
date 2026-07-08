@@ -142,15 +142,6 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
         <!-- Footer / Profile Quick view & Dark mode -->
         <div class="border-t border-border pt-6 mt-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold text-text-secondary uppercase">Theme</span>
-            <button (click)="toggleDarkMode()" 
-                    class="w-10 h-6 bg-border dark:bg-primary rounded-full relative flex items-center p-1 transition-all duration-300">
-              <div class="w-4 h-4 bg-white rounded-full shadow transition-all duration-300 transform"
-                   [ngClass]="isDark() ? 'translate-x-4' : 'translate-x-0'"></div>
-            </button>
-          </div>
-
           <div (click)="currentTab.set('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
             <div class="w-9 h-9 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">
               {{ userInitial() }}
