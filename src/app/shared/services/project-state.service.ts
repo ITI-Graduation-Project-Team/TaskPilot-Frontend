@@ -8,6 +8,8 @@ export interface ProjectInfo {
   nameEn: string;
   nameAr: string;
   description: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
   companyId: string;
   managerId: string;
 }
@@ -86,7 +88,9 @@ export class ProjectStateService {
             name: p.name || p.nameEn || '',
             nameEn: p.nameEn || p.name || '',
             nameAr: p.nameAr || p.name || '',
-            description: p.descriptionEn || p.description || '',
+            description: p.description || p.descriptionEn || '',
+            descriptionEn: p.descriptionEn || p.description || '',
+            descriptionAr: p.descriptionAr || p.description || '',
             companyId: p.companyId,
             managerId: p.managerId
           }));
@@ -102,7 +106,9 @@ export class ProjectStateService {
                 name: p.name || p.nameEn || '',
                 nameEn: p.nameEn || p.name || '',
                 nameAr: p.nameAr || p.name || '',
-                description: p.descriptionEn || p.description || '',
+                description: p.description || p.descriptionEn || '',
+                descriptionEn: p.descriptionEn || p.description || '',
+                descriptionAr: p.descriptionAr || p.description || '',
                 companyId: p.companyId,
                 managerId: p.managerId
               });
@@ -144,18 +150,19 @@ export class ProjectStateService {
     }
   }
 
-  async createNewProject(nameEn: string, nameAr: string, description: string): Promise<boolean> {
+  async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
     const pmId = this._userId();
     const companyId = this._userCompanyId();
     if (!pmId || !companyId) return false;
 
+    const descAr = descriptionAr || descriptionEn;
     try {
       this._loading.set(true);
       await apiClient.post('/Projects', {
         nameEn,
         nameAr,
-        descriptionEn: description,
-        descriptionAr: description,
+        descriptionEn,
+        descriptionAr: descAr,
         managerId: pmId,
         companyId: companyId
       });
@@ -163,6 +170,48 @@ export class ProjectStateService {
       return true;
     } catch (e) {
       console.error('Failed to create project:', e);
+      return false;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  async updateProject(projectId: string, nameEn: string, nameAr: string, descriptionEn: string, descriptionAr: string): Promise<boolean> {
+    try {
+      this._loading.set(true);
+      await apiClient.put('/Projects', {
+        id: projectId,
+        nameEn,
+        nameAr,
+        descriptionEn,
+        descriptionAr
+      });
+      await this.loadProjects();
+      return true;
+    } catch (e) {
+      console.error('Failed to update project:', e);
+      return false;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  async deleteProject(projectId: string): Promise<boolean> {
+    try {
+      this._loading.set(true);
+      await apiClient.delete(`/Projects/${projectId}`);
+      await this.loadProjects();
+      // If we deleted the currently selected project, reset it
+      if (this._selectedProjectId() === projectId) {
+        if (this._projects().length > 0) {
+          this.setSelectedProject(this._projects()[0].id);
+        } else {
+          this.setSelectedProject(null);
+        }
+      }
+      return true;
+    } catch (e) {
+      console.error('Failed to delete project:', e);
       return false;
     } finally {
       this._loading.set(false);
