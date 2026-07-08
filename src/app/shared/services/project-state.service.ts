@@ -22,6 +22,7 @@ export class ProjectStateService {
   private _selectedProjectId = signal<string | null>(null);
   private _isProjectManager = signal<boolean>(false);
   private _userCompanyId = signal<string | null>(null);
+  private _companyName = signal<string>('');
   private _userId = signal<string | null>(null);
   private _loading = signal<boolean>(false);
 
@@ -29,6 +30,7 @@ export class ProjectStateService {
   readonly selectedProjectId = this._selectedProjectId.asReadonly();
   readonly isProjectManager = this._isProjectManager.asReadonly();
   readonly userCompanyId = this._userCompanyId.asReadonly();
+  readonly companyName = this._companyName.asReadonly();
   readonly userId = this._userId.asReadonly();
   readonly loading = this._loading.asReadonly();
 
@@ -58,6 +60,9 @@ export class ProjectStateService {
         this._isProjectManager.set(isPM || !profile.isEmployee);
         const companyId = profile.companyId || profile.CompanyId || null;
         this._userCompanyId.set(companyId);
+        
+        const companyName = profile.companyName || profile.CompanyName || '';
+        this._companyName.set(companyName);
 
         await this.loadProjects();
       }

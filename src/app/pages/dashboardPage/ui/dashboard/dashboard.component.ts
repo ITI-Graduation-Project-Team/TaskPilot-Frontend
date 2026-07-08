@@ -42,6 +42,15 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         <div class="flex flex-col gap-2 mb-8 bg-white dark:bg-[#020114] p-4 rounded-2xl border border-border/40 shadow-sm transition-all duration-200">
           <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="h-8 transition-transform hover:scale-105 mx-auto" />
           
+          <!-- Company Name Badge -->
+          @if (projectState.companyName()) {
+            <div class="text-center mt-0.5">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/15 tracking-wide max-w-full truncate" [title]="projectState.companyName()">
+                🏢 {{ projectState.companyName() }}
+              </span>
+            </div>
+          }
+
           <!-- Selected Project Sidebar Header Context -->
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
