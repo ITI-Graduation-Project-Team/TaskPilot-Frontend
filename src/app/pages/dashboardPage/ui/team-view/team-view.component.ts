@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamCollaborationService, EmployeeAssignmentDto } from '../../../../shared/api/team-collaboration.service';
@@ -282,14 +282,19 @@ export class TeamViewComponent implements OnInit {
         this.loadProjectTeam(projId);
       }
     });
+
+    // Automatically load company employees when company ID is resolved
+    effect(() => {
+      const compId = this.projectState.userCompanyId();
+      if (compId) {
+        untracked(() => {
+          this.loadCompanyEmployees(compId);
+        });
+      }
+    });
   }
 
-  async ngOnInit() {
-    const compId = this.projectState.userCompanyId();
-    if (compId) {
-      this.loadCompanyEmployees(compId);
-    }
-  }
+  async ngOnInit() {}
 
   async loadCompanyEmployees(companyId: string) {
     try {
