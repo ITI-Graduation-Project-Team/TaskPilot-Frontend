@@ -22,10 +22,16 @@ export class PaymentCallbackComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const status = this.route.snapshot.queryParamMap.get('status');
     const payerId = this.route.snapshot.queryParamMap.get('PayerID');
+    const success = this.route.snapshot.queryParamMap.get('success');
+    const pending = this.route.snapshot.queryParamMap.get('pending');
 
-    if (status === 'cancel') {
+    const isPaymobSuccess = success === 'true' && pending === 'false';
+    const isPaymobFailure = success === 'false';
+    const isPayPalReturn = !!payerId || status === 'success';
+
+    if (status === 'cancel' || isPaymobFailure) {
       this.state.set('cancel');
-    } else if (status === 'success' || payerId) {
+    } else if (isPaymobSuccess || isPayPalReturn) {
       this.verifySubscription();
     } else {
       // Fallback for unknown parameters

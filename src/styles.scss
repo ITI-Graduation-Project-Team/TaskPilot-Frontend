@@ -55,6 +55,20 @@
 }
 
 body {
-  @apply bg-brandLight text-brandSecondary m-0 p-0 font-sans transition-colors duration-200;
+  @apply bg-brandLight text-brandSecondary dark:bg-brandSecondary dark:text-slate-100 m-0 p-0 font-sans transition-colors duration-300;
 }
 
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-reveal,
+input::-webkit-password-reveal,
+input::-webkit-clear-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Utilities */
+.delay-0   { animation-delay: 0ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-300 { animation-delay: 300ms; }

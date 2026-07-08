@@ -3,7 +3,7 @@
   <!-- Language Toggle -->
   <div class="absolute top-6 right-6 z-50">
     <button (click)="toggleLanguage()"
-            class="flex items-center gap-2 px-3 py-1.5 bg-slate-950 text-teal-400 rounded-full border border-teal-400/30 hover:bg-slate-900 transition-colors">
+            class="flex items-center gap-2 px-3 py-1.5 bg-white text-gray-700 rounded-full border border-gray-300 hover:bg-gray-100 dark:bg-slate-800 dark:text-teal-400 dark:border-teal-400/30 dark:hover:bg-slate-700 transition-colors shadow-sm">
       <span class="text-sm font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -21,13 +21,7 @@
 
     <!-- Brand -->
     <div class="flex items-center gap-2.5 mb-8">
-      <div class="flex items-center justify-center w-10 h-10 bg-brandPrimary rounded-xl text-brandWhite shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-          <path d="M4 12l4 4L20 4" />
-          <path d="M20 4L13 18l-3-6z" fill="currentColor" fill-opacity="0.2" />
-        </svg>
-      </div>
-      <span class="text-2xl font-extrabold text-brandSecondary tracking-tight">TaskPilot</span>
+      <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-10" />
     </div>
 
     <!-- Heading -->

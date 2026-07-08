@@ -8,6 +8,9 @@ import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ThemeService } from '../../../../shared/services/theme.service';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../../shared/api/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +18,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, 
+    RouterLink,
     BoardComponent, 
     BacklogViewComponent, 
     ProfileViewComponent, 
@@ -28,14 +32,8 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
       <!-- Desktop Sidebar Navigation -->
       <aside class="w-64 bg-sidebar border-r border-border hidden md:flex flex-col p-6 transition-colors duration-200 shrink-0">
         <!-- Logo -->
-        <div class="flex items-center gap-2.5 mb-8">
-          <div class="flex items-center justify-center w-9 h-9 bg-primary rounded-xl text-white shadow-md shadow-primary/20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3L22 4" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-            </svg>
-          </div>
-          <span class="text-xl font-bold tracking-tight text-text-primary">TaskPilot</span>
+        <div class="flex items-center gap-2.5 mb-8 bg-white dark:bg-[#020114] p-3 rounded-2xl border border-border/40 shadow-sm transition-all duration-200">
+          <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="h-8 transition-transform hover:scale-105" />
         </div>
 
         <!-- Navigation Links -->
@@ -120,14 +118,54 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
             <!-- Project selector for Project Manager / Employee -->
             @if (projectState.projects().length > 0) {
               <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-text-secondary uppercase hidden md:inline">Project:</span>
-                <select [value]="projectState.selectedProjectId() || ''" 
-                        (change)="onProjectSelect($event)" 
-                        class="bg-background border border-border text-sm font-semibold rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
-                  @for (p of projectState.projects(); track p.id) {
-                    <option [value]="p.id" [selected]="p.id === projectState.selectedProjectId()">{{ p.nameEn }}</option>
+                <!-- Custom Project Dropdown -->
+                <div class="relative">
+                  <button (click)="isProjectDropdownOpen.update(v => !v)"
+                          class="flex items-center gap-2 px-3 py-1.5 bg-background border border-border hover:border-primary/40 rounded-xl text-sm font-semibold text-text-primary transition-all duration-200 hover:bg-sidebar focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] group">
+                    <!-- Folder Icon -->
+                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+                    </svg>
+                    <span class="truncate max-w-[110px]">
+                      {{ projectState.selectedProject()?.nameEn || 'Select Project' }}
+                    </span>
+                    <svg class="w-3.5 h-3.5 ml-auto text-text-secondary transition-transform duration-200 shrink-0"
+                         [class.rotate-180]="isProjectDropdownOpen()"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+
+                  @if (isProjectDropdownOpen()) {
+                    <!-- Backdrop -->
+                    <div class="fixed inset-0 z-40" (click)="isProjectDropdownOpen.set(false)"></div>
+                    <!-- Dropdown Panel -->
+                    <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both]">
+                      <div class="px-3 py-2 border-b border-border">
+                        <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Your Projects</p>
+                      </div>
+                      <div class="py-1 max-h-60 overflow-y-auto">
+                        @for (p of projectState.projects(); track p.id) {
+                          <button (click)="selectProject(p.id)"
+                                  class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left hover:bg-sidebar transition-colors"
+                                  [class.bg-primary/8]="p.id === projectState.selectedProjectId()">
+                            <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white text-xs font-bold"
+                                 [style.background]="'#6366f1'">
+                              {{ (p.nameEn || p.name || '?')[0].toUpperCase() }}
+                            </div>
+                            <span class="font-medium text-text-primary truncate">{{ p.nameEn || p.name }}</span>
+                            @if (p.id === projectState.selectedProjectId()) {
+                              <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                              </svg>
+                            }
+                          </button>
+                        }
+                      </div>
+                    </div>
                   }
-                </select>
+                </div>
+
                 @if (projectState.isProjectManager()) {
                   <button (click)="isCreateProjectModalOpen.set(true)"
                           title="Create New Project"
@@ -143,6 +181,20 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
                 Create Project
               </button>
             }
+
+            <!-- Subscription button -->
+            <a routerLink="/subscription"
+               class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              Subscription
+            </a>
+
+            <!-- Logout button -->
+            <button (click)="logout()"
+                    class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              Logout
+            </button>
 
             <!-- Dark mode toggle -->
             <button (click)="toggleDarkMode()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-border transition-colors">
@@ -299,7 +351,8 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
   `
 })
 export class DashboardComponent implements OnInit {
-  isDark = signal(false);
+  themeService = inject(ThemeService);
+  get isDark() { return this.themeService.isDark; }
   currentDate = '';
   userName = signal('Guest User');
   userJobTitle = signal('');
@@ -313,6 +366,7 @@ export class DashboardComponent implements OnInit {
 
   isCreateProjectModalOpen = signal(false);
   showManualForm = signal(false);
+  isProjectDropdownOpen = signal(false);
 
   // AI Project creation signals
   isAiChatOpen = signal(false);
@@ -321,6 +375,11 @@ export class DashboardComponent implements OnInit {
   chatId = signal<string>('');
 
   public projectState = inject(ProjectStateService);
+  private authService = inject(AuthService);
+
+  logout(): void {
+    this.authService.logout();
+  }
 
   constructor() {
     // Reactively update sprint name whenever selected project ID changes
@@ -343,18 +402,6 @@ export class DashboardComponent implements OnInit {
     });
     
     if (typeof localStorage !== 'undefined') {
-      const savedTheme = localStorage.getItem('selectedTheme');
-      if (savedTheme) {
-        const isDarkTheme = savedTheme === 'dark';
-        this.isDark.set(isDarkTheme);
-        if (isDarkTheme) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light-mode');
-        } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light-mode');
-        }
-      }
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
         this.userName.set(storedName);
@@ -425,16 +472,25 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  selectProject(id: string) {
+    this.projectState.setSelectedProject(id);
+    this.isProjectDropdownOpen.set(false);
+  }
+
+  getProjectColor(id: string): string {
+    const colors = [
+      'linear-gradient(135deg,#6366f1,#8b5cf6)',
+      'linear-gradient(135deg,#3b82f6,#06b6d4)',
+      'linear-gradient(135deg,#10b981,#059669)',
+      'linear-gradient(135deg,#f59e0b,#ef4444)',
+      'linear-gradient(135deg,#ec4899,#8b5cf6)',
+    ];
+    let hash = 0;
+    for (let i = 0; i < (id || '').length; i++) hash += id.charCodeAt(i);
+    return colors[hash % colors.length];
+  }
+
   toggleDarkMode() {
-    this.isDark.update(v => !v);
-    if (this.isDark()) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light-mode');
-      localStorage.setItem('selectedTheme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light-mode');
-      localStorage.setItem('selectedTheme', 'light');
-    }
+    this.themeService.toggle();
   }
 }

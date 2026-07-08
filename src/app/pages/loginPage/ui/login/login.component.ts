@@ -1,8 +1,8 @@
-import { Component, signal, AfterViewInit, NgZone } from '@angular/core';
+import { Component, signal, AfterViewInit, NgZone, OnInit, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
 import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -20,7 +20,7 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent implements AfterViewInit {
+export class LoginComponent implements AfterViewInit, OnInit {
   email = signal('');
   password = signal('');
   showPassword = signal(false);
@@ -45,6 +45,15 @@ export class LoginComponent implements AfterViewInit {
     this.translate.use(savedLang);
     this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
     this.document.documentElement.lang = savedLang;
+  }
+
+  private route = inject(ActivatedRoute);
+
+  ngOnInit() {
+    const emailParam = this.route.snapshot.queryParamMap.get('email');
+    if (emailParam) {
+      this.email.set(emailParam);
+    }
   }
 
   ngAfterViewInit() {
@@ -104,15 +113,19 @@ export class LoginComponent implements AfterViewInit {
               localStorage.setItem('userFullName', fullName);
             }
             const isProfileCompleted = (res.data as any).isProfileCompleted === true;
-            let route = ['/dashboard'];
-            if (role === 'Employee') {
-              route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
-            } else if (role === 'ProjectManager') {
-              route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
+
+            const invToken = sessionStorage.getItem('invitationToken');
+            if (invToken) {
+              authApi.completeInvitation(invToken).then(() => {
+                sessionStorage.removeItem('invitationToken');
+                this.router.navigate(['/dashboard']);
+              }).catch(e => {
+                console.error("Failed to complete invitation", e);
+                this.router.navigate(this.getRouteForRole(role, isProfileCompleted));
+              });
             } else {
-              route = [getRedirectForRole(role)];
+              this.router.navigate(this.getRouteForRole(role, isProfileCompleted));
             }
-            this.router.navigate(route);
           } else {
             this.state.set('error');
             this.errorMessage.set(res.message || 'Google Sign-In failed');
@@ -169,8 +182,6 @@ export class LoginComponent implements AfterViewInit {
         return;
       }
 
-      localStorage.removeItem('userRole');
-
       const tokenData = data.data as any;
       const accessToken = tokenData?.accessToken || tokenData?.token;
       const refreshToken = tokenData?.refreshToken;
@@ -188,20 +199,40 @@ export class LoginComponent implements AfterViewInit {
         localStorage.setItem('userFullName', tokenData.fullName);
       }
 
+      this.successMessage.set(data.message || 'Signed in successfully! Redirecting…');
+      this.state.set('success');
+
       const userRole = this.authService.getUserRole() || role;
       const isProfileCompleted = tokenData?.isProfileCompleted === true;
-      let route = ['/dashboard'];
-      if (userRole === 'Employee') {
-        route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
-      } else if (userRole === 'ProjectManager') {
-        route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
+
+      const invToken = sessionStorage.getItem('invitationToken');
+      if (invToken) {
+        try {
+          await authApi.completeInvitation(invToken);
+          sessionStorage.removeItem('invitationToken');
+          setTimeout(() => this.router.navigate(['/dashboard']), 1800);
+        } catch (e) {
+          console.error("Failed to complete invitation", e);
+          setTimeout(() => this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)), 1800);
+        }
       } else {
-        route = [getRedirectForRole(userRole)];
+        setTimeout(() => this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)), 1800);
       }
-      this.router.navigate(route);
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));
     }
+  }
+
+  getRouteForRole(role: string | null, isProfileCompleted: boolean): string[] {
+    let route = ['/dashboard'];
+    if (role === 'Employee') {
+      route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
+    } else if (role === 'ProjectManager') {
+      route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
+    } else if (role) {
+      route = [getRedirectForRole(role)];
+    }
+    return route;
   }
 }

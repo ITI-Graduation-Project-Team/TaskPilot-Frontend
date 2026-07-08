@@ -1,10 +1,17 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './shared/guards/role.guard';
 import { authGuard } from './shared/guards/auth.guard';
+import { authRedirectGuard } from './shared/guards/auth-redirect.guard';
 
 export const routes: Routes = [
 
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./pages/landingPage/ui/landing/landing.component').then(
+        (m) => m.LandingComponent
+      ),
+  },
   {
     path: 'dashboard',
     canActivate: [authGuard],
@@ -38,6 +45,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [authRedirectGuard],
     loadComponent: () =>
       import('./pages/loginPage/ui/login/login.component').then(
         (m) => m.LoginComponent
@@ -56,6 +64,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/resetPasswordPage/ui/reset-password/reset-password.component').then(
         (m) => m.ResetPasswordComponent
+      ),
+  },
+  {
+    path: 'accept-invitation',
+    loadComponent: () =>
+      import('./pages/acceptInvitationPage/ui/accept-invitation/accept-invitation').then(
+        (m) => m.AcceptInvitationComponent
       ),
   },
   {
@@ -80,6 +95,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/completeProfilePage/ui/complete-profile/complete-profile.component').then(
         (m) => m.CompleteProfileComponent
+      ),
+  },
+  {
+    path: 'employees',
+    canActivate: [roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/employeesPage/ui/employees/employees').then(
+        (m) => m.EmployeesComponent
       ),
   },
 ];
