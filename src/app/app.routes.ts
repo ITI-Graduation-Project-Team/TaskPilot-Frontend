@@ -1,11 +1,13 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './shared/guards/role.guard';
+import { authGuard } from './shared/guards/auth.guard';
 
 export const routes: Routes = [
 
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   {
     path: 'dashboard',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
@@ -74,6 +76,7 @@ export const routes: Routes = [
   },
   {
     path: 'complete-profile',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/completeProfilePage/ui/complete-profile/complete-profile.component').then(
         (m) => m.CompleteProfileComponent
