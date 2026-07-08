@@ -5,12 +5,17 @@ import { LoadingService } from '../../services/loading.service';
 
 export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   const loadingService = inject(LoadingService);
+  const isAuthRequest = req.url.toLowerCase().includes('/auth/');
 
-  loadingService.show();
+  if (!isAuthRequest) {
+    loadingService.show();
+  }
 
   return next(req).pipe(
     finalize(() => {
-      loadingService.hide();
+      if (!isAuthRequest) {
+        loadingService.hide();
+      }
     })
   );
 };
