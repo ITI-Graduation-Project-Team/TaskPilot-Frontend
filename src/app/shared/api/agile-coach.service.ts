@@ -13,7 +13,7 @@ import {
 export class AgileCoachService {
   async getSummary(taskItemId: string): Promise<AgileCoachSummaryResponse> {
     const response = await apiClient.get<any>(
-      `/api/agile-coach/summary/${taskItemId}`
+      `/agile-coach/summary/${taskItemId}`
     );
     return response.data.data;
   }
@@ -22,7 +22,7 @@ export class AgileCoachService {
     taskItemId: string
   ): Promise<AgileCoachSummaryResponse> {
     const response = await apiClient.post<any>(
-      `/api/agile-coach/summary/${taskItemId}/regenerate`
+      `/agile-coach/summary/${taskItemId}/regenerate`
     );
     return response.data.data;
   }
@@ -38,7 +38,7 @@ export class AgileCoachService {
     const token = getAccessToken();
     const lang = localStorage.getItem('app_lang') ?? 'en';
 
-    fetch(`${environment.apiUrl}/api/agile-coach/chat/stream`, {
+    fetch(`${environment.apiUrl}/agile-coach/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
