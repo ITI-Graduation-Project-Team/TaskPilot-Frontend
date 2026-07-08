@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
@@ -577,7 +577,9 @@ export class DashboardComponent implements OnInit {
       const tab = this.currentTab();
       const projects = this.projectState.projects();
       if (tab === 'projects' && projects.length > 0) {
-        this.loadAllProjectStats();
+        untracked(() => {
+          this.loadAllProjectStats();
+        });
       }
     });
 
