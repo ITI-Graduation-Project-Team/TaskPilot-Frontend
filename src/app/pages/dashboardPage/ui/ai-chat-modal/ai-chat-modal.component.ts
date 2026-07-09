@@ -146,29 +146,56 @@ interface ChatMessage {
         <!-- Custom Beautiful Naming Modal -->
         @if (showNamePrompt()) {
           <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-[fadeIn_0.2s_ease_both]">
-            <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4 animate-[scaleUp_0.25s_ease_both]">
+            <div class="bg-surface border border-border rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-5 animate-[scaleUp_0.25s_ease_both]">
               <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-lg font-bold">📂</div>
+                <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-lg font-bold">📂</div>
                 <div>
-                  <h4 class="text-sm font-bold text-text-primary">Name Your Project</h4>
-                  <p class="text-xs text-text-secondary">Provide a custom name for this generated workspace.</p>
+                  <h4 class="text-base font-bold text-text-primary">Configure & Initialize Project</h4>
+                  <p class="text-xs text-text-secondary">Provide initial metadata and sprint settings to create the workspace.</p>
                 </div>
               </div>
               
-              <div>
-                <input type="text" [value]="projectNameInput()" (input)="projectNameInput.set(nameField.value)" #nameField
-                       [disabled]="isGeneratingDraft()"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"
-                       placeholder="e.g. E-Commerce App, Marketing Dashboard..." (keyup.enter)="!isGeneratingDraft() && submitFinalization()">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-text-secondary mb-1 uppercase tracking-wider">Project Name (English)</label>
+                  <input type="text" [value]="projectNameInput()" (input)="projectNameInput.set(nameEnField.value)" #nameEnField
+                         [disabled]="isGeneratingDraft()"
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"
+                         placeholder="e.g. E-Commerce App, Marketing Dashboard...">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-text-secondary mb-1 uppercase tracking-wider">اسم المشروع (عربي)</label>
+                  <input type="text" [value]="projectNameArInput()" (input)="projectNameArInput.set(nameArField.value)" #nameArField dir="rtl"
+                         [disabled]="isGeneratingDraft()"
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50 text-right"
+                         placeholder="مثال: تطبيق التجارة الإلكترونية...">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-text-secondary mb-1 uppercase tracking-wider">Sprint Duration (Days)</label>
+                    <input type="number" [value]="sprintDurationInput()" (input)="sprintDurationInput.set(+durationField.value)" #durationField
+                           [disabled]="isGeneratingDraft()" min="1" max="90"
+                           class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-text-secondary mb-1 uppercase tracking-wider">Target Sprint Hours</label>
+                    <input type="number" [value]="targetSprintHoursInput()" (input)="targetSprintHoursInput.set(+hoursField.value)" #hoursField
+                           [disabled]="isGeneratingDraft()" min="1" max="1000"
+                           class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50">
+                  </div>
+                </div>
               </div>
               
-              <div class="flex items-center justify-end gap-2.5 mt-2">
+              <div class="flex items-center justify-end gap-2.5 mt-2 border-t border-border/60 pt-4 shrink-0">
                 <button (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
                         class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
                   Cancel
                 </button>
-                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim()"
-                        class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[120px] justify-center">
+                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim() || !projectNameArInput().trim()"
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[140px] justify-center">
                   @if (isGeneratingDraft()) {
                     <div class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
                     Generating...
@@ -338,6 +365,9 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   showNamePrompt = signal(false);
   projectNameInput = signal('My Awesome AI Project');
+  projectNameArInput = signal('مشروعي الذكي الجديد');
+  sprintDurationInput = signal(14);
+  targetSprintHoursInput = signal(80);
 
   onGenerateDraft() {
     const activeChatId = this.chatId();
@@ -348,6 +378,9 @@ export class AiChatModalComponent implements AfterViewChecked {
     
     // Open custom name input dialog
     this.projectNameInput.set('My Awesome AI Project');
+    this.projectNameArInput.set('مشروعي الذكي الجديد');
+    this.sprintDurationInput.set(14);
+    this.targetSprintHoursInput.set(80);
     this.showNamePrompt.set(true);
   }
 
@@ -355,18 +388,23 @@ export class AiChatModalComponent implements AfterViewChecked {
     const activeChatId = this.chatId();
     const companyId = this.projectState.userCompanyId();
     const managerId = this.projectState.userId();
-    const name = this.projectNameInput().trim();
+    const nameEn = this.projectNameInput().trim();
+    const nameAr = this.projectNameArInput().trim();
+    const sprintDuration = this.sprintDurationInput();
+    const targetHours = this.targetSprintHoursInput();
 
-    if (!activeChatId || !companyId || !managerId || !name) return;
+    if (!activeChatId || !companyId || !managerId || !nameEn || !nameAr) return;
 
     this.isGeneratingDraft.set(true);
     
     try {
-      // Step 1: Finalize session and save project draft with user-defined name
+      // Step 1: Finalize session and save project draft with user-defined configuration DTO
       const res = await this.aiRequirements.finalizeSession(activeChatId, {
-        projectNameEn: name,
-        companyId,
-        managerId
+        projectNameEn: nameEn,
+        projectNameAr: nameAr,
+        companyId: companyId,
+        sprintDurationInDays: sprintDuration,
+        targetSprintHours: targetHours
       });
       const finalizeResult = res.data || res;
       

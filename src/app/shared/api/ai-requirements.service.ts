@@ -49,7 +49,16 @@ export class AiRequirementsService {
     return data;
   }
 
-  async finalizeSession(chatId: string, payload: { projectNameEn: string; companyId: string; managerId: string }): Promise<any> {
+  async finalizeSession(
+    chatId: string, 
+    payload: { 
+      projectNameEn: string; 
+      projectNameAr: string; 
+      companyId: string; 
+      sprintDurationInDays: number; 
+      targetSprintHours: number; 
+    }
+  ): Promise<any> {
     const { data } = await apiClient.post(`/requirements/${chatId}/finalize`, payload);
     return data;
   }

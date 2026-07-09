@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { RecommendedStackDto, TechStackService, TechStackSuggestionDto } from '../../../../shared/api/tech-stack.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 const PLATFORM_OPTIONS = ['Web', 'Mobile', 'Desktop', 'API'];
 const PROJECT_TYPE_OPTIONS = ['ERP', 'SaaS', 'MobileApp', 'API', 'Portal', 'Other'];
@@ -128,6 +129,37 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
                 <button type="submit" class="rounded-xl bg-text-primary px-4 py-2.5 text-xs font-bold text-background transition-opacity hover:opacity-90">Add technology</button>
               </form>
 
+              <div class="mt-5 border-t border-border/60 pt-5 space-y-4">
+                <div>
+                  <h4 class="text-xs font-bold text-text-primary uppercase tracking-wider mb-2">Project Metadata & Description</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-[10px] font-extrabold text-text-secondary uppercase mb-1">Project Name (English)</label>
+                      <input type="text" [value]="projectNameEn()" (input)="projectNameEn.set(nameEnField.value)" #nameEnField
+                             class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold">
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-extrabold text-text-secondary uppercase mb-1">اسم المشروع (عربي)</label>
+                      <input type="text" [value]="projectNameAr()" (input)="projectNameAr.set(nameArField.value)" #nameArField dir="rtl"
+                             class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold text-right">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-[10px] font-extrabold text-text-secondary uppercase mb-1">Description (English)</label>
+                    <textarea [value]="descriptionEn()" (input)="descriptionEn.set(descEnField.value)" #descEnField rows="3"
+                              class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium"></textarea>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-extrabold text-text-secondary uppercase mb-1">الوصف (عربي)</label>
+                    <textarea [value]="descriptionAr()" (input)="descriptionAr.set(descArField.value)" #descArField rows="3" dir="rtl"
+                              class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium text-right"></textarea>
+                  </div>
+                </div>
+              </div>
+
               <div class="mt-5 grid gap-4 lg:grid-cols-2">
                 <div>
                   <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-text-secondary">Platform targets</label>
@@ -202,6 +234,7 @@ export class TechStackAdvisorModalComponent implements OnInit {
   private techStackService = inject(TechStackService);
   private aiRequirements = inject(AiRequirementsService);
   private toastService = inject(ToastService);
+  private projectState = inject(ProjectStateService);
 
   readonly platformOptions = PLATFORM_OPTIONS;
   readonly projectTypeOptions = PROJECT_TYPE_OPTIONS;
@@ -217,12 +250,19 @@ export class TechStackAdvisorModalComponent implements OnInit {
   isConfirming = signal(false);
   errorMessage = signal('');
 
+  projectNameEn = signal('');
+  projectNameAr = signal('');
+  descriptionEn = signal('');
+  descriptionAr = signal('');
+
   isConfirmDisabled = computed(() =>
     this.isLoading() ||
     this.isConfirming() ||
     this.selectedTechStack().length === 0 ||
     this.selectedPlatforms().length === 0 ||
-    !this.selectedProjectType()
+    !this.selectedProjectType() ||
+    !this.projectNameEn().trim() ||
+    !this.projectNameAr().trim()
   );
 
   ngOnInit() {
@@ -240,6 +280,15 @@ export class TechStackAdvisorModalComponent implements OnInit {
       this.applyStack(suggestion.primaryStack, 'primary');
       this.selectedPlatforms.set(suggestion.platformTargets?.length ? [...suggestion.platformTargets] : ['Web']);
       this.selectedProjectType.set(suggestion.projectType || 'Other');
+
+      // Load initial metadata from projects state
+      const project = this.projectState.projects().find(p => p.id === this.projectId);
+      if (project) {
+        this.projectNameEn.set(project.nameEn || project.name || '');
+        this.projectNameAr.set(project.nameAr || '');
+        this.descriptionEn.set(project.descriptionEn || project.description || 'Provide project description...');
+        this.descriptionAr.set(project.descriptionAr || 'اكتب وصفاً للمشروع...');
+      }
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.response?.data?.error?.message || error?.message || 'Please check the backend logs and try again.';
       this.errorMessage.set(message);
@@ -289,12 +338,25 @@ export class TechStackAdvisorModalComponent implements OnInit {
 
     this.isConfirming.set(true);
     try {
+      // 1. Update project names and descriptions in backend
+      await this.projectState.updateProject(
+        this.projectId,
+        this.projectNameEn(),
+        this.projectNameAr(),
+        this.descriptionEn(),
+        this.descriptionAr()
+      );
+
+      // 2. Confirm approved tech stack and platforms
       await this.techStackService.confirm(this.projectId, {
         techStack: this.selectedTechStack(),
         platformTargets: this.selectedPlatforms(),
         projectType: this.selectedProjectType(),
       });
+
+      // 3. Generate WBS backlog items
       await this.aiRequirements.generateWbs(this.projectId);
+      
       this.toastService.show('Tech stack confirmed and backlog generated successfully.', 'success');
       this.completed.emit(this.projectId);
     } catch (error: any) {
