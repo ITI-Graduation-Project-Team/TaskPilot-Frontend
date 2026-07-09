@@ -31,10 +31,19 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
+function shouldShowLoader(url: string | undefined): boolean {
+  if (!url) return false;
+  const lowerUrl = url.toLowerCase();
+  // Skip loader for auth endpoints and AI requirements chat/streaming/status endpoints
+  if (lowerUrl.includes('/auth/') || lowerUrl.includes('/requirements/')) {
+    return false;
+  }
+  return true;
+}
+
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const isAuthRequest = config.url?.toLowerCase().includes('/auth/');
-    if (!isAuthRequest) {
+    if (shouldShowLoader(config.url)) {
       getLoadingService()?.show();
     }
     const token = getAccessToken();
@@ -49,8 +58,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    const isAuthRequest = error.config?.url?.toLowerCase().includes('/auth/');
-    if (!isAuthRequest) {
+    if (shouldShowLoader(error.config?.url)) {
       getLoadingService()?.hide();
     }
     return Promise.reject(error);
@@ -90,16 +98,14 @@ async function refreshAccessToken(): Promise<string> {
 
 apiClient.interceptors.response.use(
   (response) => {
-    const isAuthRequest = response.config?.url?.toLowerCase().includes('/auth/');
-    if (!isAuthRequest) {
+    if (shouldShowLoader(response.config?.url)) {
       getLoadingService()?.hide();
     }
     return response;
   },
 
   async (error: AxiosError) => {
-    const isAuthRequest = error.config?.url?.toLowerCase().includes('/auth/');
-    if (!isAuthRequest) {
+    if (shouldShowLoader(error.config?.url)) {
       getLoadingService()?.hide();
     }
     const originalRequest = error.config as InternalAxiosRequestConfig & {
