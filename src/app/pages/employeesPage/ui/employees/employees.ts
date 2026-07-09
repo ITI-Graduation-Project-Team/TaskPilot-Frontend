@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CompanyService, EmployeeModel, InvitationModel } from '../../../../shared/api/Company-api/company';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-employees',
@@ -13,6 +14,7 @@ import { CompanyService, EmployeeModel, InvitationModel } from '../../../../shar
 })
 export class EmployeesComponent implements OnInit {
   companyService = inject(CompanyService);
+  toastService = inject(ToastService);
 
   activeTab = signal<'active' | 'invitations'>('active');
   
@@ -185,15 +187,15 @@ export class EmployeesComponent implements OnInit {
       this.isInviting.set(true);
       const res = await this.companyService.inviteEmployees([email.trim()]);
       if (res.succeeded) {
-        // Optionally show success toast
+        this.toastService.show('🎉 Invitation sent successfully!', 'success');
         this.loadInvitations();
         this.closeInviteModal();
       } else {
-        alert(res.message || 'Failed to invite.');
+        this.toastService.show(res.message || 'Failed to invite.', 'error');
       }
     } catch (e) {
       console.error(e);
-      alert('An error occurred while inviting.');
+      this.toastService.show('An error occurred while inviting.', 'error');
     } finally {
       this.isInviting.set(false);
     }

@@ -33,7 +33,10 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    getLoadingService()?.show();
+    const isAuthRequest = config.url?.toLowerCase().includes('/auth/');
+    if (!isAuthRequest) {
+      getLoadingService()?.show();
+    }
     const token = getAccessToken();
 
     if (token) {
@@ -46,7 +49,10 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    getLoadingService()?.hide();
+    const isAuthRequest = error.config?.url?.toLowerCase().includes('/auth/');
+    if (!isAuthRequest) {
+      getLoadingService()?.hide();
+    }
     return Promise.reject(error);
   }
 );
@@ -84,12 +90,18 @@ async function refreshAccessToken(): Promise<string> {
 
 apiClient.interceptors.response.use(
   (response) => {
-    getLoadingService()?.hide();
+    const isAuthRequest = response.config?.url?.toLowerCase().includes('/auth/');
+    if (!isAuthRequest) {
+      getLoadingService()?.hide();
+    }
     return response;
   },
 
   async (error: AxiosError) => {
-    getLoadingService()?.hide();
+    const isAuthRequest = error.config?.url?.toLowerCase().includes('/auth/');
+    if (!isAuthRequest) {
+      getLoadingService()?.hide();
+    }
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };

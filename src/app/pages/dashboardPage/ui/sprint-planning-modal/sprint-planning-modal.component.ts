@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintSuggestionDto } from '../../../../shared/api/sprint-planning.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { BacklogService } from '../../../../shared/api/backlog.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-sprint-planning-modal',
@@ -152,6 +153,7 @@ export class SprintPlanningModalComponent implements OnInit {
   private sprintService = inject(SprintPlanningService);
   private backlogService = inject(BacklogService);
   public projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
 
   suggestions = signal<SprintSuggestionDto[]>([]);
   isLoadingSuggestions = signal(false);
@@ -227,12 +229,12 @@ export class SprintPlanningModalComponent implements OnInit {
     this.isSaving.set(true);
     try {
       await this.sprintService.confirmSprints(projId, this.suggestions());
-      alert('Sprints configured and saved successfully!');
+      this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();
     } catch (e) {
       console.error(e);
-      alert('Failed to save sprints configuration.');
+      this.toastService.show('Failed to save sprints configuration. Please try again.', 'error');
     } finally {
       this.isSaving.set(false);
     }
