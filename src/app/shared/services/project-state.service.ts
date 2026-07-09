@@ -12,6 +12,9 @@ export interface ProjectInfo {
   descriptionAr?: string;
   companyId: string;
   managerId: string;
+  techStack?: string[];
+  platformTargets?: string[];
+  projectType?: string;
 }
 
 @Injectable({
@@ -97,7 +100,10 @@ export class ProjectStateService {
             descriptionEn: p.descriptionEn || p.description || '',
             descriptionAr: p.descriptionAr || p.description || '',
             companyId: p.companyId,
-            managerId: p.managerId
+            managerId: p.managerId,
+            techStack: p.techStack || [],
+            platformTargets: p.platformTargets || [],
+            projectType: p.projectType || ''
           }));
       } else {
         // Employee sees projects they are assigned to
@@ -115,7 +121,10 @@ export class ProjectStateService {
                 descriptionEn: p.descriptionEn || p.description || '',
                 descriptionAr: p.descriptionAr || p.description || '',
                 companyId: p.companyId,
-                managerId: p.managerId
+                managerId: p.managerId,
+                techStack: p.techStack || [],
+                platformTargets: p.platformTargets || [],
+                projectType: p.projectType || ''
               });
             }
           } catch (err) {

@@ -30,6 +30,8 @@ interface Task {
   type: 'Feature' | 'Bug' | 'Refactor';
 }
 
+type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
+
 @Component({
   selector: 'app-board',
   standalone: true,
@@ -167,14 +169,70 @@ interface Task {
                 📋 Sprint Retro
               </button>
             }
-            <button (click)="openAddModal()" 
-                    class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
-                           shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 text-sm">
-              + Add Custom Task
-            </button>
           </div>
         </div>
 
+
+        <!-- Board controls -->
+        <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm">
+          <div class="grid grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_auto_auto_auto] gap-3 items-end">
+            <label class="block">
+              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">Search tasks</span>
+              <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+                </svg>
+                <input
+                  type="search"
+                  [ngModel]="boardSearch()"
+                  (ngModelChange)="boardSearch.set($event)"
+                  placeholder="Search by title or description"
+                  class="w-full h-11 bg-background border border-border rounded-xl pl-9 pr-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+            </label>
+
+            <label class="block min-w-40">
+              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">Priority</span>
+              <select
+                [ngModel]="priorityFilter()"
+                (ngModelChange)="priorityFilter.set($event)"
+                class="w-full h-11 bg-background border border-border rounded-xl px-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                <option value="All">All priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </label>
+
+            <label class="block min-w-40">
+              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">Type</span>
+              <select
+                [ngModel]="typeFilter()"
+                (ngModelChange)="typeFilter.set($event)"
+                class="w-full h-11 bg-background border border-border rounded-xl px-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                <option value="All">All types</option>
+                <option value="Feature">Feature</option>
+                <option value="Bug">Bug</option>
+                <option value="Refactor">Refactor</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              (click)="resetBoardFilters()"
+              [disabled]="!hasActiveBoardFilters()"
+              class="h-11 px-4 border border-border text-text-secondary hover:text-text-primary hover:bg-background disabled:opacity-45 disabled:cursor-not-allowed rounded-xl text-sm font-semibold transition-all">
+              Clear filters
+            </button>
+          </div>
+
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
+            <span>Showing {{ visibleTasksCount() }} of {{ totalTasksCount() }} tasks. Each column loads in focused batches.</span>
+            @if (hasActiveBoardFilters()) {
+              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is paused while filters are active</span>
+            }
+          </div>
+        </div>
         <!-- Kanban columns -->
         <div cdkDropListGroup class="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
@@ -190,8 +248,8 @@ interface Task {
                  [cdkDropListData]="todo()"
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
-              @for (task of todo(); track task.id) {
-                <div cdkDrag class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-200">
+              @for (task of visibleTodo(); track task.id) {
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -224,8 +282,17 @@ interface Task {
                 </div>
               } @empty {
                 <div class="h-24 border border-dashed border-border rounded-xl flex items-center justify-center text-xs text-text-secondary">
-                  No tasks to do
+                  {{ emptyColumnMessage('todo') }}
                 </div>
+              }
+              @if (visibleTodo().length < filteredTodo().length) {
+                <button type="button" (click)="showMore('todo')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                  Show {{ remainingTasks('todo') }} more
+                </button>
+              } @else if (todoLimit() > boardPageSize && filteredTodo().length > boardPageSize) {
+                <button type="button" (click)="showLess('todo')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
+                  Show less
+                </button>
               }
             </div>
           </div>
@@ -242,8 +309,8 @@ interface Task {
                  [cdkDropListData]="inProgress()"
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
-              @for (task of inProgress(); track task.id) {
-                <div cdkDrag class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-200">
+              @for (task of visibleInProgress(); track task.id) {
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -276,8 +343,17 @@ interface Task {
                 </div>
               } @empty {
                 <div class="h-24 border border-dashed border-border rounded-xl flex items-center justify-center text-xs text-text-secondary">
-                  Drop tasks here to start
+                  {{ emptyColumnMessage('inProgress') }}
                 </div>
+              }
+              @if (visibleInProgress().length < filteredInProgress().length) {
+                <button type="button" (click)="showMore('inProgress')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                  Show {{ remainingTasks('inProgress') }} more
+                </button>
+              } @else if (inProgressLimit() > boardPageSize && filteredInProgress().length > boardPageSize) {
+                <button type="button" (click)="showLess('inProgress')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
+                  Show less
+                </button>
               }
             </div>
           </div>
@@ -294,8 +370,8 @@ interface Task {
                  [cdkDropListData]="review()"
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
-              @for (task of review(); track task.id) {
-                <div cdkDrag class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-200">
+              @for (task of visibleReview(); track task.id) {
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -328,8 +404,17 @@ interface Task {
                 </div>
               } @empty {
                 <div class="h-24 border border-dashed border-border rounded-xl flex items-center justify-center text-xs text-text-secondary">
-                  Drop tasks for validation
+                  {{ emptyColumnMessage('review') }}
                 </div>
+              }
+              @if (visibleReview().length < filteredReview().length) {
+                <button type="button" (click)="showMore('review')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                  Show {{ remainingTasks('review') }} more
+                </button>
+              } @else if (reviewLimit() > boardPageSize && filteredReview().length > boardPageSize) {
+                <button type="button" (click)="showLess('review')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
+                  Show less
+                </button>
               }
             </div>
           </div>
@@ -346,8 +431,8 @@ interface Task {
                  [cdkDropListData]="done()"
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
-              @for (task of done(); track task.id) {
-                <div cdkDrag class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-200">
+              @for (task of visibleDone(); track task.id) {
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -380,8 +465,17 @@ interface Task {
                 </div>
               } @empty {
                 <div class="h-24 border border-dashed border-border rounded-xl flex items-center justify-center text-xs text-text-secondary">
-                  No completed tasks yet
+                  {{ emptyColumnMessage('done') }}
                 </div>
+              }
+              @if (visibleDone().length < filteredDone().length) {
+                <button type="button" (click)="showMore('done')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
+                  Show {{ remainingTasks('done') }} more
+                </button>
+              } @else if (doneLimit() > boardPageSize && filteredDone().length > boardPageSize) {
+                <button type="button" (click)="showLess('done')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
+                  Show less
+                </button>
               }
             </div>
           </div>
@@ -396,7 +490,7 @@ interface Task {
         <div class="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 flex flex-col space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-border">
             <h3 class="text-lg font-bold text-text-primary">
-              {{ isEditing() ? 'Modify Task Details' : 'Create Custom Task' }}
+              Modify Task Details
             </h3>
             <button (click)="closeModal()" class="text-text-secondary hover:text-text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -520,6 +614,32 @@ export class BoardComponent implements OnInit {
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
   });
+  readonly boardPageSize = 8;
+  boardSearch = signal('');
+  priorityFilter = signal<'All' | Task['priority']>('All');
+  typeFilter = signal<'All' | Task['type']>('All');
+  todoLimit = signal(this.boardPageSize);
+  inProgressLimit = signal(this.boardPageSize);
+  reviewLimit = signal(this.boardPageSize);
+  doneLimit = signal(this.boardPageSize);
+
+  hasActiveBoardFilters = computed(() => {
+    return Boolean(this.boardSearch().trim()) || this.priorityFilter() !== 'All' || this.typeFilter() !== 'All';
+  });
+
+  filteredTodo = computed(() => this.filterTasks(this.todo()));
+  filteredInProgress = computed(() => this.filterTasks(this.inProgress()));
+  filteredReview = computed(() => this.filterTasks(this.review()));
+  filteredDone = computed(() => this.filterTasks(this.done()));
+
+  visibleTodo = computed(() => this.filteredTodo().slice(0, this.todoLimit()));
+  visibleInProgress = computed(() => this.filteredInProgress().slice(0, this.inProgressLimit()));
+  visibleReview = computed(() => this.filteredReview().slice(0, this.reviewLimit()));
+  visibleDone = computed(() => this.filteredDone().slice(0, this.doneLimit()));
+
+  visibleTasksCount = computed(() => {
+    return this.visibleTodo().length + this.visibleInProgress().length + this.visibleReview().length + this.visibleDone().length;
+  });
 
   showModal = signal(false);
   isEditing = signal(false);
@@ -585,11 +705,15 @@ export class BoardComponent implements OnInit {
     
     // Automatically create a user story if somehow missing
     if (!userStory) {
-      userStory = await this.backlogService.createUserStory(
-        this.activeProjectId,
-        'Sprint Backlog Story',
-        'Auto generated story for managing project tasks.'
-      );
+      userStory = await this.backlogService.createUserStory(this.activeProjectId, {
+        titleEn: 'Sprint Backlog Story',
+        titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
+        descriptionEn: 'Auto generated story for managing project tasks.',
+        descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
+        acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
+        acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
+        priority: 'Medium'
+      });
     }
     this.activeUserStoryId = userStory.id;
 
@@ -608,7 +732,7 @@ export class BoardComponent implements OnInit {
         id: t.id,
         userStoryId: t.userStoryId,
         title: t.titleEn,
-        description: t.descriptionEn,
+        description: t.descriptionEn || '',
         priority: mapPriorityToFrontend(t.priority),
         hours: t.estimatedHours,
         type: mapTypeToFrontend(t.type)
@@ -627,7 +751,68 @@ export class BoardComponent implements OnInit {
     this.done.set(doneList);
   }
 
+  private filterTasks(tasks: Task[]): Task[] {
+    const query = this.boardSearch().trim().toLowerCase();
+    const priority = this.priorityFilter();
+    const type = this.typeFilter();
+
+    return tasks.filter(task => {
+      const matchesSearch = !query || `${task.title} ${task.description}`.toLowerCase().includes(query);
+      const matchesPriority = priority === 'All' || task.priority === priority;
+      const matchesType = type === 'All' || task.type === type;
+      return matchesSearch && matchesPriority && matchesType;
+    });
+  }
+
+  private limitSignalFor(column: ColumnKey) {
+    if (column === 'inProgress') return this.inProgressLimit;
+    if (column === 'review') return this.reviewLimit;
+    if (column === 'done') return this.doneLimit;
+    return this.todoLimit;
+  }
+
+  private filteredTasksFor(column: ColumnKey): Task[] {
+    if (column === 'inProgress') return this.filteredInProgress();
+    if (column === 'review') return this.filteredReview();
+    if (column === 'done') return this.filteredDone();
+    return this.filteredTodo();
+  }
+
+  showMore(column: ColumnKey) {
+    const limit = this.limitSignalFor(column);
+    const total = this.filteredTasksFor(column).length;
+    limit.set(Math.min(total, limit() + this.boardPageSize));
+  }
+
+  showLess(column: ColumnKey) {
+    this.limitSignalFor(column).set(this.boardPageSize);
+  }
+
+  remainingTasks(column: ColumnKey): number {
+    const limit = this.limitSignalFor(column)();
+    const total = this.filteredTasksFor(column).length;
+    return Math.min(this.boardPageSize, Math.max(total - limit, 0));
+  }
+
+  resetBoardFilters() {
+    this.boardSearch.set('');
+    this.priorityFilter.set('All');
+    this.typeFilter.set('All');
+  }
+
+  emptyColumnMessage(column: ColumnKey): string {
+    if (this.hasActiveBoardFilters()) return 'No matching tasks';
+    if (column === 'todo') return 'No tasks to do';
+    if (column === 'inProgress') return 'Drop tasks here to start';
+    if (column === 'review') return 'Drop tasks for validation';
+    return 'No completed tasks yet';
+  }
   async drop(event: CdkDragDrop<Task[]>) {
+    if (this.hasActiveBoardFilters()) {
+      this.toastService.show('Clear filters before moving tasks on the board.', 'error');
+      return;
+    }
+
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
@@ -651,6 +836,7 @@ export class BoardComponent implements OnInit {
           titleEn: task.title,
           descriptionEn: task.description,
           estimatedHours: task.hours,
+          effortSize: 'Medium',
           priority: task.priority,
           type: task.type,
           status: newStatus
@@ -664,20 +850,6 @@ export class BoardComponent implements OnInit {
     this.inProgress.set([...this.inProgress()]);
     this.review.set([...this.review()]);
     this.done.set([...this.done()]);
-  }
-
-  openAddModal() {
-    this.isEditing.set(false);
-    this.modalTask.set({
-      id: '',
-      userStoryId: this.activeUserStoryId,
-      title: '',
-      description: '',
-      priority: 'Medium',
-      hours: 4,
-      type: 'Feature'
-    });
-    this.showModal.set(true);
   }
 
   openEditModal(task: Task) {
@@ -711,6 +883,7 @@ export class BoardComponent implements OnInit {
           titleEn: taskData.title,
           descriptionEn: taskData.description,
           estimatedHours: taskData.hours,
+          effortSize: 'Medium',
           priority: taskData.priority,
           type: taskData.type,
           status: this.originalColumn
@@ -720,6 +893,7 @@ export class BoardComponent implements OnInit {
           titleEn: taskData.title,
           descriptionEn: taskData.description,
           estimatedHours: taskData.hours,
+          effortSize: 'Medium',
           priority: taskData.priority,
           type: taskData.type,
           status: 'todo'
@@ -771,3 +945,9 @@ export class BoardComponent implements OnInit {
     }
   }
 }
+
+
+
+
+
+

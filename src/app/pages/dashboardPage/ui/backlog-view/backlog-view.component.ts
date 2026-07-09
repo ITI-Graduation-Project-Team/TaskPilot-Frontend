@@ -1,262 +1,486 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BacklogService, BacklogDto, UserStoryDto } from '../../../../shared/api/backlog.service';
+import { BacklogService, BacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-planning-modal.component';
+import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+
+interface StoryFormModel extends UserStoryPayload {
+  id?: string;
+}
+
+interface TaskFormModel extends TaskPayload {
+  id?: string;
+  userStoryId?: string;
+}
+
+const EMPTY_STORY: StoryFormModel = {
+  titleEn: '',
+  titleAr: '',
+  descriptionEn: '',
+  descriptionAr: '',
+  acceptanceCriteriaEn: '',
+  acceptanceCriteriaAr: '',
+  priority: 'Medium',
+};
+
+const EMPTY_TASK: TaskFormModel = {
+  titleEn: '',
+  titleAr: '',
+  descriptionEn: '',
+  descriptionAr: '',
+  technicalSummaryEn: '',
+  technicalSummaryAr: '',
+  acceptanceCriteriaEn: '',
+  acceptanceCriteriaAr: '',
+  estimatedHours: 4,
+  effortSize: 'Medium',
+  priority: 'Medium',
+  type: 'Technical',
+  status: 'ToDo',
+};
 
 @Component({
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent],
   template: `
     <div class="space-y-6">
-      
       @if (projectState.loading() || isLoading()) {
-        <div class="flex items-center justify-center p-12 bg-surface border border-border rounded-2xl shadow-sm">
+        <div class="flex items-center justify-center rounded-2xl border border-border bg-surface p-12 shadow-sm">
           <div class="flex flex-col items-center gap-3">
-            <div class="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+            <div class="h-8 w-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
             <span class="text-sm font-semibold text-text-secondary">Loading backlog...</span>
           </div>
         </div>
       } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
-        <!-- PM First Project Creation Screen -->
-        <div class="bg-surface border border-border p-8 rounded-2xl shadow-lg max-w-xl mx-auto my-8 animate-[fadeUp_0.3s_ease_both]">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
-              <p class="text-text-secondary text-xs mt-0.5">Let's set up a workspace for your team.</p>
-            </div>
-          </div>
-
-          <form (submit)="onCreateProject($event)" class="space-y-5">
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
-              <input type="text" name="projNameEn" required placeholder="e.g. E-Commerce Platform" 
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
-              <input type="text" name="projNameAr" required placeholder="مثال: منصة التجارة الإلكترونية" dir="rtl"
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
-              <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
-                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
-            </div>
-
-            <button type="submit" 
-                    class="w-full py-3.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0">
-              Create Project
-            </button>
+        <div class="mx-auto my-8 max-w-xl rounded-2xl border border-border bg-surface p-8 shadow-lg">
+          <h3 class="text-xl font-bold text-text-primary">Create your first project</h3>
+          <p class="mt-1 text-sm text-text-secondary">Set up a workspace before managing backlog items.</p>
+          <form (submit)="onCreateProject($event)" class="mt-6 space-y-4">
+            <input type="text" name="projNameEn" required placeholder="Project name in English" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
+            <input type="text" name="projNameAr" required [placeholder]="label('projectNameArPlaceholder')" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
+            <textarea name="projDesc" required rows="3" placeholder="Project scope" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+            <button type="submit" class="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white hover:bg-primary-hover">Create project</button>
           </form>
         </div>
       } @else if (!isAssigned()) {
-        <!-- Warning for unassigned employees -->
-        <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
-          <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-xl font-bold text-text-primary">No Project Assigned</h3>
-            <p class="text-text-secondary text-sm mt-2 max-w-md">
-              Please contact your Project Manager or Admin to assign you to a project to view the backlog.
-            </p>
-          </div>
+        <div class="mx-auto my-12 max-w-xl rounded-2xl border border-warning/30 bg-surface p-8 text-center shadow-sm">
+          <h3 class="text-xl font-bold text-text-primary">No project assigned</h3>
+          <p class="mt-2 text-sm text-text-secondary">Please contact your Project Manager or Admin to assign you to a project.</p>
         </div>
       } @else {
-        
-        <!-- Header Actions -->
-        <div class="flex items-center justify-between flex-wrap gap-4">
+        <header class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-bold text-text-primary">Product Backlog</h2>
-            <p class="text-text-secondary text-sm">Sprint User Stories & Task Breakdown structure.</p>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Product backlog</p>
+            <h2 class="mt-1 text-2xl font-extrabold text-text-primary font-display">{{ localizedProjectName() }}</h2>
+            <p class="mt-1 text-sm text-text-secondary">{{ label('backlogSubtitle') }}</p>
           </div>
 
-          <div class="flex items-center gap-3">
-            @if (projectState.isProjectManager() && backlog()?.userStories?.length) {
-              <button (click)="isSprintPlanningModalOpen.set(true)" 
-                      class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl
-                             shadow-md shadow-indigo-500/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                AI Sprint Planner
-              </button>
+          <div class="flex flex-wrap items-center gap-3">
+            @if (projectState.isProjectManager() && (backlog()?.userStories?.length || 0) > 0) {
+              <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">AI Sprint Planner</button>
             }
-
             @if (projectState.isProjectManager()) {
-              <button (click)="isStoryModalOpen.set(true)" 
-                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
-                             shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                Add User Story
-              </button>
+              <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">Add user story</button>
             }
           </div>
-        </div>
+        </header>
 
-        <div class="space-y-4">
-          @for (story of backlog()?.userStories; track story.id) {
-            <div class="bg-surface border border-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-200">
-              <!-- Story Header -->
-              <div class="p-5 bg-sidebar border-b border-border flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary rounded">User Story</span>
-                    <h3 class="font-bold text-text-primary text-[17px]">{{ story.titleEn }}</h3>
-                  </div>
-                  <p class="text-text-secondary text-xs mt-1">{{ story.descriptionEn }}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-1 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">
-                    {{ story.tasks.length }} Tasks
-                  </span>
-                </div>
-              </div>
-
-              <!-- Task List -->
-              <div class="p-4 divide-y divide-border">
-                @for (task of story.tasks; track task.id) {
-                  <div class="py-3.5 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="space-y-1 max-w-xl">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <h4 class="font-bold text-text-primary text-sm">{{ task.titleEn }}</h4>
-                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-200 dark:bg-border text-text-secondary rounded uppercase">
-                          {{ task.status }}
-                        </span>
-                      </div>
-                      <p class="text-text-secondary text-xs line-clamp-1">{{ task.descriptionEn }}</p>
-                    </div>
-                    <div class="flex items-center gap-4 text-xs font-semibold shrink-0">
-                      <span class="flex items-center gap-1 text-text-secondary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {{ task.estimatedHours }}h
-                      </span>
-                      <span class="px-2 py-0.5 text-[10px] font-bold rounded"
-                            [ngClass]="{
-                              'bg-error/10 text-error': task.priority === 'High' || task.priority === '2',
-                              'bg-warning/10 text-warning': task.priority === 'Medium' || task.priority === '1',
-                              'bg-primary/10 text-primary': task.priority === 'Low' || task.priority === '0'
-                            }">
-                        {{ task.priority }}
-                      </span>
-                    </div>
-                  </div>
-                } @empty {
-                  <div class="text-center py-6 text-xs text-text-secondary">
-                    No tasks assigned to this user story.
-                  </div>
-                }
-              </div>
+        @if ((backlog()?.userStories?.length || 0) > 0) {
+          <section class="rounded-2xl border border-border bg-surface shadow-sm">
+            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
+              <span>{{ label('story') }}</span>
+              <span class="hidden sm:block">{{ label('priority') }}</span>
+              <span class="hidden md:block">{{ label('tasks') }}</span>
+              <span>{{ label('actions') }}</span>
             </div>
-          } @empty {
-            <div class="bg-surface border border-border p-12 text-center rounded-2xl flex flex-col items-center justify-center space-y-4">
-              <svg class="w-12 h-12 text-text-secondary opacity-40 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-              <div class="space-y-1">
-                <h4 class="text-base font-bold text-text-primary">Empty Product Backlog</h4>
-                <p class="text-xs text-text-secondary max-w-sm mx-auto">There are no user stories in this project yet. You can write them manually, or use AI WBS Generator to automatically build a breakdown structure.</p>
-              </div>
-              
-              @if (projectState.isProjectManager()) {
-                <div class="flex items-center gap-3 justify-center">
-                  <button (click)="isStoryModalOpen.set(true)" class="px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-border transition-colors">
-                    Add Story Manually
-                  </button>
-                  <button (click)="generateWbs()" 
-                          [disabled]="isGeneratingWbs()"
-                          class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50">
-                    @if (isGeneratingWbs()) {
-                      <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                      Generating Backlog...
+
+            <div class="divide-y divide-border">
+              @for (story of backlog()?.userStories; track story.id) {
+                <article>
+                  <div class="grid grid-cols-[1fr_auto] gap-3 px-4 py-4 md:grid-cols-[1fr_90px_80px_150px] md:items-center">
+                    <button type="button" (click)="toggleStory(story.id)" class="min-w-0 text-left">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="truncate text-sm font-extrabold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyTitle(story) }}</h3>
+                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ story.status }}</span>
+                      </div>
+                      <p class="mt-1 line-clamp-1 text-xs text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyDescription(story) }}</p>
+                    </button>
+                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ story.priority }}</span>
+                    <span class="hidden text-xs font-bold text-text-secondary md:block">{{ story.tasks.length }}</span>
+                    @if (projectState.isProjectManager()) {
+                      <div class="flex justify-end gap-2">
+                        <button type="button" (click)="openTaskModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Task</button>
+                        <button type="button" (click)="openStoryModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Edit</button>
+                        <button type="button" (click)="deleteStory(story)" class="rounded-lg border border-error/30 px-2.5 py-1.5 text-[11px] font-bold text-error hover:bg-error/10">Delete</button>
+                      </div>
                     } @else {
-                      🤖 Generate WBS with AI
+                      <span></span>
                     }
-                  </button>
-                </div>
+                  </div>
+
+                  @if (expandedStoryIds().includes(story.id)) {
+                    <div class="border-t border-border bg-background/40 px-4 py-4">
+                      <div class="rounded-xl border border-border bg-surface p-3" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">
+                        <p class="text-[11px] font-bold uppercase text-text-secondary">{{ isArabic() ? label('acceptanceCriteriaAr') : label('acceptanceCriteriaEn') }}</p>
+                        <p class="mt-1 whitespace-pre-wrap text-xs text-text-primary">{{ storyAcceptanceCriteria(story) }}</p>
+                      </div>
+
+                      <div class="mt-4 overflow-x-auto rounded-xl border border-border bg-surface">
+                        <table class="w-full min-w-[820px] text-left text-xs">
+                          <thead class="bg-sidebar text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
+                            <tr>
+                              <th class="px-3 py-2">{{ label('task') }}</th>
+                              <th class="px-3 py-2">{{ label('status') }}</th>
+                              <th class="px-3 py-2">{{ label('type') }}</th>
+                              <th class="px-3 py-2">{{ label('priority') }}</th>
+                              <th class="px-3 py-2">{{ label('effort') }}</th>
+                              <th class="px-3 py-2">{{ label('hours') }}</th>
+                              <th class="px-3 py-2 text-right">{{ label('actions') }}</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-border">
+                            @for (task of story.tasks; track task.id) {
+                              <tr>
+                                <td class="px-3 py-3">
+                                  <p class="font-bold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskTitle(task) }}</p>
+                                  <p class="mt-0.5 line-clamp-1 text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskDescription(task) }}</p>
+                                </td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.status }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.type }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.priority }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.effortSize }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.estimatedHours }}</td>
+                                <td class="px-3 py-3 text-right">
+                                  @if (projectState.isProjectManager()) {
+                                    <button type="button" (click)="openTaskModal(story, task)" class="mr-2 font-bold text-primary hover:underline">Edit</button>
+                                    <button type="button" (click)="deleteTask(task)" class="font-bold text-error hover:underline">Delete</button>
+                                  }
+                                </td>
+                              </tr>
+                            } @empty {
+                              <tr><td colspan="7" class="px-3 py-6 text-center text-text-secondary">{{ label('noTasks') }}</td></tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  }
+                </article>
               }
             </div>
-          }
-        </div>
+          </section>
+        } @else {
+          <section class="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface p-12 text-center shadow-sm">
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Empty backlog</p>
+            <h3 class="mt-2 text-lg font-extrabold text-text-primary">Create stories manually or generate with AI</h3>
+            <p class="mt-2 max-w-md text-sm text-text-secondary">AI generation will first confirm the tech stack, then persist bilingual user stories and implementation tasks.</p>
+            @if (projectState.isProjectManager()) {
+              <div class="mt-5 flex flex-wrap justify-center gap-3">
+                <button type="button" (click)="openStoryModal()" class="rounded-xl border border-border px-4 py-2.5 text-xs font-bold hover:bg-sidebar">Add story manually</button>
+                <button type="button" (click)="generateWbs()" [disabled]="isGeneratingWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover disabled:opacity-50">
+                  {{ isGeneratingWbs() ? 'Generating backlog...' : 'Generate WBS with AI' }}
+                </button>
+              </div>
+            }
+          </section>
+        }
       }
     </div>
-
-    <!-- Add User Story Modal -->
     @if (isStoryModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-text-primary">Add New User Story</h3>
-            <button (click)="isStoryModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-border rounded-full transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <form (submit)="saveStory($event)" class="flex max-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
+          <div class="shrink-0 border-b border-border bg-sidebar px-6 py-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-start gap-3">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8M8 12h5m-5 5h8M5 5a2 2 0 012-2h10a2 2 0 012 2v14l-4-2-4 2-4-2-4 2V5z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ storyForm().id ? 'Update story' : 'New story' }}</p>
+                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ storyForm().id ? 'Edit user story' : 'Add user story' }}</h3>
+                  <p class="mt-1 text-sm text-text-secondary">Maintain English and Arabic backlog columns in one pass.</p>
+                </div>
+              </div>
+              <button type="button" (click)="isStoryModalOpen.set(false)" aria-label="Close story form" class="rounded-xl border border-border p-2 text-text-secondary hover:bg-background hover:text-text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <form (submit)="onAddUserStory($event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Title / Name</label>
-              <input type="text" name="storyTitle" required placeholder="e.g. As a user, I want to authenticate via Google" 
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Description / Details</label>
-              <textarea name="storyDesc" placeholder="Provide detailed acceptance criteria or description..." rows="4" required
-                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Priority</label>
-              <select name="storyPriority" class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-                <option value="Low">Low</option>
-                <option value="Medium" selected>Medium</option>
-                <option value="High">High</option>
-              </select>
+          <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <div class="grid gap-5 lg:grid-cols-2">
+              <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4">
+                <div class="flex items-center justify-between border-b border-border pb-2">
+                  <h4 class="text-sm font-extrabold text-text-primary">English story</h4>
+                  <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">EN</span>
+                </div>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title EN
+                  <input name="titleEn" required [(ngModel)]="storyForm().titleEn" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description EN
+                  <textarea name="descriptionEn" rows="4" [(ngModel)]="storyForm().descriptionEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaEn') }}
+                  <textarea name="acceptanceCriteriaEn" rows="4" [(ngModel)]="storyForm().acceptanceCriteriaEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                </label>
+              </section>
+
+              <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4" dir="rtl">
+                <div class="flex items-center justify-between border-b border-border pb-2">
+                  <h4 class="text-sm font-extrabold text-text-primary">Arabic story</h4>
+                  <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">AR</span>
+                </div>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title AR
+                  <input name="titleAr" [(ngModel)]="storyForm().titleAr" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description AR
+                  <textarea name="descriptionAr" rows="4" [(ngModel)]="storyForm().descriptionAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaAr') }}
+                  <textarea name="acceptanceCriteriaAr" rows="4" [(ngModel)]="storyForm().acceptanceCriteriaAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                </label>
+              </section>
             </div>
 
-            <div class="flex justify-end gap-3 pt-3">
-              <button type="button" (click)="isStoryModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-border font-semibold text-sm transition-colors">
-                Cancel
-              </button>
-              <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
-                Add Story
+            <label class="mt-5 block max-w-xs space-y-1.5 text-xs font-bold text-text-secondary">Priority
+              <select name="priority" [(ngModel)]="storyForm().priority" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Low</option><option>Medium</option><option>High</option></select>
+            </label>
+          </div>
+
+          <div class="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border bg-sidebar px-6 py-4">
+            <button type="button" (click)="isStoryModalOpen.set(false)" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary">Cancel</button>
+            <button type="submit" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-hover">Save story</button>
+          </div>
+        </form>
+      </div>
+    }
+    @if (isTaskModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <form (submit)="saveTask($event)" class="flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
+          <div class="shrink-0 border-b border-border bg-sidebar px-6 py-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-start gap-3">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5h6M9 12h6m-6 7h6M5 5h.01M5 12h.01M5 19h.01" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ taskForm().id ? 'Update task' : 'New task' }}</p>
+                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ taskForm().id ? 'Edit implementation task' : 'Add implementation task' }}</h3>
+                  <p class="mt-1 text-sm text-text-secondary">Fill the English and Arabic task columns, then set delivery metadata.</p>
+                </div>
+              </div>
+              <button type="button" (click)="isTaskModalOpen.set(false)" aria-label="Close task form" class="rounded-xl border border-border p-2 text-text-secondary hover:bg-background hover:text-text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+
+          <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+              <div class="grid gap-5 lg:grid-cols-2">
+                <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4">
+                  <div class="flex items-center justify-between border-b border-border pb-2">
+                    <h4 class="text-sm font-extrabold text-text-primary">English task</h4>
+                    <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">EN</span>
+                  </div>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title EN
+                    <input name="taskTitleEn" required [(ngModel)]="taskForm().titleEn" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
+                  </label>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description EN
+                    <textarea name="taskDescriptionEn" rows="3" [(ngModel)]="taskForm().descriptionEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                  </label>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary EN
+                    <textarea name="technicalSummaryEn" rows="3" [(ngModel)]="taskForm().technicalSummaryEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                  </label>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaEn') }}
+                    <textarea name="taskAcceptanceCriteriaEn" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                  </label>
+                </section>
+
+                <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4" dir="rtl">
+                  <div class="flex items-center justify-between border-b border-border pb-2">
+                    <h4 class="text-sm font-extrabold text-text-primary">Arabic task</h4>
+                    <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">AR</span>
+                  </div>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title AR
+                    <input name="taskTitleAr" [(ngModel)]="taskForm().titleAr" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
+                  </label>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description AR
+                    <textarea name="taskDescriptionAr" rows="3" [(ngModel)]="taskForm().descriptionAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                  </label>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary AR
+                    <textarea name="technicalSummaryAr" rows="3" [(ngModel)]="taskForm().technicalSummaryAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                  </label>
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaAr') }}
+                    <textarea name="taskAcceptanceCriteriaAr" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+                  </label>
+                </section>
+              </div>
+
+              <aside class="space-y-4 rounded-xl border border-border bg-background/60 p-4">
+                <div>
+                  <h4 class="text-sm font-extrabold text-text-primary">Delivery details</h4>
+                  <p class="mt-1 text-xs text-text-secondary">Status, sizing, and planning values.</p>
+                </div>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Priority
+                  <select name="taskPriority" [(ngModel)]="taskForm().priority" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Low</option><option>Medium</option><option>High</option></select>
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Effort
+                  <select name="effortSize" [(ngModel)]="taskForm().effortSize" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Small</option><option>Medium</option><option>Large</option></select>
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Type
+                  <select name="taskType" [(ngModel)]="taskForm().type" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Technical</option><option>NonTechnical</option></select>
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Status
+                  <select name="taskStatus" [(ngModel)]="taskForm().status" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>ToDo</option><option>InProgress</option><option>Review</option><option>Done</option></select>
+                </label>
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Estimated hours
+                  <input type="number" name="estimatedHours" min="0.1" step="0.5" required [(ngModel)]="taskForm().estimatedHours" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
+                </label>
+              </aside>
+            </div>
+          </div>
+
+          <div class="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border bg-sidebar px-6 py-4">
+            <button type="button" (click)="isTaskModalOpen.set(false)" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary">Cancel</button>
+            <button type="submit" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-hover">Save task</button>
+          </div>
+        </form>
       </div>
     }
 
-    <!-- AI Sprint Planning Modal -->
     @if (isSprintPlanningModalOpen()) {
       <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
     }
-  `
+
+    @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {
+      <app-tech-stack-advisor-modal [projectId]="projectState.selectedProjectId()!" (close)="isTechStackAdvisorOpen.set(false)" (completed)="onAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
+    }
+  `,
 })
 export class BacklogViewComponent implements OnInit {
   private backlogService = inject(BacklogService);
   private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   isLoading = signal(false);
   isAssigned = signal(false);
   backlog = signal<BacklogDto | null>(null);
   isStoryModalOpen = signal(false);
+  isTaskModalOpen = signal(false);
   isSprintPlanningModalOpen = signal(false);
+  isTechStackAdvisorOpen = signal(false);
   isGeneratingWbs = signal(false);
+  expandedStoryIds = signal<string[]>([]);
+  storyForm = signal<StoryFormModel>({ ...EMPTY_STORY });
+  taskForm = signal<TaskFormModel>({ ...EMPTY_TASK });
+
+  currentLang(): 'en' | 'ar' {
+    return (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang') === 'ar') ? 'ar' : 'en';
+  }
+
+  isArabic(): boolean {
+    return this.currentLang() === 'ar';
+  }
+
+  label(key: string): string {
+    const ar: Record<string, string> = {
+      projectNameArPlaceholder: '\u0627\u0633\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629',
+      backlogSubtitle: '\u0642\u0635\u0635 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u060c \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u062d\u0644\u064a\u0629\u060c \u0645\u0639\u0627\u064a\u064a\u0631 \u0627\u0644\u0642\u0628\u0648\u0644\u060c \u0648\u0645\u0647\u0627\u0645 \u0627\u0644\u062a\u0646\u0641\u064a\u0630.',
+      story: '\u0627\u0644\u0642\u0635\u0629',
+      task: '\u0627\u0644\u0645\u0647\u0645\u0629',
+      tasks: '\u0627\u0644\u0645\u0647\u0627\u0645',
+      priority: '\u0627\u0644\u0623\u0648\u0644\u0648\u064a\u0629',
+      actions: '\u0627\u0644\u0625\u062c\u0631\u0627\u0621\u0627\u062a',
+      status: '\u0627\u0644\u062d\u0627\u0644\u0629',
+      type: '\u0627\u0644\u0646\u0648\u0639',
+      effort: '\u0627\u0644\u062c\u0647\u062f',
+      hours: '\u0627\u0644\u0633\u0627\u0639\u0627\u062a',
+      acceptanceCriteriaEn: '\u0645\u0639\u0627\u064a\u064a\u0631 \u0627\u0644\u0642\u0628\u0648\u0644 \u0628\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629',
+      acceptanceCriteriaAr: '\u0645\u0639\u0627\u064a\u064a\u0631 \u0627\u0644\u0642\u0628\u0648\u0644 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629',
+      notProvided: '\u063a\u064a\u0631 \u0645\u062a\u0648\u0641\u0631.',
+      notProvidedAr: '\u063a\u064a\u0631 \u0645\u062a\u0648\u0641\u0631.',
+      noTasks: '\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0647\u0627\u0645 \u0645\u0631\u062a\u0628\u0637\u0629 \u0628\u0647\u0630\u0647 \u0627\u0644\u0642\u0635\u0629.',
+      noDescription: '\u0644\u0627 \u062a\u0648\u062c\u062f \u062a\u0641\u0627\u0635\u064a\u0644 \u062d\u0627\u0644\u064a\u0627.'
+    };
+    const en: Record<string, string> = {
+      projectNameArPlaceholder: 'Project name in Arabic',
+      backlogSubtitle: 'User stories, localized details, acceptance criteria, and implementation tasks.',
+      story: 'Story',
+      task: 'Task',
+      tasks: 'Tasks',
+      priority: 'Priority',
+      actions: 'Actions',
+      status: 'Status',
+      type: 'Type',
+      effort: 'Effort',
+      hours: 'Hours',
+      acceptanceCriteriaEn: 'Acceptance criteria EN',
+      acceptanceCriteriaAr: 'Acceptance criteria AR',
+      notProvided: 'Not provided.',
+      notProvidedAr: 'Not provided.',
+      noTasks: 'No tasks assigned to this user story.',
+      noDescription: 'No detail yet.'
+    };
+    return (this.isArabic() ? ar : en)[key] || key;
+  }
+
+  localizedProjectName(): string {
+    const data = this.backlog();
+    const project = this.projectState.selectedProject();
+    return this.isArabic()
+      ? (data?.projectNameAr || project?.nameAr || 'Backlog')
+      : (data?.projectNameEn || project?.nameEn || 'Backlog');
+  }
+
+  storyTitle(story: UserStoryDto): string {
+    return this.isArabic() ? (story.titleAr || '') : (story.titleEn || '');
+  }
+
+  storyDescription(story: UserStoryDto): string {
+    return this.isArabic()
+      ? (story.descriptionAr || this.label('noDescription'))
+      : (story.descriptionEn || this.label('noDescription'));
+  }
+
+
+  storyAcceptanceCriteria(story: UserStoryDto): string {
+    return this.isArabic()
+      ? (story.acceptanceCriteriaAr || this.label('notProvidedAr'))
+      : (story.acceptanceCriteriaEn || this.label('notProvided'));
+  }
+  taskTitle(task: TaskItemDto): string {
+    return this.isArabic() ? (task.titleAr || '') : (task.titleEn || '');
+  }
+
+  taskDescription(task: TaskItemDto): string {
+    return this.isArabic()
+      ? (task.descriptionAr || task.technicalSummaryAr || this.label('noDescription'))
+      : (task.descriptionEn || task.technicalSummaryEn || this.label('noDescription'));
+  }
+  selectedProjectHasStack = computed(() => {
+    const project = this.projectState.selectedProject();
+    return !!project?.techStack?.length;
+  });
 
   constructor() {
-    // Automatically trigger reload when the active selected project changes
     effect(() => {
       const projId = this.projectState.selectedProjectId();
       if (projId) {
@@ -276,6 +500,8 @@ export class BacklogViewComponent implements OnInit {
     try {
       const data = await this.backlogService.getBacklog(projectId);
       this.backlog.set(data);
+      const firstStory = data.userStories[0]?.id;
+      this.expandedStoryIds.set(firstStory ? [firstStory] : []);
     } catch (e) {
       console.error('Failed to fetch backlog:', e);
       this.backlog.set(null);
@@ -292,16 +518,159 @@ export class BacklogViewComponent implements OnInit {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
 
+    if (!this.selectedProjectHasStack()) {
+      this.isTechStackAdvisorOpen.set(true);
+      return;
+    }
+
     this.isGeneratingWbs.set(true);
     try {
       await this.aiRequirementsService.generateWbs(projId);
-      this.toastService.show('✅ AI WBS user stories and task items generated successfully!', 'success');
+      this.toastService.show('AI WBS user stories and task items generated successfully.', 'success');
       await this.fetchBacklog(projId);
-    } catch (e) {
-      console.error(e);
-      this.toastService.show('Failed to generate WBS. Check backend API logs.', 'error');
+    } catch (e: any) {
+      const message = e?.response?.data?.message || e?.response?.data?.error?.message || e?.message || 'Check backend API logs.';
+      this.toastService.show(`Failed to generate WBS: ${message}`, 'error');
     } finally {
       this.isGeneratingWbs.set(false);
+    }
+  }
+
+  async onAdvisorCompleted(projectId: string) {
+    this.isTechStackAdvisorOpen.set(false);
+    await this.projectState.loadProjects();
+    this.projectState.setSelectedProject(projectId);
+    await this.fetchBacklog(projectId);
+  }
+
+  toggleStory(storyId: string) {
+    this.expandedStoryIds.update(ids => ids.includes(storyId) ? ids.filter(id => id !== storyId) : [...ids, storyId]);
+  }
+
+  openStoryModal(story?: UserStoryDto) {
+    this.storyForm.set(story ? {
+      id: story.id,
+      titleEn: story.titleEn || '',
+      titleAr: story.titleAr || '',
+      descriptionEn: story.descriptionEn || '',
+      descriptionAr: story.descriptionAr || '',
+      acceptanceCriteriaEn: story.acceptanceCriteriaEn || '',
+      acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
+      priority: story.priority || 'Medium',
+    } : { ...EMPTY_STORY });
+    this.isStoryModalOpen.set(true);
+  }
+
+  async saveStory(event: Event) {
+    event.preventDefault();
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+
+    try {
+      this.isLoading.set(true);
+      const story = this.storyForm();
+      if (story.id) {
+        await this.backlogService.updateUserStory(story.id, story);
+        this.toastService.show('User story updated.', 'success');
+      } else {
+        const created = await this.backlogService.createUserStory(projId, story);
+        this.expandedStoryIds.update(ids => [...ids, created.id]);
+        this.toastService.show('User story created.', 'success');
+      }
+      this.isStoryModalOpen.set(false);
+      await this.fetchBacklog(projId);
+    } catch (e: any) {
+      this.toastService.show(e?.response?.data?.message || 'Failed to save user story.', 'error');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async deleteStory(story: UserStoryDto) {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Delete user story',
+      message: `Delete "${story.titleEn}" and all of its tasks?`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      type: 'danger',
+    });
+    if (!confirmed) return;
+
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+    try {
+      await this.backlogService.deleteUserStory(story.id);
+      this.toastService.show('User story deleted.', 'success');
+      await this.fetchBacklog(projId);
+    } catch (e: any) {
+      this.toastService.show(e?.response?.data?.message || 'Failed to delete user story.', 'error');
+    }
+  }
+
+  openTaskModal(story: UserStoryDto, task?: TaskItemDto) {
+    this.taskForm.set(task ? {
+      id: task.id,
+      userStoryId: story.id,
+      titleEn: task.titleEn || '',
+      titleAr: task.titleAr || '',
+      descriptionEn: task.descriptionEn || '',
+      descriptionAr: task.descriptionAr || '',
+      technicalSummaryEn: task.technicalSummaryEn || '',
+      technicalSummaryAr: task.technicalSummaryAr || '',
+      acceptanceCriteriaEn: task.acceptanceCriteriaEn || '',
+      acceptanceCriteriaAr: task.acceptanceCriteriaAr || '',
+      estimatedHours: Number(task.estimatedHours || 1),
+      effortSize: task.effortSize || 'Medium',
+      priority: task.priority || 'Medium',
+      type: task.type || 'Technical',
+      status: task.status || 'ToDo',
+    } : { ...EMPTY_TASK, userStoryId: story.id });
+    this.isTaskModalOpen.set(true);
+  }
+
+  async saveTask(event: Event) {
+    event.preventDefault();
+    const projId = this.projectState.selectedProjectId();
+    const task = this.taskForm();
+    if (!projId || !task.userStoryId) return;
+
+    try {
+      this.isLoading.set(true);
+      if (task.id) {
+        await this.backlogService.updateTask(task.id, task);
+        this.toastService.show('Task updated.', 'success');
+      } else {
+        await this.backlogService.createTask(task.userStoryId, task);
+        this.toastService.show('Task created.', 'success');
+      }
+      this.isTaskModalOpen.set(false);
+      await this.fetchBacklog(projId);
+      this.expandedStoryIds.update(ids => ids.includes(task.userStoryId!) ? ids : [...ids, task.userStoryId!]);
+    } catch (e: any) {
+      this.toastService.show(e?.response?.data?.message || 'Failed to save task.', 'error');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async deleteTask(task: TaskItemDto) {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Delete task',
+      message: `Delete "${task.titleEn}"?`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      type: 'danger',
+    });
+    if (!confirmed) return;
+
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+    try {
+      await this.backlogService.deleteTask(task.id);
+      this.toastService.show('Task deleted.', 'success');
+      await this.fetchBacklog(projId);
+    } catch (e: any) {
+      this.toastService.show(e?.response?.data?.message || 'Failed to delete task.', 'error');
     }
   }
 
@@ -313,31 +682,16 @@ export class BacklogViewComponent implements OnInit {
     const desc = (form.elements.namedItem('projDesc') as HTMLTextAreaElement).value;
 
     const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
-    if (success) {
-      form.reset();
-    }
-  }
-
-  async onAddUserStory(event: Event) {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const title = (form.elements.namedItem('storyTitle') as HTMLInputElement).value;
-    const desc = (form.elements.namedItem('storyDesc') as HTMLTextAreaElement).value;
-    const priority = (form.elements.namedItem('storyPriority') as HTMLSelectElement).value;
-    
-    const projId = this.projectState.selectedProjectId();
-    if (!projId) return;
-
-    try {
-      this.isLoading.set(true);
-      await this.backlogService.createUserStory(projId, title, desc, priority);
-      this.isStoryModalOpen.set(false);
-      // Reload backlog
-      await this.fetchBacklog(projId);
-    } catch (e) {
-      console.error('Failed to create user story:', e);
-    } finally {
-      this.isLoading.set(false);
-    }
+    if (success) form.reset();
   }
 }
+
+
+
+
+
+
+
+
+
+

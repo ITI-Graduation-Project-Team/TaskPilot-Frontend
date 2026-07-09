@@ -6,6 +6,7 @@ import { ProfileViewComponent } from '../profile-view/profile-view.component';
 import { TeamViewComponent } from '../team-view/team-view.component';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
+import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
@@ -31,6 +32,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     TeamViewComponent,
     AiChatModalComponent,
     DraftReviewModalComponent,
+    TechStackAdvisorModalComponent,
     ProjectHubComponent
   ],
   template: `
@@ -172,6 +174,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <h1 class="text-lg font-extrabold text-text-primary font-display flex items-center gap-1.5">
               @if (currentTab() === 'projects') {
                 Projects Hub
+              } @else if (currentTab() === 'create-project') {
+                Create Project
               } @else if (currentTab() === 'profile') {
                 My Profile
               } @else {
@@ -246,7 +250,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
             <!-- Create project manual CTA (Header Projects Hub only) -->
             @if (currentTab() === 'projects') {
-              <button (click)="isCreateProjectModalOpen.set(true)"
+              <button (click)="openCreateProjectPage()"
                       class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 Create Project
@@ -290,13 +294,95 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <app-project-hub
               [projects]="projectState.projects()"
               [projectStatsMap]="projectStatsMap()"
-              (createProject)="isCreateProjectModalOpen.set(true)"
-              (createProjectWithAi)="isCreateProjectModalOpen.set(false); isAiChatOpen.set(true)"
+              (createProject)="openCreateProjectPage()"
+              (createProjectWithAi)="openAiProjectFlow()"
               (selectSprint)="goToProject($event, 'sprint')"
               (selectBacklog)="goToProject($event, 'backlog')"
               (editProject)="openEditProjectModal($event)"
               (deleteProject)="deleteProject($event)">
             </app-project-hub>
+          } @else if (currentTab() === 'create-project') {
+            <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
+              <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+                <div>
+                  <button type="button" (click)="currentTab.set('projects')" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                    Back to projects
+                  </button>
+                  <p class="text-[11px] font-extrabold uppercase tracking-[0.24em] text-primary">New workspace</p>
+                  <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-text-primary font-display">Create a project your team can actually run</h2>
+                  <p class="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">Start with AI when requirements are still fuzzy, or use manual setup when you already know the project name and scope. Either path lands in the same project workspace.</p>
+                </div>
+                <div class="mt-1 flex w-full rounded-2xl border border-border bg-surface p-1 shadow-sm sm:w-auto xl:justify-self-end">
+                  <button type="button" (click)="showManualForm.set(false)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
+                          [class.bg-primary]="!showManualForm()" [class.text-white]="!showManualForm()" [class.text-text-secondary]="showManualForm()">AI assisted</button>
+                  <button type="button" (click)="showManualForm.set(true)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
+                          [class.bg-primary]="showManualForm()" [class.text-white]="showManualForm()" [class.text-text-secondary]="!showManualForm()">Manual setup</button>
+                </div>
+              </div>
+
+              <div class="mt-7 md:mt-8">
+              @if (!showManualForm()) {
+                @if (isAiChatOpen()) {
+                  <app-ai-chat-modal [embedded]="true" (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
+                } @else {
+                <div class="grid gap-6 lg:grid-cols-[1fr_380px]">
+                  <button type="button" (click)="openAiProjectFlow()" class="group min-h-[360px] rounded-3xl border border-primary/25 bg-surface p-8 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl">
+                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
+                      <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="mt-6 text-2xl font-extrabold text-text-primary font-display">Build from requirements chat</h3>
+                    <p class="mt-3 max-w-xl text-sm leading-7 text-text-secondary">Use the AI flow to clarify scope, finalize the project, review tech stack recommendations, and generate the initial backlog with WBS.</p>
+                    <div class="mt-8 grid gap-3 sm:grid-cols-2">
+                      @for (step of ['Requirements interview', 'Project draft saved', 'Tech stack advisor', 'Backlog generated']; track step) {
+                        <div class="rounded-2xl border border-border bg-sidebar px-4 py-3 text-xs font-bold text-text-primary">{{ step }}</div>
+                      }
+                    </div>
+                    <span class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-white shadow-md transition-colors group-hover:bg-primary-hover">
+                      Start AI flow
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </span>
+                  </button>
+
+                  <aside class="rounded-3xl border border-border bg-sidebar p-6 shadow-sm">
+                    <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-text-secondary">Best for</p>
+                    <div class="mt-5 space-y-4">
+                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Unclear scope</p><p class="mt-1 text-xs leading-5 text-text-secondary">Let the assistant ask clarifying questions before the project exists.</p></div>
+                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Backlog generation</p><p class="mt-1 text-xs leading-5 text-text-secondary">Tech Stack Advisor runs before WBS so tasks match the chosen architecture.</p></div>
+                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Team handoff</p><p class="mt-1 text-xs leading-5 text-text-secondary">The final project opens directly into a backlog your team can refine.</p></div>
+                    </div>
+                  </aside>
+                </div>
+                }
+              } @else {
+                <form (submit)="onCreateProjectSubmit($event)" class="grid gap-6 lg:grid-cols-[1fr_340px]">
+                  <div class="rounded-3xl border border-border bg-surface p-6 shadow-sm">
+                    <div class="grid gap-5 md:grid-cols-2">
+                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name EN<input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
+                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name AR<input type="text" name="projNameAr" required placeholder="&#1605;&#1579;&#1575;&#1604;: &#1578;&#1591;&#1576;&#1610;&#1602; &#1575;&#1604;&#1580;&#1608;&#1575;&#1604;" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
+                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description EN<textarea name="projDescEn" required rows="7" placeholder="What will this project deliver?" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
+                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description AR<textarea name="projDescAr" required rows="7" placeholder="&#1605;&#1575; &#1575;&#1604;&#1584;&#1610; &#1587;&#1610;&#1602;&#1583;&#1605;&#1607; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1588;&#1585;&#1608;&#1593;&#1567;" dir="rtl" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
+                    </div>
+                    <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-border pt-5">
+                      <button type="button" (click)="currentTab.set('projects')" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
+                      <button type="submit" class="rounded-xl bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-primary-hover">Create project</button>
+                    </div>
+                  </div>
+
+                  <aside class="rounded-3xl border border-border bg-sidebar p-6 shadow-sm">
+                    <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Manual setup</p>
+                    <h3 class="mt-2 text-lg font-extrabold text-text-primary">Keep it lean</h3>
+                    <p class="mt-2 text-sm leading-6 text-text-secondary">Manual projects start empty. After creation, assign team members, confirm stack when needed, and build the backlog from the Backlog tab.</p>
+                    <div class="mt-5 space-y-3 text-xs font-semibold text-text-secondary">
+                      <p class="rounded-2xl bg-surface p-3">Bilingual names and descriptions are stored separately.</p>
+                      <p class="rounded-2xl bg-surface p-3">No WBS is generated until you ask for it.</p>
+                      <p class="rounded-2xl bg-surface p-3">You can switch to the AI path before submitting.</p>
+                    </div>
+                  </aside>
+                </form>
+              }
+              </div>
+            </section>
           } @else if (currentTab() === 'sprint') {
             <app-board></app-board>
           } @else if (currentTab() === 'backlog') {
@@ -377,81 +463,6 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
     </div>
 
-    <!-- Create Project Modal Choice / Manual Form -->
-    @if (isCreateProjectModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-text-primary font-display">Create New Project</h3>
-            <button (click)="isCreateProjectModalOpen.set(false); showManualForm.set(false)" class="p-1.5 text-text-secondary hover:bg-sidebar rounded-full transition-colors focus:outline-none">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-          </div>
-
-          @if (!showManualForm()) {
-            <!-- Selector Options -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <!-- AI Option -->
-              <button (click)="isCreateProjectModalOpen.set(false); isAiChatOpen.set(true)"
-                      class="flex flex-col items-center text-center p-6 bg-sidebar border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-md group">
-                <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                  <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <h4 class="text-sm font-bold text-text-primary font-display">AI Requirements Flow</h4>
-                <p class="text-[11px] text-text-secondary mt-1">Chat with AI to define requirements, analyze scopes, and build structured backlogs automatically.</p>
-              </button>
-
-              <!-- Manual Option -->
-              <button (click)="showManualForm.set(true)"
-                      class="flex flex-col items-center text-center p-6 bg-sidebar border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-md group">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                </div>
-                <h4 class="text-sm font-bold text-text-primary font-display">Manual Configuration</h4>
-                <p class="text-[11px] text-text-secondary mt-1">Directly fill names and description forms to construct your workspace manually.</p>
-              </button>
-            </div>
-          } @else {
-            <form (submit)="onCreateProjectSubmit($event)" class="space-y-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
-                  <input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" 
-                         class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
-                  <input type="text" name="projNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
-                         class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description (English)</label>
-                  <textarea name="projDescEn" placeholder="English details..." rows="3" required
-                            class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">الوصف (عربي)</label>
-                  <textarea name="projDescAr" placeholder="تفاصيل باللغة العربية..." rows="3" required dir="rtl"
-                            class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
-                </div>
-              </div>
-
-              <div class="flex justify-end gap-3 pt-3">
-                <button type="button" (click)="showManualForm.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-sidebar font-semibold text-sm transition-colors">
-                  Back
-                </button>
-                <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
-                  Create Project
-                </button>
-              </div>
-            </form>
-          }
-        </div>
-      </div>
-    }
-
     <!-- Edit Project Modal -->
     @if (isEditProjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
@@ -503,8 +514,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     }
 
     <!-- AI Requirement Chat modal -->
-    @if (isAiChatOpen()) {
-      <app-ai-chat-modal (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
+
+    @if (isTechStackAdvisorOpen() && advisorProjectId()) {
+      <app-tech-stack-advisor-modal [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
     }
 
     <!-- Project Draft Review modal -->
@@ -530,12 +542,11 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'sprint' | 'backlog' | 'team' | 'profile'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'backlog' | 'team' | 'profile'>('sprint');
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
 
-  isCreateProjectModalOpen = signal(false);
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
 
@@ -555,6 +566,8 @@ export class DashboardComponent implements OnInit {
   isDraftReviewOpen = signal(false);
   aiDraft = signal<any>(null);
   chatId = signal<string>('');
+  isTechStackAdvisorOpen = signal(false);
+  advisorProjectId = signal<string | null>(null);
 
   public projectState = inject(ProjectStateService);
   private authService = inject(AuthService);
@@ -706,14 +719,43 @@ export class DashboardComponent implements OnInit {
     this.projectState.setSelectedProject(select.value);
   }
 
+  openCreateProjectPage() {
+    this.showManualForm.set(false);
+    this.currentTab.set('create-project');
+  }
+
+  openAiProjectFlow() {
+    this.showManualForm.set(false);
+    this.currentTab.set('create-project');
+    this.isAiChatOpen.set(true);
+  }
+
   onAiChatClose() {
     this.isAiChatOpen.set(false);
   }
 
-  onDraftGenerated(event: { draft: any, chatId: string }) {
+  async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
     this.isAiChatOpen.set(false);
-    // Reload projects after new project generated by AI
-    this.projectState.loadProjects();
+    this.aiDraft.set(event.draft);
+    this.chatId.set(event.chatId);
+    this.advisorProjectId.set(event.projectId);
+    this.isTechStackAdvisorOpen.set(true);
+    await this.projectState.loadProjects();
+    this.projectState.setSelectedProject(event.projectId);
+  }
+
+  onTechStackAdvisorClose() {
+    this.isTechStackAdvisorOpen.set(false);
+    this.advisorProjectId.set(null);
+  }
+
+  async onTechStackAdvisorCompleted(projectId: string) {
+    this.isTechStackAdvisorOpen.set(false);
+    this.advisorProjectId.set(null);
+    await this.projectState.loadProjects();
+    this.projectState.setSelectedProject(projectId);
+    this.currentTab.set('backlog');
+    this.loadAllProjectStats();
   }
 
   onProjectSaved() {
@@ -731,8 +773,8 @@ export class DashboardComponent implements OnInit {
 
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
-      this.isCreateProjectModalOpen.set(false);
       this.showManualForm.set(false);
+      this.currentTab.set('projects');
       form.reset();
       this.loadAllProjectStats();
     }

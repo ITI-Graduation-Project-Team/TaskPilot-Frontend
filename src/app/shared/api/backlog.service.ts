@@ -5,9 +5,13 @@ export interface TaskItemDto {
   id: string;
   userStoryId: string;
   titleEn: string;
-  titleAr: string;
-  descriptionEn: string;
-  descriptionAr: string;
+  titleAr?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  technicalSummaryEn?: string;
+  technicalSummaryAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
   estimatedHours: number;
   effortSize: string;
   type: string;
@@ -19,9 +23,11 @@ export interface UserStoryDto {
   id: string;
   projectId: string;
   titleEn: string;
-  titleAr: string;
-  descriptionEn: string;
-  descriptionAr: string;
+  titleAr?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
   priority: string;
   status: string;
   tasks: TaskItemDto[];
@@ -40,15 +46,50 @@ export interface ProjectDto {
   nameAr: string;
   descriptionEn: string;
   companyId: string;
+  techStack?: string[];
+  platformTargets?: string[];
+  projectType?: string;
+}
+
+export interface UserStoryPayload {
+  titleEn: string;
+  titleAr?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
+  priority: string;
+}
+
+export interface TaskPayload {
+  titleEn: string;
+  titleAr?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  technicalSummaryEn?: string;
+  technicalSummaryAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
+  estimatedHours: number;
+  effortSize: string;
+  priority: string;
+  type: string;
+  status?: string;
 }
 
 export function mapPriorityToBackend(priority: string): number {
   switch (priority) {
-    case 'Low': return 0;
-    case 'Medium': return 1;
-    case 'High': return 2;
-    case 'Critical': return 3;
-    default: return 1;
+    case 'Low':
+    case '0':
+      return 0;
+    case 'High':
+    case '2':
+      return 2;
+    case 'Critical':
+    case '3':
+      return 3;
+    default:
+      return 1;
   }
 }
 
@@ -60,8 +101,8 @@ export function mapPriorityToFrontend(priority: number | string): 'Low' | 'Mediu
 }
 
 export function mapTypeToBackend(type: string): number {
-  if (type === 'Bug') return 2; // NonTechnical
-  return 1; // Technical (Feature, Refactor)
+  if (type === '2' || type === 'NonTechnical' || type === 'Bug') return 2;
+  return 1;
 }
 
 export function mapTypeToFrontend(type: number | string): 'Feature' | 'Bug' | 'Refactor' {
@@ -75,15 +116,19 @@ export function mapStatusToBackend(status: string): number {
   switch (status) {
     case 'todo':
     case 'ToDo':
+    case '0':
       return 0;
     case 'inProgress':
     case 'InProgress':
+    case '1':
       return 1;
     case 'review':
     case 'Review':
+    case '2':
       return 2;
     case 'done':
     case 'Done':
+    case '3':
       return 3;
     default:
       return 0;
@@ -98,11 +143,23 @@ export function mapStatusToFrontend(status: number | string): 'todo' | 'inProgre
   return 'todo';
 }
 
+export function mapEffortSizeToBackend(effortSize: string): number {
+  switch (effortSize) {
+    case 'Small':
+    case '0':
+      return 0;
+    case 'Large':
+    case '2':
+      return 2;
+    default:
+      return 1;
+  }
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class BacklogService {
-  
   async getProjects(): Promise<ProjectDto[]> {
     const { data } = await apiClient.get<any>('/Projects');
     return data.data || [];
@@ -125,59 +182,68 @@ export class BacklogService {
     return data.data;
   }
 
-  async createUserStory(projectId: string, titleEn: string, descriptionEn: string, priority: string = 'High'): Promise<UserStoryDto> {
+  async createUserStory(projectId: string, story: UserStoryPayload): Promise<UserStoryDto> {
     const { data } = await apiClient.post<any>(`/projects/${projectId}/userstories`, {
-      titleEn,
-      titleAr: titleEn,
-      descriptionEn,
-      descriptionAr: descriptionEn,
-      acceptanceCriteriaEn: 'Fully implemented and verified.',
-      acceptanceCriteriaAr: 'Fully implemented and verified.',
-      priority: mapPriorityToBackend(priority),
+      titleEn: story.titleEn,
+      titleAr: story.titleAr || '',
+      descriptionEn: story.descriptionEn || '',
+      descriptionAr: story.descriptionAr || '',
+      acceptanceCriteriaEn: story.acceptanceCriteriaEn || '',
+      acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
+      priority: mapPriorityToBackend(story.priority),
     });
     return data.data;
   }
 
-  async createTask(storyId: string, task: {
-    titleEn: string;
-    descriptionEn: string;
-    estimatedHours: number;
-    priority: string;
-    type: string;
-    status: string;
-  }): Promise<TaskItemDto> {
+  async updateUserStory(storyId: string, story: UserStoryPayload): Promise<void> {
+    await apiClient.put(`/userstories/${storyId}`, {
+      titleEn: story.titleEn,
+      titleAr: story.titleAr || '',
+      descriptionEn: story.descriptionEn || '',
+      descriptionAr: story.descriptionAr || '',
+      acceptanceCriteriaEn: story.acceptanceCriteriaEn || '',
+      acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
+      priority: mapPriorityToBackend(story.priority),
+    });
+  }
+
+  async deleteUserStory(storyId: string): Promise<void> {
+    await apiClient.delete(`/userstories/${storyId}`);
+  }
+
+  async createTask(storyId: string, task: TaskPayload): Promise<TaskItemDto> {
     const { data } = await apiClient.post<any>(`/userstories/${storyId}/tasks`, {
       titleEn: task.titleEn,
-      titleAr: task.titleEn,
-      descriptionEn: task.descriptionEn,
-      descriptionAr: task.descriptionEn,
+      titleAr: task.titleAr || '',
+      descriptionEn: task.descriptionEn || '',
+      descriptionAr: task.descriptionAr || '',
+      technicalSummaryEn: task.technicalSummaryEn || '',
+      technicalSummaryAr: task.technicalSummaryAr || '',
+      acceptanceCriteriaEn: task.acceptanceCriteriaEn || '',
+      acceptanceCriteriaAr: task.acceptanceCriteriaAr || '',
       estimatedHours: task.estimatedHours,
-      effortSize: 1, // Medium
+      effortSize: mapEffortSizeToBackend(task.effortSize),
       type: mapTypeToBackend(task.type),
       priority: mapPriorityToBackend(task.priority),
-      status: mapStatusToBackend(task.status),
     });
     return data.data;
   }
 
-  async updateTask(taskId: string, task: {
-    titleEn: string;
-    descriptionEn: string;
-    estimatedHours: number;
-    priority: string;
-    type: string;
-    status: string;
-  }): Promise<void> {
+  async updateTask(taskId: string, task: TaskPayload): Promise<void> {
     await apiClient.put(`/tasks/${taskId}`, {
       titleEn: task.titleEn,
-      titleAr: task.titleEn,
-      descriptionEn: task.descriptionEn,
-      descriptionAr: task.descriptionEn,
+      titleAr: task.titleAr || '',
+      descriptionEn: task.descriptionEn || '',
+      descriptionAr: task.descriptionAr || '',
+      technicalSummaryEn: task.technicalSummaryEn || '',
+      technicalSummaryAr: task.technicalSummaryAr || '',
+      acceptanceCriteriaEn: task.acceptanceCriteriaEn || '',
+      acceptanceCriteriaAr: task.acceptanceCriteriaAr || '',
       estimatedHours: task.estimatedHours,
-      effortSize: 1, // Medium
+      effortSize: mapEffortSizeToBackend(task.effortSize),
       type: mapTypeToBackend(task.type),
       priority: mapPriorityToBackend(task.priority),
-      status: mapStatusToBackend(task.status),
+      status: mapStatusToBackend(task.status || 'ToDo'),
     });
   }
 
