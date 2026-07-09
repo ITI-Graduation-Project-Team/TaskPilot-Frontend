@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiRequirementsService, GeneratedProjectDTO } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-draft-review-modal',
@@ -161,6 +162,7 @@ export class DraftReviewModalComponent implements OnInit {
 
   private aiRequirements = inject(AiRequirementsService);
   private projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
 
   isSaving = signal(false);
 
@@ -197,7 +199,7 @@ export class DraftReviewModalComponent implements OnInit {
       this.projectSaved.emit();
     } catch (e) {
       console.error(e);
-      alert('Failed to save project. Ensure the backend is running and details are valid.');
+      this.toastService.show('Failed to save project. Ensure the backend is running and details are valid.', 'error');
     } finally {
       this.isSaving.set(false);
     }

@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, signal, inject, Output, EventEmitter, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, input, Output, EventEmitter, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 interface ChatMessage {
   text: string;
@@ -16,8 +17,8 @@ interface ChatMessage {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-      <div class="bg-surface border border-border rounded-3xl w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-[scaleUp_0.25s_ease_both]">
+    <div class="flex items-center justify-center animate-[fadeIn_0.2s_ease_both]" [class.fixed]="!embedded()" [class.inset-0]="!embedded()" [class.z-50]="!embedded()" [class.p-4]="!embedded()" [class.bg-black\/60]="!embedded()" [class.backdrop-blur-sm]="!embedded()" [class.w-full]="embedded()">
+      <div class="bg-surface border border-border rounded-3xl w-full flex flex-col shadow-sm overflow-hidden animate-[scaleUp_0.25s_ease_both]" [class.max-w-3xl]="!embedded()" [class.h-[85vh]]="!embedded()" [class.max-w-none]="embedded()" [class.min-h-[520px]]="embedded()">
         
         <!-- Header -->
         <div class="p-5 border-b border-border bg-sidebar flex items-center justify-between shrink-0">
@@ -57,7 +58,7 @@ interface ChatMessage {
         </div>
 
         <!-- Chat Area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-4" #chatScrollContainer>
+        <div class="flex-1 overflow-y-auto p-6 space-y-4" [class.max-h-[360px]]="embedded()" #chatScrollContainer>
           
           <!-- Welcome Message -->
           <div class="flex gap-3 max-w-[85%]">
@@ -190,13 +191,15 @@ interface ChatMessage {
   `]
 })
 export class AiChatModalComponent implements AfterViewChecked {
+  embedded = input(false);
   @Output() close = new EventEmitter<void>();
-  @Output() draftGenerated = new EventEmitter<{ draft: any; chatId: string }>();
+  @Output() draftGenerated = new EventEmitter<{ projectId: string; chatId: string; draft: any }>();
 
   @ViewChild('chatScrollContainer') private chatScrollContainer!: ElementRef;
 
   private aiRequirements = inject(AiRequirementsService);
   private projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
 
   chatId = signal<string | null>(null);
   completenessScore = signal(0);
@@ -368,22 +371,14 @@ export class AiChatModalComponent implements AfterViewChecked {
       const finalizeResult = res.data || res;
       
       if (finalizeResult && finalizeResult.projectId) {
-        // Step 2: Automatically generate and persist WBS/Backlog
-        await this.aiRequirements.generateWbs(finalizeResult.projectId);
-        
-        // Refresh project state to display the newly created project
         await this.projectState.loadProjects();
-        
-        // Hide modal only on success
         this.showNamePrompt.set(false);
-        
-        // Notify parent that project creation is complete
-        this.draftGenerated.emit({ draft: finalizeResult, chatId: activeChatId });
+        this.draftGenerated.emit({ projectId: finalizeResult.projectId, draft: finalizeResult, chatId: activeChatId });
       }
     } catch (err: any) {
       console.error(err);
       const backendError = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Please check and try again.';
-      alert(`Failed to finalize requirements: ${backendError}`);
+      this.toastService.show(`Failed to finalize requirements: ${backendError}`, 'error');
     } finally {
       this.isGeneratingDraft.set(false);
     }

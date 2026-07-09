@@ -4,6 +4,7 @@ import { AsyncPipe } from '@angular/common';
 
 import { LoaderComponent } from './shared/ui/loader/loader';
 import { ToastComponent } from './shared/ui/toast/toast.component';
+import { ConfirmDialogComponent } from './shared/ui/confirm-dialog/confirm-dialog.component';
 import { LoadingService } from './shared/services/loading.service';
 import { setAxiosInjector } from './shared/api/axios.instance';
 import { ThemeService } from './shared/services/theme.service';
@@ -15,6 +16,7 @@ import { ThemeService } from './shared/services/theme.service';
     RouterOutlet,
     LoaderComponent,
     ToastComponent,
+    ConfirmDialogComponent,
     AsyncPipe
   ],
   template: `
@@ -24,6 +26,7 @@ import { ThemeService } from './shared/services/theme.service';
 
     <router-outlet />
     <app-toast />
+    <app-confirm-dialog />
   `,
 })
 export class AppComponent {

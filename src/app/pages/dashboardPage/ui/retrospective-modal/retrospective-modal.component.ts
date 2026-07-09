@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, Input, Output, Even
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintRetroDto } from '../../../../shared/api/sprint-planning.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-retrospective-modal',
@@ -108,6 +109,7 @@ export class RetrospectiveModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
 
   private sprintService = inject(SprintPlanningService);
+  private toastService = inject(ToastService);
 
   retro = signal<SprintRetroDto | null>(null);
   isLoading = signal(false);
@@ -135,7 +137,7 @@ export class RetrospectiveModalComponent implements OnInit {
       this.retro.set(res.data || res || null);
     } catch (e) {
       console.error(e);
-      alert('Failed to generate retrospective analysis. Check backend server logs.');
+      this.toastService.show('Failed to generate retrospective analysis. Check backend server logs.', 'error');
     } finally {
       this.isLoading.set(false);
     }

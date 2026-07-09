@@ -13,6 +13,7 @@ import {
 } from '../../../../shared/api/profile.service';
 import { extractApiError } from '../../../../shared/api/auth.api';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 type UploadState = 'idle' | 'dragging' | 'loading' | 'success' | 'error';
 
@@ -39,6 +40,7 @@ export class CompleteProfileComponent {
     private profileService: ProfileService,
     private router: Router,
     private translate: TranslateService,
+    private toastService: ToastService,
     @Inject(DOCUMENT) private document: Document
   ) {
     const savedLang = localStorage.getItem('app_lang') || 'en';
@@ -163,7 +165,7 @@ export class CompleteProfileComponent {
 
   confirmAndSave() {
     if (this.skills().length === 0) {
-      alert('Please add at least one skill.');
+      this.toastService.show('Please add at least one skill.', 'error');
       return;
     }
 
@@ -184,7 +186,7 @@ export class CompleteProfileComponent {
     this.profileService.confirmProfile(payload).subscribe({
       next: (res) => {
         localStorage.setItem('isProfileCompleted', 'true');
-        alert('Profile saved successfully!');
+        this.toastService.show('🎉 Profile saved successfully!', 'success');
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

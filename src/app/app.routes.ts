@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './shared/guards/role.guard';
+import { authGuard } from './shared/guards/auth.guard';
 import { authRedirectGuard } from './shared/guards/auth-redirect.guard';
 
 export const routes: Routes = [
@@ -13,6 +14,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
@@ -89,6 +91,7 @@ export const routes: Routes = [
   },
   {
     path: 'complete-profile',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/completeProfilePage/ui/complete-profile/complete-profile.component').then(
         (m) => m.CompleteProfileComponent
