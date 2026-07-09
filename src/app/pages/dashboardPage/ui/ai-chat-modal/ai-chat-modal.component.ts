@@ -214,13 +214,13 @@ interface ChatMessage {
                         class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
                   Cancel
                 </button>
-                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim() || !projectNameArInput().trim() || !projectDescriptionEnInput().trim() || !projectDescriptionArInput().trim()"
+                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim() || !projectNameArInput().trim() || !projectDescriptionEnInput().trim() || !projectDescriptionArInput().trim() || !sprintDurationInput() || !targetSprintHoursInput()"
                         class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[140px] justify-center">
                   @if (isGeneratingDraft()) {
-                    <div class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                    Generating...
+                    <span class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
+                    <span>Generating...</span>
                   } @else {
-                    Confirm & Save
+                    <span>Confirm & Save</span>
                   }
                 </button>
               </div>
