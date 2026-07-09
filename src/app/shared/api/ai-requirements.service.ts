@@ -57,6 +57,8 @@ export class AiRequirementsService {
       companyId: string; 
       sprintDurationInDays: number; 
       targetSprintHours: number; 
+      descriptionEn: string;
+      descriptionAr: string;
     }
   ): Promise<any> {
     const { data } = await apiClient.post(`/requirements/${chatId}/finalize`, payload);
