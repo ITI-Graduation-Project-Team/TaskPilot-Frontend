@@ -367,6 +367,17 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       return;
     }
     
+    const createdAt = new Date(pending.startDate);
+    const ageMinutes = (Date.now() - createdAt.getTime()) / 1000 / 60;
+  
+    if (pending.gateway === 'Paymob' && ageMinutes > 55) {
+      this.toastService.show(
+        'Your payment session has expired. Please start a new payment.',
+        'error');
+      this.showStartOverConfirm.set(true);
+      return;
+    }
+    
     // Both Paymob and PayPal use redirect flow
     if (pending.gateway === 'Paymob' || 
         pending.gateway === 'PayPal') {
@@ -397,8 +408,20 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
       this.showStartOverConfirm.set(false);
       this.currentSub.set(null);
       await this.loadData();
-      this.toastService.show(
-        'Payment cancelled successfully.', 'success');
+      
+      const sub = this.currentSub();
+      const currentPlan = this.plans().find(p => p.id === sub?.subscriptionPlanId);
+      const isFree = currentPlan?.monthlyPrice === 0 && currentPlan?.annualPrice === 0;
+      
+      if (sub && !isFree) {
+        this.toastService.show(
+          `Payment cancelled. You remain on ${currentPlan?.name}.`,
+          'success');
+      } else {
+        this.toastService.show(
+          'Payment cancelled successfully.', 
+          'success');
+      }
     } catch (err: any) {
       this.toastService.show(err.response?.data?.message || 'Failed to cancel pending subscription.', 'error');
     } finally {
