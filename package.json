@@ -26,7 +26,8 @@
     "ngx-cookie-service": "^21.3.1",
     "ngx-quicklink": "^0.4.9",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@angular/build": "^21.2.9",

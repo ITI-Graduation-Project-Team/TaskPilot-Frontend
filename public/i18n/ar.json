@@ -150,5 +150,106 @@
     "sales": "المبيعات",
     "followUs": "تابعنا",
     "copyright": "© 2026 TaskPilot. جميع الحقوق محفوظة."
+  },
+  "calendar": {
+    "title": "التقويم",
+    "workload": "نظرة عامة على عبء العمل",
+    "tasksCount": "مهام",
+    "reschedule": "إعادة جدولة",
+    "rescheduleSuccess": "تمت إعادة جدولة المهمة بنجاح",
+    "rescheduleError": "فشل في إعادة جدولة المهمة",
+    "loadError": "فشل في تحميل بيانات التقويم",
+    "months": {
+      "jan": "يناير", "feb": "فبراير", "mar": "مارس", "apr": "أبريل",
+      "may": "مايو", "jun": "يونيو", "jul": "يوليو", "aug": "أغسطس",
+      "sep": "سبتمبر", "oct": "أكتوبر", "nov": "نوفمبر", "dec": "ديسمبر"
+    },
+    "days": {
+      "sun": "الأحد", "mon": "الإثنين", "tue": "الثلاثاء", "wed": "الأربعاء", "thu": "الخميس", "fri": "الجمعة", "sat": "السبت"
+    }
+  },
+  "employee": {
+    "loading": "جاري تحميل مساحة العمل…",
+    "nav": {
+      "sprintBoard": "الاسبرينت النشط",
+      "myBacklog": "مهامي",
+      "myProfile": "ملفي الشخصي",
+      "sprint": "سبرينت",
+      "backlog": "المهام",
+      "profile": "الملف",
+      "myProjects": "مشاريعي",
+      "currentProjects": "المشاريع الحالية",
+      "projectHistory": "سجل المشاريع",
+      "current": "الحالية",
+      "history": "السجل"
+    },
+    "pages": {
+      "sprintBoard": "الاسبرينت النشط",
+      "myBacklog": "مهامي",
+      "myProfile": "ملفي الشخصي",
+      "currentProjects": "المشاريع الحالية",
+      "projectHistory": "سجل المشاريع"
+    },
+    "header": {
+      "selectProject": "اختر مشروعاً",
+      "yourProjects": "مشاريعك",
+      "logout": "تسجيل الخروج"
+    },
+    "sidebar": {
+      "employee": "موظف"
+    },
+    "noProject": {
+      "title": "لم يتم تعيينك في مشروع",
+      "description": "لم يتم تعيينك في أي مشروع حتى الآن. تواصل مع مدير المشروع للبدء."
+    },
+    "backlog": {
+      "title": "مهامي",
+      "subtitle": "جميع المهام في مشروعك الحالي",
+      "filterAll": "الكل",
+      "filterTodo": "للتنفيذ",
+      "filterInProgress": "قيد التنفيذ",
+      "filterReview": "قيد المراجعة",
+      "filterDone": "منجز",
+      "filterMine": "معينة لي",
+      "mine": "لي",
+      "empty": "لا توجد مهام",
+      "emptyHint": "جرّب تغيير التصفية أو تحقق لاحقاً.",
+      "tasks": "مهمة"
+    },
+    "status": {
+      "todo": "للتنفيذ",
+      "inProgress": "قيد التنفيذ",
+      "review": "قيد المراجعة",
+      "done": "منجز"
+    },
+    "profile": {
+      "edit": "تعديل الملف",
+      "editTitle": "تعديل ملفك الشخصي",
+      "noJobTitle": "لم يتم تحديد المسمى الوظيفي",
+      "seniority": "مستوى الخبرة",
+      "yearsExp": "سنوات الخبرة",
+      "years": "سنة",
+      "skills": "مهارات",
+      "skillsTitle": "المهارات التقنية",
+      "noSkills": "لم تُضف أي مهارات بعد",
+      "loadError": "تعذر تحميل ملفك الشخصي",
+      "jobTitle": "المسمى الوظيفي",
+      "jobTitlePlaceholder": "مثال: مطور واجهات أمامية",
+      "addSkill": "إضافة مهارة",
+      "skillName": "اسم المهارة…",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء"
+    },
+    "projects": {
+      "current": "المشاريع الحالية",
+      "history": "سجل المشاريع",
+      "noActiveTitle": "لا توجد مشاريع نشطة",
+      "noActiveDesc": "ليس لديك أي مشاريع نشطة حالياً. تحقق لاحقاً أو تواصل مع مدير المشروع.",
+      "inProgress": "قيد التنفيذ",
+      "noHistoryTitle": "لا يوجد سجل مشاريع",
+      "noHistoryDesc": "لم تكمل أي مشاريع بعد. عندما يتم إغلاق أو إكمال مشروع معين لك، سيظهر هنا.",
+      "completed": "مكتمل",
+      "noDescription": "لا يوجد وصف."
+    }
   }
 }

@@ -9,6 +9,7 @@ import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-mo
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { ProjectStats } from '../project-card/project-card.component';
+import { CalendarViewComponent } from '../calendar-view/calendar-view.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
@@ -17,7 +18,7 @@ import { AuthService } from '../../../../shared/api/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
-
+import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -33,7 +34,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     AiChatModalComponent,
     DraftReviewModalComponent,
     TechStackAdvisorModalComponent,
-    ProjectHubComponent
+    ProjectHubComponent,
+    CalendarViewComponent,
+    TranslatePipe
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -57,7 +60,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
               <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate max-w-[130px]" [title]="sp.nameEn">
+                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="sp.nameEn">
                   📁 {{ sp.nameEn }}
                 </span>
                 <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
@@ -134,6 +137,19 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               Project Team
             </a>
           }
+          <a (click)="currentTab.set('calendar')"
+             [class.bg-primary/10]="currentTab() === 'calendar'"
+             [class.text-primary]="currentTab() === 'calendar'"
+             [class.font-bold]="currentTab() === 'calendar'"
+             [class.shadow-sm]="currentTab() === 'calendar'"
+             [class.text-text-secondary]="currentTab() !== 'calendar'"
+             [class.hover:text-text-primary]="currentTab() !== 'calendar'"
+             [class.hover:bg-primary/5]="currentTab() !== 'calendar'"
+             [class.font-medium]="currentTab() !== 'calendar'"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            {{ 'calendar.title' | translate }}
+          </a>
           <a (click)="currentTab.set('profile')"
              [class.bg-primary/10]="currentTab() === 'profile'"
              [class.text-primary]="currentTab() === 'profile'"
@@ -299,8 +315,11 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               (selectSprint)="goToProject($event, 'sprint')"
               (selectBacklog)="goToProject($event, 'backlog')"
               (editProject)="openEditProjectModal($event)"
-              (deleteProject)="deleteProject($event)">
+              (deleteProject)="deleteProject($event)"
+              (toggleProjectStatus)="onToggleProjectStatus($event)">
             </app-project-hub>
+          } @else if (currentTab() === 'calendar') {
+            <app-calendar-view [isPM]="true"></app-calendar-view>
           } @else if (currentTab() === 'create-project') {
             <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
               <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
@@ -393,6 +412,27 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <app-profile-view></app-profile-view>
           }
         </main>
+        
+        <!-- Floating AI Chat Button -->
+        <button (click)="isAiChatOpen.set(true)"
+                class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center hover:scale-110 transition-transform duration-300 z-50 group">
+          <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          <!-- Tooltip -->
+          <span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-sidebar border border-border text-text-primary text-xs font-bold rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none">
+            Ask AI Assistant
+          </span>
+        </button>
+
+        <!-- AI Chat Modal (Floating mode) -->
+        @if (isAiChatOpen()) {
+          <app-ai-chat-modal 
+            [embedded]="false" 
+            (close)="onAiChatClose()" 
+            (draftGenerated)="onDraftGenerated($event)">
+          </app-ai-chat-modal>
+        }
       </div>
 
       <!-- Mobile Bottom Navigation Bar -->
@@ -542,7 +582,7 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'backlog' | 'team' | 'profile'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'backlog' | 'team' | 'profile' | 'calendar'>('calendar');
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
@@ -818,12 +858,49 @@ export class DashboardComponent implements OnInit {
         type: 'danger'
       });
       if (confirmed) {
-        const success = await this.projectState.deleteProject(projectId);
-        if (success) {
-          this.toastService.show(`Project "${proj.nameEn}" deleted successfully.`, 'success');
+        await this.onDeleteProject(projectId);
+      }
+    }
+  }
+
+  async onDeleteProject(projectId: string) {
+    const success = await this.projectState.deleteProject(projectId);
+    if (success) {
+      this.toastService.show('Project deleted successfully', 'success');
+      this.loadAllProjectStats();
+    } else {
+      this.toastService.show('Failed to delete project. Please try again.', 'error');
+    }
+  }
+
+  async onToggleProjectStatus(projectId: string) {
+    const p = this.projectState.projects().find(x => x.id === projectId);
+    if (p) {
+      if (p.status === 'Completed') {
+        const confirmed = await this.confirmDialog.confirm({
+          title: 'Restore Project',
+          message: `Are you sure you want to restore "${p.nameEn}" to an active state?`,
+          confirmLabel: 'Restore',
+          cancelLabel: 'Cancel',
+          type: 'info'
+        });
+        if (confirmed) {
+          this.projectState.restoreProject(projectId);
+          this.toastService.show('Project restored successfully', 'success');
           this.loadAllProjectStats();
-        } else {
-          this.toastService.show('Failed to delete project. Please try again.', 'error');
+        }
+      } else {
+        const confirmed = await this.confirmDialog.confirm({
+          title: 'Complete Project',
+          message: `Are you sure you want to mark "${p.nameEn}" as completed?`,
+          confirmLabel: 'Complete',
+          cancelLabel: 'Cancel',
+          type: 'info'
+        });
+        if (confirmed) {
+          this.projectState.markProjectCompleted(projectId);
+          this.toastService.show('Project marked as completed', 'success');
+          this.loadAllProjectStats();
         }
       }
     }

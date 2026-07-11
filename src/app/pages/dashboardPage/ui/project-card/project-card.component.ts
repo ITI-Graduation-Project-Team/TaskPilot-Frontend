@@ -54,7 +54,16 @@ export interface ProjectStats {
                 <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Project
               </button>
-              <button (click)="onDelete($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2">
+              <button (click)="onToggleStatus($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
+                @if (project().status === 'Completed') {
+                  <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                  Restore Project
+                } @else {
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Complete Project
+                }
+              </button>
+              <button (click)="onDelete($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2 border-t border-border mt-1 pt-2">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 Delete
               </button>
@@ -145,6 +154,7 @@ export class ProjectCardComponent {
   selectBacklog = output<string>();
   editProject = output<string>();
   deleteProject = output<string>();
+  toggleStatus = output<string>();
 
   accentColor = computed(() => {
     const colors = [
@@ -193,6 +203,12 @@ export class ProjectCardComponent {
   onDelete(event: Event) {
     event.stopPropagation();
     this.deleteProject.emit(this.project().id);
+    this.isMenuOpen.set(false);
+  }
+
+  onToggleStatus(event: Event) {
+    event.stopPropagation();
+    this.toggleStatus.emit(this.project().id);
     this.isMenuOpen.set(false);
   }
 

@@ -77,7 +77,12 @@ export class AcceptInvitationComponent implements OnInit {
       sessionStorage.removeItem('invitationToken');
       this.state.set('success');
       setTimeout(() => {
-        this.router.navigate(['/dashboard']);
+        const currentRole = this.authService.getUserRole();
+        if (currentRole === 'Employee') {
+          this.router.navigate(['/employee-dashboard']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       }, 1500);
     } catch (err: any) {
       this.state.set('error');

@@ -121,7 +121,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
             if (invToken) {
               authApi.completeInvitation(invToken).then(() => {
                 sessionStorage.removeItem('invitationToken');
-                this.router.navigate(['/dashboard']).then(() => this.loadingService.hide());
+                this.router.navigate(this.getRouteForRole(role, isProfileCompleted)).then(() => this.loadingService.hide());
               }).catch(e => {
                 console.error("Failed to complete invitation", e);
                 this.router.navigate(this.getRouteForRole(role, isProfileCompleted)).then(() => this.loadingService.hide());
@@ -217,7 +217,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
         try {
           await authApi.completeInvitation(invToken);
           sessionStorage.removeItem('invitationToken');
-          this.router.navigate(['/dashboard']).then(() => this.loadingService.hide());
+          this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)).then(() => this.loadingService.hide());
         } catch (e) {
           console.error("Failed to complete invitation", e);
           this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)).then(() => this.loadingService.hide());
@@ -235,7 +235,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
   getRouteForRole(role: string | null, isProfileCompleted: boolean): string[] {
     let route = ['/dashboard'];
     if (role === 'Employee') {
-      route = isProfileCompleted ? ['/dashboard'] : ['/complete-profile'];
+      route = isProfileCompleted ? ['/employee-dashboard'] : ['/complete-profile'];
     } else if (role === 'ProjectManager') {
       route = isProfileCompleted ? ['/dashboard'] : ['/company-setup'];
     } else if (role) {

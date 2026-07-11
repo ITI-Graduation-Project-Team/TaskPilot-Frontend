@@ -15,6 +15,7 @@ export interface ProjectInfo {
   techStack?: string[];
   platformTargets?: string[];
   projectType?: string;
+  status?: string;
 }
 
 @Injectable({
@@ -28,6 +29,7 @@ export class ProjectStateService {
   private _companyName = signal<string>('');
   private _userId = signal<string | null>(null);
   private _loading = signal<boolean>(false);
+  private _localCompletedIds = signal<string[]>([]);
 
   readonly projects = this._projects.asReadonly();
   readonly selectedProjectId = this._selectedProjectId.asReadonly();
@@ -43,6 +45,12 @@ export class ProjectStateService {
   });
 
   constructor() {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('localCompletedIds');
+      if (stored) {
+        try { this._localCompletedIds.set(JSON.parse(stored)); } catch(e) {}
+      }
+    }
     this.initializeState();
   }
 
@@ -103,7 +111,8 @@ export class ProjectStateService {
             managerId: p.managerId,
             techStack: p.techStack || [],
             platformTargets: p.platformTargets || [],
-            projectType: p.projectType || ''
+            projectType: p.projectType || '',
+            status: this._localCompletedIds().includes(p.id) ? 'Completed' : (p.status || 'Active')
           }));
       } else {
         // Employee sees projects they are assigned to
@@ -124,7 +133,8 @@ export class ProjectStateService {
                 managerId: p.managerId,
                 techStack: p.techStack || [],
                 platformTargets: p.platformTargets || [],
-                projectType: p.projectType || ''
+                projectType: p.projectType || '',
+                status: this._localCompletedIds().includes(p.id) ? 'Completed' : (p.status || 'Active')
               });
             }
           } catch (err) {
@@ -229,6 +239,30 @@ export class ProjectStateService {
       return false;
     } finally {
       this._loading.set(false);
+    }
+  }
+
+  markProjectCompleted(id: string) {
+    const current = this._localCompletedIds();
+    if (!current.includes(id)) {
+      const updated = [...current, id];
+      this._localCompletedIds.set(updated);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('localCompletedIds', JSON.stringify(updated));
+      }
+      this._projects.update(projects => projects.map(p => p.id === id ? { ...p, status: 'Completed' } : p));
+    }
+  }
+
+  restoreProject(id: string) {
+    const current = this._localCompletedIds();
+    if (current.includes(id)) {
+      const updated = current.filter(cid => cid !== id);
+      this._localCompletedIds.set(updated);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('localCompletedIds', JSON.stringify(updated));
+      }
+      this._projects.update(projects => projects.map(p => p.id === id ? { ...p, status: 'Active' } : p));
     }
   }
 }

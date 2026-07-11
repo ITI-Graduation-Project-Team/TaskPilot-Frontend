@@ -47,7 +47,8 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               (selectSprint)="selectSprint.emit($event)"
               (selectBacklog)="selectBacklog.emit($event)"
               (editProject)="editProject.emit($event)"
-              (deleteProject)="deleteProject.emit($event)">
+              (deleteProject)="deleteProject.emit($event)"
+              (toggleStatus)="toggleProjectStatus.emit($event)">
             </app-project-card>
           }
         </div>
@@ -112,6 +113,7 @@ export class ProjectHubComponent {
   selectBacklog = output<string>();
   editProject = output<string>();
   deleteProject = output<string>();
+  toggleProjectStatus = output<string>();
 
   filteredProjects = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();

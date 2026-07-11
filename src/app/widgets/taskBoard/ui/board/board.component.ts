@@ -277,7 +277,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                      {{ projectState.isProjectManager() ? 'Edit' : 'View' }}
+                    </button>
                   </div>
                 </div>
               } @empty {
@@ -503,21 +505,21 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
-              <input type="text" [(ngModel)]="modalTask().title" 
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+              <input type="text" [(ngModel)]="modalTask().title" [disabled]="!projectState.isProjectManager()"
+                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface" />
             </div>
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
-              <textarea [(ngModel)]="modalTask().description" rows="3"
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
+              <textarea [(ngModel)]="modalTask().description" rows="3" [disabled]="!projectState.isProjectManager()"
+                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                <select [(ngModel)]="modalTask().priority" 
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
+                <select [(ngModel)]="modalTask().priority" [disabled]="!projectState.isProjectManager()"
+                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface">
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
                   <option value="High">High</option>
@@ -526,8 +528,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                <select [(ngModel)]="modalTask().type" 
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
+                <select [(ngModel)]="modalTask().type" [disabled]="!projectState.isProjectManager()"
+                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface">
                   <option value="Feature">Feature</option>
                   <option value="Bug">Bug</option>
                   <option value="Refactor">Refactor</option>
@@ -537,12 +539,12 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
-              <input type="number" [(ngModel)]="modalTask().hours" 
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+              <input type="number" [(ngModel)]="modalTask().hours" [disabled]="!projectState.isProjectManager()"
+                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface" />
             </div>
 
-            <!-- Agile Coach Features (only for existing tasks) -->
-            @if (isEditing()) {
+            <!-- Agile Coach Features (only for existing tasks and Project Managers) -->
+            @if (isEditing() && projectState.isProjectManager()) {
               <app-agile-coach-summary
                 [taskItemId]="modalTask().id"
                 [lang]="currentLang"
@@ -560,17 +562,19 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Buttons -->
           <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-            @if (isEditing()) {
+            @if (isEditing() && projectState.isProjectManager()) {
               <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
                 Delete Task
               </button>
             }
             <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
-              Cancel
+              {{ projectState.isProjectManager() ? 'Cancel' : 'Close' }}
             </button>
-            <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-              Save changes
-            </button>
+            @if (projectState.isProjectManager()) {
+              <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
+                Save changes
+              </button>
+            }
           </div>
         </div>
       </div>
