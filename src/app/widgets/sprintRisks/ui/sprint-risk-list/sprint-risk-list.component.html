@@ -1,0 +1,68 @@
+<div class="flex flex-col w-full h-full">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <svg class="w-5 h-5 text-brandPrimary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      {{ currentLang === 'ar' ? 'مخاطر السبرينت' : 'Sprint Risks' }}
+    </h3>
+  </div>
+
+  @if (isLoading()) {
+    <div class="space-y-3">
+      @for (i of [1, 2]; track i) {
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 animate-pulse">
+          <div class="flex items-start gap-4">
+            <div class="flex-grow">
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+            <div class="flex flex-col gap-2 w-24">
+              <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span class="text-sm">{{ currentLang === 'ar' ? 'تعذر تحميل المخاطر.' : 'Could not load sprint risks.' }}</span>
+      </div>
+      <button (click)="loadRisks(sprintId())" class="text-sm font-medium hover:underline">
+        {{ currentLang === 'ar' ? 'إعادة المحاولة' : 'Retry' }}
+      </button>
+    </div>
+  } @else if (risks().length > 0) {
+    <div class="flex flex-col">
+      @for (risk of risks(); track risk.id) {
+        <app-sprint-risk-card 
+          [risk]="risk" 
+          [isSimulating]="simulatingRiskId() === risk.id"
+          (dismiss)="onDismiss($event)"
+          (simulate)="onSimulate($event)">
+        </app-sprint-risk-card>
+      }
+    </div>
+  } @else {
+    <div class="flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center">
+      <div class="w-12 h-12 bg-green-50 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      </div>
+      <h4 class="text-base font-medium text-gray-900 dark:text-white mb-1">
+        {{ currentLang === 'ar' ? 'لا توجد مخاطر نشطة' : 'No active risks' }}
+      </h4>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        {{ currentLang === 'ar' ? 'يبدو أن كل شيء يسير على ما يرام في هذا السبرينت!' : 'Everything seems to be on track for this sprint!' }}
+      </p>
+    </div>
+  }
+
+  @if (simulatedScenarios() !== null) {
+    <app-simulation-results-view 
+      [scenarios]="simulatedScenarios()!"
+      (close)="closeSimulation()">
+    </app-simulation-results-view>
+  }
+</div>

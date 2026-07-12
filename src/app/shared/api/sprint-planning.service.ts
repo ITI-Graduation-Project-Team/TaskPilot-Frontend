@@ -33,8 +33,8 @@ export class SprintPlanningService {
     return data;
   }
 
-  async confirmSprints(projectId: string, sprints: SprintSuggestionDto[]): Promise<any> {
-    const { data } = await apiClient.post(`/projects/${projectId}/sprints/confirm`, sprints);
+  async confirmSprints(projectId: string, request: any): Promise<any> {
+    const { data } = await apiClient.post(`/projects/${projectId}/sprints/confirm`, request);
     return data;
   }
 
