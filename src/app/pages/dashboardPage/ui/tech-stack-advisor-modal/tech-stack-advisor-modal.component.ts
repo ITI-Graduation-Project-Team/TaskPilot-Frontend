@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { RecommendedStackDto, TechStackService, TechStackSuggestionDto } from '../../../../shared/api/tech-stack.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 const PLATFORM_OPTIONS = ['Web', 'Mobile', 'Desktop', 'API'];
 const PROJECT_TYPE_OPTIONS = ['ERP', 'SaaS', 'MobileApp', 'API', 'Portal', 'Other'];
@@ -289,12 +290,16 @@ export class TechStackAdvisorModalComponent implements OnInit {
 
     this.isConfirming.set(true);
     try {
+      // 1. Confirm approved tech stack and platforms
       await this.techStackService.confirm(this.projectId, {
         techStack: this.selectedTechStack(),
         platformTargets: this.selectedPlatforms(),
         projectType: this.selectedProjectType(),
       });
+
+      // 2. Generate WBS backlog items
       await this.aiRequirements.generateWbs(this.projectId);
+      
       this.toastService.show('Tech stack confirmed and backlog generated successfully.', 'success');
       this.completed.emit(this.projectId);
     } catch (error: any) {
