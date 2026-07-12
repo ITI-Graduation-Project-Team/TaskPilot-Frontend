@@ -19,6 +19,7 @@ import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-s
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { SprintRiskListComponent } from '../../../sprintRisks';
 
 interface Task {
   id: string;
@@ -36,7 +37,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent],
   template: `
     <div class="space-y-6">
       
@@ -172,6 +173,11 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
 
+        @if (activeSprintId()) {
+          <div class="mt-6 mb-6">
+            <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
+          </div>
+        }
 
         <!-- Board controls -->
         <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm">

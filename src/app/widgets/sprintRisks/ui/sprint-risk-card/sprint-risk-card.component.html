@@ -1,0 +1,59 @@
+<div class="flex items-start justify-between gap-4">
+  <div class="flex flex-col gap-2 flex-grow">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getSeverityClasses()">
+        {{ risk().severity }}
+      </span>
+      <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        {{ risk().riskType }}
+      </span>
+      <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+        {{ risk().detectedAt | date:'short' }}
+      </span>
+    </div>
+
+    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+      {{ message() }}
+    </p>
+
+    @if (risk().affectedTaskTitle || risk().affectedEmployeeName) {
+      <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-600 dark:text-gray-400">
+        @if (risk().affectedTaskTitle) {
+          <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+            <span class="font-medium truncate max-w-[150px]">{{ risk().affectedTaskTitle }}</span>
+          </div>
+        }
+        @if (risk().affectedEmployeeName) {
+          <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="font-medium">{{ risk().affectedEmployeeName }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="flex flex-col items-end gap-2 flex-shrink-0">
+    <button 
+      (click)="onSimulate()" 
+      [disabled]="isSimulating()"
+      class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors bg-brandPrimary rounded hover:bg-brandPrimary/90 focus:outline-none focus:ring-2 focus:ring-brandPrimary focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed">
+      @if (isSimulating()) {
+        <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>{{ currentLang === 'ar' ? 'جاري المحاكاة...' : 'Simulating...' }}</span>
+      } @else {
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <span>{{ currentLang === 'ar' ? 'محاكاة الحل' : 'Simulate Resolution' }}</span>
+      }
+    </button>
+    <button 
+      (click)="onDismiss()"
+      class="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors underline-offset-2 hover:underline">
+      {{ currentLang === 'ar' ? 'تجاهل الخطر' : 'Dismiss Risk' }}
+    </button>
+  </div>
+</div>
