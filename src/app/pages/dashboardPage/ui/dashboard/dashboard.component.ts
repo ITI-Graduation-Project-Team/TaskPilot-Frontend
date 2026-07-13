@@ -648,13 +648,17 @@ export class DashboardComponent implements OnInit {
       }
     });
 
-    // If a PM has no projects, default to the projects hub tab to create one
+    // If a PM has no projects, default to the create-project tab and open AI chat automatically
     effect(() => {
       const isPM = this.projectState.isProjectManager();
       const projCount = this.projectState.projects().length;
       const initialized = !this.projectState.loading();
       if (initialized && isPM && projCount === 0) {
-        this.currentTab.set('projects');
+        untracked(() => {
+          this.currentTab.set('create-project');
+          this.isAiChatOpen.set(true);
+          this.showManualForm.set(false);
+        });
       }
     });
   }
