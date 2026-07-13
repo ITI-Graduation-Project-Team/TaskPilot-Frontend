@@ -50,38 +50,48 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
         <!-- PM First Project Creation Screen on Board -->
-        <div class="bg-surface border border-border p-8 rounded-2xl shadow-lg max-w-xl mx-auto my-8 animate-[fadeUp_0.3s_ease_both]">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div class="bg-surface border border-border p-8 rounded-3xl shadow-lg max-w-xl mx-auto my-8 animate-[fadeUp_0.3s_ease_both]">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-lg font-bold border border-primary/20 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
               </svg>
             </div>
             <div>
               <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
-              <p class="text-text-secondary text-xs mt-0.5">Let's set up a workspace for your team.</p>
+              <p class="text-xs text-text-secondary mt-0.5">Let's set up a workspace for your team.</p>
             </div>
           </div>
 
-          <form (submit)="onCreateProject($event)" class="space-y-5">
+          <form (submit)="onCreateProject($event)" class="space-y-4">
             <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
               <input type="text" name="projNameEn" required placeholder="e.g. E-Commerce Platform" 
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                     class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold placeholder:text-gray-400/70">
             </div>
+
             <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
               <input type="text" name="projNameAr" required placeholder="مثال: منصة التجارة الإلكترونية" dir="rtl"
-                     class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                     class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold text-right placeholder:text-gray-400/70">
             </div>
+
             <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description</label>
-              <textarea name="projDesc" placeholder="Brief details about the project scope..." rows="3" required
-                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">Description (English)</label>
+              <textarea name="projDescEn" required rows="3" placeholder="Brief details about the project scope..."
+                        class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-gray-400/70"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">الوصف (عربي)</label>
+              <textarea name="projDescAr" required rows="3" placeholder="تفاصيل مختصرة عن نطاق المشروع..." dir="rtl"
+                        class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-right placeholder:text-gray-400/70"></textarea>
             </div>
 
             <button type="submit" 
-                    class="w-full py-3.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0">
+                    class="w-full py-3.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/10 transition-all duration-200 hover:-translate-y-px active:translate-y-0 mt-2">
               Create Project
             </button>
           </form>
@@ -937,9 +947,10 @@ export class BoardComponent implements OnInit {
     const form = event.target as HTMLFormElement;
     const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
     const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
-    const desc = (form.elements.namedItem('projDesc') as HTMLTextAreaElement).value;
+    const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
+    const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
+    const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       form.reset();
     }
