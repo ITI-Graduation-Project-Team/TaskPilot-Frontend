@@ -59,14 +59,46 @@ const EMPTY_TASK: TaskFormModel = {
           </div>
         </div>
       } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
-        <div class="mx-auto my-8 max-w-xl rounded-2xl border border-border bg-surface p-8 shadow-lg">
-          <h3 class="text-xl font-bold text-text-primary">Create your first project</h3>
-          <p class="mt-1 text-sm text-text-secondary">Set up a workspace before managing backlog items.</p>
-          <form (submit)="onCreateProject($event)" class="mt-6 space-y-4">
-            <input type="text" name="projNameEn" required placeholder="Project name in English" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
-            <input type="text" name="projNameAr" required [placeholder]="label('projectNameArPlaceholder')" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20">
-            <textarea name="projDesc" required rows="3" placeholder="Project scope" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"></textarea>
-            <button type="submit" class="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white hover:bg-primary-hover">Create project</button>
+        <div class="mx-auto my-8 max-w-xl rounded-3xl border border-border bg-surface p-8 shadow-lg">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-lg font-bold border border-primary/20 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
+              <p class="text-xs text-text-secondary mt-0.5">Let's set up a workspace for your team.</p>
+            </div>
+          </div>
+          <form (submit)="onCreateProject($event)" class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+              <input type="text" name="projNameEn" required placeholder="e.g. E-Commerce Platform"
+                     class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold placeholder:text-gray-400/70">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+              <input type="text" name="projNameAr" required placeholder="مثال: منصة التجارة الإلكترونية" dir="rtl"
+                     class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold text-right placeholder:text-gray-400/70">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">Description (English)</label>
+              <textarea name="projDescEn" required rows="3" placeholder="Brief details about the project scope..."
+                        class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-gray-400/70"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">الوصف (عربي)</label>
+              <textarea name="projDescAr" required rows="3" placeholder="تفاصيل مختصرة عن نطاق المشروع..." dir="rtl"
+                        class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-right placeholder:text-gray-400/70"></textarea>
+            </div>
+
+            <button type="submit" class="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white hover:bg-primary-hover shadow-md transition-all active:scale-[0.99] mt-2">Create Project</button>
           </form>
         </div>
       } @else if (!isAssigned()) {
@@ -679,9 +711,10 @@ export class BacklogViewComponent implements OnInit {
     const form = event.target as HTMLFormElement;
     const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
     const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
-    const desc = (form.elements.namedItem('projDesc') as HTMLTextAreaElement).value;
+    const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
+    const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    const success = await this.projectState.createNewProject(nameEn, nameAr, desc);
+    const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) form.reset();
   }
 }
