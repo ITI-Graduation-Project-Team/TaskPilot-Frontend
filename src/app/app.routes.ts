@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { roleGuard } from './shared/guards/role.guard';
 import { authGuard } from './shared/guards/auth.guard';
 import { authRedirectGuard } from './shared/guards/auth-redirect.guard';
+import { companySetupGuard } from './shared/guards/company-setup.guard';
 
 export const routes: Routes = [
 
@@ -14,7 +15,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canActivate: [authGuard, companySetupGuard],
     loadComponent: () =>
       import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
@@ -26,7 +27,7 @@ export const routes: Routes = [
       import('./pages/subscriptionPage/ui/subscription-plans/subscription-plans.component').then(
         (m) => m.SubscriptionPlansComponent
       ),
-    canActivate: [roleGuard],
+    canActivate: [roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] }
   },
   {
@@ -82,7 +83,7 @@ export const routes: Routes = [
   },
   {
     path: 'company-setup',
-    canActivate: [roleGuard],
+    canActivate: [roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] },
     loadComponent: () =>
       import('./pages/companySetupPage/ui/company-setup/company-setup').then(
@@ -99,7 +100,7 @@ export const routes: Routes = [
   },
   {
     path: 'employees',
-    canActivate: [roleGuard],
+    canActivate: [roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] },
     loadComponent: () =>
       import('./pages/employeesPage/ui/employees/employees').then(
@@ -107,4 +108,3 @@ export const routes: Routes = [
       ),
   },
 ];
-
