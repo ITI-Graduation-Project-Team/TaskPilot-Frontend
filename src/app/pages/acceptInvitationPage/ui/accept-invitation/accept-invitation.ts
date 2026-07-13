@@ -78,8 +78,11 @@ export class AcceptInvitationComponent implements OnInit {
       this.state.set('success');
       setTimeout(() => {
         const currentRole = this.authService.getUserRole();
+        const isProfileCompleted = localStorage.getItem('isProfileCompleted') === 'true';
         if (currentRole === 'Employee') {
-          this.router.navigate(['/employee-dashboard']);
+          this.router.navigate([isProfileCompleted ? '/employee-dashboard' : '/complete-profile']);
+        } else if (currentRole === 'ProjectManager') {
+          this.router.navigate([isProfileCompleted ? '/dashboard' : '/company-setup']);
         } else {
           this.router.navigate(['/dashboard']);
         }

@@ -116,6 +116,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
               localStorage.setItem('userFullName', fullName);
             }
             const isProfileCompleted = (res.data as any).isProfileCompleted === true;
+            localStorage.setItem('isProfileCompleted', isProfileCompleted ? 'true' : 'false');
 
             const invToken = sessionStorage.getItem('invitationToken');
             if (invToken) {
@@ -211,6 +212,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
 
       const userRole = this.authService.getUserRole() || role;
       const isProfileCompleted = tokenData?.isProfileCompleted === true;
+      localStorage.setItem('isProfileCompleted', isProfileCompleted ? 'true' : 'false');
 
       const invToken = sessionStorage.getItem('invitationToken');
       if (invToken) {
