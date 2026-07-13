@@ -8,6 +8,7 @@ import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
+import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { CalendarViewComponent } from '../calendar-view/calendar-view.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
@@ -24,19 +25,20 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, 
+    CommonModule,
     RouterLink,
     FormsModule,
-    BoardComponent, 
-    BacklogViewComponent, 
-    ProfileViewComponent, 
+    BoardComponent,
+    BacklogViewComponent,
+    ProfileViewComponent,
     TeamViewComponent,
     AiChatModalComponent,
     DraftReviewModalComponent,
     TechStackAdvisorModalComponent,
     ProjectHubComponent,
     CalendarViewComponent,
-    TranslatePipe
+    TranslatePipe,
+    SprintPlanningViewComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -123,6 +125,26 @@ import { TranslatePipe } from '@ngx-translate/core';
             Backlog
           </a>
           @if (projectState.isProjectManager()) {
+            <!-- Sprint Planning tab (PM only) -->
+            <a (click)="currentTab.set('sprint-planning')"
+               [class.bg-primary/10]="currentTab() === 'sprint-planning'"
+               [class.text-primary]="currentTab() === 'sprint-planning'"
+               [class.font-bold]="currentTab() === 'sprint-planning'"
+               [class.shadow-sm]="currentTab() === 'sprint-planning'"
+               [class.text-text-secondary]="currentTab() !== 'sprint-planning'"
+               [class.hover:text-text-primary]="currentTab() !== 'sprint-planning'"
+               [class.hover:bg-primary/5]="currentTab() !== 'sprint-planning'"
+               [class.font-medium]="currentTab() !== 'sprint-planning'"
+               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Sprint Planning
+              <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+            </a>
+          }
+
+          @if (projectState.isProjectManager()) {
             <a (click)="currentTab.set('team')"
                [class.bg-primary/10]="currentTab() === 'team'"
                [class.text-primary]="currentTab() === 'team'"
@@ -194,6 +216,14 @@ import { TranslatePipe } from '@ngx-translate/core';
                 Create Project
               } @else if (currentTab() === 'profile') {
                 My Profile
+              } @else if (currentTab() === 'sprint-planning') {
+                @if (projectState.isProjectManager()) {
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary font-light">/</span>
+                }
+                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
+                <span class="text-text-secondary font-light">/</span>
+                Sprint Planning
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
@@ -404,6 +434,10 @@ import { TranslatePipe } from '@ngx-translate/core';
             </section>
           } @else if (currentTab() === 'sprint') {
             <app-board></app-board>
+          } @else if (currentTab() === 'sprint-planning') {
+            <app-sprint-planning-view 
+              (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)">
+            </app-sprint-planning-view>
           } @else if (currentTab() === 'backlog') {
             <app-backlog-view></app-backlog-view>
           } @else if (currentTab() === 'team') {
@@ -463,6 +497,20 @@ import { TranslatePipe } from '@ngx-translate/core';
           </svg>
           <span class="text-[9px] font-bold">Sprint</span>
         </button>
+
+        <!-- Sprint Planning Tab (Mobile PM) -->
+        @if (projectState.isProjectManager()) {
+          <button (click)="currentTab.set('sprint-planning')"
+                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
+                  [class.text-primary]="currentTab() === 'sprint-planning'"
+                  [class.scale-105]="currentTab() === 'sprint-planning'"
+                  [class.text-text-secondary]="currentTab() !== 'sprint-planning'">
+            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <span class="text-[9px] font-bold">Planning</span>
+          </button>
+        }
 
         <!-- Backlog Tab -->
         <button (click)="currentTab.set('backlog')" 
@@ -582,7 +630,8 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'backlog' | 'team' | 'profile' | 'calendar'>('calendar');
+
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'calendar'>('sprint');
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
@@ -658,7 +707,7 @@ export class DashboardComponent implements OnInit {
       day: 'numeric',
       year: 'numeric'
     });
-    
+
     if (typeof localStorage !== 'undefined') {
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
@@ -716,7 +765,7 @@ export class DashboardComponent implements OnInit {
     // Fire API requests in parallel using Promise.allSettled
     const promises = projects.map(async (p) => {
       const stats: ProjectStats = { activeSprint: 'No Active Sprint', memberCount: 0, taskCount: 0, loading: false };
-      
+
       try {
         const [sprintRes, employeesRes, backlogRes] = await Promise.allSettled([
           apiClient.get<any>(`/projects/${p.id}/sprints/active`),
