@@ -217,7 +217,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
         try {
           await authApi.completeInvitation(invToken);
           sessionStorage.removeItem('invitationToken');
-          this.router.navigate(['/dashboard']).then(() => this.loadingService.hide());
+          this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)).then(() => this.loadingService.hide());
         } catch (e) {
           console.error("Failed to complete invitation", e);
           this.router.navigate(this.getRouteForRole(userRole, isProfileCompleted)).then(() => this.loadingService.hide());

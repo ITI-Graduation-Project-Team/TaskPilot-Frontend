@@ -163,10 +163,33 @@ export class CompleteProfileComponent {
     }
   }
 
+  togglePrimarySkill(index: number) {
+    this.skills.update(current => {
+      return current.map((s, idx) => {
+        if (idx === index) {
+          return { ...s, isPrimary: !s.isPrimary };
+        }
+        return s;
+      });
+    });
+  }
+
   confirmAndSave() {
     if (this.skills().length === 0) {
       this.toastService.show('Please add at least one skill.', 'error');
       return;
+    }
+
+    // Auto-select first skill as primary if none are selected
+    const hasPrimary = this.skills().some(s => s.isPrimary);
+    if (!hasPrimary) {
+      this.skills.update(current => {
+        const copy = [...current];
+        if (copy.length > 0) {
+          copy[0] = { ...copy[0], isPrimary: true };
+        }
+        return copy;
+      });
     }
 
     this.uploadState.set('loading');

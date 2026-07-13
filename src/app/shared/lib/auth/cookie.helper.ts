@@ -55,3 +55,22 @@ export function getUserIdFromToken(): string | null {
     return null;
   }
 }
+
+export function isProfileCompleted(): boolean {
+  if (typeof localStorage !== 'undefined') {
+    if (localStorage.getItem('isProfileCompleted') === 'true') {
+      return true;
+    }
+  }
+
+  const token = getAccessToken();
+  if (!token) return false;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const val = payload['ProfileCompleted'] ?? payload['isProfileCompleted'] ?? null;
+    return val === 'True' || val === 'true' || val === true;
+  } catch {
+    return false;
+  }
+}
