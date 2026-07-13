@@ -72,6 +72,7 @@ export class AiRequirementsService {
 
   async generateWbs(projectId: string): Promise<any> {
     const { data } = await apiClient.post(`/projects/${projectId}/wbs/generate`);
+    await apiClient.post(`/projects/${projectId}/wbs/enrich-skills`);
     return data;
   }
 
