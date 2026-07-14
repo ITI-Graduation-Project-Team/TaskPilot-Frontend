@@ -98,8 +98,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </button>
           </form>
         </div>
-      } @else if (!isAssignedToProject()) {
-        <!-- Warning Panel for unassigned employee -->
+      } @else if (!isAssignedToProject() || isBoardReadonly()) {
+        <!-- Warning Panel for unassigned employee or archived project -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
           <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -107,9 +107,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-text-primary">No Project Assignment</h3>
+            <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
             <p class="text-text-secondary text-sm mt-2 max-w-md">
-              You are currently not assigned to any projects. Please ask your Project Manager or Admin to assign you to a project to start viewing and executing tasks.
+              You are currently not viewing an active project. Please select an active project from the dropdown, or ask your Project Manager to assign you to one.
             </p>
           </div>
         </div>
@@ -245,7 +245,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
             <span>Showing {{ visibleTasksCount() }} of {{ totalTasksCount() }} tasks. Each column loads in focused batches.</span>
-            @if (hasActiveBoardFilters()) {
+            @if (isBoardReadonly()) {
+              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is disabled (Project is {{ projectState.selectedProject()?.status }})</span>
+            } @else if (hasActiveBoardFilters()) {
               <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is paused while filters are active</span>
             }
           </div>
@@ -266,7 +268,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleTodo(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -294,7 +296,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                      {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                    </button>
                   </div>
                 </div>
               } @empty {
@@ -327,7 +331,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleInProgress(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -388,7 +392,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleReview(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -449,7 +453,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleDone(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -518,6 +522,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Form -->
           <div class="space-y-4">
+<<<<<<< HEAD
             @if (projectState.isProjectManager()) {
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
@@ -529,8 +534,42 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
                 <textarea [(ngModel)]="modalTask().description" rows="3"
                           class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
+=======
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
+              <input type="text" [(ngModel)]="modalTask().title" [disabled]="!projectState.isProjectManager()"
+                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
+              <textarea [(ngModel)]="modalTask().description" rows="3" [disabled]="!projectState.isProjectManager()"
+                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
+                <select [(ngModel)]="modalTask().priority" [disabled]="!projectState.isProjectManager()"
+                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface">
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
               </div>
 
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
+                <select [(ngModel)]="modalTask().type" [disabled]="!projectState.isProjectManager()"
+                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface">
+                  <option value="Feature">Feature</option>
+                  <option value="Bug">Bug</option>
+                  <option value="Refactor">Refactor</option>
+                </select>
+>>>>>>> origin/abdelhay-branch
+              </div>
+
+<<<<<<< HEAD
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
@@ -582,9 +621,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 <p class="text-[10px] text-text-secondary mt-1 font-medium">Update the actual hours you spent working on this task.</p>
               </div>
             }
+=======
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
+              <input type="number" [(ngModel)]="modalTask().hours" [disabled]="!projectState.isProjectManager()"
+                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface" />
+            </div>
+>>>>>>> origin/abdelhay-branch
 
-            <!-- Agile Coach Features (only for existing tasks) -->
-            @if (isEditing()) {
+            <!-- Agile Coach Features (only for existing tasks and Project Managers) -->
+            @if (isEditing() && projectState.isProjectManager()) {
               <app-agile-coach-summary
                 [taskItemId]="modalTask().id"
                 [lang]="currentLang"
@@ -602,23 +648,28 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Buttons -->
           <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
+<<<<<<< HEAD
             @if (isEditing() && projectState.isProjectManager()) {
+=======
+            @if (isEditing() && projectState.isProjectManager() && !isBoardReadonly()) {
+>>>>>>> origin/abdelhay-branch
               <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
                 Delete Task
               </button>
             }
             <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
-              Cancel
+              {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
             </button>
-            <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-              Save changes
-            </button>
+            @if (projectState.isProjectManager() && !isBoardReadonly()) {
+              <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
+                Save changes
+              </button>
+            }
           </div>
         </div>
       </div>
     }
 
-    <!-- Retrospective Modal -->
     @if (isRetroModalOpen() && activeSprintId()) {
       <app-retrospective-modal [sprintId]="activeSprintId()!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
     }
@@ -633,6 +684,10 @@ export class BoardComponent implements OnInit {
   private tasksService = inject(TasksService);
 
   employeeActualHours = 0;
+
+  isBoardReadonly = computed(() => {
+    return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
+  });
 
   // Loading and assignment status signals
   isLoading = signal(true);

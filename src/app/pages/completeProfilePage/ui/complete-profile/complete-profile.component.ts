@@ -113,14 +113,23 @@ export class CompleteProfileComponent {
           this.jobTitle.set(res.data.jobTitle || '');
           this.seniorityLevel.set(mapSeniorityLevelToFrontend(res.data.seniorityLevel));
           this.totalYearsOfExperience.set(res.data.totalYearsOfExperience || 0);
-          
-          const mapped = (res.data.skills || []).map(s => ({
+          let mapped = (res.data.skills || []).map(s => ({
             name: s.name,
             level: mapSkillLevelToFrontend(s.level),
             yearsOfExperience: s.yearsOfExperience || 1,
             confidenceScore: s.confidenceScore || 1.0,
             isPrimary: s.isPrimary || false
           }));
+
+          // Ensure exactly one primary skill
+          if (mapped.length > 0) {
+            const primaryCount = mapped.filter(s => s.isPrimary).length;
+            if (primaryCount !== 1) {
+              mapped.forEach(s => s.isPrimary = false);
+              mapped[0].isPrimary = true;
+            }
+          }
+
           this.skills.set(mapped);
           this.uploadState.set('success');
         } else {
@@ -137,8 +146,12 @@ export class CompleteProfileComponent {
 
   removeSkill(index: number) {
     this.skills.update(current => {
+      const wasPrimary = current[index].isPrimary;
       const newSkills = [...current];
       newSkills.splice(index, 1);
+      if (wasPrimary && newSkills.length > 0) {
+        newSkills[0].isPrimary = true;
+      }
       return newSkills;
     });
   }
@@ -148,12 +161,13 @@ export class CompleteProfileComponent {
     if (skillName) {
       this.skills.update(current => {
         if (!current.some(s => s.name.toLowerCase() === skillName.toLowerCase())) {
+          const isFirst = current.length === 0;
           const newSkillDetail: SkillDetails = {
             name: skillName,
             level: 'Intermediate',
             yearsOfExperience: 1,
             confidenceScore: 1.0,
-            isPrimary: false
+            isPrimary: isFirst
           };
           return [...current, newSkillDetail];
         }
@@ -163,14 +177,9 @@ export class CompleteProfileComponent {
     }
   }
 
-  togglePrimarySkill(index: number) {
+  setPrimarySkill(index: number) {
     this.skills.update(current => {
-      return current.map((s, idx) => {
-        if (idx === index) {
-          return { ...s, isPrimary: !s.isPrimary };
-        }
-        return s;
-      });
+      return current.map((s, i) => ({ ...s, isPrimary: i === index }));
     });
   }
 
@@ -193,6 +202,19 @@ export class CompleteProfileComponent {
     }
 
     this.uploadState.set('loading');
+
+    // Failsafe: ensure exactly one primary skill before sending
+    this.skills.update(current => {
+      if (current.length > 0) {
+        const primaryCount = current.filter(s => s.isPrimary).length;
+        if (primaryCount !== 1) {
+          const newSkills = current.map(s => ({ ...s, isPrimary: false }));
+          newSkills[0].isPrimary = true;
+          return newSkills;
+        }
+      }
+      return current;
+    });
 
     const payload = {
       jobTitle: this.jobTitle(),

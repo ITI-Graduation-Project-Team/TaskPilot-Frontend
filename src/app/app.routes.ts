@@ -15,10 +15,20 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard, companySetupGuard],
+    canActivate: [authGuard, roleGuard, companySetupGuard],
+    data: { roles: ['ProjectManager'] },
     loadComponent: () =>
       import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
+      ),
+  },
+  {
+    path: 'employee-dashboard',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Employee'] },
+    loadComponent: () =>
+      import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then(
+        (m) => m.EmployeeDashboardComponent
       ),
   },
   {

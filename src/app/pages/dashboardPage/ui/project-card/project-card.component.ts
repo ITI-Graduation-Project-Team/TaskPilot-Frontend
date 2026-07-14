@@ -54,7 +54,13 @@ export interface ProjectStats {
                 <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Project
               </button>
-              <button (click)="onDelete($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2">
+              <button (click)="onToggleStatus($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                View Status & History
+              </button>
+              <button (click)="onDelete($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2 border-t border-border mt-1 pt-2">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 Delete
               </button>
@@ -71,17 +77,27 @@ export interface ProjectStats {
       <!-- Stats / Skeletons -->
       @if (stats() && !stats()?.loading) {
         <div class="space-y-4">
-          <!-- Active Sprint pill -->
+          <!-- Status / Active Sprint pill -->
           <div class="flex items-center">
-            @if (stats()?.activeSprint && stats()?.activeSprint !== 'No Active Sprint') {
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
-                <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
-                {{ stats()?.activeSprint }}
+            @if (project().status === 'Completed') {
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                Completed
+              </div>
+            } @else if (project().status === 'Archived') {
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 border border-slate-500/20">
+                Archived
               </div>
             } @else {
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-text-secondary/10 text-text-secondary border border-border">
-                No Active Sprint
-              </div>
+              @if (stats()?.activeSprint && stats()?.activeSprint !== 'No Active Sprint') {
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+                  {{ stats()?.activeSprint }}
+                </div>
+              } @else {
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-text-secondary/10 text-text-secondary border border-border">
+                  No Active Sprint
+                </div>
+              }
             }
           </div>
 
@@ -145,6 +161,7 @@ export class ProjectCardComponent {
   selectBacklog = output<string>();
   editProject = output<string>();
   deleteProject = output<string>();
+  toggleStatus = output<string>();
 
   accentColor = computed(() => {
     const colors = [
@@ -193,6 +210,12 @@ export class ProjectCardComponent {
   onDelete(event: Event) {
     event.stopPropagation();
     this.deleteProject.emit(this.project().id);
+    this.isMenuOpen.set(false);
+  }
+
+  onToggleStatus(event: Event) {
+    event.stopPropagation();
+    this.toggleStatus.emit(this.project().id);
     this.isMenuOpen.set(false);
   }
 

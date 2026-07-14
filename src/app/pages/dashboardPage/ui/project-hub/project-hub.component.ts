@@ -13,27 +13,43 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
     <div class="space-y-6">
       <!-- Search & Filters -->
       @if (projects().length > 0) {
-        <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between bg-surface border border-border p-4 rounded-2xl shadow-sm">
-          <div class="relative flex-1 max-w-md">
-            <span class="absolute top-1/2 left-3.5 -translate-y-1/2 text-text-secondary pointer-events-none">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </span>
-            <input type="text" 
-                   [ngModel]="searchQuery()" 
-                   (ngModelChange)="searchQuery.set($event)"
-                   placeholder="Search projects..." 
-                   class="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-text-secondary/70" />
-          </div>
+        <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-surface border border-border p-4 rounded-2xl shadow-sm">
           
-          <button (click)="createProject.emit()" 
-                  class="bg-primary hover:bg-primary-hover text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-            </svg>
-            <span>New Project</span>
-          </button>
+          <!-- Tabs -->
+          <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto custom-scrollbar shrink-0">
+            <button (click)="activeTab.set('active')" 
+                    [class.bg-surface]="activeTab() === 'active'" [class.shadow-sm]="activeTab() === 'active'" [class.text-text-primary]="activeTab() === 'active'" [class.text-text-secondary]="activeTab() !== 'active'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">Active & Draft</button>
+            <button (click)="activeTab.set('completed')" 
+                    [class.bg-surface]="activeTab() === 'completed'" [class.shadow-sm]="activeTab() === 'completed'" [class.text-text-primary]="activeTab() === 'completed'" [class.text-text-secondary]="activeTab() !== 'completed'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">Completed</button>
+            <button (click)="activeTab.set('archived')" 
+                    [class.bg-surface]="activeTab() === 'archived'" [class.shadow-sm]="activeTab() === 'archived'" [class.text-text-primary]="activeTab() === 'archived'" [class.text-text-secondary]="activeTab() !== 'archived'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">Archived</button>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1 justify-end">
+            <div class="relative flex-1 sm:max-w-[280px]">
+              <span class="absolute top-1/2 left-3.5 -translate-y-1/2 text-text-secondary pointer-events-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </span>
+              <input type="text" 
+                     [ngModel]="searchQuery()" 
+                     (ngModelChange)="searchQuery.set($event)"
+                     placeholder="Search projects..." 
+                     class="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-text-secondary/70" />
+            </div>
+            
+            <button (click)="createProject.emit()" 
+                    class="bg-primary hover:bg-primary-hover text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span>New Project</span>
+            </button>
+          </div>
         </div>
       }
 
@@ -47,7 +63,8 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               (selectSprint)="selectSprint.emit($event)"
               (selectBacklog)="selectBacklog.emit($event)"
               (editProject)="editProject.emit($event)"
-              (deleteProject)="deleteProject.emit($event)">
+              (deleteProject)="deleteProject.emit($event)"
+              (toggleStatus)="toggleProjectStatus.emit($event)">
             </app-project-card>
           }
         </div>
@@ -105,6 +122,7 @@ export class ProjectHubComponent {
   projectStatsMap = input.required<Map<string, ProjectStats>>();
 
   searchQuery = signal('');
+  activeTab = signal<'active' | 'completed' | 'archived'>('active');
 
   createProject = output<void>();
   createProjectWithAi = output<void>();
@@ -112,11 +130,25 @@ export class ProjectHubComponent {
   selectBacklog = output<string>();
   editProject = output<string>();
   deleteProject = output<string>();
+  toggleProjectStatus = output<string>();
 
   filteredProjects = computed(() => {
+    const tab = this.activeTab();
     const query = this.searchQuery().toLowerCase().trim();
-    if (!query) return this.projects();
-    return this.projects().filter(p => 
+    
+    let result = this.projects();
+    
+    if (tab === 'active') {
+      result = result.filter(p => p.status === 'Active' || p.status === 'Draft' || !p.status);
+    } else if (tab === 'completed') {
+      result = result.filter(p => p.status === 'Completed');
+    } else if (tab === 'archived') {
+      result = result.filter(p => p.status === 'Archived');
+    }
+
+    if (!query) return result;
+    
+    return result.filter(p => 
       (p.nameEn || '').toLowerCase().includes(query) || 
       (p.nameAr || '').toLowerCase().includes(query) || 
       (p.description || '').toLowerCase().includes(query)

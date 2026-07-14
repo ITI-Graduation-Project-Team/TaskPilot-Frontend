@@ -101,10 +101,10 @@ const EMPTY_TASK: TaskFormModel = {
             <button type="submit" class="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white hover:bg-primary-hover shadow-md transition-all active:scale-[0.99] mt-2">Create Project</button>
           </form>
         </div>
-      } @else if (!isAssigned()) {
+      } @else if (!isAssigned() || projectState.selectedProject()?.status === 'Completed' || projectState.selectedProject()?.status === 'Archived') {
         <div class="mx-auto my-12 max-w-xl rounded-2xl border border-warning/30 bg-surface p-8 text-center shadow-sm">
-          <h3 class="text-xl font-bold text-text-primary">No project assigned</h3>
-          <p class="mt-2 text-sm text-text-secondary">Please contact your Project Manager or Admin to assign you to a project.</p>
+          <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
+          <p class="mt-2 text-sm text-text-secondary">Please select an active project, or contact your Project Manager to assign you to one.</p>
         </div>
       } @else {
         <header class="flex flex-wrap items-start justify-between gap-4">
@@ -115,10 +115,10 @@ const EMPTY_TASK: TaskFormModel = {
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
-            @if (projectState.isProjectManager() && (backlog()?.userStories?.length || 0) > 0) {
-              <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">AI Sprint Planner</button>
-            }
-            @if (projectState.isProjectManager()) {
+            @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
+              @if ((backlog()?.userStories?.length || 0) > 0) {
+                <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">AI Sprint Planner</button>
+              }
               <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">Add user story</button>
             }
           </div>
@@ -146,7 +146,7 @@ const EMPTY_TASK: TaskFormModel = {
                     </button>
                     <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ story.priority }}</span>
                     <span class="hidden text-xs font-bold text-text-secondary md:block">{{ story.tasks.length }}</span>
-                    @if (projectState.isProjectManager()) {
+                    @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
                       <div class="flex justify-end gap-2">
                         <button type="button" (click)="openTaskModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Task</button>
                         <button type="button" (click)="openStoryModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Edit</button>
@@ -190,7 +190,7 @@ const EMPTY_TASK: TaskFormModel = {
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.effortSize }}</td>
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.estimatedHours }}</td>
                                 <td class="px-3 py-3 text-right">
-                                  @if (projectState.isProjectManager()) {
+                                  @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
                                     <button type="button" (click)="openTaskModal(story, task)" class="mr-2 font-bold text-primary hover:underline">Edit</button>
                                     <button type="button" (click)="deleteTask(task)" class="font-bold text-error hover:underline">Delete</button>
                                   }
@@ -213,7 +213,7 @@ const EMPTY_TASK: TaskFormModel = {
             <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Empty backlog</p>
             <h3 class="mt-2 text-lg font-extrabold text-text-primary">Create stories manually or generate with AI</h3>
             <p class="mt-2 max-w-md text-sm text-text-secondary">AI generation will first confirm the tech stack, then persist bilingual user stories and implementation tasks.</p>
-            @if (projectState.isProjectManager()) {
+            @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               <div class="mt-5 flex flex-wrap justify-center gap-3">
                 <button type="button" (click)="openStoryModal()" class="rounded-xl border border-border px-4 py-2.5 text-xs font-bold hover:bg-sidebar">Add story manually</button>
                 <button type="button" (click)="generateWbs()" [disabled]="isGeneratingWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover disabled:opacity-50">

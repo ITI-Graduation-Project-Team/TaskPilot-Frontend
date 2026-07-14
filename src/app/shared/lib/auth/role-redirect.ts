@@ -2,5 +2,8 @@ export function getRedirectForRole(role: string | null, isProfileCompleted?: boo
     if (role === 'ProjectManager') {
         return isProfileCompleted ? '/dashboard' : '/company-setup';
     }
-    return '/dashboard'; // Default for Employee or unknown roles
+    if (role === 'Employee') {
+        return isProfileCompleted ? '/employee-dashboard' : '/complete-profile';
+    }
+    return '/dashboard'; // Default for unknown roles
 }
