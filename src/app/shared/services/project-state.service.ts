@@ -48,7 +48,7 @@ export class ProjectStateService {
     if (typeof localStorage !== 'undefined') {
       const stored = localStorage.getItem('localCompletedIds');
       if (stored) {
-        try { this._localCompletedIds.set(JSON.parse(stored)); } catch(e) {}
+        try { this._localCompletedIds.set(JSON.parse(stored)); } catch (e) { }
       }
     }
     this.initializeState();
@@ -70,7 +70,7 @@ export class ProjectStateService {
         this._isProjectManager.set(isPM || !profile.isEmployee);
         const companyId = profile.companyId || profile.CompanyId || null;
         this._userCompanyId.set(companyId);
-        
+
         const companyName = profile.companyName || profile.CompanyName || '';
         this._companyName.set(companyName);
 
@@ -134,7 +134,7 @@ export class ProjectStateService {
                 status: p.status || 'Active'
               });
             }
-          } catch (err) {}
+          } catch (err) { }
         }
       }
 
@@ -234,7 +234,7 @@ export class ProjectStateService {
     }
   }
 
-  async changeProjectStatus(projectId: string, status: string): Promise<{success: boolean, error?: string}> {
+  async changeProjectStatus(projectId: string, status: string): Promise<{ success: boolean, error?: string }> {
     try {
       this._loading.set(true);
       await apiClient.put('/Projects/' + projectId + '/status', { status });

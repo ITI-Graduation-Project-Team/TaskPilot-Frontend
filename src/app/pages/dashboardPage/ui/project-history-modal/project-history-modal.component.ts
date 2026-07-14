@@ -98,7 +98,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </button>
           
           <div class="flex items-center gap-3">
-            @if (currentStatus() !== 'Draft') {
+            @if (currentStatus() !== 'Draft' && currentStatus() !== 'Archived') {
               <button (click)="onRevertClick()" 
                       [disabled]="isActionLoading()"
                       class="px-5 py-2.5 font-bold text-sm rounded-xl transition-all shadow-md flex items-center gap-2 group border border-border bg-surface hover:bg-background text-text-secondary disabled:opacity-50">
@@ -167,7 +167,6 @@ export class ProjectHistoryModalComponent implements OnInit {
     switch (this.currentStatus()) {
       case 'Active': return 'Revert to Draft';
       case 'Completed': return 'Revert to Active';
-      case 'Archived': return 'Revert to Completed';
       default: return 'Revert';
     }
   });
@@ -231,8 +230,6 @@ export class ProjectHistoryModalComponent implements OnInit {
     let targetStatus = 'Draft';
     if (this.currentStatus() === 'Completed') {
       targetStatus = 'Active';
-    } else if (this.currentStatus() === 'Archived') {
-      targetStatus = 'Completed';
     } else if (this.currentStatus() === 'Active') {
       targetStatus = 'Draft';
     }

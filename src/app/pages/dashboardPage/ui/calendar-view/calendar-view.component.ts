@@ -143,7 +143,7 @@ interface CalendarDay {
                     [class.bg-surface-variant]="task.status === 'Done'"
                     [class.text-text-secondary]="task.status === 'Done'"
                     [class.text-text-secondary]="task.status === 'Done'"
-                    [style.background]="task.status === 'Done' ? '#94a3b8' : getProjectColor(task.projectId)"
+                    [style.background]="getTaskColor(task)"
                     [style.color]="'#ffffff'"
                     [title]="(isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr)) + (task.descriptionEn || task.descriptionAr ? '\n\n' + (isAr() ? (task.descriptionAr || task.descriptionEn) : (task.descriptionEn || task.descriptionAr)) : '')"
                     (click)="!isPM() ? openEditModal(task, $event) : null">
@@ -353,9 +353,9 @@ interface CalendarDay {
   `]
 })
 export class CalendarViewComponent implements OnInit {
-  isPM = input(false);
+  isPM = input<boolean>(false);
 
-  calendarService = inject(CalendarService);
+  calendarService: CalendarService = inject(CalendarService);
   themeService = inject(ThemeService);
   translate = inject(TranslateService);
   projectState = inject(ProjectStateService);
@@ -499,6 +499,31 @@ export class CalendarViewComponent implements OnInit {
     let hash = 0;
     for (let i = 0; i < (id || '').length; i++) hash += id.charCodeAt(i);
     return colors[hash % colors.length];
+  }
+
+  getTaskColor(task: CalendarTask): string {
+    if (task.status === 'Done') return '#94a3b8';
+    
+    if (task.eventType) {
+      const type = task.eventType.toLowerCase();
+      if (type.includes('assigned')) {
+        return 'linear-gradient(135deg,#3b82f6,#06b6d4)'; // Blue gradient
+      }
+      if (type.includes('personal')) {
+        return 'linear-gradient(135deg,#10b981,#059669)'; // Green gradient
+      }
+      // For any other eventType, pick a consistent color
+      const eventColors = [
+        'linear-gradient(135deg,#f59e0b,#ef4444)', // Orange/Red
+        'linear-gradient(135deg,#ec4899,#8b5cf6)', // Pink/Purple
+        'linear-gradient(135deg,#6366f1,#8b5cf6)', // Indigo/Purple
+      ];
+      let hash = 0;
+      for (let i = 0; i < task.eventType.length; i++) hash += task.eventType.charCodeAt(i);
+      return eventColors[hash % eventColors.length];
+    }
+    
+    return this.getProjectColor(task.projectId);
   }
 
   previousMonth() {

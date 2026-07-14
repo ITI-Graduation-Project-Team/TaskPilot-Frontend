@@ -2,13 +2,13 @@ import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, e
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { 
-  BacklogService, 
-  TaskItemDto, 
-  mapPriorityToFrontend, 
-  mapTypeToFrontend, 
-  mapStatusToFrontend, 
-  mapStatusToBackend 
+import {
+  BacklogService,
+  TaskItemDto,
+  mapPriorityToFrontend,
+  mapTypeToFrontend,
+  mapStatusToFrontend,
+  mapStatusToBackend
 } from '../../../../shared/api/backlog.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
@@ -522,7 +522,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Form -->
           <div class="space-y-4">
-<<<<<<< HEAD
             @if (projectState.isProjectManager()) {
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
@@ -534,42 +533,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
                 <textarea [(ngModel)]="modalTask().description" rows="3"
                           class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
-=======
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
-              <input type="text" [(ngModel)]="modalTask().title" [disabled]="!projectState.isProjectManager()"
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
-              <textarea [(ngModel)]="modalTask().description" rows="3" [disabled]="!projectState.isProjectManager()"
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface"></textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                <select [(ngModel)]="modalTask().priority" [disabled]="!projectState.isProjectManager()"
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
               </div>
 
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                <select [(ngModel)]="modalTask().type" [disabled]="!projectState.isProjectManager()"
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface">
-                  <option value="Feature">Feature</option>
-                  <option value="Bug">Bug</option>
-                  <option value="Refactor">Refactor</option>
-                </select>
->>>>>>> origin/abdelhay-branch
-              </div>
-
-<<<<<<< HEAD
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
@@ -621,13 +586,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 <p class="text-[10px] text-text-secondary mt-1 font-medium">Update the actual hours you spent working on this task.</p>
               </div>
             }
-=======
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
-              <input type="number" [(ngModel)]="modalTask().hours" [disabled]="!projectState.isProjectManager()"
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 disabled:opacity-75 disabled:bg-surface" />
-            </div>
->>>>>>> origin/abdelhay-branch
 
             <!-- Agile Coach Features (only for existing tasks and Project Managers) -->
             @if (isEditing() && projectState.isProjectManager()) {
@@ -648,11 +606,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Buttons -->
           <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-<<<<<<< HEAD
-            @if (isEditing() && projectState.isProjectManager()) {
-=======
             @if (isEditing() && projectState.isProjectManager() && !isBoardReadonly()) {
->>>>>>> origin/abdelhay-branch
               <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
                 Delete Task
               </button>
@@ -693,7 +647,7 @@ export class BoardComponent implements OnInit {
   isLoading = signal(true);
   isAssignedToProject = signal(false);
   projectName = signal('');
-  
+
   // Real active ids
   activeProjectId = '';
   activeUserStoryId = '';
@@ -743,7 +697,7 @@ export class BoardComponent implements OnInit {
 
   showModal = signal(false);
   isEditing = signal(false);
-  
+
   modalTask = signal<Task>({
     id: '',
     userStoryId: '',
@@ -767,7 +721,7 @@ export class BoardComponent implements OnInit {
     });
   }
 
-  async ngOnInit() {}
+  async ngOnInit() { }
 
   public async loadWorkspaceData() {
     const projectId = this.projectState.selectedProjectId();
@@ -782,7 +736,7 @@ export class BoardComponent implements OnInit {
 
     this.isAssignedToProject.set(true);
     this.activeProjectId = projectId;
-    
+
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
 
@@ -805,7 +759,7 @@ export class BoardComponent implements OnInit {
     if (this.projectState.isProjectManager()) {
       let backlog = await this.backlogService.getBacklog(this.activeProjectId);
       let userStory = backlog?.userStories?.[0];
-      
+
       // Automatically create a user story if somehow missing
       if (!userStory) {
         userStory = await this.backlogService.createUserStory(this.activeProjectId, {
@@ -939,7 +893,7 @@ export class BoardComponent implements OnInit {
 
       const task = event.container.data[event.currentIndex];
       const targetColumnId = event.container.id;
-      
+
       let newStatus = 'todo';
       if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
       else if (targetColumnId === 'review-list') newStatus = 'review';
