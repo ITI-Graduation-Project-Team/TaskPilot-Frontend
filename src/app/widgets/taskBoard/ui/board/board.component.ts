@@ -20,6 +20,7 @@ import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.co
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
+import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 
 interface Task {
   id: string;
@@ -517,45 +518,70 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Form -->
           <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
-              <input type="text" [(ngModel)]="modalTask().title" 
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
-              <textarea [(ngModel)]="modalTask().description" rows="3"
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
+            @if (projectState.isProjectManager()) {
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                <select [(ngModel)]="modalTask().priority" 
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
+                <input type="text" [(ngModel)]="modalTask().title" 
+                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
               </div>
 
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                <select [(ngModel)]="modalTask().type" 
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                  <option value="Feature">Feature</option>
-                  <option value="Bug">Bug</option>
-                  <option value="Refactor">Refactor</option>
-                </select>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
+                <textarea [(ngModel)]="modalTask().description" rows="3"
+                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
               </div>
-            </div>
 
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
-              <input type="number" [(ngModel)]="modalTask().hours" 
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-            </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
+                  <select [(ngModel)]="modalTask().priority" 
+                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
+                  <select [(ngModel)]="modalTask().type" 
+                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
+                    <option value="Feature">Feature</option>
+                    <option value="Bug">Bug</option>
+                    <option value="Refactor">Refactor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
+                <input type="number" [(ngModel)]="modalTask().hours" 
+                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+              </div>
+            } @else {
+              <div class="p-4 bg-background rounded-xl border border-border space-y-3">
+                <div>
+                  <h4 class="text-sm font-bold text-text-primary">{{ modalTask().title }}</h4>
+                  <p class="text-xs text-text-secondary mt-1">{{ modalTask().description || 'No description provided.' }}</p>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2 text-[11px] font-semibold text-text-secondary border-t border-border/50">
+                  <div>Type: <span class="text-text-primary font-bold">{{ modalTask().type }}</span></div>
+                  <div>Priority: <span class="text-text-primary font-bold">{{ modalTask().priority }}</span></div>
+                  <div>Estimated: <span class="text-text-primary font-bold">{{ modalTask().hours }}h</span></div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Actual Hours Spent</label>
+                <div class="relative">
+                  <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
+                         class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"
+                         placeholder="e.g. 4.5" />
+                  <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
+                </div>
+                <p class="text-[10px] text-text-secondary mt-1 font-medium">Update the actual hours you spent working on this task.</p>
+              </div>
+            }
 
             <!-- Agile Coach Features (only for existing tasks) -->
             @if (isEditing()) {
@@ -576,7 +602,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Buttons -->
           <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-            @if (isEditing()) {
+            @if (isEditing() && projectState.isProjectManager()) {
               <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
                 Delete Task
               </button>
@@ -604,6 +630,9 @@ export class BoardComponent implements OnInit {
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
+  private tasksService = inject(TasksService);
+
+  employeeActualHours = 0;
 
   // Loading and assignment status signals
   isLoading = signal(true);
@@ -716,26 +745,39 @@ export class BoardComponent implements OnInit {
     }
 
     // 4. Load backlog
-    let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-    let userStory = backlog?.userStories?.[0];
-    
-    // Automatically create a user story if somehow missing
-    if (!userStory) {
-      userStory = await this.backlogService.createUserStory(this.activeProjectId, {
-        titleEn: 'Sprint Backlog Story',
-        titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
-        descriptionEn: 'Auto generated story for managing project tasks.',
-        descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
-        acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
-        acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
-        priority: 'Medium'
-      });
-    }
-    this.activeUserStoryId = userStory.id;
+    let tasks: any[] = [];
 
-    // Refresh backlog tasks
-    backlog = await this.backlogService.getBacklog(this.activeProjectId);
-    const tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
+    if (this.projectState.isProjectManager()) {
+      let backlog = await this.backlogService.getBacklog(this.activeProjectId);
+      let userStory = backlog?.userStories?.[0];
+      
+      // Automatically create a user story if somehow missing
+      if (!userStory) {
+        userStory = await this.backlogService.createUserStory(this.activeProjectId, {
+          titleEn: 'Sprint Backlog Story',
+          titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
+          descriptionEn: 'Auto generated story for managing project tasks.',
+          descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
+          acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
+          acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
+          priority: 'Medium'
+        });
+      }
+      this.activeUserStoryId = userStory.id;
+
+      // Refresh backlog tasks
+      backlog = await this.backlogService.getBacklog(this.activeProjectId);
+      tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
+    } else {
+      // Load employee's own assigned tasks
+      try {
+        const myTasksRes = await this.tasksService.getMyTasks(this.activeProjectId);
+        tasks = myTasksRes.tasks || [];
+      } catch (err) {
+        console.error('Error loading employee tasks:', err);
+        tasks = [];
+      }
+    }
 
     // 5. Populate task columns from real data
     const todoList: Task[] = [];
@@ -745,20 +787,21 @@ export class BoardComponent implements OnInit {
 
     for (const t of tasks) {
       const task: Task = {
-        id: t.id,
-        userStoryId: t.userStoryId,
+        id: t.id || t.taskId,
+        userStoryId: t.userStoryId || '',
         title: t.titleEn,
         description: t.descriptionEn || '',
         priority: mapPriorityToFrontend(t.priority),
-        hours: t.estimatedHours,
+        hours: t.estimatedHours || 0,
         type: mapTypeToFrontend(t.type)
       };
+      (task as any).actualHours = t.actualHours || 0;
 
-      const status = mapStatusToFrontend(t.status);
-      if (status === 'inProgress') inProgressList.push(task);
-      else if (status === 'review') reviewList.push(task);
-      else if (status === 'done') doneList.push(task);
-      else todoList.push(task);
+      const col = mapStatusToFrontend(t.status);
+      if (col === 'todo') todoList.push(task);
+      else if (col === 'inProgress') inProgressList.push(task);
+      else if (col === 'review') reviewList.push(task);
+      else if (col === 'done') doneList.push(task);
     }
 
     this.todo.set(todoList);
@@ -848,17 +891,24 @@ export class BoardComponent implements OnInit {
       else if (targetColumnId === 'done-list') newStatus = 'done';
 
       try {
-        await this.backlogService.updateTask(task.id, {
-          titleEn: task.title,
-          descriptionEn: task.description,
-          estimatedHours: task.hours,
-          effortSize: 'Medium',
-          priority: task.priority,
-          type: task.type,
-          status: newStatus
-        });
+        if (this.projectState.isProjectManager()) {
+          await this.backlogService.updateTask(task.id, {
+            titleEn: task.title,
+            descriptionEn: task.description,
+            estimatedHours: task.hours,
+            effortSize: 'Medium',
+            priority: task.priority,
+            type: task.type,
+            status: newStatus
+          });
+        } else {
+          const statusEnum = this.mapColumnToEnum(newStatus);
+          await this.tasksService.updateTaskStatus(task.id, statusEnum);
+          this.toastService.show('Task status updated successfully.', 'success');
+        }
       } catch (err) {
         console.error('Failed to update task status in backend:', err);
+        this.toastService.show('Failed to update task status.', 'error');
       }
     }
 
@@ -866,6 +916,13 @@ export class BoardComponent implements OnInit {
     this.inProgress.set([...this.inProgress()]);
     this.review.set([...this.review()]);
     this.done.set([...this.done()]);
+  }
+
+  private mapColumnToEnum(column: string): TaskItemStatus {
+    if (column === 'inProgress') return TaskItemStatus.InProgress;
+    if (column === 'review') return TaskItemStatus.Review;
+    if (column === 'done') return TaskItemStatus.Done;
+    return TaskItemStatus.ToDo;
   }
 
   openEditModal(task: Task) {
@@ -877,6 +934,7 @@ export class BoardComponent implements OnInit {
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
     this.modalTask.set({ ...task });
+    this.employeeActualHours = (task as any).actualHours || 0;
     this.showModal.set(true);
   }
 
@@ -887,33 +945,41 @@ export class BoardComponent implements OnInit {
 
   async saveTask() {
     const taskData = this.modalTask();
-    if (!taskData.title.trim()) {
-      this.toastService.show('Task title is required.', 'error');
-      return;
-    }
 
     try {
       this.isLoading.set(true);
-      if (this.isEditing()) {
-        await this.backlogService.updateTask(taskData.id, {
-          titleEn: taskData.title,
-          descriptionEn: taskData.description,
-          estimatedHours: taskData.hours,
-          effortSize: 'Medium',
-          priority: taskData.priority,
-          type: taskData.type,
-          status: this.originalColumn
-        });
+      if (this.projectState.isProjectManager()) {
+        if (!taskData.title.trim()) {
+          this.toastService.show('Task title is required.', 'error');
+          this.isLoading.set(false);
+          return;
+        }
+
+        if (this.isEditing()) {
+          await this.backlogService.updateTask(taskData.id, {
+            titleEn: taskData.title,
+            descriptionEn: taskData.description,
+            estimatedHours: taskData.hours,
+            effortSize: 'Medium',
+            priority: taskData.priority,
+            type: taskData.type,
+            status: this.originalColumn
+          });
+        } else {
+          await this.backlogService.createTask(this.activeUserStoryId, {
+            titleEn: taskData.title,
+            descriptionEn: taskData.description,
+            estimatedHours: taskData.hours,
+            effortSize: 'Medium',
+            priority: taskData.priority,
+            type: taskData.type,
+            status: 'todo'
+          });
+        }
       } else {
-        await this.backlogService.createTask(this.activeUserStoryId, {
-          titleEn: taskData.title,
-          descriptionEn: taskData.description,
-          estimatedHours: taskData.hours,
-          effortSize: 'Medium',
-          priority: taskData.priority,
-          type: taskData.type,
-          status: 'todo'
-        });
+        // Employee saving log actual hours
+        await this.tasksService.logActualHours(taskData.id, this.employeeActualHours);
+        this.toastService.show('Actual hours logged successfully.', 'success');
       }
       this.closeModal();
       await this.loadWorkspaceData();
