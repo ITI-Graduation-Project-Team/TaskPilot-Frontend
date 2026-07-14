@@ -1,42 +1,42 @@
-<section class="relative min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 py-12 overflow-hidden font-sans text-slate-300">
+<section class="relative min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 overflow-hidden font-dashboard text-text-secondary">
   
   <!-- Language Toggle -->
   <div class="absolute top-6 right-6 z-50" [class.right-6]="currentLang() === 'en'" [class.left-6]="currentLang() === 'ar'">
     <button (click)="toggleLanguage()"
-            class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-teal-400 rounded-full border border-teal-500/30 hover:bg-slate-800 transition-colors">
-      <span class="text-sm font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            class="flex items-center gap-2 px-3.5 py-1.5 bg-surface text-text-primary rounded-full border border-border shadow-sm hover:bg-background transition-all font-bold uppercase text-xs">
+      <span>{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
     </button>
   </div>
   
   <!-- Background blobs -->
-  <div class="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-teal-500/10 blur-[100px] pointer-events-none"></div>
+  <div class="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px] pointer-events-none"></div>
   <div class="absolute -bottom-24 -right-20 w-80 h-80 rounded-full bg-indigo-500/10 blur-[100px] pointer-events-none"></div>
 
-  <div class="relative z-10 w-full max-w-2xl bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-10 shadow-2xl animate-[fadeUp_0.45s_ease_both]">
+  <div class="relative z-10 w-full max-w-2xl bg-surface border border-border rounded-3xl p-8 sm:p-10 shadow-xl animate-[fadeUp_0.45s_ease_both]">
     
     <!-- Header -->
     <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-teal-500/10 text-teal-400 rounded-xl mb-4 border border-teal-500/20">
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-primary/10 text-primary rounded-2xl mb-4 border border-primary/20 shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
       </div>
-      <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">{{ 'PROFILE.UPLOAD_TITLE' | translate }}</h1>
-      <p class="text-slate-400">{{ 'PROFILE.UPLOAD_SUBTITLE' | translate }}</p>
+      <h1 class="text-3xl font-extrabold text-text-primary tracking-tight mb-2">{{ 'PROFILE.UPLOAD_TITLE' | translate }}</h1>
+      <p class="text-text-secondary text-sm">{{ 'PROFILE.UPLOAD_SUBTITLE' | translate }}</p>
     </div>
 
     <!-- Error banner -->
     <div *ngIf="uploadState() === 'error'"
-         class="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl mb-6">
-      <div class="shrink-0 flex items-center justify-center w-8 h-8 bg-red-500/20 rounded-full text-red-400 mt-0.5">
+         class="flex items-start gap-3 p-4 bg-error/10 border border-error/20 rounded-2xl mb-6">
+      <div class="shrink-0 flex items-center justify-center w-8 h-8 bg-error/20 rounded-full text-error mt-0.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
       </div>
-      <p class="text-sm font-medium text-red-400 leading-relaxed">{{ errorMessage() }}</p>
+      <p class="text-sm font-semibold text-error leading-relaxed">{{ errorMessage() }}</p>
     </div>
 
     <!-- Phase 1: Upload -->
@@ -46,11 +46,11 @@
          (drop)="onDrop($event)"
          (click)="triggerFileInput()"
          class="group relative w-full flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300"
-         [ngClass]="uploadState() === 'dragging' ? 'border-teal-400 bg-teal-400/5' : 'border-slate-700 bg-slate-800/30 hover:border-teal-500/50 hover:bg-slate-800/80'">
+         [ngClass]="uploadState() === 'dragging' ? 'border-primary bg-primary/5' : 'border-border bg-background hover:border-primary hover:bg-background/80'">
       
       <input type="file" #fileInput (change)="onFileSelected($event)" accept=".pdf,.docx" class="hidden" />
       
-      <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4 group-hover:scale-110 group-hover:text-teal-400 transition-all duration-300 shadow-lg border border-slate-700 group-hover:border-teal-500/30">
+      <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center text-text-secondary mb-4 group-hover:scale-110 group-hover:text-primary transition-all duration-300 shadow-sm border border-border group-hover:border-primary/30">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
@@ -58,23 +58,23 @@
         </svg>
       </div>
       
-      <h3 class="text-lg font-bold text-white mb-1 group-hover:text-teal-400 transition-colors">{{ 'PROFILE.DRAG_DROP' | translate }}</h3>
-      <p class="text-sm text-slate-400 text-center">{{ 'PROFILE.SUPPORTED_FILES' | translate }}</p>
+      <h3 class="text-lg font-bold text-text-primary mb-1 group-hover:text-primary transition-colors">{{ 'PROFILE.DRAG_DROP' | translate }}</h3>
+      <p class="text-xs text-text-secondary text-center">{{ 'PROFILE.SUPPORTED_FILES' | translate }}</p>
     </div>
 
     <!-- Loading State -->
     <div *ngIf="uploadState() === 'loading'" class="w-full flex flex-col items-center justify-center py-16 animate-pulse">
       <div class="relative w-20 h-20 mb-6">
-        <div class="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
-        <div class="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
-        <div class="absolute inset-0 flex items-center justify-center text-teal-500">
+        <div class="absolute inset-0 border-4 border-border rounded-full"></div>
+        <div class="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-primary">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
           </svg>
         </div>
       </div>
-      <h3 class="text-xl font-bold text-white mb-2">{{ 'PROFILE.ANALYZING' | translate }}</h3>
-      <p class="text-slate-400">{{ 'PROFILE.AI_PROCESSING' | translate }}</p>
+      <h3 class="text-xl font-bold text-text-primary mb-2">{{ 'PROFILE.ANALYZING' | translate }}</h3>
+      <p class="text-text-secondary text-sm">{{ 'PROFILE.AI_PROCESSING' | translate }}</p>
     </div>
 
     <!-- Phase 2: Review & Edit -->
@@ -82,51 +82,59 @@
       
       <!-- Metadata Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="p-4 bg-slate-800/40 border border-slate-700/50 rounded-xl">
-          <label class="block text-xs font-semibold text-teal-400 mb-1 uppercase tracking-wider">{{ 'PROFILE.JOB_TITLE' | translate }}</label>
+        <div class="p-4 bg-background border border-border rounded-xl">
+          <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'PROFILE.JOB_TITLE' | translate }}</label>
           <input type="text" [ngModel]="jobTitle()" (ngModelChange)="jobTitle.set($event)"
-                 class="w-full bg-transparent text-white font-medium outline-none border-b border-transparent focus:border-teal-500 transition-colors" />
+                 class="w-full bg-transparent text-text-primary font-semibold outline-none border-b border-transparent focus:border-primary transition-colors text-sm" />
         </div>
-        <div class="p-4 bg-slate-800/40 border border-slate-700/50 rounded-xl">
-          <label class="block text-xs font-semibold text-teal-400 mb-1 uppercase tracking-wider">{{ 'PROFILE.SENIORITY_LEVEL' | translate }}</label>
+        <div class="p-4 bg-background border border-border rounded-xl">
+          <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'PROFILE.SENIORITY_LEVEL' | translate }}</label>
           <select [ngModel]="seniorityLevel()" (ngModelChange)="seniorityLevel.set($event)"
-                  class="w-full bg-transparent text-white font-medium outline-none border-none focus:ring-0 focus:outline-none cursor-pointer bg-slate-800">
-            <option value="Junior" class="bg-slate-900 text-white">Junior</option>
-            <option value="MidLevel" class="bg-slate-900 text-white">Mid Level</option>
-            <option value="Senior" class="bg-slate-900 text-white">Senior</option>
-            <option value="Lead" class="bg-slate-900 text-white">Lead</option>
+                  class="w-full bg-transparent text-text-primary font-semibold outline-none border-none focus:ring-0 focus:outline-none cursor-pointer text-sm">
+            <option value="Junior" class="bg-surface text-text-primary">Junior</option>
+            <option value="MidLevel" class="bg-surface text-text-primary">Mid Level</option>
+            <option value="Senior" class="bg-surface text-text-primary">Senior</option>
+            <option value="Lead" class="bg-surface text-text-primary">Lead</option>
           </select>
         </div>
-        <div class="p-4 bg-slate-800/40 border border-slate-700/50 rounded-xl">
-          <label class="block text-xs font-semibold text-teal-400 mb-1 uppercase tracking-wider">{{ 'PROFILE.TOTAL_YEARS' | translate }}</label>
+        <div class="p-4 bg-background border border-border rounded-xl">
+          <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'PROFILE.TOTAL_YEARS' | translate }}</label>
           <input type="number" [ngModel]="totalYearsOfExperience()" (ngModelChange)="totalYearsOfExperience.set($event)"
-                 class="w-full bg-transparent text-white font-medium outline-none border-b border-transparent focus:border-teal-500 transition-colors" />
+                 class="w-full bg-transparent text-text-primary font-semibold outline-none border-b border-transparent focus:border-primary transition-colors text-sm" />
         </div>
       </div>
 
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-white">{{ 'PROFILE.REVIEW_SKILLS' | translate }}</h3>
-        <span class="text-xs font-semibold px-2.5 py-1 bg-teal-500/10 text-teal-400 rounded-full border border-teal-500/20">
+        <h3 class="text-lg font-bold text-text-primary">{{ 'PROFILE.REVIEW_SKILLS' | translate }}</h3>
+        <span class="text-xs font-semibold px-2.5 py-1 bg-primary/10 text-primary rounded-full border border-primary/20">
           {{ skills().length }} {{ 'PROFILE.SKILLS_FOUND' | translate }}
         </span>
       </div>
 
       <!-- Skills Container -->
-      <div class="flex flex-col gap-3 p-5 bg-slate-800/30 border border-slate-700/50 rounded-xl mb-6 min-h-[100px] max-h-[300px] overflow-y-auto">
-        <div *ngIf="skills().length === 0" class="w-full text-center py-4 text-slate-500">
+      <div class="flex flex-col gap-3 p-5 bg-background border border-border rounded-xl mb-6 min-h-[100px] max-h-[300px] overflow-y-auto">
+        <div *ngIf="skills().length === 0" class="w-full text-center py-4 text-text-secondary text-sm font-medium">
           {{ 'PROFILE.NO_SKILLS_EXTRACTED' | translate }}
         </div>
         
         <div *ngFor="let skill of skills(); let i = index"
-             class="group flex items-center justify-between p-3 bg-slate-800 text-slate-200 border border-slate-600 rounded-lg shadow-sm hover:border-teal-500/50 hover:bg-slate-700/50 transition-all">
-          <div class="flex flex-col">
-            <span class="text-sm font-bold text-white mb-0.5">{{ skill.name }}</span>
-            <div class="flex items-center gap-3 text-xs text-slate-400">
-              <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>{{ skill.level }}</span>
-              <span>{{ skill.yearsOfExperience }} {{ 'PROFILE.YEARS' | translate }}</span>
+             class="group flex items-center justify-between p-3 bg-surface text-text-primary border border-border rounded-xl shadow-sm hover:border-primary/50 hover:bg-background transition-all">
+          <div (click)="togglePrimarySkill(i)" class="flex items-center gap-3 cursor-pointer select-none flex-1 py-1">
+            <span class="p-1.5 rounded-lg transition-colors group-hover:bg-primary/5" 
+                  [class.text-amber-500]="skill.isPrimary" [class.text-text-secondary/40]="!skill.isPrimary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 fill-current" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" [class.fill-none]="!skill.isPrimary" />
+              </svg>
+            </span>
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-text-primary mb-0.5">{{ skill.name }}</span>
+              <div class="flex items-center gap-3 text-xs text-text-secondary font-medium">
+                <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{{ skill.level }}</span>
+                <span>{{ skill.yearsOfExperience }} {{ 'PROFILE.YEARS' | translate }}</span>
+              </div>
             </div>
           </div>
-          <button (click)="removeSkill(i)" class="p-2 text-slate-400 hover:text-red-400 transition-colors outline-none focus:text-red-400">
+          <button (click)="removeSkill(i)" class="p-2 text-text-secondary hover:text-error transition-colors outline-none focus:text-error shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
@@ -138,24 +146,24 @@
       <div class="flex gap-3 mb-8">
         <input type="text" [ngModel]="newSkill()" (ngModelChange)="newSkill.set($event)" (keyup.enter)="addSkill()"
                [placeholder]="'PROFILE.ADD_SKILL_PLACEHOLDER' | translate"
-               class="flex-1 px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white outline-none placeholder:text-slate-500 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all"/>
+               class="flex-1 px-4 py-3 bg-background border border-border rounded-xl text-sm text-text-primary outline-none placeholder:text-text-secondary/50 focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-medium"/>
         <button (click)="addSkill()" [disabled]="!newSkill().trim()"
-                class="px-5 py-3 bg-slate-800 text-white font-semibold rounded-xl border border-slate-700 hover:bg-slate-700 hover:border-slate-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                class="px-5 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
           {{ 'PROFILE.ADD_BTN' | translate }}
         </button>
       </div>
 
       <!-- Submit -->
       <button (click)="confirmAndSave()"
-              class="w-full flex items-center justify-center py-3.5 bg-teal-500 text-slate-950 rounded-xl text-base font-bold shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:shadow-[0_0_25px_rgba(20,184,166,0.5)] hover:-translate-y-0.5 transition-all active:translate-y-0">
+              class="w-full flex items-center justify-center py-3.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-base font-bold shadow-md shadow-primary/25 hover:-translate-y-0.5 transition-all active:translate-y-0">
         {{ 'PROFILE.CONFIRM_SAVE_BTN' | translate }}
       </button>
 
       <!-- Payload Preview (Debugging) -->
-      <div *ngIf="showFinalArray" class="mt-6 p-4 bg-slate-900 border border-slate-700 rounded-xl" dir="ltr">
-        <h4 class="text-sm font-semibold text-teal-400 mb-2">{{ 'PROFILE.PAYLOAD_PREVIEW' | translate }}</h4>
-        <pre class="text-xs text-slate-300 overflow-x-auto"><code>{{ { jobTitle: jobTitle(), seniorityLevel: seniorityLevel(), totalYearsOfExperience: totalYearsOfExperience(), skills: skills() } | json }}</code></pre>
-        <div class="mt-2 text-right text-xs text-green-400 font-medium">{{ 'PROFILE.READY_TO_SEND' | translate }}</div>
+      <div *ngIf="showFinalArray" class="mt-6 p-4 bg-background border border-border rounded-xl" dir="ltr">
+        <h4 class="text-sm font-semibold text-primary mb-2">{{ 'PROFILE.PAYLOAD_PREVIEW' | translate }}</h4>
+        <pre class="text-xs text-text-primary overflow-x-auto"><code>{{ { jobTitle: jobTitle(), seniorityLevel: seniorityLevel(), totalYearsOfExperience: totalYearsOfExperience(), skills: skills() } | json }}</code></pre>
+        <div class="mt-2 text-right text-xs text-emerald-500 font-medium">{{ 'PROFILE.READY_TO_SEND' | translate }}</div>
       </div>
     </div>
 
