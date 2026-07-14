@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, computed, effect, inject, OnInit, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CalendarService, CalendarTask } from '../../../../shared/services/calendar.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
@@ -17,27 +18,54 @@ interface CalendarDay {
   selector: 'app-calendar-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DragDropModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, DragDropModule, TranslatePipe],
   template: `
     <div class="flex flex-col h-full bg-background text-text-primary p-4 md:p-8 font-dashboard transition-colors duration-200" [dir]="isAr() ? 'rtl' : 'ltr'">
       <!-- Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h2 class="text-2xl font-extrabold font-display">{{ 'calendar.title' | translate }}</h2>
-          <p class="text-text-secondary text-sm mt-1">
-             {{ currentMonthName() }} {{ currentYear() }}
-          </p>
+      <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative">
+        <div class="relative z-10">
+          <h2 class="text-3xl font-extrabold font-display bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary tracking-tight">
+            {{ 'calendar.title' | translate }}
+          </h2>
+          <div class="flex items-center gap-3 mt-1.5">
+            <div class="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></div>
+            <p class="text-text-secondary text-sm font-medium tracking-wide uppercase">
+               {{ currentMonthName() }} {{ currentYear() }}
+            </p>
+          </div>
         </div>
         
-        <div class="flex items-center gap-2 bg-surface border border-border p-1 rounded-xl shadow-sm">
-          <button (click)="previousMonth()" class="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">
-            <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <div class="flex items-center gap-1 bg-surface/80 backdrop-blur-md border border-border/60 p-1.5 rounded-2xl shadow-sm z-10">
+          <button (click)="previousMonth()" class="p-2 hover:bg-background text-text-secondary hover:text-primary rounded-xl transition-all hover:-translate-x-0.5 active:scale-95">
+            <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
           </button>
-          <button (click)="goToToday()" class="px-4 py-1.5 text-sm font-bold hover:bg-primary/5 rounded-lg transition-colors">
+          
+          <button (click)="goToToday()" 
+                  class="px-5 py-2 text-sm font-extrabold rounded-xl transition-all duration-300 flex items-center gap-2"
+                  [class.bg-gradient-to-r]="isNotCurrentMonth()"
+                  [class.from-primary]="isNotCurrentMonth()"
+                  [class.to-indigo-500]="isNotCurrentMonth()"
+                  [class.text-white]="isNotCurrentMonth()"
+                  [class.shadow-[0_0_20px_rgba(var(--color-primary),0.3)]]="isNotCurrentMonth()"
+                  [class.hover:scale-105]="isNotCurrentMonth()"
+                  [class.hover:shadow-[0_0_25px_rgba(var(--color-primary),0.5)]]="isNotCurrentMonth()"
+                  [class.active:scale-95]="isNotCurrentMonth()"
+                  [class.bg-primary/10]="!isNotCurrentMonth()"
+                  [class.text-primary]="!isNotCurrentMonth()"
+                  [class.opacity-60]="!isNotCurrentMonth()"
+                  [class.cursor-default]="!isNotCurrentMonth()"
+                  [disabled]="!isNotCurrentMonth()">
+            @if (isNotCurrentMonth()) {
+              <span class="relative flex h-2.5 w-2.5 mr-1">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+              </span>
+            }
             {{ isAr() ? 'اليوم' : 'Today' }}
           </button>
-          <button (click)="nextMonth()" class="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">
-            <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+
+          <button (click)="nextMonth()" class="p-2 hover:bg-background text-text-secondary hover:text-primary rounded-xl transition-all hover:translate-x-0.5 active:scale-95">
+            <svg class="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
@@ -75,16 +103,19 @@ interface CalendarDay {
         </div>
 
         <!-- Days Grid -->
-        <div class="flex-1 grid grid-cols-7 grid-rows-5 md:grid-rows-auto auto-rows-[1fr]" 
+        <div class="flex-1 min-h-0 grid grid-cols-7 auto-rows-fr" 
              cdkDropListGroup>
           @for (day of calendarDays(); track day.date.toISOString(); let idx = $index) {
             <div 
-              class="border-b border-r border-border/50 p-1 md:p-2 flex flex-col transition-colors"
+              class="border-b border-r border-border/50 p-1 md:p-2 flex flex-col transition-colors min-h-0"
               [class.bg-background]="!day.isCurrentMonth"
               [class.opacity-60]="!day.isCurrentMonth"
               [class.bg-primary/5]="day.isToday"
+              [class.cursor-pointer]="!isPM()"
+              [class.hover:bg-primary/5]="!isPM()"
               cdkDropList
               [cdkDropListData]="day.tasks"
+              (click)="!isPM() ? openCreateTaskModal(day.date, $event) : null"
               (cdkDropListDropped)="drop($event, day.date)">
               
               <div class="flex justify-between items-start mb-1">
@@ -104,15 +135,39 @@ interface CalendarDay {
                     cdkDrag
                     [cdkDragDisabled]="!isPM()"
                     [cdkDragData]="task"
-                    class="text-[10px] md:text-xs p-1.5 rounded-md font-medium truncate shadow-sm border border-black/5 hover:brightness-110 hover:-translate-y-0.5 transition-all select-none group"
+                    class="text-[10px] md:text-xs p-1.5 rounded-md font-medium truncate shadow-sm border border-black/5 hover:brightness-110 hover:-translate-y-0.5 transition-all select-none group relative"
                     [class.cursor-grab]="isPM()"
                     [class.cursor-default]="!isPM()"
-                    [style.background]="getProjectColor(task.projectId)"
-                    [style.color]="'#ffffff'">
+                    [class.line-through]="task.status === 'Done'"
+                    [class.opacity-60]="task.status === 'Done'"
+                    [class.bg-surface-variant]="task.status === 'Done'"
+                    [class.text-text-secondary]="task.status === 'Done'"
+                    [class.text-text-secondary]="task.status === 'Done'"
+                    [style.background]="task.status === 'Done' ? '#94a3b8' : getProjectColor(task.projectId)"
+                    [style.color]="'#ffffff'"
+                    [title]="(isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr)) + (task.descriptionEn || task.descriptionAr ? '\n\n' + (isAr() ? (task.descriptionAr || task.descriptionEn) : (task.descriptionEn || task.descriptionAr)) : '')"
+                    (click)="!isPM() ? openEditModal(task, $event) : null">
                     
                     <div class="flex items-center gap-1">
+                      @if (task.status === 'Done') {
+                        <svg class="w-3 h-3 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      }
                       <span class="truncate">{{ isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr) }}</span>
+                      
+                      @if (task.status === 'Done') {
+                        <button (click)="$event.stopPropagation(); deleteTask(task.id)" class="ml-auto opacity-0 group-hover:opacity-100 p-0.5 rounded-sm hover:bg-black/10 transition-all text-text-secondary">
+                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      }
                     </div>
+
+                    @if (isMultiDay(task)) {
+                      <div class="text-[8.5px] opacity-90 mt-0.5 truncate tracking-tight">{{ formatMultiDay(task) }}</div>
+                    }
 
                     <div *cdkDragPreview class="bg-primary text-white text-xs p-2 rounded-lg shadow-xl opacity-90 z-50">
                        {{ isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr) }}
@@ -125,6 +180,151 @@ interface CalendarDay {
           }
         </div>
       </div>
+
+      <!-- Create Personal Task Modal -->
+      @if (showCreateModal()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center animate-[fadeIn_0.2s_ease_both]">
+          <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeCreateModal()"></div>
+          
+          <div class="relative bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 animate-[scaleUp_0.2s_ease_both]">
+            <h3 class="text-xl font-bold mb-4 font-display">Add Personal Task</h3>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-bold text-text-secondary mb-1">Title *</label>
+                <input type="text" [(ngModel)]="newTask().title" 
+                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors"
+                       placeholder="e.g. Prepare for meeting">
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-text-secondary mb-1">Description</label>
+                <textarea [(ngModel)]="newTask().description" rows="2"
+                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar"
+                       placeholder="Task details..."></textarea>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">Start</label>
+                  <input type="datetime-local" [(ngModel)]="newTask().startDateTime" 
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">End</label>
+                  <input type="datetime-local" [(ngModel)]="newTask().endDateTime" 
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="block text-sm font-bold text-text-secondary mb-1">Priority</label>
+                <select [(ngModel)]="newTask().priority" 
+                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-end gap-3 mt-8">
+              <button (click)="closeCreateModal()" 
+                      class="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
+                Cancel
+              </button>
+              <button (click)="saveNewTask()" 
+                      [disabled]="!newTask().title"
+                      class="px-6 py-2 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                Save Task
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Edit Personal Task Modal -->
+      @if (showEditModal() && editingTask()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center animate-[fadeIn_0.2s_ease_both]">
+          <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeEditModal()"></div>
+          
+          <div class="relative bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 animate-[scaleUp_0.2s_ease_both]">
+            <h3 class="text-xl font-bold mb-4 font-display">Edit Task</h3>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-bold text-text-secondary mb-1">Title *</label>
+                <input type="text" [(ngModel)]="editingTask()!.title" 
+                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors"
+                       placeholder="e.g. Prepare for meeting">
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-text-secondary mb-1">Description</label>
+                <textarea [(ngModel)]="editingTask()!.description" rows="2"
+                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar"
+                       placeholder="Task details..."></textarea>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">Start</label>
+                  <input type="datetime-local" [(ngModel)]="editingTask()!.startDateTime" 
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">End</label>
+                  <input type="datetime-local" [(ngModel)]="editingTask()!.endDateTime" 
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">Priority</label>
+                  <select [(ngModel)]="editingTask()!.priority" 
+                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">Status</label>
+                  <select [(ngModel)]="editingTask()!.status" 
+                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                    <option value="ToDo">To Do</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="Review">Review</option>
+                    <option value="Done">Done</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-8 pt-4 border-t border-border/50">
+              <button (click)="deleteEditedTask()" 
+                      class="px-4 py-2 text-sm font-bold text-error hover:bg-error/10 transition-colors rounded-xl">
+                Delete
+              </button>
+              <div class="flex items-center gap-2">
+                <button (click)="closeEditModal()" 
+                        class="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
+                  Cancel
+                </button>
+                <button (click)="saveEditedTask()" 
+                        [disabled]="!editingTask()!.title"
+                        class="px-6 py-2 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -154,16 +354,38 @@ interface CalendarDay {
 })
 export class CalendarViewComponent implements OnInit {
   isPM = input(false);
-  
+
   calendarService = inject(CalendarService);
   themeService = inject(ThemeService);
   translate = inject(TranslateService);
   projectState = inject(ProjectStateService);
 
   currentDate = signal(new Date());
-  
+
   weekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   monthsKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+  showCreateModal = signal(false);
+  selectedDate = signal<Date | null>(null);
+  newTask = signal({
+    title: '',
+    description: '',
+    startDateTime: '',
+    endDateTime: '',
+    priority: 'Low'
+  });
+
+  showEditModal = signal(false);
+  editingTask = signal<{
+    id: string;
+    title: string;
+    description: string;
+    startDateTime: string;
+    endDateTime: string;
+    priority: string;
+    status: string;
+    eventType: string;
+  } | null>(null);
 
   isAr = computed(() => this.translate.currentLang() === 'ar');
 
@@ -174,21 +396,27 @@ export class CalendarViewComponent implements OnInit {
 
   currentYear = computed(() => this.currentDate().getFullYear());
 
+  isNotCurrentMonth = computed(() => {
+    const d = this.currentDate();
+    const today = new Date();
+    return d.getMonth() !== today.getMonth() || d.getFullYear() !== today.getFullYear();
+  });
+
   calendarDays = computed(() => {
     const date = this.currentDate();
     const year = date.getFullYear();
     const month = date.getMonth();
-    
+
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
-    
+
     const daysInMonth = lastDayOfMonth.getDate();
     const startingDayOfWeek = firstDayOfMonth.getDay();
-    
+
     const days: CalendarDay[] = [];
     const today = new Date();
-    today.setHours(0,0,0,0);
-    
+    today.setHours(0, 0, 0, 0);
+
     const prevMonthDays = startingDayOfWeek;
     const prevMonthLastDate = new Date(year, month, 0).getDate();
     for (let i = prevMonthDays - 1; i >= 0; i--) {
@@ -200,7 +428,7 @@ export class CalendarViewComponent implements OnInit {
         tasks: this.getTasksForDate(d)
       });
     }
-    
+
     for (let i = 1; i <= daysInMonth; i++) {
       const d = new Date(year, month, i);
       days.push({
@@ -210,7 +438,7 @@ export class CalendarViewComponent implements OnInit {
         tasks: this.getTasksForDate(d)
       });
     }
-    
+
     const totalCells = days.length > 35 ? 42 : 35;
     const nextMonthDays = totalCells - days.length;
     for (let i = 1; i <= nextMonthDays; i++) {
@@ -222,7 +450,7 @@ export class CalendarViewComponent implements OnInit {
         tasks: this.getTasksForDate(d)
       });
     }
-    
+
     return days;
   });
 
@@ -241,20 +469,21 @@ export class CalendarViewComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   getTasksForDate(date: Date): CalendarTask[] {
     const tasks = this.calendarService.tasks();
     return tasks.filter(t => {
+      if (t.isHidden) return false;
       if (!t.startDate) return false;
       const start = new Date(t.startDate);
       const end = t.endDate ? new Date(t.endDate) : new Date(t.startDate);
-      
-      start.setHours(0,0,0,0);
-      end.setHours(0,0,0,0);
+
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
       const target = new Date(date);
-      target.setHours(0,0,0,0);
-      
+      target.setHours(0, 0, 0, 0);
+
       return target >= start && target <= end;
     });
   }
@@ -284,13 +513,73 @@ export class CalendarViewComponent implements OnInit {
     this.currentDate.set(new Date());
   }
 
+  async deleteTask(taskId: string) {
+    await this.calendarService.deleteTask(taskId);
+  }
+
+  openCreateTaskModal(date: Date, event: Event) {
+    if (this.isPM()) return;
+    event.stopPropagation();
+    if ((event.target as HTMLElement).closest('.group')) {
+      return;
+    }
+
+    const formatDateTimeLocal = (d: Date) => {
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    const startDate = new Date(date);
+    startDate.setHours(9, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(10, 0, 0, 0);
+
+    this.selectedDate.set(date);
+    this.newTask.set({ title: '', description: '', startDateTime: formatDateTimeLocal(startDate), endDateTime: formatDateTimeLocal(endDate), priority: 'Low' });
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal() {
+    this.showCreateModal.set(false);
+    this.selectedDate.set(null);
+  }
+
+  async saveNewTask() {
+    if (!this.selectedDate() || !this.newTask().title) return;
+
+    const startDate = new Date(this.newTask().startDateTime);
+    const endDate = new Date(this.newTask().endDateTime);
+
+    let durationInMinutes = Math.round((endDate.getTime() - startDate.getTime()) / 60000);
+    if (durationInMinutes < 0) {
+      durationInMinutes += 24 * 60; // Just in case it's negative
+    }
+
+    const dto = {
+      title: this.newTask().title,
+      description: this.newTask().description,
+      startDate: startDate.toISOString(),
+      durationInMinutes: durationInMinutes,
+      eventType: 'PersonalTask',
+      priority: this.newTask().priority
+    };
+
+    const success = await this.calendarService.createTask(dto);
+    if (success) {
+      this.closeCreateModal();
+      const d = this.currentDate();
+      const start = new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString();
+      const end = new Date(d.getFullYear(), d.getMonth() + 2, 0).toISOString();
+      this.calendarService.loadTasks(start, end);
+    }
+  }
+
   async drop(event: CdkDragDrop<CalendarTask[]>, targetDate: Date) {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
       const task = event.previousContainer.data[event.previousIndex];
       const newStartStr = targetDate.toISOString();
-      
+
       let newEndStr = newStartStr;
       if (task.startDate && task.endDate) {
         const oldStart = new Date(task.startDate).getTime();
@@ -317,4 +606,89 @@ export class CalendarViewComponent implements OnInit {
       }
     }
   }
+
+  isMultiDay(task: CalendarTask): boolean {
+    if (!task.startDate || !task.endDate) return false;
+    const start = new Date(task.startDate);
+    const end = new Date(task.endDate);
+    return start.toDateString() !== end.toDateString();
+  }
+
+  formatMultiDay(task: CalendarTask): string {
+    if (!task.startDate || !task.endDate) return '';
+    const start = new Date(task.startDate);
+    const end = new Date(task.endDate);
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString(undefined, opts)} - ${end.toLocaleDateString(undefined, opts)}`;
+  }
+
+  openEditModal(task: CalendarTask, event: Event) {
+    if (this.isPM()) return;
+    event.stopPropagation();
+
+    // Format for datetime-local: YYYY-MM-DDThh:mm
+    const formatDateTimeLocal = (dateString: string) => {
+      const d = new Date(dateString);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    let st = '';
+    let et = '';
+    if (task.startDate) st = formatDateTimeLocal(task.startDate);
+    if (task.endDate) et = formatDateTimeLocal(task.endDate);
+
+    this.editingTask.set({
+      id: task.id,
+      title: task.titleEn || task.titleAr || '',
+      description: task.descriptionEn || task.descriptionAr || '',
+      startDateTime: st,
+      endDateTime: et,
+      priority: task.priority || 'Low',
+      status: task.status || 'ToDo',
+      eventType: task.eventType || 'PersonalTask'
+    });
+    this.showEditModal.set(true);
+  }
+
+  closeEditModal() {
+    this.showEditModal.set(false);
+    this.editingTask.set(null);
+  }
+
+  async saveEditedTask() {
+    const task = this.editingTask();
+    if (!task) return;
+
+    const start = new Date(task.startDateTime);
+    const end = new Date(task.endDateTime);
+    let durationInMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
+    if (durationInMinutes < 0) {
+      durationInMinutes += 24 * 60;
+    }
+
+    const updatePayload = {
+      title: task.title,
+      description: task.description,
+      startDate: start.toISOString(),
+      durationInMinutes: durationInMinutes,
+      eventType: task.eventType,
+      priority: task.priority,
+      status: task.status,
+      _endDate: end.toISOString()
+    };
+    await this.calendarService.updateTask(task.id, updatePayload);
+
+    this.closeEditModal();
+  }
+
+  async deleteEditedTask() {
+    const task = this.editingTask();
+    if (!task) return;
+
+    const success = await this.calendarService.deleteTask(task.id);
+    if (success) {
+      this.closeEditModal();
+    }
+  }
+
 }

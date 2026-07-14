@@ -78,9 +78,8 @@ export class CurrentProjects {
 
   @Output() viewBoard = new EventEmitter<string>();
 
-  // We assume projects without a status or with status !== 'Completed' are current.
   currentProjects = computed(() => {
-    return this.projectState.projects().filter((p: any) => p.status !== 'Completed' && p.status !== 'Closed');
+    return this.projectState.projects().filter((p: any) => p.status !== 'Completed' && p.status !== 'Closed' && p.status !== 'Archived');
   });
 
   selectProject(id: string) {

@@ -10,7 +10,8 @@ import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
-import { CalendarViewComponent } from '../calendar-view/calendar-view.component';
+import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
+
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
@@ -19,7 +20,6 @@ import { AuthService } from '../../../../shared/api/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
-import { TranslatePipe } from '@ngx-translate/core';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -36,8 +36,7 @@ import { TranslatePipe } from '@ngx-translate/core';
     DraftReviewModalComponent,
     TechStackAdvisorModalComponent,
     ProjectHubComponent,
-    CalendarViewComponent,
-    TranslatePipe,
+    ProjectHistoryModalComponent,
     SprintPlanningViewComponent
   ],
   template: `
@@ -159,19 +158,6 @@ import { TranslatePipe } from '@ngx-translate/core';
               Project Team
             </a>
           }
-          <a (click)="currentTab.set('calendar')"
-             [class.bg-primary/10]="currentTab() === 'calendar'"
-             [class.text-primary]="currentTab() === 'calendar'"
-             [class.font-bold]="currentTab() === 'calendar'"
-             [class.shadow-sm]="currentTab() === 'calendar'"
-             [class.text-text-secondary]="currentTab() !== 'calendar'"
-             [class.hover:text-text-primary]="currentTab() !== 'calendar'"
-             [class.hover:bg-primary/5]="currentTab() !== 'calendar'"
-             [class.font-medium]="currentTab() !== 'calendar'"
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            {{ 'calendar.title' | translate }}
-          </a>
           <a (click)="currentTab.set('profile')"
              [class.bg-primary/10]="currentTab() === 'profile'"
              [class.text-primary]="currentTab() === 'profile'"
@@ -234,7 +220,15 @@ import { TranslatePipe } from '@ngx-translate/core';
               }
             </h1>
             
-            @if (currentTab() === 'sprint') {
+            @if (projectState.selectedProject()?.status === 'Completed') {
+              <span class="px-2.5 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-600 rounded-full font-mono uppercase tracking-wider">
+                Completed
+              </span>
+            } @else if (projectState.selectedProject()?.status === 'Archived') {
+              <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
+                Archived
+              </span>
+            } @else if (currentTab() === 'sprint') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
                 {{ activeSprintName() }}
               </span>
@@ -348,8 +342,6 @@ import { TranslatePipe } from '@ngx-translate/core';
               (deleteProject)="deleteProject($event)"
               (toggleProjectStatus)="onToggleProjectStatus($event)">
             </app-project-hub>
-          } @else if (currentTab() === 'calendar') {
-            <app-calendar-view [isPM]="true"></app-calendar-view>
           } @else if (currentTab() === 'create-project') {
             <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
               <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
@@ -493,7 +485,7 @@ import { TranslatePipe } from '@ngx-translate/core';
                 [class.scale-105]="currentTab() === 'sprint'"
                 [class.text-text-secondary]="currentTab() !== 'sprint'">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
           <span class="text-[9px] font-bold">Sprint</span>
         </button>
@@ -611,6 +603,17 @@ import { TranslatePipe } from '@ngx-translate/core';
     @if (isDraftReviewOpen()) {
       <app-draft-review-modal [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
     }
+
+    <!-- Project History Modal -->
+    @if (isHistoryModalOpen() && selectedHistoryProject()) {
+      <app-project-history-modal 
+        [projectId]="selectedHistoryProject()!.id"
+        [projectName]="selectedHistoryProject()!.nameEn || 'Project'"
+        [currentStatus]="selectedHistoryProject()!.status"
+        (close)="closeHistoryModal()"
+        (actionCompleted)="onHistoryActionCompleted()">
+      </app-project-history-modal>
+    }
   `,
   styles: `
     .line-clamp-2 {
@@ -631,13 +634,17 @@ export class DashboardComponent implements OnInit {
 
   // Active navigation tab signal
 
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'calendar'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
 
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
+
+  // Status History Modal state
+  isHistoryModalOpen = signal(false);
+  selectedHistoryProject = signal<{id: string, nameEn: string, status: string} | null>(null);
 
   // Edit Project properties
   isEditProjectModalOpen = signal(false);
@@ -925,34 +932,24 @@ export class DashboardComponent implements OnInit {
   async onToggleProjectStatus(projectId: string) {
     const p = this.projectState.projects().find(x => x.id === projectId);
     if (p) {
-      if (p.status === 'Completed') {
-        const confirmed = await this.confirmDialog.confirm({
-          title: 'Restore Project',
-          message: `Are you sure you want to restore "${p.nameEn}" to an active state?`,
-          confirmLabel: 'Restore',
-          cancelLabel: 'Cancel',
-          type: 'info'
-        });
-        if (confirmed) {
-          this.projectState.restoreProject(projectId);
-          this.toastService.show('Project restored successfully', 'success');
-          this.loadAllProjectStats();
-        }
-      } else {
-        const confirmed = await this.confirmDialog.confirm({
-          title: 'Complete Project',
-          message: `Are you sure you want to mark "${p.nameEn}" as completed?`,
-          confirmLabel: 'Complete',
-          cancelLabel: 'Cancel',
-          type: 'info'
-        });
-        if (confirmed) {
-          this.projectState.markProjectCompleted(projectId);
-          this.toastService.show('Project marked as completed', 'success');
-          this.loadAllProjectStats();
-        }
-      }
+      this.selectedHistoryProject.set({
+        id: p.id,
+        nameEn: p.nameEn || 'Project',
+        status: p.status || 'Active'
+      });
+      this.isHistoryModalOpen.set(true);
     }
+  }
+
+  closeHistoryModal() {
+    this.isHistoryModalOpen.set(false);
+    this.selectedHistoryProject.set(null);
+  }
+
+  onHistoryActionCompleted() {
+    this.closeHistoryModal();
+    this.toastService.show('Project status updated successfully', 'success');
+    this.loadAllProjectStats();
   }
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {

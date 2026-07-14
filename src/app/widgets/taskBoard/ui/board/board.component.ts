@@ -50,7 +50,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
       } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
-        <!-- PM First Project Creation Screen on Board -->
+        <!-- PM Project Creation Screen on Board -->
         <div class="bg-surface border border-border p-8 rounded-2xl shadow-lg max-w-xl mx-auto my-8 animate-[fadeUp_0.3s_ease_both]">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shadow-sm">
@@ -59,7 +59,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </svg>
             </div>
             <div>
-              <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
+              <h3 class="text-xl font-bold text-text-primary">Create a New Project</h3>
               <p class="text-text-secondary text-xs mt-0.5">Let's set up a workspace for your team.</p>
             </div>
           </div>
@@ -87,8 +87,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </button>
           </form>
         </div>
-      } @else if (!isAssignedToProject()) {
-        <!-- Warning Panel for unassigned employee -->
+      } @else if (!isAssignedToProject() || isBoardReadonly()) {
+        <!-- Warning Panel for unassigned employee or archived project -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
           <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -96,9 +96,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-text-primary">No Project Assignment</h3>
+            <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
             <p class="text-text-secondary text-sm mt-2 max-w-md">
-              You are currently not assigned to any projects. Please ask your Project Manager or Admin to assign you to a project to start viewing and executing tasks.
+              You are currently not viewing an active project. Please select an active project from the dropdown, or ask your Project Manager to assign you to one.
             </p>
           </div>
         </div>
@@ -234,7 +234,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
             <span>Showing {{ visibleTasksCount() }} of {{ totalTasksCount() }} tasks. Each column loads in focused batches.</span>
-            @if (hasActiveBoardFilters()) {
+            @if (isBoardReadonly()) {
+              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is disabled (Project is {{ projectState.selectedProject()?.status }})</span>
+            } @else if (hasActiveBoardFilters()) {
               <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is paused while filters are active</span>
             }
           </div>
@@ -255,7 +257,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleTodo(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -284,7 +286,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                      {{ projectState.isProjectManager() ? 'Edit' : 'View' }}
+                      {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
                     </button>
                   </div>
                 </div>
@@ -318,7 +320,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleInProgress(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -379,7 +381,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleReview(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -440,7 +442,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleDone(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -568,15 +570,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Buttons -->
           <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-            @if (isEditing() && projectState.isProjectManager()) {
+            @if (isEditing() && projectState.isProjectManager() && !isBoardReadonly()) {
               <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
                 Delete Task
               </button>
             }
             <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
-              {{ projectState.isProjectManager() ? 'Cancel' : 'Close' }}
+              {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
             </button>
-            @if (projectState.isProjectManager()) {
+            @if (projectState.isProjectManager() && !isBoardReadonly()) {
               <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
                 Save changes
               </button>
@@ -586,7 +588,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
       </div>
     }
 
-    <!-- Retrospective Modal -->
     @if (isRetroModalOpen() && activeSprintId()) {
       <app-retrospective-modal [sprintId]="activeSprintId()!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
     }
@@ -598,6 +599,10 @@ export class BoardComponent implements OnInit {
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
+
+  isBoardReadonly = computed(() => {
+    return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
+  });
 
   // Loading and assignment status signals
   isLoading = signal(true);

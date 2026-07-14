@@ -91,25 +91,27 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
         <!-- Navigation Links -->
         <nav class="flex-1 px-3 space-y-0.5">
 
-          <!-- Active Sprint -->
-          <button
-            (click)="activeTab.set('sprint')"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
-            [class.nav-item-active]="activeTab() === 'sprint'"
-            [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
-          >
-            <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/>
-            </svg>
-            <span class="flex-1 text-start">{{ 'employee.nav.sprintBoard' | translate }}</span>
-            <!-- Live pulse when sprint is active -->
-            @if (activeTab() === 'sprint' && hasActiveSprint()) {
-              <span class="w-2 h-2 rounded-full bg-success animate-pulse-dot shrink-0"
-                    style="background: var(--success);"></span>
-            }
-          </button>
+          @if (projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
+            <!-- Active Sprint -->
+            <button
+              (click)="activeTab.set('sprint')"
+              class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+              [class.nav-item-active]="activeTab() === 'sprint'"
+              [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
+            >
+              <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/>
+              </svg>
+              <span class="flex-1 text-start">{{ 'employee.nav.sprintBoard' | translate }}</span>
+              <!-- Live pulse when sprint is active -->
+              @if (activeTab() === 'sprint' && hasActiveSprint()) {
+                <span class="w-2 h-2 rounded-full bg-success animate-pulse-dot shrink-0"
+                      style="background: var(--success);"></span>
+              }
+            </button>
+          }
 
           <!-- Current Projects -->
           <button

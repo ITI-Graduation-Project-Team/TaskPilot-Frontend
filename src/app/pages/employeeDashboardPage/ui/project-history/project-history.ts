@@ -40,7 +40,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
               
               <div class="absolute top-5 right-5">
                 <span class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-600 bg-gray-100 rounded-full dark:bg-gray-800 dark:text-gray-300">
-                  Completed
+                  {{ p.status }}
                 </span>
               </div>
 
@@ -67,7 +67,7 @@ export class ProjectHistory {
   projectState = inject(ProjectStateService);
 
   historicalProjects = computed(() => {
-    return this.projectState.projects().filter((p: any) => p.status === 'Completed' || p.status === 'Closed');
+    return this.projectState.projects().filter((p: any) => p.status === 'Completed' || p.status === 'Closed' || p.status === 'Archived');
   });
 
   getProjectColor(id: string): string {

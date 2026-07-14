@@ -6,8 +6,9 @@ export interface CalendarTask {
   id: string;
   titleEn: string;
   titleAr: string;
-  descriptionEn: string;
-  descriptionAr: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  isHidden?: boolean;
   status: string;
   priority: string;
   startDate: string;
@@ -16,6 +17,7 @@ export interface CalendarTask {
   projectNameEn?: string;
   projectNameAr?: string;
   assignedTo?: string;
+  eventType?: string;
 }
 
 export interface WorkloadStat {
@@ -23,6 +25,15 @@ export interface WorkloadStat {
   employeeName: string;
   taskCount: number;
   totalHours?: number;
+}
+
+export interface CreateCalendarTaskDto {
+  title: string;
+  description?: string;
+  startDate: string;
+  durationInMinutes: number;
+  eventType: string; // 'AssignedTask' | 'PersonalTask'
+  priority: string;
 }
 
 @Injectable({
@@ -47,15 +58,42 @@ export class CalendarService {
       const response = await apiClient.get<any>(`/calendar/tasks`, {
         params: { start: startDate, end: endDate }
       });
-      // The backend returns { data: CalendarTask[] } or similar structure
-      const data = response.data?.data || response.data || [];
-      this.tasks.set(Array.isArray(data) ? data : []);
+
+      const rawData = response.data?.data?.events || response.data?.events || response.data?.data || response.data || [];
+      const eventsList = Array.isArray(rawData) ? rawData : [];
+
+      const mappedTasks = eventsList.map((item: any) => ({
+        ...item,
+        titleEn: item.titleEn || item.title || '',
+        titleAr: item.titleAr || item.title || '',
+        descriptionEn: item.descriptionEn || item.description || '',
+        descriptionAr: item.descriptionAr || item.description || '',
+        startDate: item.startDate || item.start || '',
+        endDate: item.endDate || item.end || ''
+      }));
+
+      this.tasks.set(mappedTasks);
     } catch (error) {
       console.error('Failed to load calendar tasks', error);
       this.toastService.show('Failed to load calendar tasks', 'error');
       this.tasks.set([]);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Create a new task (e.g., PersonalTask)
+   */
+  async createTask(dto: CreateCalendarTaskDto): Promise<boolean> {
+    try {
+      await apiClient.post('/calendar/tasks', dto);
+      this.toastService.show('Task created successfully', 'success');
+      return true;
+    } catch (error) {
+      console.error('Failed to create task', error);
+      this.toastService.show('Failed to create task', 'error');
+      return false;
     }
   }
 
@@ -69,20 +107,69 @@ export class CalendarService {
         newEnd
       });
       this.toastService.show('Task rescheduled successfully', 'success');
-      
+
       // Optimistically update the task in the current list
-      this.tasks.update(currentTasks => 
-        currentTasks.map(t => 
-          t.id === taskId 
-            ? { ...t, startDate: newStart, endDate: newEnd } 
+      this.tasks.update(currentTasks =>
+        currentTasks.map(t =>
+          t.id === taskId
+            ? { ...t, startDate: newStart, endDate: newEnd }
             : t
         )
       );
-      
+
       return true;
     } catch (error) {
       console.error('Failed to reschedule task', error);
       this.toastService.show('Failed to reschedule task', 'error');
+      return false;
+    }
+  }
+
+  /**
+   * Delete a task
+   */
+  async deleteTask(taskId: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/calendar/tasks/${taskId}`);
+      this.toastService.show('Task deleted successfully', 'success');
+
+      // Optimistically update
+      this.tasks.update(currentTasks => currentTasks.filter(t => t.id !== taskId));
+      return true;
+    } catch (error) {
+      console.error('Failed to delete task', error);
+      this.toastService.show('Failed to delete task', 'error');
+      return false;
+    }
+  }
+  /**
+   * Update task details (title, status, priority, etc.)
+   */
+  async updateTask(taskId: string, payload: any): Promise<boolean> {
+    try {
+      await apiClient.patch(`/calendar/tasks/${taskId}`, payload);
+      this.toastService.show('Task updated successfully', 'success');
+
+      // Optimistically update
+      this.tasks.update(currentTasks => 
+        currentTasks.map(t => 
+          t.id === taskId 
+            ? { 
+                ...t, 
+                titleEn: payload.title || payload.titleEn || t.titleEn, 
+                descriptionEn: payload.description !== undefined ? payload.description : t.descriptionEn,
+                status: payload.status || t.status, 
+                priority: payload.priority || t.priority,
+                startDate: payload.startDate || t.startDate,
+                endDate: payload._endDate || t.endDate
+              } 
+            : t
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error('Failed to update task', error);
+      this.toastService.show('Failed to update task', 'error');
       return false;
     }
   }
