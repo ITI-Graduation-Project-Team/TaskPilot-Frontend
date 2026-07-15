@@ -107,4 +107,13 @@ export const routes: Routes = [
         (m) => m.EmployeesComponent
       ),
   },
+  {
+    path: 'assignment/:sprintId',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/assignmentPage/ui/assignment/assignment.component').then(
+        (m) => m.AssignmentComponent
+      ),
+  },
 ];

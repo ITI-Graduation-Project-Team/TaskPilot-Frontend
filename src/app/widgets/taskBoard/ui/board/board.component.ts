@@ -20,6 +20,8 @@ import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.co
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
+import { Router } from '@angular/router';
+import { AssignmentService } from '../../../../shared/api/assignment.service';
 
 interface Task {
   id: string;
@@ -174,6 +176,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
           
           <div class="flex items-center gap-3">
+            @if (projectState.isProjectManager() && plannedSprintId()) {
+              <button (click)="goToAssignment()" 
+                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                👥 Assign Tasks
+              </button>
+              <button (click)="startSprint()" 
+                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                ▶ Start Sprint
+              </button>
+            }
             @if (projectState.isProjectManager() && activeSprintId()) {
               <button (click)="isRetroModalOpen.set(true)" 
                       class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
@@ -601,9 +613,11 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 export class BoardComponent implements OnInit {
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
+  private assignmentService = inject(AssignmentService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
+  private router = inject(Router);
 
   // Loading and assignment status signals
   isLoading = signal(true);
@@ -614,6 +628,8 @@ export class BoardComponent implements OnInit {
   activeProjectId = '';
   activeUserStoryId = '';
   activeSprintId = signal<string | null>(null);
+  plannedSprintId = signal<string | null>(null);
+  sprintStatus = signal<string | null>(null);
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
 
@@ -685,6 +701,27 @@ export class BoardComponent implements OnInit {
 
   async ngOnInit() {}
 
+  goToAssignment() {
+    const sprintId = this.plannedSprintId();
+    if (sprintId) {
+      this.router.navigate(['/assignment', sprintId]);
+    }
+  }
+
+  async startSprint(): Promise<void> {
+    const projectId = this.projectState.selectedProjectId();
+    const sprintId = this.plannedSprintId();
+    if (!projectId || !sprintId) return;
+
+    try {
+      await this.sprintService.startSprint(projectId, sprintId);
+      this.toastService.show('Sprint started successfully', 'success');
+      await this.loadWorkspaceData();
+    } catch {
+      this.toastService.show('Failed to start sprint', 'error');
+    }
+  }
+
   public async loadWorkspaceData() {
     const projectId = this.projectState.selectedProjectId();
     if (!projectId) {
@@ -703,16 +740,41 @@ export class BoardComponent implements OnInit {
     this.projectName.set(projectInfo?.nameEn || 'Project');
 
     // Fetch active sprint to enable retrospectives
+    // Step 1: Try to get active sprint — treat 404 as null, not an error
+    let activeSprint: { sprintId: string } | null = null;
     try {
       const activeSprintRes = await this.sprintService.getActiveSprint(projectId);
-      const activeSprint = activeSprintRes?.data || activeSprintRes;
-      if (activeSprint && activeSprint.id) {
-        this.activeSprintId.set(activeSprint.id);
-      } else {
-        this.activeSprintId.set(null);
+      const resolved = activeSprintRes?.data || activeSprintRes;
+      if (resolved && resolved.sprintId) {
+        activeSprint = resolved;
       }
-    } catch (e) {
+    } catch {
+      // 404 or any error = no active sprint. Continue to planned check.
+      activeSprint = null;
+    }
+
+    // Step 2: Branch based on result
+    if (activeSprint && activeSprint.sprintId) {
+      this.activeSprintId.set(activeSprint.sprintId);
+      this.plannedSprintId.set(null);
+      this.sprintStatus.set('Active');
+    } else {
       this.activeSprintId.set(null);
+
+      // Step 3: Try to get planned sprint — isolated try/catch
+      try {
+        const plannedSprint = await this.sprintService.getPlannedSprint(projectId);
+        if (plannedSprint && plannedSprint.sprintId) {
+          this.plannedSprintId.set(plannedSprint.sprintId);
+          this.sprintStatus.set('Planned');
+        } else {
+          this.plannedSprintId.set(null);
+          this.sprintStatus.set(null);
+        }
+      } catch {
+        this.plannedSprintId.set(null);
+        this.sprintStatus.set(null);
+      }
     }
 
     // 4. Load backlog
