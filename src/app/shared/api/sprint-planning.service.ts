@@ -43,6 +43,15 @@ export class SprintPlanningService {
     return data;
   }
 
+  async getPlannedSprint(projectId: string): Promise<{ sprintId: string; status: string } | null> {
+    try {
+      const { data } = await apiClient.get(`/projects/${projectId}/sprints/planned`);
+      return data?.data || data || null;
+    } catch {
+      return null;
+    }
+  }
+
   async getAssignmentSnapshot(projectId: string, sprintId: string): Promise<any> {
     const { data } = await apiClient.get(`/projects/${projectId}/sprints/${sprintId}/assignment/snapshot`);
     return data;
@@ -56,5 +65,12 @@ export class SprintPlanningService {
   async getRetrospective(sprintId: string): Promise<any> {
     const { data } = await apiClient.get(`/sprints/${sprintId}/retrospective`);
     return data;
+  }
+
+  async startSprint(projectId: string, sprintId: string): Promise<void> {
+    await apiClient.post(
+      `/projects/${projectId}/sprints/${sprintId}/start`,
+      {}
+    );
   }
 }
