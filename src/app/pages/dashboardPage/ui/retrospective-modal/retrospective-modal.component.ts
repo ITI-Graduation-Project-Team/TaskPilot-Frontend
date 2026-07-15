@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintRetroDto } from '../../../../shared/api/sprint-planning.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 @Component({
   selector: 'app-retrospective-modal',
@@ -198,12 +199,11 @@ export class RetrospectiveModalComponent implements OnInit {
         this.currentLang === 'ar' ? '🎉 تم إنشاء التقرير الختامي بنجاح!' : '🎉 Retrospective report generated successfully!',
         'success'
       );
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      this.toastService.show(
-        this.currentLang === 'ar' ? 'فشل إنشاء تقرير التحليل الختامي.' : 'Failed to generate retrospective analysis. Check backend server logs.',
-        'error'
-      );
+      const apiError = extractApiError(e);
+      const fallbackMsg = this.currentLang === 'ar' ? 'فشل إنشاء تقرير التحليل الختامي.' : 'Failed to generate retrospective analysis. Check backend server logs.';
+      this.toastService.show(apiError || fallbackMsg, 'error');
     } finally {
       this.isLoading.set(false);
     }
