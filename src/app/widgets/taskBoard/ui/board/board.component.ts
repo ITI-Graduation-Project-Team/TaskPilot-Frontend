@@ -172,14 +172,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <!-- Action buttons & Board Title -->
         <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
           <div>
-            <div class="flex items-center gap-3 mb-1">
-              <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Sprints
-              </button>
-            </div>
+            @if (projectState.isProjectManager()) {
+              <div class="flex items-center gap-3 mb-1">
+                <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Back to Sprints
+                </button>
+              </div>
+            }
             <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
             <p class="text-text-secondary text-sm mt-1">Drag and drop tasks to update their current progress state.</p>
           </div>
@@ -210,7 +212,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
 
-        @if (activeSprintId()) {
+        @if (projectState.isProjectManager() && activeSprintId()) {
           <div class="mt-6 mb-6">
             <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
           </div>
