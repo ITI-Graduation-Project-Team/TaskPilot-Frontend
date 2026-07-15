@@ -6,6 +6,7 @@ import { CalendarService, CalendarTask } from '../../../../shared/services/calen
 import { ThemeService } from '../../../../shared/services/theme.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 
 interface CalendarDay {
   date: Date;
@@ -469,6 +470,7 @@ export class CalendarViewComponent implements OnInit {
   themeService = inject(ThemeService);
   translate = inject(TranslateService);
   projectState = inject(ProjectStateService);
+  tasksService = inject(TasksService);
 
   currentDate = signal(new Date());
 
@@ -829,9 +831,44 @@ export class CalendarViewComponent implements OnInit {
       status: task.status,
       _endDate: end.toISOString()
     };
-    await this.calendarService.updateTask(task.id, updatePayload);
 
-    this.closeEditModal();
+    try {
+      if (task.eventType === 'WorkspaceTask') {
+        const statusEnum = this.mapStatusToEnum(task.status);
+        let actualHours: number | undefined = undefined;
+        if (statusEnum === TaskItemStatus.Done) {
+          const userInput = prompt("Please enter the actual hours spent to complete this task:");
+          if (userInput === null) {
+            return;
+          }
+          actualHours = parseFloat(userInput);
+          if (isNaN(actualHours) || actualHours <= 0) {
+            alert("Actual hours must be a positive number.");
+            return;
+          }
+        }
+        await this.tasksService.updateTaskStatus(task.id, statusEnum, actualHours);
+      } else {
+        await this.calendarService.updateTask(task.id, updatePayload);
+      }
+
+      this.closeEditModal();
+
+      // Reload calendar tasks
+      const d = this.currentDate();
+      const startStr = new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString();
+      const endStr = new Date(d.getFullYear(), d.getMonth() + 2, 0).toISOString();
+      await this.calendarService.loadTasks(startStr, endStr);
+    } catch (err) {
+      console.error('Error saving task:', err);
+    }
+  }
+
+  private mapStatusToEnum(status: string): TaskItemStatus {
+    if (status === 'InProgress') return TaskItemStatus.InProgress;
+    if (status === 'Review') return TaskItemStatus.Review;
+    if (status === 'Done') return TaskItemStatus.Done;
+    return TaskItemStatus.ToDo;
   }
 
   async deleteEditedTask() {

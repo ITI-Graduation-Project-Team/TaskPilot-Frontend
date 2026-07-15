@@ -642,9 +642,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
               {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
             </button>
-            @if (projectState.isProjectManager() && !isBoardReadonly()) {
+            @if (!isBoardReadonly()) {
               <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-                Save changes
+                {{ projectState.isProjectManager() ? 'Save changes' : 'Save actual hours' }}
               </button>
             }
           </div>
@@ -1050,7 +1050,22 @@ export class BoardComponent implements OnInit, OnChanges {
           });
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
-          await this.tasksService.updateTaskStatus(task.id, statusEnum);
+          let actualHours: number | undefined = undefined;
+          if (statusEnum === TaskItemStatus.Done) {
+            const userInput = prompt("Please enter the actual hours spent to complete this task:");
+            if (userInput === null) {
+              await this.loadWorkspaceData();
+              return;
+            }
+            actualHours = parseFloat(userInput);
+            if (isNaN(actualHours) || actualHours <= 0) {
+              this.toastService.show("Actual hours must be a positive number.", "error");
+              await this.loadWorkspaceData();
+              return;
+            }
+            this.employeeActualHours = actualHours;
+          }
+          await this.tasksService.updateTaskStatus(task.id, statusEnum, actualHours);
           this.toastService.show('Task status updated successfully.', 'success');
         }
       } catch (err) {
