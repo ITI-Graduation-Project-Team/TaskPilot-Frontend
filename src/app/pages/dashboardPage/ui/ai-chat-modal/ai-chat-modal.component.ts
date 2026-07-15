@@ -38,24 +38,26 @@ interface ChatMessage {
           </button>
         </div>
 
-        <!-- Progress Tracker -->
-        <div class="px-6 py-4 bg-primary/5 border-b border-primary/10 shrink-0 flex items-center justify-between gap-4">
-          <div class="flex-1">
-            <div class="flex items-center justify-between text-xs font-bold text-primary mb-1">
-              <span>Requirements Completeness</span>
-              <span>{{ completenessScore() }}%</span>
+        <!-- Progress Tracker (PM Only) -->
+        @if (projectState.isProjectManager()) {
+          <div class="px-6 py-4 bg-primary/5 border-b border-primary/10 shrink-0 flex items-center justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center justify-between text-xs font-bold text-primary mb-1">
+                <span>Requirements Completeness</span>
+                <span>{{ completenessScore() }}%</span>
+              </div>
+              <div class="w-full h-2.5 bg-border rounded-full overflow-hidden">
+                <div class="h-full bg-primary transition-all duration-500 rounded-full" [style.width.%]="completenessScore()"></div>
+              </div>
             </div>
-            <div class="w-full h-2.5 bg-border rounded-full overflow-hidden">
-              <div class="h-full bg-primary transition-all duration-500 rounded-full" [style.width.%]="completenessScore()"></div>
-            </div>
+            @if (isReadyForFinalization()) {
+              <button (click)="onGenerateDraft()" 
+                      class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0 animate-bounce">
+                Generate Project Draft
+              </button>
+            }
           </div>
-          @if (isReadyForFinalization()) {
-            <button (click)="onGenerateDraft()" 
-                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0 animate-bounce">
-              Generate Project Draft
-            </button>
-          }
-        </div>
+        }
 
         <!-- Chat Area -->
         <div class="flex-1 overflow-y-auto p-6 space-y-4" [class.max-h-[360px]]="embedded()" #chatScrollContainer>
@@ -64,7 +66,12 @@ interface ChatMessage {
           <div class="flex gap-3 max-w-[85%]">
             <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">🤖</div>
             <div class="p-4 bg-sidebar border border-border rounded-2xl text-sm text-text-primary rounded-tl-none leading-relaxed">
-              Hello! I am your AI assistant. Tell me about the project you want to build. You can describe it in text, upload technical documentation, or specify platforms and stack you prefer.
+              Hello! I am your AI assistant. 
+              @if (projectState.isProjectManager()) {
+                Tell me about the project you want to build. You can describe it in text, upload technical documentation, or specify platforms and stack you prefer.
+              } @else {
+                I can help you understand project requirements, explain tasks, or assist with any technical questions you have. How can I help you today?
+              }
             </div>
           </div>
 
@@ -85,8 +92,8 @@ interface ChatMessage {
             </div>
           }
 
-          <!-- AI Suggested Questions list -->
-          @if (clarifyingQuestions().length > 0) {
+          <!-- AI Suggested Questions list (PM Only) -->
+          @if (clarifyingQuestions().length > 0 && projectState.isProjectManager()) {
             <div class="p-5 bg-warning/5 border border-warning/20 rounded-2xl space-y-2.5 animate-[fadeIn_0.3s_ease_both]">
               <h4 class="text-xs font-bold text-warning uppercase tracking-wider flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -245,8 +252,8 @@ export class AiChatModalComponent implements AfterViewChecked {
   @ViewChild('chatScrollContainer') private chatScrollContainer!: ElementRef;
 
   private aiRequirements = inject(AiRequirementsService);
-  private projectState = inject(ProjectStateService);
-  private toastService = inject(ToastService);
+  projectState = inject(ProjectStateService);
+  toastService = inject(ToastService);
 
   chatId = signal<string | null>(null);
   completenessScore = signal(0);

@@ -104,61 +104,77 @@ const LOADING_HINTS = [
 
       <!-- ─── EMPTY STATE ─── -->
       @if (pageState() === 'empty') {
-        <div class="flex flex-col items-center justify-center text-center rounded-2xl border border-border bg-surface px-6 py-12 shadow-sm max-w-3xl mx-auto mt-8 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
-
-          <!-- Icon / Illustration -->
-          <div class="relative mb-6">
-            <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto ring-8 ring-primary/5">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        @if (projectState.selectedProject()?.status === 'Completed' || projectState.selectedProject()?.status === 'Archived') {
+          <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
+            <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-          </div>
-
-          <h3 class="text-xl font-bold text-text-primary mb-2">
-            {{ currentLang() === 'ar' ? 'المخطط الذكي للسبرينت' : 'AI Sprint Planner' }}
-          </h3>
-          <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
-            {{ currentLang() === 'ar' ? 'قائمة المهام جاهزة. دع الذكاء الاصطناعي يحلل الأولويات، ويقدّر القدرة الاستيعابية، لإنشاء أفضل مقترح للسبرينت الخاص بفريقك.' : 'Your backlog is ready. Let the AI analyze task priorities, estimate capacity, and build the optimal sprint proposal for your team.' }}
-          </p>
-
-          @if (projectState.selectedProject(); as sp) {
-            <div class="mb-10 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sidebar border border-border">
-              <span class="w-2 h-2 rounded-full bg-primary"></span>
-              <p class="text-xs font-medium text-text-secondary">
-                {{ currentLang() === 'ar' ? sp.nameAr : sp.nameEn }}
+            <div>
+              <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
+              <p class="text-text-secondary text-sm mt-2 max-w-md">
+                You are currently not viewing an active project. Please select an active project from the dropdown.
               </p>
             </div>
-          }
-
-          <!-- Steps preview (horizontal linear flow) -->
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-10 w-full max-w-lg mx-auto">
-            @for (step of emptyStateSteps; track step.labelEn; let isLast = $last) {
-              <div class="flex flex-col items-center text-center flex-1">
-                <div class="w-10 h-10 mb-3 rounded-full bg-sidebar border border-border flex items-center justify-center text-primary font-bold shadow-sm">
-                  {{ step.icon }}
-                </div>
-                <p class="text-xs font-bold text-text-primary mb-1">{{ currentLang() === 'ar' ? step.labelAr : step.labelEn }}</p>
-                <p class="text-[11px] text-text-secondary leading-tight">{{ currentLang() === 'ar' ? step.descAr : step.descEn }}</p>
-              </div>
-              @if (!isLast) {
-                <!-- connector -->
-                <div class="hidden sm:block w-8 h-[1px] bg-border shrink-0 mt-[-30px]"></div>
-              }
-            }
           </div>
+        } @else {
+          <div class="flex flex-col items-center justify-center text-center rounded-2xl border border-border bg-surface px-6 py-12 shadow-sm max-w-3xl mx-auto mt-8 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
 
-          <button
-            id="generate-sprint-btn"
-            (click)="onGenerate()"
-            class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm transition-all text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            {{ currentLang() === 'ar' ? 'توليد المقترح بالذكاء الاصطناعي' : 'Generate AI Sprint Suggestion' }}
-          </button>
-        </div>
+            <!-- Icon / Illustration -->
+            <div class="relative mb-6">
+              <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto ring-8 ring-primary/5">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-bold text-text-primary mb-2">
+              {{ currentLang() === 'ar' ? 'المخطط الذكي للسبرينت' : 'AI Sprint Planner' }}
+            </h3>
+            <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
+              {{ currentLang() === 'ar' ? 'قائمة المهام جاهزة. دع الذكاء الاصطناعي يحلل الأولويات، ويقدّر القدرة الاستيعابية، لإنشاء أفضل مقترح للسبرينت الخاص بفريقك.' : 'Your backlog is ready. Let the AI analyze task priorities, estimate capacity, and build the optimal sprint proposal for your team.' }}
+            </p>
+
+            @if (projectState.selectedProject(); as sp) {
+              <div class="mb-10 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sidebar border border-border">
+                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                <p class="text-xs font-medium text-text-secondary">
+                  {{ currentLang() === 'ar' ? sp.nameAr : sp.nameEn }}
+                </p>
+              </div>
+            }
+
+            <!-- Steps preview (horizontal linear flow) -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-10 w-full max-w-lg mx-auto">
+              @for (step of emptyStateSteps; track step.labelEn; let isLast = $last) {
+                <div class="flex flex-col items-center text-center flex-1">
+                  <div class="w-10 h-10 mb-3 rounded-full bg-sidebar border border-border flex items-center justify-center text-primary font-bold shadow-sm">
+                    {{ step.icon }}
+                  </div>
+                  <p class="text-xs font-bold text-text-primary mb-1">{{ currentLang() === 'ar' ? step.labelAr : step.labelEn }}</p>
+                  <p class="text-[11px] text-text-secondary leading-tight">{{ currentLang() === 'ar' ? step.descAr : step.descEn }}</p>
+                </div>
+                @if (!isLast) {
+                  <!-- connector -->
+                  <div class="hidden sm:block w-8 h-[1px] bg-border shrink-0 mt-[-30px]"></div>
+                }
+              }
+            </div>
+
+            <button
+              id="generate-sprint-btn"
+              (click)="onGenerate()"
+              class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm transition-all text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              {{ currentLang() === 'ar' ? 'توليد المقترح بالذكاء الاصطناعي' : 'Generate AI Sprint Suggestion' }}
+            </button>
+          </div>
+        }
       }
 
       <!-- ─── LOADING STATE — AI Generation Screen ─── -->

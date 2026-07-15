@@ -26,7 +26,7 @@
   --border: #D8E1F0;
   --text-primary: #0F172A;
   --text-secondary: #64748B;
-  
+
   --success: #22C55E;
   --warning: #F59E0B;
   --error: #EF4444;
@@ -79,6 +79,14 @@ input::-webkit-clear-button {
 }
 
 /* Utilities */
-.delay-0   { animation-delay: 0ms; }
-.delay-150 { animation-delay: 150ms; }
-.delay-300 { animation-delay: 300ms; }
+.delay-0 {
+  animation-delay: 0ms;
+}
+
+.delay-150 {
+  animation-delay: 150ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}

@@ -19,5 +19,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
   }
 
   console.warn(`Access Denied: User role '${currentRole}' is not authorized.`);
+  if (currentRole === 'Employee') {
+    return router.createUrlTree(['/employee-dashboard']);
+  }
   return router.createUrlTree(['/dashboard']);
 };
