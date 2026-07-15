@@ -9,6 +9,19 @@ export interface SprintSuggestionDto {
   userStoryIds: string[];
 }
 
+export interface SprintListItem {
+  sprintId: string;
+  titleEn: string;
+  titleAr: string;
+  sprintGoalEn?: string;
+  sprintGoalAr?: string;
+  startDate: string;
+  endDate: string;
+  status: 'Planned' | 'Active' | 'Completed' | 'Cancelled';
+  userStoriesCount: number;
+  tasksCount: number;
+}
+
 export interface SprintRetroDto {
   id: string;
   sprintId: string;
@@ -72,5 +85,33 @@ export class SprintPlanningService {
       `/projects/${projectId}/sprints/${sprintId}/start`,
       {}
     );
+  }
+
+  async getAllSprints(projectId: string): Promise<SprintListItem[]> {
+    try {
+      const { data } = await apiClient.get(
+        `/projects/${projectId}/sprints`
+      );
+      return data?.data || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async completeSprint(projectId: string, sprintId: string): Promise<void> {
+    await apiClient.post(
+      `/projects/${projectId}/sprints/${sprintId}/complete`,
+      {}
+    );
+  }
+  async getLatestCompletedSprint(projectId: string): Promise<{ sprintId: string } | null> {
+    try {
+      const { data } = await apiClient.get(
+        `/projects/${projectId}/sprints/completed/latest`
+      );
+      return data?.data || null;
+    } catch {
+      return null;
+    }
   }
 }

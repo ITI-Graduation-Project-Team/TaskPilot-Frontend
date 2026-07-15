@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -172,12 +172,20 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <!-- Action buttons & Board Title -->
         <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
           <div>
+            <div class="flex items-center gap-3 mb-1">
+              <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Sprints
+              </button>
+            </div>
             <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
-            <p class="text-text-secondary text-sm">Drag and drop tasks to update their current progress state.</p>
+            <p class="text-text-secondary text-sm mt-1">Drag and drop tasks to update their current progress state.</p>
           </div>
           
           <div class="flex items-center gap-3">
-            @if (projectState.isProjectManager() && plannedSprintId()) {
+            @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
                       class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 👥 Assign Tasks
@@ -187,7 +195,13 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 ▶ Start Sprint
               </button>
             }
-            @if (projectState.isProjectManager() && activeSprintId()) {
+            @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
+              <button (click)="completeSprintFromBoard()" 
+                      class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                Complete Sprint
+              </button>
+            }
+            @if (projectState.isProjectManager() && sprintStatus() === 'Completed') {
               <button (click)="isRetroModalOpen.set(true)" 
                       class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 📋 Sprint Retro
@@ -642,6 +656,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   `
 })
 export class BoardComponent implements OnInit {
+  @Input() overrideSprintId: string | null = null;
+  @Input() overrideSprintStatus: string | null = null;
+  @Output() backToSprints = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -667,6 +684,7 @@ export class BoardComponent implements OnInit {
   activeUserStoryId = '';
   activeSprintId = signal<string | null>(null);
   plannedSprintId = signal<string | null>(null);
+  completedSprintId = signal<string | null>(null);
   sprintStatus = signal<string | null>(null);
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
@@ -737,7 +755,8 @@ export class BoardComponent implements OnInit {
     });
   }
 
-  async ngOnInit() { }
+  async ngOnInit() {
+  }
 
   goToAssignment() {
     const sprintId = this.plannedSprintId();
@@ -792,9 +811,30 @@ export class BoardComponent implements OnInit {
     }
 
     // Step 2: Branch based on result
-    if (activeSprint && activeSprint.sprintId) {
+    if (this.overrideSprintId && this.overrideSprintStatus) {
+      const status = this.overrideSprintStatus;
+      if (status === 'Active') {
+        this.activeSprintId.set(this.overrideSprintId);
+        this.plannedSprintId.set(null);
+        this.completedSprintId.set(null);
+      } else if (status === 'Planned') {
+        this.plannedSprintId.set(this.overrideSprintId);
+        this.activeSprintId.set(null);
+        this.completedSprintId.set(null);
+      } else if (status === 'Completed') {
+        this.completedSprintId.set(this.overrideSprintId);
+        this.activeSprintId.set(null);
+        this.plannedSprintId.set(null);
+      } else {
+        this.activeSprintId.set(null);
+        this.plannedSprintId.set(null);
+        this.completedSprintId.set(null);
+      }
+      this.sprintStatus.set(status);
+    } else if (activeSprint && activeSprint.sprintId) {
       this.activeSprintId.set(activeSprint.sprintId);
       this.plannedSprintId.set(null);
+      this.completedSprintId.set(null);
       this.sprintStatus.set('Active');
     } else {
       this.activeSprintId.set(null);
@@ -812,6 +852,24 @@ export class BoardComponent implements OnInit {
       } catch {
         this.plannedSprintId.set(null);
         this.sprintStatus.set(null);
+      }
+
+      if (!this.plannedSprintId()) {
+        try {
+          const completedSprint = await this.sprintService.getLatestCompletedSprint(projectId);
+          if (completedSprint && completedSprint.sprintId) {
+            this.activeSprintId.set(null);
+            this.plannedSprintId.set(null);
+            this.completedSprintId.set(completedSprint.sprintId);
+            this.sprintStatus.set('Completed');
+          } else {
+            this.completedSprintId.set(null);
+            this.sprintStatus.set(null);
+          }
+        } catch {
+          this.completedSprintId.set(null);
+          this.sprintStatus.set(null);
+        }
       }
     }
 
@@ -1096,6 +1154,20 @@ export class BoardComponent implements OnInit {
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       form.reset();
+    }
+  }
+
+  async completeSprintFromBoard(): Promise<void> {
+    const projectId = this.projectState.selectedProjectId();
+    const sprintId = this.activeSprintId();
+    if (!projectId || !sprintId) return;
+
+    try {
+      await this.sprintService.completeSprint(projectId, sprintId);
+      this.toastService.show('Sprint completed successfully', 'success');
+      await this.loadWorkspaceData();
+    } catch {
+      this.toastService.show('Failed to complete sprint', 'error');
     }
   }
 }
