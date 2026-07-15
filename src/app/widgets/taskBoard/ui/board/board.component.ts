@@ -650,8 +650,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
       </div>
     }
 
-    @if (isRetroModalOpen() && activeSprintId()) {
-      <app-retrospective-modal [sprintId]="activeSprintId()!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
+    @if (isRetroModalOpen() && (activeSprintId() || completedSprintId())) {
+      <app-retrospective-modal [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
     }
   `
 })
