@@ -500,27 +500,27 @@ export class CalendarViewComponent implements OnInit {
   showDayEventsModal = signal(false);
   selectedDayEvents = signal<CalendarDay | null>(null);
 
-  hoveredTask = signal<{task: CalendarTask, x: number, y: number} | null>(null);
+  hoveredTask = signal<{ task: CalendarTask, x: number, y: number } | null>(null);
   hoverTimeout: any;
 
   onTaskMouseEnter(task: CalendarTask, event: MouseEvent) {
-     clearTimeout(this.hoverTimeout);
-     const rect = (event.target as HTMLElement).getBoundingClientRect();
-     this.hoveredTask.set({task, x: rect.left + rect.width / 2, y: rect.top});
+    clearTimeout(this.hoverTimeout);
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    this.hoveredTask.set({ task, x: rect.left + rect.width / 2, y: rect.top });
   }
-  
+
   onTaskMouseLeave() {
-     this.hoverTimeout = setTimeout(() => {
-       this.hoveredTask.set(null);
-     }, 150);
+    this.hoverTimeout = setTimeout(() => {
+      this.hoveredTask.set(null);
+    }, 150);
   }
 
   onTooltipMouseEnter() {
-     clearTimeout(this.hoverTimeout);
+    clearTimeout(this.hoverTimeout);
   }
 
   onTooltipMouseLeave() {
-     this.hoveredTask.set(null);
+    this.hoveredTask.set(null);
   }
 
   getMonthStr(dateStr?: string): string {
