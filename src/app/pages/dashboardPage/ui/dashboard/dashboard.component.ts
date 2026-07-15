@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BoardComponent } from '../../../../widgets/taskBoard';
+import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
 import { TeamViewComponent } from '../team-view/team-view.component';
@@ -11,12 +11,14 @@ import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
+import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../shared/api/auth.service';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
@@ -37,7 +39,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     TechStackAdvisorModalComponent,
     ProjectHubComponent,
     ProjectHistoryModalComponent,
-    SprintPlanningViewComponent
+    SprintPlanningViewComponent,
+    SprintListComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -106,7 +109,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
-            Active Sprint
+            Sprints
           </a>
           <a (click)="currentTab.set('backlog')"
              [class.bg-primary/10]="currentTab() === 'backlog'"
@@ -425,7 +428,18 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               </div>
             </section>
           } @else if (currentTab() === 'sprint') {
-            <app-board></app-board>
+            @if (selectedSprintId()) {
+              <app-board 
+                [overrideSprintId]="selectedSprintId()"
+                [overrideSprintStatus]="selectedSprintStatus()"
+                (backToSprints)="onBackToSprints()">
+              </app-board>
+            } @else {
+              <app-sprint-list
+                [projectId]="projectState.selectedProjectId()!"
+                (viewBoard)="onViewBoard($event)">
+              </app-sprint-list>
+            }
           } @else if (currentTab() === 'sprint-planning') {
             <app-sprint-planning-view 
               (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)">
@@ -633,14 +647,15 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
 
-  // Active Sprint badge details
+  // Component state
   activeSprintName = signal('No Active Sprint');
-
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
+  
+  selectedSprintId = signal<string | null>(null);
+  selectedSprintStatus = signal<string | null>(null);
 
   // Status History Modal state
   isHistoryModalOpen = signal(false);
@@ -669,6 +684,8 @@ export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
+  private router = inject(Router);
+  private sprintService = inject(SprintPlanningService);
 
   logout(): void {
     this.authService.logout();
@@ -708,6 +725,14 @@ export class DashboardComponent implements OnInit {
           this.showManualForm.set(false);
         });
       }
+    });
+
+    effect(() => {
+      this.projectState.selectedProjectId(); // Track project id change
+      untracked(() => {
+        this.selectedSprintId.set(null);
+        this.selectedSprintStatus.set(null);
+      });
     });
   }
 
@@ -981,5 +1006,15 @@ export class DashboardComponent implements OnInit {
 
   toggleDarkMode() {
     this.themeService.toggle();
+  }
+
+  onViewBoard(event: { sprintId: string; sprintStatus: string }): void {
+    this.selectedSprintId.set(event.sprintId);
+    this.selectedSprintStatus.set(event.sprintStatus);
+  }
+
+  onBackToSprints(): void {
+    this.selectedSprintId.set(null);
+    this.selectedSprintStatus.set(null);
   }
 }
