@@ -9,6 +9,7 @@ import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-mo
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
+import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
@@ -35,7 +36,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     DraftReviewModalComponent,
     TechStackAdvisorModalComponent,
     ProjectHubComponent,
-    SprintPlanningViewComponent
+    SprintPlanningViewComponent,
+    OrganizationViewComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -156,6 +158,26 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               Project Team
             </a>
           }
+          
+          <!-- Organization Hub / Company Policies Tab -->
+          <a (click)="currentTab.set('organization')"
+             [class.bg-primary/10]="currentTab() === 'organization'"
+             [class.text-primary]="currentTab() === 'organization'"
+             [class.font-bold]="currentTab() === 'organization'"
+             [class.shadow-sm]="currentTab() === 'organization'"
+             [class.text-text-secondary]="currentTab() !== 'organization'"
+             [class.hover:text-text-primary]="currentTab() !== 'organization'"
+             [class.hover:bg-primary/5]="currentTab() !== 'organization'"
+             [class.font-medium]="currentTab() !== 'organization'"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            @if (projectState.isProjectManager()) {
+              Organization Hub
+            } @else {
+              Company Policies
+            }
+          </a>
+
           <a (click)="currentTab.set('profile')"
              [class.bg-primary/10]="currentTab() === 'profile'"
              [class.text-primary]="currentTab() === 'profile'"
@@ -208,6 +230,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
                 <span class="text-text-secondary font-light">/</span>
                 Sprint Planning
+              } @else if (currentTab() === 'organization') {
+                @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
@@ -227,7 +251,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
           <div class="flex items-center gap-4">
             <!-- Project selector context dropdown (only shown inside project tabs) -->
-            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && projectState.projects().length > 0) {
+            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'organization' && projectState.projects().length > 0) {
               <div class="flex items-center gap-2">
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
@@ -423,6 +447,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <app-backlog-view></app-backlog-view>
           } @else if (currentTab() === 'team') {
             <app-team-view></app-team-view>
+          } @else if (currentTab() === 'organization') {
+            <app-organization-view></app-organization-view>
           } @else if (currentTab() === 'profile') {
             <app-profile-view></app-profile-view>
           }
@@ -590,7 +616,7 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
 
   // Active Sprint badge details
   activeSprintName = signal('No Active Sprint');
