@@ -90,6 +90,15 @@ interface CalendarDay {
         </div>
       }
 
+      <!-- Legend -->
+      <div class="flex flex-wrap items-center gap-4 mb-4 text-[11px] md:text-xs font-bold text-text-secondary px-2">
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#3b82f6]"></div> {{ isAr() ? 'معينة' : 'Assigned' }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#22c55e]"></div> {{ isAr() ? 'شخصية' : 'Personal' }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#a855f7]"></div> {{ isAr() ? 'اجتماع' : 'Meeting' }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#f97316]"></div> {{ isAr() ? 'أخرى' : 'Other' }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#94a3b8]"></div> {{ isAr() ? 'مكتملة' : 'Done' }}</div>
+      </div>
+
       <!-- Calendar Grid -->
       <div class="flex-1 bg-surface border border-border rounded-2xl shadow-sm flex flex-col overflow-hidden min-h-0 animate-[fadeIn_0.4s_ease]">
         
@@ -119,57 +128,34 @@ interface CalendarDay {
               (cdkDropListDropped)="drop($event, day.date)">
               
               <div class="flex justify-between items-start mb-1">
-                <span class="text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full transition-transform hover:scale-110 cursor-default"
-                      [class.bg-primary]="day.isToday"
-                      [class.text-white]="day.isToday"
-                      [class.text-text-primary]="day.isCurrentMonth && !day.isToday"
-                      [class.text-text-secondary]="!day.isCurrentMonth">
+                <button class="text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full transition-transform hover:scale-110 hover:bg-black/5"
+                        [class.bg-primary]="day.isToday"
+                        [class.text-white]="day.isToday"
+                        [class.hover:bg-primary/90]="day.isToday"
+                        [class.text-text-primary]="day.isCurrentMonth && !day.isToday"
+                        [class.text-text-secondary]="!day.isCurrentMonth"
+                        (click)="$event.stopPropagation(); openDayEventsModal(day)">
                   {{ day.date.getDate() }}
-                </span>
+                </button>
               </div>
 
               <!-- Tasks -->
-              <div class="flex-1 flex flex-col gap-1 overflow-y-auto custom-scrollbar min-h-[40px]">
+              <div class="flex-1 flex flex-wrap gap-1.5 overflow-y-auto custom-scrollbar min-h-0 pr-0.5 items-start content-start mt-1">
                 @for (task of day.tasks; track task.id) {
                   <div 
                     cdkDrag
                     [cdkDragDisabled]="!isPM()"
                     [cdkDragData]="task"
-                    class="text-[10px] md:text-xs p-1.5 rounded-md font-medium truncate shadow-sm border border-black/5 hover:brightness-110 hover:-translate-y-0.5 transition-all select-none group relative"
+                    class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full shadow-sm hover:scale-150 transition-transform"
                     [class.cursor-grab]="isPM()"
-                    [class.cursor-default]="!isPM()"
-                    [class.line-through]="task.status === 'Done'"
-                    [class.opacity-60]="task.status === 'Done'"
-                    [class.bg-surface-variant]="task.status === 'Done'"
-                    [class.text-text-secondary]="task.status === 'Done'"
-                    [class.text-text-secondary]="task.status === 'Done'"
+                    [class.cursor-pointer]="!isPM()"
+                    [class.opacity-50]="task.status === 'Done'"
                     [style.background]="getTaskColor(task)"
-                    [style.color]="'#ffffff'"
-                    [title]="(isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr)) + (task.descriptionEn || task.descriptionAr ? '\n\n' + (isAr() ? (task.descriptionAr || task.descriptionEn) : (task.descriptionEn || task.descriptionAr)) : '')"
+                    (mouseenter)="onTaskMouseEnter(task, $event)"
+                    (mouseleave)="onTaskMouseLeave()"
                     (click)="!isPM() ? openEditModal(task, $event) : null">
                     
-                    <div class="flex items-center gap-1">
-                      @if (task.status === 'Done') {
-                        <svg class="w-3 h-3 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                      }
-                      <span class="truncate">{{ isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr) }}</span>
-                      
-                      @if (task.status === 'Done') {
-                        <button (click)="$event.stopPropagation(); deleteTask(task.id)" class="ml-auto opacity-0 group-hover:opacity-100 p-0.5 rounded-sm hover:bg-black/10 transition-all text-text-secondary">
-                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      }
-                    </div>
-
-                    @if (isMultiDay(task)) {
-                      <div class="text-[8.5px] opacity-90 mt-0.5 truncate tracking-tight">{{ formatMultiDay(task) }}</div>
-                    }
-
-                    <div *cdkDragPreview class="bg-primary text-white text-xs p-2 rounded-lg shadow-xl opacity-90 z-50">
+                    <div *cdkDragPreview class="bg-primary text-white text-[10px] p-2 rounded-lg shadow-xl opacity-90 z-50">
                        {{ isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr) }}
                     </div>
                   </div>
@@ -180,6 +166,75 @@ interface CalendarDay {
           }
         </div>
       </div>
+
+      <!-- Day Events Modal -->
+      @if (showDayEventsModal() && selectedDayEvents()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center animate-[fadeIn_0.2s_ease_both]">
+          <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeDayEventsModal()"></div>
+          
+          <div class="relative bg-surface border border-border w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl shadow-2xl animate-[scaleUp_0.2s_ease_both]">
+            <div class="p-6 border-b border-border/50 flex justify-between items-center shrink-0">
+              <h3 class="text-xl font-bold font-display">
+                {{ selectedDayEvents()!.date.toLocaleDateString(isAr() ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' }) }}
+              </h3>
+              <button (click)="closeDayEventsModal()" class="p-2 text-text-secondary hover:text-text-primary hover:bg-black/5 rounded-full transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-3 flex-1 min-h-0">
+              @for (task of selectedDayEvents()!.tasks; track task.id) {
+                <div 
+                  class="p-4 rounded-xl border shadow-sm transition-all relative flex flex-col gap-2 bg-background hover:border-primary/30"
+                  [class.border-border]="task.status !== 'Done'"
+                  [class.opacity-70]="task.status === 'Done'"
+                  [style.border-left]="'4px solid ' + getTaskColor(task)"
+                  (click)="!isPM() ? closeDayEventsModal() : null; openEditModal(task, $event)"
+                  [class.cursor-pointer]="!isPM()"
+                  [class.hover:shadow-md]="!isPM()">
+                  
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-start gap-2 font-bold text-sm text-text-primary">
+                      @if (task.status === 'Done') {
+                        <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      } @else {
+                        <div class="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-extrabold shrink-0 uppercase"
+                             [style.background]="getTaskColor(task) + '20'"
+                             [style.color]="getTaskColor(task)">
+                          {{ (isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr))?.charAt(0) || 'T' }}
+                        </div>
+                      }
+                      <span [class.line-through]="task.status === 'Done'" [class.text-text-secondary]="task.status === 'Done'" [class.mt-0.5]="task.status !== 'Done'">
+                        {{ isAr() ? (task.titleAr || task.titleEn) : (task.titleEn || task.titleAr) }}
+                      </span>
+                    </div>
+                    
+                    <span class="text-[10px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap"
+                          [style.background]="getTaskColor(task) + '20'"
+                          [style.color]="getTaskColor(task)">
+                      {{ task.eventType || 'Task' }}
+                    </span>
+                  </div>
+                  
+                  @if (task.descriptionEn || task.descriptionAr) {
+                    <p class="text-xs text-text-secondary leading-relaxed mt-1">
+                      {{ isAr() ? (task.descriptionAr || task.descriptionEn) : (task.descriptionEn || task.descriptionAr) }}
+                    </p>
+                  }
+                  
+                  @if (isMultiDay(task)) {
+                    <div class="text-[10px] text-text-secondary mt-1 font-bold bg-black/5 self-start px-2 py-1 rounded-md">
+                      {{ formatMultiDay(task) }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- Create Personal Task Modal -->
       @if (showCreateModal()) {
@@ -325,6 +380,61 @@ interface CalendarDay {
           </div>
         </div>
       }
+
+      <!-- Custom Hover Tooltip Card -->
+      @if (hoveredTask(); as hover) {
+        <div class="fixed z-[120] -translate-x-1/2 -translate-y-full pb-3 animate-[fadeIn_0.15s_ease_both] pointer-events-auto"
+             [style.left.px]="hover.x" [style.top.px]="hover.y"
+             (mouseenter)="onTooltipMouseEnter()"
+             (mouseleave)="onTooltipMouseLeave()">
+          <div class="w-72 md:w-80 bg-surface rounded-2xl shadow-[0_12px_40px_-10px_rgba(0,0,0,0.2)] border border-border p-5 flex flex-col gap-4 relative">
+             <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-surface border-b border-r border-border rotate-45"></div>
+             
+             <div class="flex items-start gap-3 relative z-10">
+                <div class="flex flex-col items-center justify-center w-11 h-12 bg-background border border-border rounded-xl overflow-hidden shadow-sm shrink-0">
+                   <div class="bg-error w-full text-white text-[9px] font-bold text-center py-0.5 uppercase tracking-wider">
+                      {{ getMonthStr(hover.task.startDate) }}
+                   </div>
+                   <div class="text-text-primary text-sm font-extrabold pb-0.5">
+                      {{ getDayStr(hover.task.startDate) }}
+                   </div>
+                </div>
+                
+                <div class="flex-1 min-w-0 pt-0.5">
+                   <h4 class="font-bold text-text-primary text-sm md:text-base truncate">
+                     {{ isAr() ? (hover.task.titleAr || hover.task.titleEn) : (hover.task.titleEn || hover.task.titleAr) }}
+                   </h4>
+                   <p class="text-text-secondary text-[11px] truncate mt-0.5 flex items-center gap-1.5 font-medium">
+                      <span class="w-2 h-2 rounded-full inline-block" [style.background]="getTaskColor(hover.task)"></span>
+                      {{ hover.task.eventType || 'Task' }} • {{ hover.task.priority || 'Medium' }}
+                   </p>
+                </div>
+             </div>
+
+             @if (hover.task.descriptionEn || hover.task.descriptionAr) {
+               <div class="flex flex-col gap-1.5 relative z-10">
+                 <span class="text-[11px] font-bold text-text-primary">{{ isAr() ? 'الملاحظات' : 'Notes' }}</span>
+                 <div class="bg-background rounded-xl p-3 text-xs text-text-secondary border border-border/50 leading-relaxed max-h-24 overflow-y-auto custom-scrollbar">
+                   {{ isAr() ? (hover.task.descriptionAr || hover.task.descriptionEn) : (hover.task.descriptionEn || hover.task.descriptionAr) }}
+                 </div>
+               </div>
+             }
+
+             @if (!isPM()) {
+               <div class="flex items-center gap-3 mt-1 pt-4 border-t border-border/50 relative z-10">
+                 <button (click)="openEditModal(hover.task, $event); hoveredTask.set(null)" class="flex-1 py-1.5 text-xs font-bold text-text-primary bg-background hover:bg-black/5 border border-border rounded-xl transition-colors flex justify-center items-center gap-1.5">
+                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> 
+                   {{ isAr() ? 'تعديل' : 'Edit' }}
+                 </button>
+                 <button (click)="$event.stopPropagation(); deleteTask(hover.task.id); hoveredTask.set(null)" class="flex-1 py-1.5 text-xs font-bold text-error bg-error/5 hover:bg-error/10 border border-error/20 rounded-xl transition-colors flex justify-center items-center gap-1.5">
+                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> 
+                   {{ isAr() ? 'حذف' : 'Delete' }}
+                 </button>
+               </div>
+             }
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -386,6 +496,43 @@ export class CalendarViewComponent implements OnInit {
     status: string;
     eventType: string;
   } | null>(null);
+
+  showDayEventsModal = signal(false);
+  selectedDayEvents = signal<CalendarDay | null>(null);
+
+  hoveredTask = signal<{task: CalendarTask, x: number, y: number} | null>(null);
+  hoverTimeout: any;
+
+  onTaskMouseEnter(task: CalendarTask, event: MouseEvent) {
+     clearTimeout(this.hoverTimeout);
+     const rect = (event.target as HTMLElement).getBoundingClientRect();
+     this.hoveredTask.set({task, x: rect.left + rect.width / 2, y: rect.top});
+  }
+  
+  onTaskMouseLeave() {
+     this.hoverTimeout = setTimeout(() => {
+       this.hoveredTask.set(null);
+     }, 150);
+  }
+
+  onTooltipMouseEnter() {
+     clearTimeout(this.hoverTimeout);
+  }
+
+  onTooltipMouseLeave() {
+     this.hoveredTask.set(null);
+  }
+
+  getMonthStr(dateStr?: string): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(this.translate.currentLang() === 'ar' ? 'ar-EG' : 'en-US', { month: 'short' });
+  }
+
+  getDayStr(dateStr?: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).getDate().toString();
+  }
 
   isAr = computed(() => this.translate.currentLang() === 'ar');
 
@@ -488,42 +635,23 @@ export class CalendarViewComponent implements OnInit {
     });
   }
 
-  getProjectColor(id: string): string {
-    const colors = [
-      'linear-gradient(135deg,#6366f1,#8b5cf6)',
-      'linear-gradient(135deg,#3b82f6,#06b6d4)',
-      'linear-gradient(135deg,#10b981,#059669)',
-      'linear-gradient(135deg,#f59e0b,#ef4444)',
-      'linear-gradient(135deg,#ec4899,#8b5cf6)',
-    ];
-    let hash = 0;
-    for (let i = 0; i < (id || '').length; i++) hash += id.charCodeAt(i);
-    return colors[hash % colors.length];
-  }
-
   getTaskColor(task: CalendarTask): string {
-    if (task.status === 'Done') return '#94a3b8';
-    
+    if (task.status === 'Done') return '#94a3b8'; // slate-400
+
     if (task.eventType) {
       const type = task.eventType.toLowerCase();
       if (type.includes('assigned')) {
-        return 'linear-gradient(135deg,#3b82f6,#06b6d4)'; // Blue gradient
+        return '#3b82f6'; // blue-500
       }
       if (type.includes('personal')) {
-        return 'linear-gradient(135deg,#10b981,#059669)'; // Green gradient
+        return '#22c55e'; // green-500
       }
-      // For any other eventType, pick a consistent color
-      const eventColors = [
-        'linear-gradient(135deg,#f59e0b,#ef4444)', // Orange/Red
-        'linear-gradient(135deg,#ec4899,#8b5cf6)', // Pink/Purple
-        'linear-gradient(135deg,#6366f1,#8b5cf6)', // Indigo/Purple
-      ];
-      let hash = 0;
-      for (let i = 0; i < task.eventType.length; i++) hash += task.eventType.charCodeAt(i);
-      return eventColors[hash % eventColors.length];
+      if (type.includes('meeting')) {
+        return '#a855f7'; // purple-500
+      }
     }
-    
-    return this.getProjectColor(task.projectId);
+
+    return '#f97316'; // orange-500 for Others / fallback
   }
 
   previousMonth() {
@@ -716,4 +844,13 @@ export class CalendarViewComponent implements OnInit {
     }
   }
 
+  openDayEventsModal(day: CalendarDay) {
+    this.selectedDayEvents.set(day);
+    this.showDayEventsModal.set(true);
+  }
+
+  closeDayEventsModal() {
+    this.showDayEventsModal.set(false);
+    this.selectedDayEvents.set(null);
+  }
 }
