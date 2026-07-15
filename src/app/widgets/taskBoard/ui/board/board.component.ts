@@ -962,26 +962,22 @@ export class BoardComponent implements OnInit, OnChanges {
     let tasks: any[] = [];
 
     if (this.projectState.isProjectManager()) {
-      let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-      let userStory = backlog?.userStories?.[0];
+      try {
+        let backlog = await this.backlogService.getBacklog(this.activeProjectId);
+        let userStory = backlog?.userStories?.[0];
 
-      // Automatically create a user story if somehow missing
-      if (!userStory) {
-        userStory = await this.backlogService.createUserStory(this.activeProjectId, {
-          titleEn: 'Sprint Backlog Story',
-          titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
-          descriptionEn: 'Auto generated story for managing project tasks.',
-          descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
-          acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
-          acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
-          priority: 'Medium'
-        });
+        if (userStory) {
+          this.activeUserStoryId = userStory.id;
+          tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
+        } else {
+          this.activeUserStoryId = '';
+          tasks = [];
+        }
+      } catch (err) {
+        console.error('Failed to load project backlog:', err);
+        this.activeUserStoryId = '';
+        tasks = [];
       }
-      this.activeUserStoryId = userStory.id;
-
-      // Refresh backlog tasks
-      backlog = await this.backlogService.getBacklog(this.activeProjectId);
-      tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
     } else {
       // Load employee's own assigned tasks
       try {
