@@ -370,6 +370,10 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               @if (!showManualForm()) {
                 @if (isAiChatOpen()) {
                   <app-ai-chat-modal [embedded]="true" (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
+                } @else if (isTechStackAdvisorOpen() && advisorProjectId()) {
+                  <app-tech-stack-advisor-modal [embedded]="true" [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
+                } @else if (isDraftReviewOpen()) {
+                  <app-draft-review-modal [embedded]="true" [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
                 } @else {
                 <div class="grid gap-6 lg:grid-cols-[1fr_380px]">
                   <button type="button" (click)="openAiProjectFlow()" class="group min-h-[360px] rounded-3xl border border-primary/25 bg-surface p-8 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl">
@@ -612,15 +616,6 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     }
 
     <!-- AI Requirement Chat modal -->
-
-    @if (isTechStackAdvisorOpen() && advisorProjectId()) {
-      <app-tech-stack-advisor-modal [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
-    }
-
-    <!-- Project Draft Review modal -->
-    @if (isDraftReviewOpen()) {
-      <app-draft-review-modal [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
-    }
 
     <!-- Project History Modal -->
     @if (isHistoryModalOpen() && selectedHistoryProject()) {

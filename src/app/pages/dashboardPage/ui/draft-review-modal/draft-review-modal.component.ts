@@ -11,8 +11,8 @@ import { ToastService } from '../../../../shared/services/toast.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-      <div class="bg-surface border border-border rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-[scaleUp_0.25s_ease_both]">
+    <div [class.fixed]="!embedded" [class.inset-0]="!embedded" [class.z-50]="!embedded" [class.flex]="!embedded" [class.items-center]="!embedded" [class.justify-center]="!embedded" [class.p-4]="!embedded" [class.bg-black/60]="!embedded" [class.backdrop-blur-sm]="!embedded" [class.animate-[fadeIn_0.2s_ease_both]]="!embedded">
+      <div class="bg-surface border border-border rounded-3xl w-full flex flex-col shadow-2xl overflow-hidden" [class.max-w-4xl]="!embedded" [class.h-[85vh]]="!embedded" [class.animate-[scaleUp_0.25s_ease_both]]="!embedded">
         
         <!-- Header -->
         <div class="p-5 border-b border-border bg-sidebar flex items-center justify-between shrink-0">
@@ -157,6 +157,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 export class DraftReviewModalComponent implements OnInit {
   @Input() draft!: GeneratedProjectDTO;
   @Input() chatId!: string;
+  @Input() embedded: boolean = false;
   @Output() close = new EventEmitter<void>();
   @Output() projectSaved = new EventEmitter<void>();
 
