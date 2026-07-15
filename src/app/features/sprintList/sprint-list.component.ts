@@ -12,19 +12,26 @@ import { ProjectStateService } from '../../shared/services/project-state.service
 })
 export class SprintListComponent implements OnInit {
   @Input() projectId: string = '';
+  @Input() set sprints(value: SprintListItem[]) {
+    this._sprints.set(value);
+  }
+  @Input() set isLoading(value: boolean) {
+    this._isLoading.set(value);
+  }
   @Output() viewBoard = new EventEmitter<{ sprintId: string; sprintStatus: string }>();
 
   sprintService = inject(SprintPlanningService);
   projectState = inject(ProjectStateService);
 
-  sprints = signal<SprintListItem[]>([]);
-  isLoading = signal<boolean>(true);
+  private _sprints = signal<SprintListItem[]>([]);
+  _isLoading = signal<boolean>(true);
+  
   filterStatus = signal<string>('All');
   filterDateFrom = signal<string>('');
   filterDateTo = signal<string>('');
 
   filteredSprints = computed(() => {
-    let result = this.sprints();
+    let result = this._sprints();
     
     if (this.filterStatus() !== 'All') {
       result = result.filter(s => s.status === this.filterStatus());
@@ -43,13 +50,8 @@ export class SprintListComponent implements OnInit {
     return result;
   });
 
-  async ngOnInit() {
-    if (this.projectId) {
-      this.isLoading.set(true);
-      const data = await this.sprintService.getAllSprints(this.projectId);
-      this.sprints.set(data);
-      this.isLoading.set(false);
-    }
+  ngOnInit() {
+    // No longer fetching internally. Handled by DashboardComponent.
   }
 
   onViewBoard(event: Event, sprint: SprintListItem) {

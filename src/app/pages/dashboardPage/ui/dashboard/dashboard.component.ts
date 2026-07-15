@@ -12,6 +12,7 @@ import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-plan
 import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
+import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
@@ -432,11 +433,14 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               <app-board 
                 [overrideSprintId]="selectedSprintId()"
                 [overrideSprintStatus]="selectedSprintStatus()"
-                (backToSprints)="onBackToSprints()">
+                (backToSprints)="onBackToSprints()"
+                (sprintStatusChanged)="onSprintStatusChanged()">
               </app-board>
             } @else {
               <app-sprint-list
                 [projectId]="projectState.selectedProjectId()!"
+                [sprints]="cachedSprints()"
+                [isLoading]="isSprintsLoading()"
                 (viewBoard)="onViewBoard($event)">
               </app-sprint-list>
             }
@@ -656,6 +660,8 @@ export class DashboardComponent implements OnInit {
   
   selectedSprintId = signal<string | null>(null);
   selectedSprintStatus = signal<string | null>(null);
+  cachedSprints = signal<SprintListItem[]>([]);
+  isSprintsLoading = signal(true);
 
   // Status History Modal state
   isHistoryModalOpen = signal(false);
@@ -732,6 +738,7 @@ export class DashboardComponent implements OnInit {
       untracked(() => {
         this.selectedSprintId.set(null);
         this.selectedSprintStatus.set(null);
+        this.loadSprints();
       });
     });
   }
@@ -1016,5 +1023,29 @@ export class DashboardComponent implements OnInit {
   onBackToSprints(): void {
     this.selectedSprintId.set(null);
     this.selectedSprintStatus.set(null);
+    this.loadSprints();
+  }
+
+  async loadSprints(): Promise<void> {
+    const projectId = this.projectState.selectedProjectId();
+    if (!projectId) return;
+    this.isSprintsLoading.set(true);
+    const sprints = await this.sprintService.getAllSprints(projectId);
+    this.cachedSprints.set(sprints);
+    this.isSprintsLoading.set(false);
+  }
+
+  async onSprintStatusChanged(): Promise<void> {
+    await this.loadSprints();
+    // Find the updated status for the currently viewed sprint
+    const currentId = this.selectedSprintId();
+    if (currentId) {
+      const updated = this.cachedSprints().find(
+        s => s.sprintId === currentId
+      );
+      if (updated) {
+        this.selectedSprintStatus.set(updated.status);
+      }
+    }
   }
 }

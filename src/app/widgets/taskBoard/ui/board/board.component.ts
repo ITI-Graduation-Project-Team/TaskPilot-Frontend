@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -657,10 +657,11 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
     }
   `
 })
-export class BoardComponent implements OnInit {
+export class BoardComponent implements OnInit, OnChanges {
   @Input() overrideSprintId: string | null = null;
   @Input() overrideSprintStatus: string | null = null;
   @Output() backToSprints = new EventEmitter<void>();
+  @Output() sprintStatusChanged = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -758,6 +759,21 @@ export class BoardComponent implements OnInit {
   }
 
   async ngOnInit() {
+    this.sprintStatus.set(this.overrideSprintStatus);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const sprintStatusChange = changes['overrideSprintStatus'];
+    const sprintIdChange = changes['overrideSprintId'];
+
+    // Re-run only when inputs change after initial load
+    // (firstChange = false means it's an update, not initial binding)
+    if (
+      (sprintStatusChange && !sprintStatusChange.firstChange) ||
+      (sprintIdChange && !sprintIdChange.firstChange)
+    ) {
+      this.loadWorkspaceData();
+    }
   }
 
   goToAssignment() {
@@ -775,7 +791,7 @@ export class BoardComponent implements OnInit {
     try {
       await this.sprintService.startSprint(projectId, sprintId);
       this.toastService.show('Sprint started successfully', 'success');
-      await this.loadWorkspaceData();
+      this.sprintStatusChanged.emit();
     } catch {
       this.toastService.show('Failed to start sprint', 'error');
     }
@@ -1167,7 +1183,7 @@ export class BoardComponent implements OnInit {
     try {
       await this.sprintService.completeSprint(projectId, sprintId);
       this.toastService.show('Sprint completed successfully', 'success');
-      await this.loadWorkspaceData();
+      this.sprintStatusChanged.emit();
     } catch {
       this.toastService.show('Failed to complete sprint', 'error');
     }
