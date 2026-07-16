@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BoardComponent } from '../../../../widgets/taskBoard';
+import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
 import { TeamViewComponent } from '../team-view/team-view.component';
@@ -12,12 +12,15 @@ import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-plan
 import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
+import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
+import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../shared/api/auth.service';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
@@ -39,7 +42,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     ProjectHubComponent,
     SprintPlanningViewComponent,
     OrganizationViewComponent,
-    ProjectHistoryModalComponent
+    ProjectHistoryModalComponent,
+    SprintListComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -108,7 +112,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
-            Active Sprint
+            Sprints
           </a>
           <a (click)="currentTab.set('backlog')"
              [class.bg-primary/10]="currentTab() === 'backlog'"
@@ -390,6 +394,10 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               @if (!showManualForm()) {
                 @if (isAiChatOpen()) {
                   <app-ai-chat-modal [embedded]="true" (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
+                } @else if (isTechStackAdvisorOpen() && advisorProjectId()) {
+                  <app-tech-stack-advisor-modal [embedded]="true" [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
+                } @else if (isDraftReviewOpen()) {
+                  <app-draft-review-modal [embedded]="true" [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
                 } @else {
                 <div class="grid gap-6 lg:grid-cols-[1fr_380px]">
                   <button type="button" (click)="openAiProjectFlow()" class="group min-h-[360px] rounded-3xl border border-primary/25 bg-surface p-8 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl">
@@ -449,7 +457,21 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               </div>
             </section>
           } @else if (currentTab() === 'sprint') {
-            <app-board></app-board>
+            @if (selectedSprintId()) {
+              <app-board 
+                [overrideSprintId]="selectedSprintId()"
+                [overrideSprintStatus]="selectedSprintStatus()"
+                (backToSprints)="onBackToSprints()"
+                (sprintStatusChanged)="onSprintStatusChanged()">
+              </app-board>
+            } @else {
+              <app-sprint-list
+                [projectId]="projectState.selectedProjectId()!"
+                [sprints]="cachedSprints()"
+                [isLoading]="isSprintsLoading()"
+                (viewBoard)="onViewBoard($event)">
+              </app-sprint-list>
+            }
           } @else if (currentTab() === 'sprint-planning') {
             <app-sprint-planning-view 
               (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)">
@@ -621,15 +643,6 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
     <!-- AI Requirement Chat modal -->
 
-    @if (isTechStackAdvisorOpen() && advisorProjectId()) {
-      <app-tech-stack-advisor-modal [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
-    }
-
-    <!-- Project Draft Review modal -->
-    @if (isDraftReviewOpen()) {
-      <app-draft-review-modal [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
-    }
-
     <!-- Project History Modal -->
     @if (isHistoryModalOpen() && selectedHistoryProject()) {
       <app-project-history-modal 
@@ -661,11 +674,15 @@ export class DashboardComponent implements OnInit {
   // Active navigation tab signal
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
 
-  // Active Sprint badge details
+  // Component state
   activeSprintName = signal('No Active Sprint');
-
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
+  
+  selectedSprintId = signal<string | null>(null);
+  selectedSprintStatus = signal<string | null>(null);
+  cachedSprints = signal<SprintListItem[]>([]);
+  isSprintsLoading = signal(true);
 
   // Status History Modal state
   isHistoryModalOpen = signal(false);
@@ -694,6 +711,8 @@ export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
+  private router = inject(Router);
+  private sprintService = inject(SprintPlanningService);
 
   logout(): void {
     this.authService.logout();
@@ -733,6 +752,15 @@ export class DashboardComponent implements OnInit {
           this.showManualForm.set(false);
         });
       }
+    });
+
+    effect(() => {
+      this.projectState.selectedProjectId(); // Track project id change
+      untracked(() => {
+        this.selectedSprintId.set(null);
+        this.selectedSprintStatus.set(null);
+        this.loadSprints();
+      });
     });
   }
 
@@ -1006,5 +1034,39 @@ export class DashboardComponent implements OnInit {
 
   toggleDarkMode() {
     this.themeService.toggle();
+  }
+
+  onViewBoard(event: { sprintId: string; sprintStatus: string }): void {
+    this.selectedSprintId.set(event.sprintId);
+    this.selectedSprintStatus.set(event.sprintStatus);
+  }
+
+  onBackToSprints(): void {
+    this.selectedSprintId.set(null);
+    this.selectedSprintStatus.set(null);
+    this.loadSprints();
+  }
+
+  async loadSprints(): Promise<void> {
+    const projectId = this.projectState.selectedProjectId();
+    if (!projectId) return;
+    this.isSprintsLoading.set(true);
+    const sprints = await this.sprintService.getAllSprints(projectId);
+    this.cachedSprints.set(sprints);
+    this.isSprintsLoading.set(false);
+  }
+
+  async onSprintStatusChanged(): Promise<void> {
+    await this.loadSprints();
+    // Find the updated status for the currently viewed sprint
+    const currentId = this.selectedSprintId();
+    if (currentId) {
+      const updated = this.cachedSprints().find(
+        s => s.sprintId === currentId
+      );
+      if (updated) {
+        this.selectedSprintStatus.set(updated.status);
+      }
+    }
   }
 }

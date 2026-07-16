@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -172,12 +172,22 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <!-- Action buttons & Board Title -->
         <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
           <div>
+            @if (projectState.isProjectManager()) {
+              <div class="flex items-center gap-3 mb-1">
+                <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Back to Sprints
+                </button>
+              </div>
+            }
             <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
-            <p class="text-text-secondary text-sm">Drag and drop tasks to update their current progress state.</p>
+            <p class="text-text-secondary text-sm mt-1">Drag and drop tasks to update their current progress state.</p>
           </div>
           
           <div class="flex items-center gap-3">
-            @if (projectState.isProjectManager() && plannedSprintId()) {
+            @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
                       class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 👥 Assign Tasks
@@ -187,7 +197,13 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 ▶ Start Sprint
               </button>
             }
-            @if (projectState.isProjectManager() && activeSprintId()) {
+            @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
+              <button (click)="completeSprintFromBoard()" 
+                      class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                Complete Sprint
+              </button>
+            }
+            @if (projectState.isProjectManager() && sprintStatus() === 'Completed') {
               <button (click)="isRetroModalOpen.set(true)" 
                       class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 📋 Sprint Retro
@@ -196,7 +212,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
 
-        @if (activeSprintId()) {
+        @if (projectState.isProjectManager() && activeSprintId()) {
           <div class="mt-6 mb-6">
             <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
           </div>
@@ -626,9 +642,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
               {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
             </button>
-            @if (projectState.isProjectManager() && !isBoardReadonly()) {
+            @if (!isBoardReadonly()) {
               <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-                Save changes
+                {{ projectState.isProjectManager() ? 'Save changes' : 'Save actual hours' }}
               </button>
             }
           </div>
@@ -636,12 +652,58 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
       </div>
     }
 
-    @if (isRetroModalOpen() && activeSprintId()) {
-      <app-retrospective-modal [sprintId]="activeSprintId()!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
+    @if (showHoursPrompt()) {
+      <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border w-full max-w-sm rounded-2xl shadow-2xl p-6 flex flex-col space-y-4 animate-[scaleUp_0.2s_ease_both]">
+          <div class="flex items-center gap-3 text-primary">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-text-primary">Log Actual Hours</h3>
+              <p class="text-xs text-text-secondary">Task Completion</p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-xs text-text-secondary leading-relaxed">
+              Please enter the actual hours spent to complete this task. This is required by the system.
+            </p>
+            
+            <div class="relative mt-2">
+              <input type="number" [(ngModel)]="hoursPromptValue" min="0.1" step="0.5" autofocus
+                     class="w-full px-3.5 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 text-sm font-bold"
+                     placeholder="e.g. 4.5" />
+              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end space-x-2 pt-2 border-t border-border/50">
+            <button (click)="cancelHoursPrompt()" class="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors">
+              Cancel
+            </button>
+            <button (click)="submitHoursPrompt()" 
+                    [disabled]="hoursPromptValue() === null || hoursPromptValue()! <= 0"
+                    class="px-5 py-2 text-xs font-bold bg-primary text-white rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary/10">
+              Complete Task
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (isRetroModalOpen() && (activeSprintId() || completedSprintId())) {
+      <app-retrospective-modal [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
     }
   `
 })
-export class BoardComponent implements OnInit {
+export class BoardComponent implements OnInit, OnChanges {
+  @Input() overrideSprintId: string | null = null;
+  @Input() overrideSprintStatus: string | null = null;
+  @Output() backToSprints = new EventEmitter<void>();
+  @Output() sprintStatusChanged = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -652,6 +714,31 @@ export class BoardComponent implements OnInit {
   private tasksService = inject(TasksService);
 
   employeeActualHours = 0;
+
+  showHoursPrompt = signal(false);
+  hoursPromptValue = signal<number | null>(null);
+  private hoursPromptResolve: ((val: number | null) => void) | null = null;
+
+  promptActualHours(): Promise<number | null> {
+    this.hoursPromptValue.set(null);
+    this.showHoursPrompt.set(true);
+    return new Promise(resolve => {
+      this.hoursPromptResolve = resolve;
+    });
+  }
+
+  submitHoursPrompt() {
+    const val = this.hoursPromptValue();
+    this.showHoursPrompt.set(false);
+    this.hoursPromptResolve?.(val);
+    this.hoursPromptResolve = null;
+  }
+
+  cancelHoursPrompt() {
+    this.showHoursPrompt.set(false);
+    this.hoursPromptResolve?.(null);
+    this.hoursPromptResolve = null;
+  }
 
   isBoardReadonly = computed(() => {
     return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
@@ -667,6 +754,7 @@ export class BoardComponent implements OnInit {
   activeUserStoryId = '';
   activeSprintId = signal<string | null>(null);
   plannedSprintId = signal<string | null>(null);
+  completedSprintId = signal<string | null>(null);
   sprintStatus = signal<string | null>(null);
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
@@ -737,7 +825,23 @@ export class BoardComponent implements OnInit {
     });
   }
 
-  async ngOnInit() { }
+  async ngOnInit() {
+    this.sprintStatus.set(this.overrideSprintStatus);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const sprintStatusChange = changes['overrideSprintStatus'];
+    const sprintIdChange = changes['overrideSprintId'];
+
+    // Re-run only when inputs change after initial load
+    // (firstChange = false means it's an update, not initial binding)
+    if (
+      (sprintStatusChange && !sprintStatusChange.firstChange) ||
+      (sprintIdChange && !sprintIdChange.firstChange)
+    ) {
+      this.loadWorkspaceData();
+    }
+  }
 
   goToAssignment() {
     const sprintId = this.plannedSprintId();
@@ -754,7 +858,7 @@ export class BoardComponent implements OnInit {
     try {
       await this.sprintService.startSprint(projectId, sprintId);
       this.toastService.show('Sprint started successfully', 'success');
-      await this.loadWorkspaceData();
+      this.sprintStatusChanged.emit();
     } catch {
       this.toastService.show('Failed to start sprint', 'error');
     }
@@ -792,9 +896,30 @@ export class BoardComponent implements OnInit {
     }
 
     // Step 2: Branch based on result
-    if (activeSprint && activeSprint.sprintId) {
+    if (this.overrideSprintId && this.overrideSprintStatus) {
+      const status = this.overrideSprintStatus;
+      if (status === 'Active') {
+        this.activeSprintId.set(this.overrideSprintId);
+        this.plannedSprintId.set(null);
+        this.completedSprintId.set(null);
+      } else if (status === 'Planned') {
+        this.plannedSprintId.set(this.overrideSprintId);
+        this.activeSprintId.set(null);
+        this.completedSprintId.set(null);
+      } else if (status === 'Completed') {
+        this.completedSprintId.set(this.overrideSprintId);
+        this.activeSprintId.set(null);
+        this.plannedSprintId.set(null);
+      } else {
+        this.activeSprintId.set(null);
+        this.plannedSprintId.set(null);
+        this.completedSprintId.set(null);
+      }
+      this.sprintStatus.set(status);
+    } else if (activeSprint && activeSprint.sprintId) {
       this.activeSprintId.set(activeSprint.sprintId);
       this.plannedSprintId.set(null);
+      this.completedSprintId.set(null);
       this.sprintStatus.set('Active');
     } else {
       this.activeSprintId.set(null);
@@ -813,32 +938,46 @@ export class BoardComponent implements OnInit {
         this.plannedSprintId.set(null);
         this.sprintStatus.set(null);
       }
+
+      if (!this.plannedSprintId()) {
+        try {
+          const completedSprint = await this.sprintService.getLatestCompletedSprint(projectId);
+          if (completedSprint && completedSprint.sprintId) {
+            this.activeSprintId.set(null);
+            this.plannedSprintId.set(null);
+            this.completedSprintId.set(completedSprint.sprintId);
+            this.sprintStatus.set('Completed');
+          } else {
+            this.completedSprintId.set(null);
+            this.sprintStatus.set(null);
+          }
+        } catch {
+          this.completedSprintId.set(null);
+          this.sprintStatus.set(null);
+        }
+      }
     }
 
     // 4. Load backlog
     let tasks: any[] = [];
 
     if (this.projectState.isProjectManager()) {
-      let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-      let userStory = backlog?.userStories?.[0];
+      try {
+        let backlog = await this.backlogService.getBacklog(this.activeProjectId);
+        let userStory = backlog?.userStories?.[0];
 
-      // Automatically create a user story if somehow missing
-      if (!userStory) {
-        userStory = await this.backlogService.createUserStory(this.activeProjectId, {
-          titleEn: 'Sprint Backlog Story',
-          titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
-          descriptionEn: 'Auto generated story for managing project tasks.',
-          descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
-          acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
-          acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
-          priority: 'Medium'
-        });
+        if (userStory) {
+          this.activeUserStoryId = userStory.id;
+          tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
+        } else {
+          this.activeUserStoryId = '';
+          tasks = [];
+        }
+      } catch (err) {
+        console.error('Failed to load project backlog:', err);
+        this.activeUserStoryId = '';
+        tasks = [];
       }
-      this.activeUserStoryId = userStory.id;
-
-      // Refresh backlog tasks
-      backlog = await this.backlogService.getBacklog(this.activeProjectId);
-      tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
     } else {
       // Load employee's own assigned tasks
       try {
@@ -974,7 +1113,17 @@ export class BoardComponent implements OnInit {
           });
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
-          await this.tasksService.updateTaskStatus(task.id, statusEnum);
+          let actualHours: number | undefined = undefined;
+          if (statusEnum === TaskItemStatus.Done) {
+            const val = await this.promptActualHours();
+            if (val === null) {
+              await this.loadWorkspaceData();
+              return;
+            }
+            actualHours = val;
+            this.employeeActualHours = actualHours;
+          }
+          await this.tasksService.updateTaskStatus(task.id, statusEnum, actualHours);
           this.toastService.show('Task status updated successfully.', 'success');
         }
       } catch (err) {
@@ -1096,6 +1245,20 @@ export class BoardComponent implements OnInit {
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       form.reset();
+    }
+  }
+
+  async completeSprintFromBoard(): Promise<void> {
+    const projectId = this.projectState.selectedProjectId();
+    const sprintId = this.activeSprintId();
+    if (!projectId || !sprintId) return;
+
+    try {
+      await this.sprintService.completeSprint(projectId, sprintId);
+      this.toastService.show('Sprint completed successfully', 'success');
+      this.sprintStatusChanged.emit();
+    } catch {
+      this.toastService.show('Failed to complete sprint', 'error');
     }
   }
 }

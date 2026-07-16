@@ -12,6 +12,7 @@ import {
   mapSkillLevelToFrontend
 } from '../../../../shared/api/profile.service';
 import { extractApiError } from '../../../../shared/api/auth.api';
+import { getRoleFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ToastService } from '../../../../shared/services/toast.service';
 
@@ -232,7 +233,8 @@ export class CompleteProfileComponent {
       next: (res) => {
         localStorage.setItem('isProfileCompleted', 'true');
         this.toastService.show('🎉 Profile saved successfully!', 'success');
-        this.router.navigate(['/dashboard']);
+        const role = getRoleFromToken();
+        this.router.navigate([role === 'Employee' ? '/employee-dashboard' : '/dashboard']);
       },
       error: (err) => {
         this.uploadState.set('error');

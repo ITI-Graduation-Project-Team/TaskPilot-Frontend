@@ -1,30 +1,25 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { AuthService } from '../api/auth.service';
-import { isProfileCompleted } from '../lib/auth/cookie.helper';
+import { isProfileCompleted, getRoleFromToken } from '../lib/auth/cookie.helper';
 
 export const authGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
   const router = inject(Router);
+  const role = getRoleFromToken();
 
-  if (!authService.isLoggedIn()) {
+  if (!role) {
     return router.createUrlTree(['/login']);
   }
 
-  const role = authService.getUserRole();
-  const completed = isProfileCompleted();
-  const isCompleteProfilePage = state.url.includes('/complete-profile');
-
-  if (role === 'Employee') {
-    if (!completed) {
-      if (!isCompleteProfilePage) {
-        return router.createUrlTree(['/complete-profile']);
-      }
-    } else {
-      if (isCompleteProfilePage) {
-        return router.createUrlTree(['/dashboard']);
-      }
+  // If user is Employee and hasn't uploaded their CV, force them to complete profile
+  if (role === 'Employee' && !isProfileCompleted()) {
+    if (!state.url.includes('/complete-profile')) {
+      return router.createUrlTree(['/complete-profile']);
     }
+  }
+
+  // If user has completed their profile (or is a PM) and tries to go to complete-profile, redirect them
+  if (state.url.includes('/complete-profile') && (role !== 'Employee' || isProfileCompleted())) {
+    return router.createUrlTree([role === 'Employee' ? '/employee-dashboard' : '/dashboard']);
   }
 
   return true;
