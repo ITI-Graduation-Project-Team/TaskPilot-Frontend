@@ -2,13 +2,13 @@ import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, e
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { 
-  BacklogService, 
-  TaskItemDto, 
-  mapPriorityToFrontend, 
-  mapTypeToFrontend, 
-  mapStatusToFrontend, 
-  mapStatusToBackend 
+import {
+  BacklogService,
+  TaskItemDto,
+  mapPriorityToFrontend,
+  mapTypeToFrontend,
+  mapStatusToFrontend,
+  mapStatusToBackend
 } from '../../../../shared/api/backlog.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
@@ -20,6 +20,9 @@ import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.co
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
+import { Router } from '@angular/router';
+import { AssignmentService } from '../../../../shared/api/assignment.service';
+import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 
 interface Task {
   id: string;
@@ -97,8 +100,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </button>
           </form>
         </div>
-      } @else if (!isAssignedToProject()) {
-        <!-- Warning Panel for unassigned employee -->
+      } @else if (!isAssignedToProject() || isBoardReadonly()) {
+        <!-- Warning Panel for unassigned employee or archived project -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
           <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -106,9 +109,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-text-primary">No Project Assignment</h3>
+            <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
             <p class="text-text-secondary text-sm mt-2 max-w-md">
-              You are currently not assigned to any projects. Please ask your Project Manager or Admin to assign you to a project to start viewing and executing tasks.
+              You are currently not viewing an active project. Please select an active project from the dropdown, or ask your Project Manager to assign you to one.
             </p>
           </div>
         </div>
@@ -174,6 +177,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
           
           <div class="flex items-center gap-3">
+            @if (projectState.isProjectManager() && plannedSprintId()) {
+              <button (click)="goToAssignment()" 
+                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                👥 Assign Tasks
+              </button>
+              <button (click)="startSprint()" 
+                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                ▶ Start Sprint
+              </button>
+            }
             @if (projectState.isProjectManager() && activeSprintId()) {
               <button (click)="isRetroModalOpen.set(true)" 
                       class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
@@ -244,7 +257,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
             <span>Showing {{ visibleTasksCount() }} of {{ totalTasksCount() }} tasks. Each column loads in focused batches.</span>
-            @if (hasActiveBoardFilters()) {
+            @if (isBoardReadonly()) {
+              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is disabled (Project is {{ projectState.selectedProject()?.status }})</span>
+            } @else if (hasActiveBoardFilters()) {
               <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is paused while filters are active</span>
             }
           </div>
@@ -265,7 +280,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleTodo(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -293,7 +308,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                      {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                    </button>
                   </div>
                 </div>
               } @empty {
@@ -326,7 +343,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleInProgress(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -387,7 +404,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleReview(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -448,7 +465,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleDone(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters()" [class.cursor-default]="hasActiveBoardFilters()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -517,48 +534,73 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Form -->
           <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
-              <input type="text" [(ngModel)]="modalTask().title" 
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
-              <textarea [(ngModel)]="modalTask().description" rows="3"
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
+            @if (projectState.isProjectManager()) {
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                <select [(ngModel)]="modalTask().priority" 
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
+                <input type="text" [(ngModel)]="modalTask().title" 
+                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
               </div>
 
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                <select [(ngModel)]="modalTask().type" 
-                        class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                  <option value="Feature">Feature</option>
-                  <option value="Bug">Bug</option>
-                  <option value="Refactor">Refactor</option>
-                </select>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
+                <textarea [(ngModel)]="modalTask().description" rows="3"
+                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
               </div>
-            </div>
 
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
-              <input type="number" [(ngModel)]="modalTask().hours" 
-                     class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-            </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
+                  <select [(ngModel)]="modalTask().priority" 
+                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
 
-            <!-- Agile Coach Features (only for existing tasks) -->
-            @if (isEditing()) {
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
+                  <select [(ngModel)]="modalTask().type" 
+                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
+                    <option value="Feature">Feature</option>
+                    <option value="Bug">Bug</option>
+                    <option value="Refactor">Refactor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
+                <input type="number" [(ngModel)]="modalTask().hours" 
+                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+              </div>
+            } @else {
+              <div class="p-4 bg-background rounded-xl border border-border space-y-3">
+                <div>
+                  <h4 class="text-sm font-bold text-text-primary">{{ modalTask().title }}</h4>
+                  <p class="text-xs text-text-secondary mt-1">{{ modalTask().description || 'No description provided.' }}</p>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2 text-[11px] font-semibold text-text-secondary border-t border-border/50">
+                  <div>Type: <span class="text-text-primary font-bold">{{ modalTask().type }}</span></div>
+                  <div>Priority: <span class="text-text-primary font-bold">{{ modalTask().priority }}</span></div>
+                  <div>Estimated: <span class="text-text-primary font-bold">{{ modalTask().hours }}h</span></div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Actual Hours Spent</label>
+                <div class="relative">
+                  <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
+                         class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"
+                         placeholder="e.g. 4.5" />
+                  <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
+                </div>
+                <p class="text-[10px] text-text-secondary mt-1 font-medium">Update the actual hours you spent working on this task.</p>
+              </div>
+            }
+
+            <!-- Agile Coach Features (only for existing tasks and Project Managers) -->
+            @if (isEditing() && projectState.isProjectManager()) {
               <app-agile-coach-summary
                 [taskItemId]="modalTask().id"
                 [lang]="currentLang"
@@ -576,23 +618,24 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Buttons -->
           <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-            @if (isEditing()) {
+            @if (isEditing() && projectState.isProjectManager() && !isBoardReadonly()) {
               <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
                 Delete Task
               </button>
             }
             <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
-              Cancel
+              {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
             </button>
-            <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-              Save changes
-            </button>
+            @if (projectState.isProjectManager() && !isBoardReadonly()) {
+              <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
+                Save changes
+              </button>
+            }
           </div>
         </div>
       </div>
     }
 
-    <!-- Retrospective Modal -->
     @if (isRetroModalOpen() && activeSprintId()) {
       <app-retrospective-modal [sprintId]="activeSprintId()!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
     }
@@ -601,19 +644,30 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 export class BoardComponent implements OnInit {
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
+  private assignmentService = inject(AssignmentService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
+  private router = inject(Router);
+  private tasksService = inject(TasksService);
+
+  employeeActualHours = 0;
+
+  isBoardReadonly = computed(() => {
+    return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
+  });
 
   // Loading and assignment status signals
   isLoading = signal(true);
   isAssignedToProject = signal(false);
   projectName = signal('');
-  
+
   // Real active ids
   activeProjectId = '';
   activeUserStoryId = '';
   activeSprintId = signal<string | null>(null);
+  plannedSprintId = signal<string | null>(null);
+  sprintStatus = signal<string | null>(null);
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
 
@@ -659,7 +713,7 @@ export class BoardComponent implements OnInit {
 
   showModal = signal(false);
   isEditing = signal(false);
-  
+
   modalTask = signal<Task>({
     id: '',
     userStoryId: '',
@@ -683,7 +737,28 @@ export class BoardComponent implements OnInit {
     });
   }
 
-  async ngOnInit() {}
+  async ngOnInit() { }
+
+  goToAssignment() {
+    const sprintId = this.plannedSprintId();
+    if (sprintId) {
+      this.router.navigate(['/assignment', sprintId]);
+    }
+  }
+
+  async startSprint(): Promise<void> {
+    const projectId = this.projectState.selectedProjectId();
+    const sprintId = this.plannedSprintId();
+    if (!projectId || !sprintId) return;
+
+    try {
+      await this.sprintService.startSprint(projectId, sprintId);
+      this.toastService.show('Sprint started successfully', 'success');
+      await this.loadWorkspaceData();
+    } catch {
+      this.toastService.show('Failed to start sprint', 'error');
+    }
+  }
 
   public async loadWorkspaceData() {
     const projectId = this.projectState.selectedProjectId();
@@ -698,44 +773,82 @@ export class BoardComponent implements OnInit {
 
     this.isAssignedToProject.set(true);
     this.activeProjectId = projectId;
-    
+
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
 
     // Fetch active sprint to enable retrospectives
+    // Step 1: Try to get active sprint — treat 404 as null, not an error
+    let activeSprint: { sprintId: string } | null = null;
     try {
       const activeSprintRes = await this.sprintService.getActiveSprint(projectId);
-      const activeSprint = activeSprintRes?.data || activeSprintRes;
-      if (activeSprint && activeSprint.id) {
-        this.activeSprintId.set(activeSprint.id);
-      } else {
-        this.activeSprintId.set(null);
+      const resolved = activeSprintRes?.data || activeSprintRes;
+      if (resolved && resolved.sprintId) {
+        activeSprint = resolved;
       }
-    } catch (e) {
+    } catch {
+      // 404 or any error = no active sprint. Continue to planned check.
+      activeSprint = null;
+    }
+
+    // Step 2: Branch based on result
+    if (activeSprint && activeSprint.sprintId) {
+      this.activeSprintId.set(activeSprint.sprintId);
+      this.plannedSprintId.set(null);
+      this.sprintStatus.set('Active');
+    } else {
       this.activeSprintId.set(null);
+
+      // Step 3: Try to get planned sprint — isolated try/catch
+      try {
+        const plannedSprint = await this.sprintService.getPlannedSprint(projectId);
+        if (plannedSprint && plannedSprint.sprintId) {
+          this.plannedSprintId.set(plannedSprint.sprintId);
+          this.sprintStatus.set('Planned');
+        } else {
+          this.plannedSprintId.set(null);
+          this.sprintStatus.set(null);
+        }
+      } catch {
+        this.plannedSprintId.set(null);
+        this.sprintStatus.set(null);
+      }
     }
 
     // 4. Load backlog
-    let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-    let userStory = backlog?.userStories?.[0];
-    
-    // Automatically create a user story if somehow missing
-    if (!userStory) {
-      userStory = await this.backlogService.createUserStory(this.activeProjectId, {
-        titleEn: 'Sprint Backlog Story',
-        titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
-        descriptionEn: 'Auto generated story for managing project tasks.',
-        descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
-        acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
-        acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
-        priority: 'Medium'
-      });
-    }
-    this.activeUserStoryId = userStory.id;
+    let tasks: any[] = [];
 
-    // Refresh backlog tasks
-    backlog = await this.backlogService.getBacklog(this.activeProjectId);
-    const tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
+    if (this.projectState.isProjectManager()) {
+      let backlog = await this.backlogService.getBacklog(this.activeProjectId);
+      let userStory = backlog?.userStories?.[0];
+
+      // Automatically create a user story if somehow missing
+      if (!userStory) {
+        userStory = await this.backlogService.createUserStory(this.activeProjectId, {
+          titleEn: 'Sprint Backlog Story',
+          titleAr: '\u0642\u0635\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0633\u0628\u0631\u0646\u062a',
+          descriptionEn: 'Auto generated story for managing project tasks.',
+          descriptionAr: '\u0642\u0635\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629 \u0644\u0625\u062f\u0627\u0631\u0629 \u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639.',
+          acceptanceCriteriaEn: 'Tasks can be created, updated, moved, and tracked.',
+          acceptanceCriteriaAr: '\u064a\u0645\u0643\u0646 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0647\u0627\u0645 \u0648\u062a\u062d\u062f\u064a\u062b\u0647\u0627 \u0648\u0646\u0642\u0644\u0647\u0627 \u0648\u062a\u062a\u0628\u0639\u0647\u0627.',
+          priority: 'Medium'
+        });
+      }
+      this.activeUserStoryId = userStory.id;
+
+      // Refresh backlog tasks
+      backlog = await this.backlogService.getBacklog(this.activeProjectId);
+      tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
+    } else {
+      // Load employee's own assigned tasks
+      try {
+        const myTasksRes = await this.tasksService.getMyTasks(this.activeProjectId);
+        tasks = myTasksRes.tasks || [];
+      } catch (err) {
+        console.error('Error loading employee tasks:', err);
+        tasks = [];
+      }
+    }
 
     // 5. Populate task columns from real data
     const todoList: Task[] = [];
@@ -745,20 +858,21 @@ export class BoardComponent implements OnInit {
 
     for (const t of tasks) {
       const task: Task = {
-        id: t.id,
-        userStoryId: t.userStoryId,
+        id: t.id || t.taskId,
+        userStoryId: t.userStoryId || '',
         title: t.titleEn,
         description: t.descriptionEn || '',
         priority: mapPriorityToFrontend(t.priority),
-        hours: t.estimatedHours,
+        hours: t.estimatedHours || 0,
         type: mapTypeToFrontend(t.type)
       };
+      (task as any).actualHours = t.actualHours || 0;
 
-      const status = mapStatusToFrontend(t.status);
-      if (status === 'inProgress') inProgressList.push(task);
-      else if (status === 'review') reviewList.push(task);
-      else if (status === 'done') doneList.push(task);
-      else todoList.push(task);
+      const col = mapStatusToFrontend(t.status);
+      if (col === 'todo') todoList.push(task);
+      else if (col === 'inProgress') inProgressList.push(task);
+      else if (col === 'review') reviewList.push(task);
+      else if (col === 'done') doneList.push(task);
     }
 
     this.todo.set(todoList);
@@ -841,24 +955,31 @@ export class BoardComponent implements OnInit {
 
       const task = event.container.data[event.currentIndex];
       const targetColumnId = event.container.id;
-      
+
       let newStatus = 'todo';
       if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
       else if (targetColumnId === 'review-list') newStatus = 'review';
       else if (targetColumnId === 'done-list') newStatus = 'done';
 
       try {
-        await this.backlogService.updateTask(task.id, {
-          titleEn: task.title,
-          descriptionEn: task.description,
-          estimatedHours: task.hours,
-          effortSize: 'Medium',
-          priority: task.priority,
-          type: task.type,
-          status: newStatus
-        });
+        if (this.projectState.isProjectManager()) {
+          await this.backlogService.updateTask(task.id, {
+            titleEn: task.title,
+            descriptionEn: task.description,
+            estimatedHours: task.hours,
+            effortSize: 'Medium',
+            priority: task.priority,
+            type: task.type,
+            status: newStatus
+          });
+        } else {
+          const statusEnum = this.mapColumnToEnum(newStatus);
+          await this.tasksService.updateTaskStatus(task.id, statusEnum);
+          this.toastService.show('Task status updated successfully.', 'success');
+        }
       } catch (err) {
         console.error('Failed to update task status in backend:', err);
+        this.toastService.show('Failed to update task status.', 'error');
       }
     }
 
@@ -866,6 +987,13 @@ export class BoardComponent implements OnInit {
     this.inProgress.set([...this.inProgress()]);
     this.review.set([...this.review()]);
     this.done.set([...this.done()]);
+  }
+
+  private mapColumnToEnum(column: string): TaskItemStatus {
+    if (column === 'inProgress') return TaskItemStatus.InProgress;
+    if (column === 'review') return TaskItemStatus.Review;
+    if (column === 'done') return TaskItemStatus.Done;
+    return TaskItemStatus.ToDo;
   }
 
   openEditModal(task: Task) {
@@ -877,6 +1005,7 @@ export class BoardComponent implements OnInit {
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
     this.modalTask.set({ ...task });
+    this.employeeActualHours = (task as any).actualHours || 0;
     this.showModal.set(true);
   }
 
@@ -887,33 +1016,41 @@ export class BoardComponent implements OnInit {
 
   async saveTask() {
     const taskData = this.modalTask();
-    if (!taskData.title.trim()) {
-      this.toastService.show('Task title is required.', 'error');
-      return;
-    }
 
     try {
       this.isLoading.set(true);
-      if (this.isEditing()) {
-        await this.backlogService.updateTask(taskData.id, {
-          titleEn: taskData.title,
-          descriptionEn: taskData.description,
-          estimatedHours: taskData.hours,
-          effortSize: 'Medium',
-          priority: taskData.priority,
-          type: taskData.type,
-          status: this.originalColumn
-        });
+      if (this.projectState.isProjectManager()) {
+        if (!taskData.title.trim()) {
+          this.toastService.show('Task title is required.', 'error');
+          this.isLoading.set(false);
+          return;
+        }
+
+        if (this.isEditing()) {
+          await this.backlogService.updateTask(taskData.id, {
+            titleEn: taskData.title,
+            descriptionEn: taskData.description,
+            estimatedHours: taskData.hours,
+            effortSize: 'Medium',
+            priority: taskData.priority,
+            type: taskData.type,
+            status: this.originalColumn
+          });
+        } else {
+          await this.backlogService.createTask(this.activeUserStoryId, {
+            titleEn: taskData.title,
+            descriptionEn: taskData.description,
+            estimatedHours: taskData.hours,
+            effortSize: 'Medium',
+            priority: taskData.priority,
+            type: taskData.type,
+            status: 'todo'
+          });
+        }
       } else {
-        await this.backlogService.createTask(this.activeUserStoryId, {
-          titleEn: taskData.title,
-          descriptionEn: taskData.description,
-          estimatedHours: taskData.hours,
-          effortSize: 'Medium',
-          priority: taskData.priority,
-          type: taskData.type,
-          status: 'todo'
-        });
+        // Employee saving log actual hours
+        await this.tasksService.logActualHours(taskData.id, this.employeeActualHours);
+        this.toastService.show('Actual hours logged successfully.', 'success');
       }
       this.closeModal();
       await this.loadWorkspaceData();

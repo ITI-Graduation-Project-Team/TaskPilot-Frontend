@@ -1,0 +1,60 @@
+<div class="h-full flex flex-col bg-surface-base p-6 overflow-y-auto">
+  <div *ngIf="!selectedTask" class="flex-1 flex flex-col items-center justify-center text-content-muted text-center h-full">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    </svg>
+    <p class="text-lg font-medium">Select a task</p>
+    <p class="text-sm">Click on a task from the list to view assignment suggestions.</p>
+  </div>
+
+  <div *ngIf="selectedTask" class="flex flex-col fade-in">
+    <div class="mb-6">
+      <h2 class="text-xl font-bold text-content-base mb-1">{{ lang === 'ar' ? selectedTask.taskTitleAr : selectedTask.taskTitleEn }}</h2>
+      <p class="text-sm text-content-muted">Review top developers for this task.</p>
+    </div>
+
+    <div class="space-y-4">
+      <div *ngFor="let dev of selectedTask.rankedDevelopers" class="bg-surface-elevated border border-border-base rounded-xl p-5 shadow-sm relative overflow-hidden flex flex-col transition-all" [class.ring-2]="isAssigned(dev)" [class.ring-primary-base]="isAssigned(dev)">
+        
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl" *ngIf="dev.rank === 1">🥇</span>
+            <span class="text-2xl" *ngIf="dev.rank === 2">🥈</span>
+            <span class="text-2xl" *ngIf="dev.rank === 3">🥉</span>
+            <div>
+              <div class="text-lg font-bold text-content-base">{{ dev.employeeName || 'Unknown Developer' }}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-content-muted mb-1">Score</div>
+            <div class="text-lg font-bold" [ngClass]="getScoreColorClass(dev.score)">
+              {{ dev.score }}%
+            </div>
+          </div>
+        </div>
+
+        <div class="text-sm text-content-muted mb-4">
+          <p>{{ lang === 'ar' ? dev.reasonAr : dev.reasonEn }}</p>
+        </div>
+
+        <div class="mt-auto flex justify-between items-end pt-4 border-t border-border-base/50">
+          <div class="flex flex-wrap gap-1.5 max-w-[70%]">
+            <span *ngFor="let skill of selectedTask.requiredSkills" class="px-2 py-1 text-[10px] bg-surface-base text-content-base rounded border border-border-base uppercase font-semibold">
+              {{ lang === 'ar' ? skill.skillNameAr : skill.skillNameEn }}
+            </span>
+          </div>
+          
+          <button 
+            (click)="onAssign(dev)"
+            [disabled]="isAssigned(dev)"
+            class="px-5 py-2 rounded-lg font-medium text-sm transition-all"
+            [ngClass]="isAssigned(dev) ? 'bg-primary-base text-white opacity-80 cursor-not-allowed' : 'bg-transparent border border-primary-base text-primary-base hover:bg-primary-base/10'"
+          >
+            {{ isAssigned(dev) ? 'Assigned ✓' : 'Assign' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

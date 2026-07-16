@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
@@ -23,7 +23,7 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
   /** Individual OTP digit signals for the 6-box UI */
   digits = signal<string[]>(['', '', '', '', '', '']);
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute, private router: Router, private injector: Injector) {}
 
   ngOnInit() {
     const email = this.route.snapshot.queryParamMap.get('email') ?? '';
@@ -143,22 +143,28 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
       this.state.set('success');
       
       const invToken = sessionStorage.getItem('invitationToken');
-      if (invToken) {
-        try {
-          const completeRes = await authApi.completeInvitation(invToken);
-          if (completeRes.data?.succeeded === false) {
-            console.error('Failed to complete invitation:', completeRes.data?.message);
-          }
-          sessionStorage.removeItem('invitationToken');
-          setTimeout(() => this.router.navigate(['/dashboard']), 2000);
-        } catch (e) {
-          console.error('Failed to complete invitation', e);
-          // Still redirect to dashboard as they are verified
-          setTimeout(() => this.router.navigate(['/dashboard']), 2000);
+      import('../../../../shared/api/auth.service').then(m => {
+        const authServiceRef = this.injector.get(m.AuthService);
+        const currentRole = authServiceRef.getUserRole();
+        const routePath = currentRole === 'Employee' ? '/complete-profile' : '/company-setup';
+
+        if (invToken) {
+          authApi.completeInvitation(invToken)
+            .then((completeRes) => {
+              if (completeRes.data?.succeeded === false) {
+                console.error('Failed to complete invitation:', completeRes.data?.message);
+              }
+              sessionStorage.removeItem('invitationToken');
+              setTimeout(() => this.router.navigate([routePath]), 2000);
+            })
+            .catch((e) => {
+              console.error('Failed to complete invitation', e);
+              setTimeout(() => this.router.navigate([routePath]), 2000);
+            });
+        } else {
+          setTimeout(() => this.router.navigate([routePath]), 2000);
         }
-      } else {
-        setTimeout(() => this.router.navigate(['/login']), 2000);
-      }
+      });
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));

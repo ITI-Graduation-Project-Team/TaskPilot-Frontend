@@ -1,0 +1,41 @@
+<div class="h-full flex flex-col bg-surface-base border-r border-border-base">
+  <div class="p-4 border-b border-border-base">
+    <h2 class="text-lg font-semibold text-content-base">Sprint Tasks</h2>
+  </div>
+  
+  <div class="flex-1 overflow-y-auto p-2 space-y-2">
+    <div 
+      *ngFor="let task of tasks"
+      (click)="selectTask(task.taskId)"
+      [class.ring-2]="selectedTaskId === task.taskId"
+      [class.ring-primary-base]="selectedTaskId === task.taskId"
+      class="p-3 bg-surface-elevated rounded-lg cursor-pointer hover:bg-surface-hover transition-colors border border-border-base flex flex-col"
+    >
+      <div class="flex justify-between items-start mb-1.5">
+        <h3 class="font-medium text-content-base text-sm line-clamp-2" [title]="task.taskTitleEn || task.taskTitleAr">{{ task.taskTitleEn || task.taskTitleAr }}</h3>
+      </div>
+      
+      <div class="flex gap-2 mb-3">
+        <span class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border border-border-base text-content-muted bg-surface-base">
+          {{ task.type }}
+        </span>
+        <span class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border border-border-base text-content-muted bg-surface-base">
+          {{ task.priority }}
+        </span>
+      </div>
+
+      <div class="flex items-center text-xs mt-auto pt-2 border-t border-border-base">
+        <span class="text-content-muted mr-1">Assignee:</span>
+        <span 
+          class="font-medium truncate" 
+          [ngClass]="localAssignments[task.taskId] ? 'text-primary-base' : 'text-warning-base'">
+          {{ getAssigneeName(task) }}
+        </span>
+      </div>
+    </div>
+    
+    <div *ngIf="tasks.length === 0" class="text-center p-8 text-content-muted">
+      No tasks available in this sprint.
+    </div>
+  </div>
+</div>

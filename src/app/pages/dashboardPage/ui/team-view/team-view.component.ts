@@ -106,7 +106,8 @@ interface ProjectEmployee {
             </div>
           } @else {
             <!-- Form to assign -->
-            <form (submit)="onAssignEmployee($event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-sidebar p-4 rounded-xl border border-border">
+            @if (projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
+              <form (submit)="onAssignEmployee($event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-sidebar p-4 rounded-xl border border-border">
               <div class="relative">
                 <label class="block text-xs font-bold text-text-secondary mb-1.5">Select Member</label>
                 <!-- Custom Dropdown Trigger -->
@@ -187,7 +188,8 @@ interface ProjectEmployee {
                   Assign to Project
                 </button>
               </div>
-            </form>
+              </form>
+            }
 
             <!-- Project Team list -->
             <div class="space-y-3 mt-4">

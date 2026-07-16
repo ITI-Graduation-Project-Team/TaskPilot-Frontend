@@ -15,10 +15,20 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [authGuard, companySetupGuard],
+    canActivate: [authGuard, roleGuard, companySetupGuard],
+    data: { roles: ['ProjectManager'] },
     loadComponent: () =>
       import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
+      ),
+  },
+  {
+    path: 'employee-dashboard',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Employee'] },
+    loadComponent: () =>
+      import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then(
+        (m) => m.EmployeeDashboardComponent
       ),
   },
   {
@@ -105,6 +115,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/employeesPage/ui/employees/employees').then(
         (m) => m.EmployeesComponent
+      ),
+  },
+  {
+    path: 'assignment/:sprintId',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/assignmentPage/ui/assignment/assignment.component').then(
+        (m) => m.AssignmentComponent
       ),
   },
 ];

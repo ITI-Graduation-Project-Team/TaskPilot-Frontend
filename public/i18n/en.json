@@ -150,5 +150,106 @@
     "sales": "Sales",
     "followUs": "Follow Us",
     "copyright": "© 2026 TaskPilot. All rights reserved."
+  },
+  "calendar": {
+    "title": "Calendar View",
+    "workload": "Workload Overview",
+    "tasksCount": "tasks",
+    "reschedule": "Reschedule",
+    "rescheduleSuccess": "Task rescheduled successfully",
+    "rescheduleError": "Failed to reschedule task",
+    "loadError": "Failed to load calendar data",
+    "months": {
+      "jan": "January", "feb": "February", "mar": "March", "apr": "April",
+      "may": "May", "jun": "June", "jul": "July", "aug": "August",
+      "sep": "September", "oct": "October", "nov": "November", "dec": "December"
+    },
+    "days": {
+      "sun": "Sun", "mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat"
+    }
+  },
+  "employee": {
+    "loading": "Loading your workspace…",
+    "nav": {
+      "sprintBoard": "Active Sprint",
+      "myBacklog": "My Backlog",
+      "myProfile": "My Profile",
+      "sprint": "Sprint",
+      "backlog": "Backlog",
+      "profile": "Profile",
+      "myProjects": "My Projects",
+      "currentProjects": "Current Projects",
+      "projectHistory": "Project History",
+      "current": "Current",
+      "history": "History"
+    },
+    "pages": {
+      "sprintBoard": "Active Sprint",
+      "myBacklog": "My Backlog",
+      "myProfile": "My Profile",
+      "currentProjects": "Current Projects",
+      "projectHistory": "Project History"
+    },
+    "header": {
+      "selectProject": "Select Project",
+      "yourProjects": "Your Projects",
+      "logout": "Logout"
+    },
+    "sidebar": {
+      "employee": "Employee"
+    },
+    "noProject": {
+      "title": "No Project Assigned",
+      "description": "You haven't been assigned to any project yet. Contact your Project Manager to get started."
+    },
+    "backlog": {
+      "title": "My Backlog",
+      "subtitle": "All tasks across your current project",
+      "filterAll": "All",
+      "filterTodo": "To Do",
+      "filterInProgress": "In Progress",
+      "filterReview": "In Review",
+      "filterDone": "Done",
+      "filterMine": "Assigned to me",
+      "mine": "Mine",
+      "empty": "No tasks found",
+      "emptyHint": "Try changing the filter or check back later.",
+      "tasks": "tasks"
+    },
+    "status": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "review": "In Review",
+      "done": "Done"
+    },
+    "profile": {
+      "edit": "Edit Profile",
+      "editTitle": "Edit Your Profile",
+      "noJobTitle": "No job title set",
+      "seniority": "Seniority",
+      "yearsExp": "Experience",
+      "years": "yrs",
+      "skills": "Skills",
+      "skillsTitle": "Technical Skills",
+      "noSkills": "No skills added yet",
+      "loadError": "Could not load your profile",
+      "jobTitle": "Job Title",
+      "jobTitlePlaceholder": "e.g. Frontend Developer",
+      "addSkill": "Add Skill",
+      "skillName": "Skill name…",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    },
+    "projects": {
+      "current": "Current Projects",
+      "history": "Project History",
+      "noActiveTitle": "No active projects",
+      "noActiveDesc": "You don't have any currently active projects. Check back later or contact your Project Manager.",
+      "inProgress": "In Progress",
+      "noHistoryTitle": "No historical projects",
+      "noHistoryDesc": "You haven't completed any projects yet. When a project you're assigned to is closed or completed, it will appear here.",
+      "completed": "Completed",
+      "noDescription": "No description provided."
+    }
   }
 }

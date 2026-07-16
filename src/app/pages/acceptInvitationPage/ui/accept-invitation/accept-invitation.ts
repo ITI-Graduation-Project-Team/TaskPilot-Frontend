@@ -77,7 +77,15 @@ export class AcceptInvitationComponent implements OnInit {
       sessionStorage.removeItem('invitationToken');
       this.state.set('success');
       setTimeout(() => {
-        this.router.navigate(['/dashboard']);
+        const currentRole = this.authService.getUserRole();
+        const isProfileCompleted = localStorage.getItem('isProfileCompleted') === 'true';
+        if (currentRole === 'Employee') {
+          this.router.navigate([isProfileCompleted ? '/employee-dashboard' : '/complete-profile']);
+        } else if (currentRole === 'ProjectManager') {
+          this.router.navigate([isProfileCompleted ? '/dashboard' : '/company-setup']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       }, 1500);
     } catch (err: any) {
       this.state.set('error');

@@ -15,6 +15,7 @@ export interface ProjectInfo {
   techStack?: string[];
   platformTargets?: string[];
   projectType?: string;
+  status?: string;
 }
 
 @Injectable({
@@ -28,6 +29,7 @@ export class ProjectStateService {
   private _companyName = signal<string>('');
   private _userId = signal<string | null>(null);
   private _loading = signal<boolean>(false);
+  private _localCompletedIds = signal<string[]>([]);
 
   readonly projects = this._projects.asReadonly();
   readonly selectedProjectId = this._selectedProjectId.asReadonly();
@@ -43,6 +45,12 @@ export class ProjectStateService {
   });
 
   constructor() {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('localCompletedIds');
+      if (stored) {
+        try { this._localCompletedIds.set(JSON.parse(stored)); } catch (e) { }
+      }
+    }
     this.initializeState();
   }
 
@@ -56,14 +64,13 @@ export class ProjectStateService {
       const role = getRoleFromToken();
       const isPM = role === 'ProjectManager';
 
-      // Fetch user profile to detect role and company ID
       const { data } = await apiClient.get<any>('/employees/profile');
       const profile = data.data || data;
       if (profile) {
         this._isProjectManager.set(isPM || !profile.isEmployee);
         const companyId = profile.companyId || profile.CompanyId || null;
         this._userCompanyId.set(companyId);
-        
+
         const companyName = profile.companyName || profile.CompanyName || '';
         this._companyName.set(companyName);
 
@@ -88,7 +95,6 @@ export class ProjectStateService {
       let filtered: ProjectInfo[] = [];
 
       if (isPM) {
-        // PM sees projects they manage
         filtered = allProjects
           .filter(p => p.managerId === userId)
           .map(p => ({
@@ -103,13 +109,13 @@ export class ProjectStateService {
             managerId: p.managerId,
             techStack: p.techStack || [],
             platformTargets: p.platformTargets || [],
-            projectType: p.projectType || ''
+            projectType: p.projectType || '',
+            status: p.status || 'Active'
           }));
       } else {
-        // Employee sees projects they are assigned to
         for (const p of allProjects) {
           try {
-            const teamResponse = await apiClient.get<any>(`/Projects/${p.id}/employees`);
+            const teamResponse = await apiClient.get<any>('/Projects/' + p.id + '/employees');
             const employeesList = teamResponse.data?.data || [];
             if (employeesList.some((e: any) => e.employeeId === userId)) {
               filtered.push({
@@ -124,18 +130,16 @@ export class ProjectStateService {
                 managerId: p.managerId,
                 techStack: p.techStack || [],
                 platformTargets: p.platformTargets || [],
-                projectType: p.projectType || ''
+                projectType: p.projectType || '',
+                status: p.status || 'Active'
               });
             }
-          } catch (err) {
-            // Ignore individual project fetch errors
-          }
+          } catch (err) { }
         }
       }
 
       this._projects.set(filtered);
 
-      // Restore last selected project from localStorage if it exists in filtered projects
       if (typeof localStorage !== 'undefined') {
         const savedId = localStorage.getItem('selectedProjectId');
         if (savedId && filtered.some(p => p.id === savedId)) {
@@ -144,7 +148,6 @@ export class ProjectStateService {
         }
       }
 
-      // Default to first project
       if (filtered.length > 0) {
         this.setSelectedProject(filtered[0].id);
       } else {
@@ -213,9 +216,8 @@ export class ProjectStateService {
   async deleteProject(projectId: string): Promise<boolean> {
     try {
       this._loading.set(true);
-      await apiClient.delete(`/Projects/${projectId}`);
+      await apiClient.delete('/Projects/' + projectId);
       await this.loadProjects();
-      // If we deleted the currently selected project, reset it
       if (this._selectedProjectId() === projectId) {
         if (this._projects().length > 0) {
           this.setSelectedProject(this._projects()[0].id);
@@ -229,6 +231,34 @@ export class ProjectStateService {
       return false;
     } finally {
       this._loading.set(false);
+    }
+  }
+
+  async changeProjectStatus(projectId: string, status: string): Promise<{ success: boolean, error?: string }> {
+    try {
+      this._loading.set(true);
+      await apiClient.put('/Projects/' + projectId + '/status', { status });
+      await this.loadProjects();
+      return { success: true };
+    } catch (e: any) {
+      console.error('Failed to change project status:', e);
+      let errorMsg = 'Failed to update project status.';
+      if (e.response?.data?.message) {
+        errorMsg = e.response.data.message;
+      }
+      return { success: false, error: errorMsg };
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  async getProjectStatusHistory(projectId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get<any>('/Projects/' + projectId + '/status/transitions');
+      return response.data?.data || response.data || [];
+    } catch (e) {
+      console.error('Failed to load project status history:', e);
+      return [];
     }
   }
 }

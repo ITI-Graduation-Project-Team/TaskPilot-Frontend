@@ -11,6 +11,8 @@ import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
 import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
+import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
+
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
@@ -19,25 +21,25 @@ import { AuthService } from '../../../../shared/api/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, 
+    CommonModule,
     RouterLink,
     FormsModule,
-    BoardComponent, 
-    BacklogViewComponent, 
-    ProfileViewComponent, 
+    BoardComponent,
+    BacklogViewComponent,
+    ProfileViewComponent,
     TeamViewComponent,
     AiChatModalComponent,
     DraftReviewModalComponent,
     TechStackAdvisorModalComponent,
     ProjectHubComponent,
     SprintPlanningViewComponent,
-    OrganizationViewComponent
+    OrganizationViewComponent,
+    ProjectHistoryModalComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -61,7 +63,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
               <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate max-w-[130px]" [title]="sp.nameEn">
+                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="sp.nameEn">
                   📁 {{ sp.nameEn }}
                 </span>
                 <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
@@ -242,7 +244,15 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               }
             </h1>
             
-            @if (currentTab() === 'sprint') {
+            @if (projectState.selectedProject()?.status === 'Completed') {
+              <span class="px-2.5 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-600 rounded-full font-mono uppercase tracking-wider">
+                Completed
+              </span>
+            } @else if (projectState.selectedProject()?.status === 'Archived') {
+              <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
+                Archived
+              </span>
+            } @else if (currentTab() === 'sprint') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
                 {{ activeSprintName() }}
               </span>
@@ -353,7 +363,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               (selectSprint)="goToProject($event, 'sprint')"
               (selectBacklog)="goToProject($event, 'backlog')"
               (editProject)="openEditProjectModal($event)"
-              (deleteProject)="deleteProject($event)">
+              (deleteProject)="deleteProject($event)"
+              (toggleProjectStatus)="onToggleProjectStatus($event)">
             </app-project-hub>
           } @else if (currentTab() === 'create-project') {
             <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
@@ -453,6 +464,27 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <app-profile-view></app-profile-view>
           }
         </main>
+        
+        <!-- Floating AI Chat Button -->
+        <button (click)="isAiChatOpen.set(true)"
+                class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center hover:scale-110 transition-transform duration-300 z-50 group">
+          <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          <!-- Tooltip -->
+          <span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-sidebar border border-border text-text-primary text-xs font-bold rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none">
+            Ask AI Assistant
+          </span>
+        </button>
+
+        <!-- AI Chat Modal (Floating mode) -->
+        @if (isAiChatOpen()) {
+          <app-ai-chat-modal 
+            [embedded]="false" 
+            (close)="onAiChatClose()" 
+            (draftGenerated)="onDraftGenerated($event)">
+          </app-ai-chat-modal>
+        }
       </div>
 
       <!-- Mobile Bottom Navigation Bar -->
@@ -479,7 +511,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 [class.scale-105]="currentTab() === 'sprint'"
                 [class.text-text-secondary]="currentTab() !== 'sprint'">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
           <span class="text-[9px] font-bold">Sprint</span>
         </button>
@@ -597,6 +629,17 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     @if (isDraftReviewOpen()) {
       <app-draft-review-modal [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
     }
+
+    <!-- Project History Modal -->
+    @if (isHistoryModalOpen() && selectedHistoryProject()) {
+      <app-project-history-modal 
+        [projectId]="selectedHistoryProject()!.id"
+        [projectName]="selectedHistoryProject()!.nameEn || 'Project'"
+        [currentStatus]="selectedHistoryProject()!.status"
+        (close)="closeHistoryModal()"
+        (actionCompleted)="onHistoryActionCompleted()">
+      </app-project-history-modal>
+    }
   `,
   styles: `
     .line-clamp-2 {
@@ -623,6 +666,10 @@ export class DashboardComponent implements OnInit {
 
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
+
+  // Status History Modal state
+  isHistoryModalOpen = signal(false);
+  selectedHistoryProject = signal<{id: string, nameEn: string, status: string} | null>(null);
 
   // Edit Project properties
   isEditProjectModalOpen = signal(false);
@@ -696,7 +743,7 @@ export class DashboardComponent implements OnInit {
       day: 'numeric',
       year: 'numeric'
     });
-    
+
     if (typeof localStorage !== 'undefined') {
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
@@ -754,7 +801,7 @@ export class DashboardComponent implements OnInit {
     // Fire API requests in parallel using Promise.allSettled
     const promises = projects.map(async (p) => {
       const stats: ProjectStats = { activeSprint: 'No Active Sprint', memberCount: 0, taskCount: 0, loading: false };
-      
+
       try {
         const [sprintRes, employeesRes, backlogRes] = await Promise.allSettled([
           apiClient.get<any>(`/projects/${p.id}/sprints/active`),
@@ -896,15 +943,42 @@ export class DashboardComponent implements OnInit {
         type: 'danger'
       });
       if (confirmed) {
-        const success = await this.projectState.deleteProject(projectId);
-        if (success) {
-          this.toastService.show(`Project "${proj.nameEn}" deleted successfully.`, 'success');
-          this.loadAllProjectStats();
-        } else {
-          this.toastService.show('Failed to delete project. Please try again.', 'error');
-        }
+        await this.onDeleteProject(projectId);
       }
     }
+  }
+
+  async onDeleteProject(projectId: string) {
+    const success = await this.projectState.deleteProject(projectId);
+    if (success) {
+      this.toastService.show('Project deleted successfully', 'success');
+      this.loadAllProjectStats();
+    } else {
+      this.toastService.show('Failed to delete project. Please try again.', 'error');
+    }
+  }
+
+  async onToggleProjectStatus(projectId: string) {
+    const p = this.projectState.projects().find(x => x.id === projectId);
+    if (p) {
+      this.selectedHistoryProject.set({
+        id: p.id,
+        nameEn: p.nameEn || 'Project',
+        status: p.status || 'Active'
+      });
+      this.isHistoryModalOpen.set(true);
+    }
+  }
+
+  closeHistoryModal() {
+    this.isHistoryModalOpen.set(false);
+    this.selectedHistoryProject.set(null);
+  }
+
+  onHistoryActionCompleted() {
+    this.closeHistoryModal();
+    this.toastService.show('Project status updated successfully', 'success');
+    this.loadAllProjectStats();
   }
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {
