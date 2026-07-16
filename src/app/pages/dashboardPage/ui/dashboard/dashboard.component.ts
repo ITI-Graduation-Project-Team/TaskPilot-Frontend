@@ -13,6 +13,7 @@ import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
+import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
@@ -41,7 +42,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     ProjectHubComponent,
     ProjectHistoryModalComponent,
     SprintPlanningViewComponent,
-    SprintListComponent
+    SprintListComponent,
+    NotificationBellComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -300,6 +302,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 Create Project
               </button>
             }
+
+            <!-- Notification Bell -->
+            <app-notification-bell />
 
             <!-- Subscription button -->
             <a routerLink="/subscription"

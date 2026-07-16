@@ -1,6 +1,8 @@
-import { Component, inject, Injector } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject, Injector, OnInit, DestroyRef } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { LoaderComponent } from './shared/ui/loader/loader';
 import { ToastComponent } from './shared/ui/toast/toast.component';
@@ -8,6 +10,8 @@ import { ConfirmDialogComponent } from './shared/ui/confirm-dialog/confirm-dialo
 import { LoadingService } from './shared/services/loading.service';
 import { setAxiosInjector } from './shared/api/axios.instance';
 import { ThemeService } from './shared/services/theme.service';
+import { NotificationHubService } from './shared/services/notification-hub.service';
+import { AuthService } from './shared/api/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -25,20 +29,43 @@ import { ThemeService } from './shared/services/theme.service';
     }
 
     <router-outlet />
+    
     <app-toast />
     <app-confirm-dialog />
   `,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   private loadingService = inject(LoadingService);
   private injector = inject(Injector);
-  // Injecting ThemeService here ensures it initializes and applies the
-  // persisted theme immediately when the app starts, before any page loads.
   private themeService = inject(ThemeService);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  
+  public authService = inject(AuthService);
+  private notificationHubService = inject(NotificationHubService);
 
   loading$ = this.loadingService.loading$;
 
   constructor() {
     setAxiosInjector(this.injector);
+  }
+
+  ngOnInit() {
+    // Check connection status on every route change (handles login/logout)
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      if (this.authService.isLoggedIn()) {
+        this.notificationHubService.startConnection();
+      } else {
+        this.notificationHubService.stopConnection();
+      }
+    });
+
+    // Also check on initial load
+    if (this.authService.isLoggedIn()) {
+      this.notificationHubService.startConnection();
+    }
   }
 }
