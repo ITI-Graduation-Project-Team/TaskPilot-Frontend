@@ -23,6 +23,7 @@ import { SprintRiskListComponent } from '../../../sprintRisks';
 import { Router } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
+import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
 
 interface Task {
   id: string;
@@ -40,7 +41,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent],
   template: `
     <div class="space-y-6">
       
@@ -536,118 +537,171 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
     <!-- Edit/Add Task Modal Overlay -->
     @if (showModal()) {
       <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
-        <div class="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 flex flex-col space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-border">
-            <h3 class="text-lg font-bold text-text-primary">
-              Modify Task Details
+        <div class="bg-surface border border-border w-full rounded-2xl shadow-2xl flex flex-col transition-all duration-300"
+             [ngClass]="isEditing() ? 'max-w-6xl max-h-[90vh]' : 'max-w-md'">
+          
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-border shrink-0 bg-background rounded-t-2xl">
+            <h3 class="text-xl font-extrabold text-text-primary flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {{ isEditing() ? 'Task Details' : 'Create New Task' }}
             </h3>
-            <button (click)="closeModal()" class="text-text-secondary hover:text-text-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <button (click)="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors border border-transparent hover:border-border">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <!-- Form -->
-          <div class="space-y-4">
-            @if (projectState.isProjectManager()) {
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
-                <input type="text" [(ngModel)]="modalTask().title" 
-                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+          <!-- Modal Body (Grid for Trello-like layout) -->
+          <div class="p-6 overflow-y-auto flex-1 scrollbar-thin">
+            <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="isEditing() ? 'lg:grid-cols-[1fr_1fr]' : ''">
+              
+              <!-- LEFT COLUMN: Main Task Info & Form -->
+              <div class="space-y-5 flex flex-col">
+                @if (projectState.isProjectManager()) {
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
+                    <input type="text" [(ngModel)]="modalTask().title" 
+                           class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-semibold text-[15px]" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
+                    <textarea [(ngModel)]="modalTask().description" rows="5"
+                              class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 resize-none font-medium text-sm"></textarea>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-5">
+                    <div>
+                      <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
+                      <select [(ngModel)]="modalTask().priority" 
+                              class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-medium text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
+                      <select [(ngModel)]="modalTask().type" 
+                              class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-medium text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]">
+                        <option value="Feature">Feature</option>
+                        <option value="Bug">Bug</option>
+                        <option value="Refactor">Refactor</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
+                    <div class="relative">
+                      <input type="number" [(ngModel)]="modalTask().hours" 
+                             class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-medium text-sm" />
+                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="p-6 bg-background rounded-2xl border border-border space-y-4">
+                    <div>
+                      <h4 class="text-lg font-bold text-text-primary leading-tight">{{ modalTask().title }}</h4>
+                      <p class="text-sm text-text-secondary mt-2 leading-relaxed whitespace-pre-wrap">{{ modalTask().description || 'No description provided.' }}</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 pt-4 text-xs font-semibold text-text-secondary border-t border-border/50">
+                      <div class="bg-surface rounded-lg p-2.5 border border-border text-center">
+                        <span class="block text-[10px] uppercase mb-1">Type</span>
+                        <span class="text-text-primary font-bold">{{ modalTask().type }}</span>
+                      </div>
+                      <div class="bg-surface rounded-lg p-2.5 border border-border text-center">
+                        <span class="block text-[10px] uppercase mb-1">Priority</span>
+                        <span class="text-text-primary font-bold">{{ modalTask().priority }}</span>
+                      </div>
+                      <div class="bg-surface rounded-lg p-2.5 border border-border text-center">
+                        <span class="block text-[10px] uppercase mb-1">Estimated</span>
+                        <span class="text-text-primary font-bold">{{ modalTask().hours }}h</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">Actual Hours Spent</label>
+                    <div class="relative">
+                      <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
+                             class="w-full px-4 py-3.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-bold"
+                             placeholder="e.g. 4.5" />
+                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
+                    </div>
+                    <p class="text-xs text-text-secondary mt-2 font-medium">Update the actual hours you spent working on this task.</p>
+                  </div>
+                }
+
+                <div class="flex-1"></div> <!-- Spacer -->
+
+                <!-- Buttons inside left column if it's editing -->
+                @if (isEditing()) {
+                  <div class="flex items-center space-x-3 pt-6 border-t border-border mt-6">
+                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                      <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
+                        Delete Task
+                      </button>
+                    }
+                    <div class="flex-1"></div>
+                    <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
+                      Cancel
+                    </button>
+                    @if (!isBoardReadonly()) {
+                      <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
+                        {{ projectState.isProjectManager() ? 'Save Changes' : 'Save Hours' }}
+                      </button>
+                    }
+                  </div>
+                }
               </div>
 
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
-                <textarea [(ngModel)]="modalTask().description" rows="3"
-                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
-              </div>
+              <!-- RIGHT COLUMN: Discussion & AI Coach -->
+              @if (isEditing()) {
+                <div class="flex flex-col h-full border-border lg:border-l lg:pl-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
+                  <!-- Agile Coach Features -->
+                  @if (projectState.isProjectManager()) {
+                    <div class="space-y-4 shrink-0">
+                      <app-agile-coach-summary
+                        [taskItemId]="modalTask().id"
+                        [lang]="currentLang"
+                        (openChat)="isChatOpen.set(true)"
+                      />
 
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                  <select [(ngModel)]="modalTask().priority" 
-                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
+                      <app-agile-coach-chat
+                        [taskItemId]="modalTask().id"
+                        [lang]="currentLang"
+                        [isOpen]="isChatOpen()"
+                        (closed)="isChatOpen.set(false)"
+                      />
+                    </div>
+                  }
+
+                  <!-- Task Discussion Component -->
+                  <div class="flex-1 min-h-[400px] flex flex-col bg-background rounded-2xl border border-border shadow-inner overflow-hidden">
+                    <app-task-discussion [taskId]="modalTask().id" class="flex-1" />
+                  </div>
                 </div>
-
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                  <select [(ngModel)]="modalTask().type" 
-                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                    <option value="Feature">Feature</option>
-                    <option value="Bug">Bug</option>
-                    <option value="Refactor">Refactor</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
-                <input type="number" [(ngModel)]="modalTask().hours" 
-                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-              </div>
-            } @else {
-              <div class="p-4 bg-background rounded-xl border border-border space-y-3">
-                <div>
-                  <h4 class="text-sm font-bold text-text-primary">{{ modalTask().title }}</h4>
-                  <p class="text-xs text-text-secondary mt-1">{{ modalTask().description || 'No description provided.' }}</p>
-                </div>
-                <div class="grid grid-cols-3 gap-2 pt-2 text-[11px] font-semibold text-text-secondary border-t border-border/50">
-                  <div>Type: <span class="text-text-primary font-bold">{{ modalTask().type }}</span></div>
-                  <div>Priority: <span class="text-text-primary font-bold">{{ modalTask().priority }}</span></div>
-                  <div>Estimated: <span class="text-text-primary font-bold">{{ modalTask().hours }}h</span></div>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Actual Hours Spent</label>
-                <div class="relative">
-                  <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
-                         class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"
-                         placeholder="e.g. 4.5" />
-                  <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-                </div>
-                <p class="text-[10px] text-text-secondary mt-1 font-medium">Update the actual hours you spent working on this task.</p>
-              </div>
-            }
-
-            <!-- Agile Coach Features (only for existing tasks and Project Managers) -->
-            @if (isEditing() && projectState.isProjectManager()) {
-              <app-agile-coach-summary
-                [taskItemId]="modalTask().id"
-                [lang]="currentLang"
-                (openChat)="isChatOpen.set(true)"
-              />
-
-              <app-agile-coach-chat
-                [taskItemId]="modalTask().id"
-                [lang]="currentLang"
-                [isOpen]="isChatOpen()"
-                (closed)="isChatOpen.set(false)"
-              />
-            }
+              }
+            </div>
           </div>
-
-          <!-- Buttons -->
-          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-            @if (isEditing() && projectState.isProjectManager() && !isBoardReadonly()) {
-              <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
-                Delete Task
+          
+          <!-- Bottom Buttons (For Add Mode) -->
+          @if (!isEditing()) {
+            <div class="p-6 border-t border-border flex items-center justify-end space-x-3 bg-surface rounded-b-2xl shrink-0">
+              <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-background font-bold rounded-xl transition-colors">
+                Cancel
               </button>
-            }
-            <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
-              {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
-            </button>
-            @if (!isBoardReadonly()) {
-              <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-                {{ projectState.isProjectManager() ? 'Save changes' : 'Save actual hours' }}
+              <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
+                Create Task
               </button>
-            }
-          </div>
+            </div>
+          }
         </div>
       </div>
     }
