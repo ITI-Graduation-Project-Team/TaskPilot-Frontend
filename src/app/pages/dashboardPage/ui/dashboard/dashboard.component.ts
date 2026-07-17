@@ -18,7 +18,7 @@ import { NotificationBellComponent } from '../../../../shared/ui/notification-be
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
-import { RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { FormsModule } from '@angular/forms';
@@ -691,6 +691,7 @@ export class DashboardComponent implements OnInit {
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private sprintService = inject(SprintPlanningService);
 
   logout(): void {
@@ -734,10 +735,18 @@ export class DashboardComponent implements OnInit {
     });
 
     effect(() => {
-      this.projectState.selectedProjectId(); // Track project id change
+      const projectId = this.projectState.selectedProjectId();
       untracked(() => {
-        this.selectedSprintId.set(null);
-        this.selectedSprintStatus.set(null);
+        const returnSprintId = this.route.snapshot.queryParamMap.get('sprintId');
+        const returnSprintStatus = this.route.snapshot.queryParamMap.get('sprintStatus');
+
+        if (projectId && returnSprintId) {
+          this.selectedSprintId.set(returnSprintId);
+          this.selectedSprintStatus.set(returnSprintStatus || 'Planned');
+        } else {
+          this.selectedSprintId.set(null);
+          this.selectedSprintStatus.set(null);
+        }
         this.loadSprints();
       });
     });
@@ -1023,6 +1032,15 @@ export class DashboardComponent implements OnInit {
   onBackToSprints(): void {
     this.selectedSprintId.set(null);
     this.selectedSprintStatus.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        sprintId: null,
+        sprintStatus: null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
     this.loadSprints();
   }
 

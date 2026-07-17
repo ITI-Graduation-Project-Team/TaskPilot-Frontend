@@ -1012,33 +1012,30 @@ export class BoardComponent implements OnInit, OnChanges {
       }
     }
 
-    // 4. Load backlog
+    // 4. Load only the tasks that belong to the sprint being viewed.
     let tasks: any[] = [];
+    const sprintId = this.overrideSprintId
+      || this.activeSprintId()
+      || this.plannedSprintId()
+      || this.completedSprintId();
 
-    if (this.projectState.isProjectManager()) {
+    if (!sprintId) {
+      tasks = [];
+    } else if (this.projectState.isProjectManager()) {
       try {
-        let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-        let userStory = backlog?.userStories?.[0];
-
-        if (userStory) {
-          this.activeUserStoryId = userStory.id;
-          tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
-        } else {
-          this.activeUserStoryId = '';
-          tasks = [];
-        }
+        tasks = await this.tasksService.getSprintTasks(this.activeProjectId, sprintId);
+        this.activeUserStoryId = tasks[0]?.userStoryId || '';
       } catch (err) {
-        console.error('Failed to load project backlog:', err);
+        console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
         tasks = [];
       }
     } else {
-      // Load employee's own assigned tasks
+      // Load only this employee's assignments for the selected sprint.
       try {
-        const myTasksRes = await this.tasksService.getMyTasks(this.activeProjectId);
-        tasks = myTasksRes.tasks || [];
+        tasks = await this.tasksService.getMySprintTasks(this.activeProjectId, sprintId);
       } catch (err) {
-        console.error('Error loading employee tasks:', err);
+        console.error('Error loading employee sprint tasks:', err);
         tasks = [];
       }
     }

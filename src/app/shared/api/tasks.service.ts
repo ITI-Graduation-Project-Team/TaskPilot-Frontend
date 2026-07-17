@@ -48,10 +48,53 @@ export interface MyTasksResponseDto {
   tasks: MyTaskDto[];
 }
 
+export interface SprintTaskDto {
+  id?: string;
+  taskId?: string;
+  userStoryId?: string;
+  titleEn: string;
+  titleAr?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  technicalSummaryEn?: string | null;
+  technicalSummaryAr?: string | null;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
+  estimatedHours: number;
+  actualHours?: number;
+  effortSize: string;
+  type: string;
+  priority: string;
+  status: string;
+  userStoryTitleEn?: string;
+  userStoryTitleAr?: string;
+  requiredSkills?: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class TasksService {
+
+  async getSprintTasks(projectId: string, sprintId: string): Promise<SprintTaskDto[]> {
+    const { data } = await apiClient.get<any>(
+      `/projects/${projectId}/sprints/${sprintId}/tasks`
+    );
+    return this.extractSprintTasks(data);
+  }
+
+  async getMySprintTasks(projectId: string, sprintId: string): Promise<SprintTaskDto[]> {
+    const { data } = await apiClient.get<any>(
+      `/projects/${projectId}/sprints/${sprintId}/tasks/my-tasks`
+    );
+    return this.extractSprintTasks(data);
+  }
+
+  private extractSprintTasks(responseBody: any): SprintTaskDto[] {
+    const payload = responseBody?.data ?? responseBody;
+    if (Array.isArray(payload)) return payload;
+    return Array.isArray(payload?.tasks) ? payload.tasks : [];
+  }
 
   async getMyTasks(projectId: string): Promise<MyTasksResponseDto> {
     const { data } = await apiClient.get<any>(`/projects/${projectId}/tasks/my-tasks`);
