@@ -14,7 +14,7 @@
     </div>
   </div>
 
-  <div class="chat-body">
+  <div class="chat-body" #scrollContainer>
     <div class="upload-section" *ngIf="messages().length === 0 && !projectId">
       <p>Please upload your Business Requirement Document (BRD).</p>
       <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.txt" [disabled]="isLoading()" />
@@ -29,7 +29,16 @@
       </div>
     </div>
     
-    <div class="message assistant" *ngIf="isLoading() && messages().length > 0">
+    <div class="message assistant" *ngIf="isTyping()">
+      <div class="bubble">
+        <span class="role">TaskPilot AI</span>
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="message assistant" *ngIf="isLoading() && !isTyping() && messages().length > 0">
       <div class="bubble typing">
         <p>Thinking...</p>
       </div>

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, inject, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, inject, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiProjectService } from '../../shared/api/ai-project.service';
@@ -22,16 +22,26 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
   private aiService = inject(AiProjectService);
   private projectChatApi = inject(ProjectChatApi);
 
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
   messages = signal<AiChatMessageDto[]>([]);
   inputText = signal<string>('');
   isLoading = signal<boolean>(false);
   completenessScore = signal<number>(0);
   isReadyToGenerate = signal<boolean>(false);
+  isTyping = signal<boolean>(false);
 
   ngOnInit(): void {
     if (this.isOpen && this.projectId) {
       this.loadSession();
     }
+  }
+
+  private scrollToBottom(): void {
+    try {
+      this.scrollContainer.nativeElement.scrollTop = 
+        this.scrollContainer.nativeElement.scrollHeight;
+    } catch (e) {}
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -66,6 +76,7 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
           timestamp: (m as any).timestamp || (m as any).Timestamp || new Date().toISOString()
         }));
         this.messages.set(mappedMessages);
+        setTimeout(() => this.scrollToBottom(), 0);
       } else {
         this.messages.set([]);
       }
@@ -114,7 +125,9 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
 
     this.messages.update(m => [...m, tempUserMessage]);
     this.inputText.set('');
+    this.isTyping.set(true);
     this.isLoading.set(true);
+    setTimeout(() => this.scrollToBottom(), 0);
 
     if (this.projectId) {
       try {
@@ -127,8 +140,10 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
             timestamp: new Date().toISOString()
           };
           this.messages.update(m => [...m, aiMessage]);
+          setTimeout(() => this.scrollToBottom(), 0);
         }
       } finally {
+        this.isTyping.set(false);
         this.isLoading.set(false);
       }
     } else {
@@ -148,14 +163,19 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
               timestamp: new Date().toISOString()
             };
             this.messages.update(m => [...m, aiMessage]);
+            setTimeout(() => this.scrollToBottom(), 0);
             if (result.data && typeof result.data !== 'string' && result.data.completenessScore !== undefined) {
               this.completenessScore.set(result.data.completenessScore);
               this.isReadyToGenerate.set(result.data.isReadyToGenerate);
             }
           }
+          this.isTyping.set(false);
           this.isLoading.set(false);
         },
-        error: () => this.isLoading.set(false)
+        error: () => {
+          this.isTyping.set(false);
+          this.isLoading.set(false);
+        }
       });
     }
   }

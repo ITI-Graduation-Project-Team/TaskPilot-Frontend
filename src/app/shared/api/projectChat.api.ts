@@ -28,12 +28,20 @@ export class ProjectChatApi {
   }
 
   async sendMessage(projectId: string, payload: SendChatMessageDto): Promise<ApiEnvelope<string>> {
-    const response = await apiClient.post<ApiEnvelope<string>>(`/projects/${projectId}/chat/send`, payload);
+    const response = await apiClient.post<ApiEnvelope<string>>(
+      `/projects/${projectId}/chat/send`, 
+      payload,
+      { headers: { 'X-Skip-Loader': 'true' } }
+    );
     return response.data;
   }
 
   async confirmBacklog(projectId: string): Promise<ApiEnvelope<string>> {
-    const response = await apiClient.post<ApiEnvelope<string>>(`/projects/${projectId}/chat/confirm`);
+    const response = await apiClient.post<ApiEnvelope<string>>(
+      `/projects/${projectId}/chat/confirm`,
+      undefined,
+      { headers: { 'X-Skip-Loader': 'true' } }
+    );
     return response.data;
   }
 }
