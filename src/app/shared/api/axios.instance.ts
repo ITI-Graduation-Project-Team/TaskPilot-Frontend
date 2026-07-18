@@ -52,6 +52,10 @@ apiClient.interceptors.request.use(
       config.headers.set('Authorization', `Bearer ${token}`);
     }
 
+    config.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    config.headers.set('Pragma', 'no-cache');
+    config.headers.set('Expires', '0');
+
     const lang = (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang')) || 'en';
     config.headers.set('lang', lang);
 
@@ -72,9 +76,14 @@ async function refreshAccessToken(): Promise<string> {
     throw new Error('No refresh token available');
   }
 
+  const accessToken = getAccessToken();
+
   const { data } = await axios.post<any>(
     `${environment.apiUrl}/Auth/refresh-token`,
-    { refreshToken },
+    { 
+      token: accessToken,
+      refreshToken: refreshToken 
+    },
     {
       withCredentials: true,
     }

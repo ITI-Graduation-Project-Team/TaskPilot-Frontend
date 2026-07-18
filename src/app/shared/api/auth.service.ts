@@ -24,14 +24,9 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   logout(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(environment.auth.tokenKey);
-      localStorage.removeItem(environment.auth.refreshTokenKey);
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('userFullName');
-    }
     clearTokens();
-    this.router.navigate(['/login']);
+    // Force a full page reload to clear all in-memory Angular singleton states (Signals, etc.)
+    window.location.href = '/login';
   }
 
   getUserRole(): string | null {

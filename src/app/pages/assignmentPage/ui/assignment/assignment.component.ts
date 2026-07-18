@@ -110,7 +110,12 @@ export class AssignmentComponent implements OnInit {
       this.toastService.show('Assignments confirmed. Tasks are ready to be started.', 'success');
       
       // Navigate back to sprint board
-      this.router.navigate(['/dashboard'], { queryParams: { refreshBoard: true } });
+      this.router.navigate(['/dashboard'], {
+        queryParams: {
+          sprintId: this.sprintId,
+          sprintStatus: 'Planned'
+        }
+      });
       
     } catch (error: any) {
       this.toastService.show(error.message || 'Failed to confirm assignments', 'error');

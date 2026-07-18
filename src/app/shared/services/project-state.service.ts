@@ -89,54 +89,28 @@ export class ProjectStateService {
       const userId = this._userId();
       if (!userId) return;
 
-      const { data } = await apiClient.get<any>('/Projects');
-      const allProjects: any[] = data.data || [];
+      const endpoint = isPM ? '/Projects' : `/employees/${userId}/projects`;
+      const { data } = await apiClient.get<any>(endpoint);
+      const projects: any[] = data.data || [];
+      const accessibleProjects = isPM
+        ? projects.filter(p => p.managerId === userId)
+        : projects;
 
-      let filtered: ProjectInfo[] = [];
-
-      if (isPM) {
-        filtered = allProjects
-          .filter(p => p.managerId === userId)
-          .map(p => ({
-            id: p.id,
-            name: p.name || p.nameEn || '',
-            nameEn: p.nameEn || p.name || '',
-            nameAr: p.nameAr || p.name || '',
-            description: p.description || p.descriptionEn || '',
-            descriptionEn: p.descriptionEn || p.description || '',
-            descriptionAr: p.descriptionAr || p.description || '',
-            companyId: p.companyId,
-            managerId: p.managerId,
-            techStack: p.techStack || [],
-            platformTargets: p.platformTargets || [],
-            projectType: p.projectType || '',
-            status: p.status || 'Active'
-          }));
-      } else {
-        for (const p of allProjects) {
-          try {
-            const teamResponse = await apiClient.get<any>('/Projects/' + p.id + '/employees');
-            const employeesList = teamResponse.data?.data || [];
-            if (employeesList.some((e: any) => e.employeeId === userId)) {
-              filtered.push({
-                id: p.id,
-                name: p.name || p.nameEn || '',
-                nameEn: p.nameEn || p.name || '',
-                nameAr: p.nameAr || p.name || '',
-                description: p.description || p.descriptionEn || '',
-                descriptionEn: p.descriptionEn || p.description || '',
-                descriptionAr: p.descriptionAr || p.description || '',
-                companyId: p.companyId,
-                managerId: p.managerId,
-                techStack: p.techStack || [],
-                platformTargets: p.platformTargets || [],
-                projectType: p.projectType || '',
-                status: p.status || 'Active'
-              });
-            }
-          } catch (err) { }
-        }
-      }
+      const filtered: ProjectInfo[] = accessibleProjects.map(p => ({
+        id: p.id,
+        name: p.name || p.nameEn || '',
+        nameEn: p.nameEn || p.name || '',
+        nameAr: p.nameAr || p.name || '',
+        description: p.description || p.descriptionEn || '',
+        descriptionEn: p.descriptionEn || p.description || '',
+        descriptionAr: p.descriptionAr || p.description || '',
+        companyId: p.companyId,
+        managerId: p.managerId,
+        techStack: p.techStack || [],
+        platformTargets: p.platformTargets || [],
+        projectType: p.projectType || '',
+        status: p.status || 'Active'
+      }));
 
       this._projects.set(filtered);
 

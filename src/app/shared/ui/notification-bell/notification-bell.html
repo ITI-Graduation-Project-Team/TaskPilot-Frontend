@@ -1,0 +1,95 @@
+<div class="relative inline-block text-left">
+  <!-- Bell Icon Button -->
+  <button 
+    (click)="togglePanel()"
+    class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none transition-colors rounded-full hover:bg-gray-100"
+    aria-label="Notifications"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+    </svg>
+    
+    <!-- Badge -->
+    @if (unreadCount() > 0) {
+      <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+        {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+      </span>
+    }
+  </button>
+
+  <!-- Dropdown Panel -->
+  @if (isOpen()) {
+    <div class="absolute right-0 top-full mt-2 z-50 w-80 md:w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 overflow-hidden">
+      
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+        <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+        @if (unreadCount() > 0) {
+          <button 
+            (click)="markAllAsRead()"
+            class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+          >
+            Mark all as read
+          </button>
+        }
+      </div>
+
+      <div class="max-h-96 overflow-y-auto">
+        @if (recentNotifications().length === 0) {
+          <div class="px-4 py-8 text-center text-gray-500">
+            <i class="fas fa-bell-slash text-3xl mb-2 opacity-50"></i>
+            <p class="text-sm">No notifications yet</p>
+          </div>
+        } @else {
+          <div class="divide-y divide-gray-100">
+            @for (notification of recentNotifications(); track notification.id) {
+              <!-- Use routerLink if url exists, otherwise a simple div -->
+              <ng-container>
+                @if (notification.url) {
+                  <a 
+                    [routerLink]="notification.url"
+                    (click)="onNotificationClick(notification)"
+                    class="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                    [class.bg-blue-50]="!notification.isRead"
+                  >
+                    <ng-container *ngTemplateOutlet="contentTpl; context: { $implicit: notification }"></ng-container>
+                  </a>
+                } @else {
+                  <div 
+                    (click)="onNotificationClick(notification)"
+                    class="block px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                    [class.bg-blue-50]="!notification.isRead"
+                  >
+                    <ng-container *ngTemplateOutlet="contentTpl; context: { $implicit: notification }"></ng-container>
+                  </div>
+                }
+              </ng-container>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Template for notification content to avoid duplication -->
+<ng-template #contentTpl let-notification>
+  <div class="flex items-start">
+    <div class="flex-shrink-0 mt-1">
+      <i [class]="getIconForType(notification.type)"></i>
+    </div>
+    <div class="ml-3 w-0 flex-1">
+      <p class="text-sm text-gray-900" [class.font-semibold]="!notification.isRead">
+        <!-- Assuming English for now, ideally use ngx-translate based on lang -->
+        {{ notification.messageEn }}
+      </p>
+      <p class="mt-1 text-xs text-gray-500">
+        {{ notification.createdAt | date:'short' }}
+      </p>
+    </div>
+    @if (!notification.isRead) {
+      <div class="ml-3 flex-shrink-0">
+        <span class="inline-block w-2 h-2 bg-blue-600 rounded-full"></span>
+      </div>
+    }
+  </div>
+</ng-template>
