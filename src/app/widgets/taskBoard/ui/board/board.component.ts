@@ -542,13 +542,22 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           
           <!-- Modal Header -->
           <div class="flex items-center justify-between p-6 pb-4 border-b border-border shrink-0 bg-background rounded-t-2xl">
-            <h3 class="text-xl font-extrabold text-text-primary flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              {{ isEditing() ? 'Task Details' : 'Create New Task' }}
-            </h3>
-            <button (click)="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-text-secondary hover:bg-surface hover:text-text-primary transition-colors border border-transparent hover:border-border">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-black text-text-primary tracking-tight">
+                  {{ isEditing() ? 'Task Details' : 'Create New Task' }}
+                </h3>
+                <p class="text-[11px] font-bold text-text-secondary uppercase tracking-wider mt-0.5">
+                  {{ isEditing() ? 'Manage task info and chat' : 'Add to your backlog' }}
+                </p>
+              </div>
+            </div>
+            <button (click)="closeModal()" class="w-9 h-9 flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface hover:text-text-primary transition-colors border border-border shadow-sm hover:shadow-md">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -560,68 +569,145 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="isEditing() ? 'lg:grid-cols-[1fr_1fr]' : ''">
               
               <!-- LEFT COLUMN: Main Task Info & Form -->
-              <div class="space-y-5 flex flex-col">
+              <div class="space-y-6 flex flex-col">
                 @if (projectState.isProjectManager()) {
                   <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Task Title</label>
                     <input type="text" [(ngModel)]="modalTask().title" 
-                           class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-semibold text-[15px]" />
+                           placeholder="What needs to be done?"
+                           class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-extrabold text-[15px] shadow-sm placeholder:text-text-secondary/50" />
                   </div>
 
                   <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Description</label>
                     <textarea [(ngModel)]="modalTask().description" rows="5"
-                              class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 resize-none font-medium text-sm"></textarea>
+                              placeholder="Provide more context..."
+                              class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 resize-none font-medium text-[13px] shadow-sm leading-relaxed placeholder:text-text-secondary/50"></textarea>
                   </div>
 
-                  <div class="grid grid-cols-2 gap-5">
-                    <div>
-                      <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                      <select [(ngModel)]="modalTask().priority" 
-                              class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-medium text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]">
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                      </select>
+                  <div class="grid grid-cols-2 gap-5 relative">
+                    <div class="relative">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</label>
+                      <button type="button" (click)="togglePrioritySelect()"
+                              class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
+                        <div class="flex items-center gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full" 
+                                [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
+                          {{ modalTask().priority }}
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary transition-transform" [ngClass]="{'rotate-180': isPrioritySelectOpen()}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      @if (isPrioritySelectOpen()) {
+                        <div class="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-xl py-1 overflow-hidden animate-[fadeUp_0.2s_ease_out]">
+                          @for (p of ['High', 'Medium', 'Low']; track p) {
+                            <button type="button" (click)="selectPriority(p)" 
+                                    class="w-full px-4 py-2.5 flex items-center justify-between hover:bg-background transition-colors text-left font-bold text-[13px]">
+                              <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full" 
+                                      [ngClass]="{'bg-error': p === 'High', 'bg-amber-500': p === 'Medium', 'bg-emerald-500': p === 'Low'}"></span>
+                                {{ p }}
+                              </div>
+                              @if (modalTask().priority === p) {
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              }
+                            </button>
+                          }
+                        </div>
+                      }
                     </div>
 
-                    <div>
-                      <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                      <select [(ngModel)]="modalTask().type" 
-                              class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-medium text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]">
-                        <option value="Feature">Feature</option>
-                        <option value="Bug">Bug</option>
-                        <option value="Refactor">Refactor</option>
-                      </select>
+                    <div class="relative">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</label>
+                      <button type="button" (click)="toggleTypeSelect()"
+                              class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
+                        <div class="flex items-center gap-2">
+                          <span class="text-lg leading-none" [ngSwitch]="modalTask().type">
+                            <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
+                            <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
+                            <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
+                          </span>
+                          {{ modalTask().type }}
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary transition-transform" [ngClass]="{'rotate-180': isTypeSelectOpen()}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      @if (isTypeSelectOpen()) {
+                        <div class="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-xl py-1 overflow-hidden animate-[fadeUp_0.2s_ease_out]">
+                          @for (t of ['Feature', 'Bug', 'Refactor']; track t) {
+                            <button type="button" (click)="selectType(t)" 
+                                    class="w-full px-4 py-2.5 flex items-center justify-between hover:bg-background transition-colors text-left font-bold text-[13px]">
+                              <div class="flex items-center gap-2">
+                                <span class="text-lg leading-none" [ngSwitch]="t">
+                                  <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
+                                  <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
+                                  <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
+                                </span>
+                                {{ t }}
+                              </div>
+                              @if (modalTask().type === t) {
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              }
+                            </button>
+                          }
+                        </div>
+                      }
                     </div>
                   </div>
 
                   <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimation</label>
                     <div class="relative">
+                      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       <input type="number" [(ngModel)]="modalTask().hours" 
-                             class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-medium text-sm" />
-                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
+                             class="w-full pl-10 pr-16 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-bold text-[13px] shadow-sm" />
+                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary uppercase">hrs</span>
                     </div>
                   </div>
                 } @else {
-                  <div class="p-6 bg-background rounded-2xl border border-border space-y-4">
-                    <div>
-                      <h4 class="text-lg font-bold text-text-primary leading-tight">{{ modalTask().title }}</h4>
-                      <p class="text-sm text-text-secondary mt-2 leading-relaxed whitespace-pre-wrap">{{ modalTask().description || 'No description provided.' }}</p>
+                  <div class="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+                    <div class="p-6 space-y-4">
+                      <h4 class="text-2xl font-black text-text-primary leading-tight tracking-tight">{{ modalTask().title }}</h4>
+                      <p class="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium bg-background border border-border/50 rounded-xl p-4">{{ modalTask().description || 'No description provided.' }}</p>
                     </div>
-                    <div class="grid grid-cols-3 gap-3 pt-4 text-xs font-semibold text-text-secondary border-t border-border/50">
-                      <div class="bg-surface rounded-lg p-2.5 border border-border text-center">
-                        <span class="block text-[10px] uppercase mb-1">Type</span>
-                        <span class="text-text-primary font-bold">{{ modalTask().type }}</span>
+                    <div class="grid grid-cols-3 divide-x divide-border border-t border-border bg-background text-center">
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
+                          <span class="text-lg leading-none" [ngSwitch]="modalTask().type">
+                            <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
+                            <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
+                            <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
+                          </span>
+                          {{ modalTask().type }}
+                        </span>
                       </div>
-                      <div class="bg-surface rounded-lg p-2.5 border border-border text-center">
-                        <span class="block text-[10px] uppercase mb-1">Priority</span>
-                        <span class="text-text-primary font-bold">{{ modalTask().priority }}</span>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full" 
+                                [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
+                          {{ modalTask().priority }}
+                        </span>
                       </div>
-                      <div class="bg-surface rounded-lg p-2.5 border border-border text-center">
-                        <span class="block text-[10px] uppercase mb-1">Estimated</span>
-                        <span class="text-text-primary font-bold">{{ modalTask().hours }}h</span>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimated</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ modalTask().hours }}h
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -855,6 +941,29 @@ export class BoardComponent implements OnInit, OnChanges {
 
   showModal = signal(false);
   isEditing = signal(false);
+
+  isPrioritySelectOpen = signal(false);
+  isTypeSelectOpen = signal(false);
+
+  togglePrioritySelect() {
+    this.isPrioritySelectOpen.update(v => !v);
+    this.isTypeSelectOpen.set(false);
+  }
+  
+  toggleTypeSelect() {
+    this.isTypeSelectOpen.update(v => !v);
+    this.isPrioritySelectOpen.set(false);
+  }
+  
+  selectPriority(val: any) {
+    this.modalTask.update(t => ({ ...t, priority: val }));
+    this.isPrioritySelectOpen.set(false);
+  }
+  
+  selectType(val: any) {
+    this.modalTask.update(t => ({ ...t, type: val }));
+    this.isTypeSelectOpen.set(false);
+  }
 
   modalTask = signal<Task>({
     id: '',

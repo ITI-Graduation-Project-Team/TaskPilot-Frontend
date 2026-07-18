@@ -34,8 +34,8 @@ export class AiRequirementsService {
 
   async uploadDocument(file: File, chatId: string): Promise<any> {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('chatId', chatId);
+    formData.append('File', file);
+    formData.append('SessionId', chatId);
     const { data } = await apiClient.post('/requirements/document', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

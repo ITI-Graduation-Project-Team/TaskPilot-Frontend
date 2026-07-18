@@ -62,15 +62,24 @@ export class CalendarService {
       const rawData = response.data?.data?.events || response.data?.events || response.data?.data || response.data || [];
       const eventsList = Array.isArray(rawData) ? rawData : [];
 
-      const mappedTasks = eventsList.map((item: any) => ({
-        ...item,
-        titleEn: item.titleEn || item.title || '',
-        titleAr: item.titleAr || item.title || '',
-        descriptionEn: item.descriptionEn || item.description || '',
-        descriptionAr: item.descriptionAr || item.description || '',
-        startDate: item.startDate || item.start || '',
-        endDate: item.endDate || item.end || ''
-      }));
+      const mappedTasks = eventsList.map((item: any) => {
+        let normalizedStatus = item.status || 'ToDo';
+        if (normalizedStatus === 0 || normalizedStatus === '0') normalizedStatus = 'ToDo';
+        if (normalizedStatus === 1 || normalizedStatus === '1') normalizedStatus = 'InProgress';
+        if (normalizedStatus === 2 || normalizedStatus === '2') normalizedStatus = 'Review';
+        if (normalizedStatus === 3 || normalizedStatus === '3') normalizedStatus = 'Done';
+
+        return {
+          ...item,
+          status: normalizedStatus,
+          titleEn: item.titleEn || item.title || '',
+          titleAr: item.titleAr || item.title || '',
+          descriptionEn: item.descriptionEn || item.description || '',
+          descriptionAr: item.descriptionAr || item.description || '',
+          startDate: item.startDate || item.start || '',
+          endDate: item.endDate || item.end || ''
+        };
+      });
 
       this.tasks.set(mappedTasks);
     } catch (error) {

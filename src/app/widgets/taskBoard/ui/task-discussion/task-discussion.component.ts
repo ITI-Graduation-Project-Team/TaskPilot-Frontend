@@ -23,11 +23,34 @@ export class TaskDiscussionComponent implements OnInit {
   comments = signal<TaskCommentDto[]>([]);
   attachments = signal<TaskAttachmentDto[]>([]);
   
+  feedItems = computed(() => {
+    const comments = this.comments().map(c => ({
+      type: 'comment' as const,
+      id: c.id,
+      authorId: c.authorId,
+      authorNameEn: c.authorNameEn,
+      authorRole: c.authorRole,
+      timestamp: c.createdAt,
+      data: c
+    }));
+    const attachments = this.attachments().map(a => ({
+      type: 'attachment' as const,
+      id: a.id,
+      authorId: a.uploaderId,
+      authorNameEn: a.uploaderNameEn,
+      authorRole: a.uploaderRole,
+      timestamp: a.uploadedAt,
+      data: a
+    }));
+    return [...comments, ...attachments].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  });
+  
   isLoading = signal(true);
   isPosting = signal(false);
   isUploading = signal(false);
   
   newCommentText = signal('');
+  stagedFile = signal<File | null>(null);
   
   currentUserId = getUserIdFromToken() || '';
   
@@ -65,41 +88,67 @@ export class TaskDiscussionComponent implements OnInit {
 
   async postComment() {
     const text = this.newCommentText().trim();
-    if (!text || this.isPosting()) return;
+    const file = this.stagedFile();
+    if ((!text && !file) || this.isPosting() || this.isUploading()) return;
     
     this.isPosting.set(true);
     try {
-      const newComment = await this.tasksService.addComment(this.taskId(), text);
-      this.comments.update(c => [...c, newComment]);
-      this.newCommentText.set('');
+      if (file) {
+        this.isUploading.set(true);
+        const newAttachment = await this.tasksService.addAttachment(this.taskId(), file);
+        this.attachments.update(a => [...a, newAttachment]);
+        this.stagedFile.set(null);
+        this.isUploading.set(false);
+      }
+      
+      if (text) {
+        const newComment = await this.tasksService.addComment(this.taskId(), text);
+        this.comments.update(c => [...c, newComment]);
+        this.newCommentText.set('');
+      }
       setTimeout(() => this.scrollToBottom(), 100);
     } catch (error) {
-      this.toastService.show('Failed to post comment', 'error');
+      this.toastService.show('Failed to post', 'error');
+      this.isUploading.set(false);
     } finally {
       this.isPosting.set(false);
     }
   }
 
-  async uploadFile(event: Event) {
+  onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    
-    const file = input.files[0];
-    this.isUploading.set(true);
-    try {
-      const newAttachment = await this.tasksService.addAttachment(this.taskId(), file);
-      this.attachments.update(a => [...a, newAttachment]);
-      this.toastService.show('Attachment uploaded', 'success');
-    } catch (error) {
-      this.toastService.show('Failed to upload attachment', 'error');
-    } finally {
-      this.isUploading.set(false);
-      input.value = ''; // Reset input
-    }
+    this.stagedFile.set(input.files[0]);
+    input.value = '';
+  }
+  
+  removeStagedFile() {
+    this.stagedFile.set(null);
   }
   
   triggerFileInput() {
     this.fileInput.nativeElement.click();
+  }
+
+  isConsecutive(index: number): boolean {
+    if (index === 0) return false;
+    const current = this.feedItems()[index];
+    const prev = this.feedItems()[index - 1];
+    if (current.authorId !== prev.authorId) return false;
+    
+    // Check if within 5 minutes
+    const currTime = new Date(current.timestamp).getTime();
+    const prevTime = new Date(prev.timestamp).getTime();
+    return (currTime - prevTime) < 5 * 60 * 1000;
+  }
+
+  getAbsoluteUrl(url: string): string {
+    if (!url) return '#';
+    let absUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      absUrl = 'https://' + url;
+    }
+    return absUrl;
   }
 
   private scrollToBottom() {

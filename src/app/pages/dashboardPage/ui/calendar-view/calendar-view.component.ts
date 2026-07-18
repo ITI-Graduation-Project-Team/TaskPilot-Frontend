@@ -901,7 +901,7 @@ export class CalendarViewComponent implements OnInit {
     };
 
     try {
-      if (task.eventType === 'WorkspaceTask') {
+      if (task.eventType === 'AssignedTask') {
         const statusEnum = this.mapStatusToEnum(task.status);
         let actualHours: number | undefined = undefined;
         if (statusEnum === TaskItemStatus.Done) {
@@ -911,10 +911,40 @@ export class CalendarViewComponent implements OnInit {
           }
           actualHours = val;
         }
-        await this.tasksService.updateTaskStatus(task.id, statusEnum, actualHours);
-      } else {
-        await this.calendarService.updateTask(task.id, updatePayload);
+
+        const rawTask = task as any;
+        const possibleTaskId = rawTask.taskId || rawTask.SprintTaskId || rawTask.referenceId || rawTask.affectedTaskId || task.id;
+
+        try {
+          await this.tasksService.updateTaskStatus(possibleTaskId, statusEnum, actualHours);
+        } catch (err: any) {
+          // If the provided ID is just the calendar event ID and not the sprint task ID, it throws 404.
+          // Fallback: look up the user's active sprint tasks by title to find the real task ID.
+          if (err?.response?.status === 404 || err?.status === 404 || err?.message?.includes('404')) {
+            const pId = rawTask.projectId || this.projectState.selectedProjectId();
+            if (pId) {
+              const myTasks = await this.tasksService.getMyTasks(pId);
+              const matchingTask = myTasks?.tasks?.find(t => 
+                t.titleEn === task.title || t.titleEn === rawTask.titleEn || 
+                t.titleAr === task.title || t.titleAr === rawTask.titleAr
+              );
+              
+              if (matchingTask && matchingTask.taskId) {
+                await this.tasksService.updateTaskStatus(matchingTask.taskId, statusEnum, actualHours);
+              } else {
+                // Not found in active sprint, might be a planned task or just truly not found
+                throw err;
+              }
+            } else {
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
       }
+      
+      await this.calendarService.updateTask(task.id, updatePayload);
 
       this.closeEditModal();
 
