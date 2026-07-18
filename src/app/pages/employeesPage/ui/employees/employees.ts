@@ -40,6 +40,8 @@ export class EmployeesComponent implements OnInit {
   isSearchingSystem = signal<boolean>(false);
   isInviting = signal<boolean>(false);
   companyEmployees = signal<EmployeeModel[]>([]);
+  inviteEmailError = signal<string | null>(null);
+  inviteEmailFailedAddress = signal<string | null>(null);
 
 
   ngOnInit() {
@@ -131,6 +133,8 @@ export class EmployeesComponent implements OnInit {
   async openInviteModal() {
     this.systemSearchQuery.set('');
     this.searchResults.set([]);
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
     this.isInviteModalOpen.set(true);
 
     try {
@@ -145,6 +149,8 @@ export class EmployeesComponent implements OnInit {
   }
 
   closeInviteModal() {
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
     this.isInviteModalOpen.set(false);
   }
 
@@ -152,6 +158,9 @@ export class EmployeesComponent implements OnInit {
   private searchTimeout: any;
 
   onSystemSearchChange() {
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
+
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
@@ -183,21 +192,45 @@ export class EmployeesComponent implements OnInit {
   async inviteEmail(email: string) {
     if (!email.trim()) return;
 
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
+
     try {
       this.isInviting.set(true);
       const res = await this.companyService.inviteEmployees([email.trim()]);
-      if (res.succeeded) {
+      if (res.succeeded && (!res.data?.skippedEmployees || res.data.skippedEmployees.length === 0)) {
         this.toastService.show('🎉 Invitation sent successfully!', 'success');
         this.loadInvitations();
         this.closeInviteModal();
       } else {
-        this.toastService.show(res.message || 'Failed to invite.', 'error');
+        this.handleInviteError(res, email);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      this.toastService.show('An error occurred while inviting.', 'error');
+      const errResponse = e?.response?.data || e;
+      this.handleInviteError(errResponse, email);
     } finally {
       this.isInviting.set(false);
+    }
+  }
+
+  handleInviteError(errResponse: any, email: string) {
+    const data = errResponse?.data;
+    const skipped = data?.skippedEmployees || errResponse?.skippedEmployees || [];
+    const errors = errResponse?.errors || [];
+    const code = errResponse?.code;
+
+    const hasSkippedBelongs = skipped.some((s: any) => s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY');
+    const isAlreadyBelongsError = hasSkippedBelongs || (code === 'USER_ALREADY_BELONGS_TO_COMPANY') ||
+      errors.some((err: any) => err.code === 'USER_ALREADY_BELONGS_TO_COMPANY');
+
+    if (isAlreadyBelongsError) {
+      this.inviteEmailError.set('This user is already registered under another company.');
+      this.inviteEmailFailedAddress.set(email);
+      this.toastService.show('This user is already registered under another company.', 'error');
+    } else {
+      const errorMsg = errResponse?.message || 'An error occurred while inviting.';
+      this.toastService.show(errorMsg, 'error');
     }
   }
 
