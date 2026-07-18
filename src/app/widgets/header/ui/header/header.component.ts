@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { NotificationBellComponent } from '../../../../../shared/ui/notification-bell/notification-bell';
+import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 
 type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 'organization' | 'profile' | 'create-project';
 

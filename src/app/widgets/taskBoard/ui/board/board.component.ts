@@ -20,7 +20,7 @@ import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.co
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 
@@ -174,7 +174,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div>
             @if (projectState.isProjectManager()) {
               <div class="flex items-center gap-3 mb-1">
-                <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
+                <button (click)="onBackToSprints()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
@@ -699,11 +699,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
     }
   `
 })
-export class BoardComponent implements OnInit, OnChanges {
-  @Input() overrideSprintId: string | null = null;
-  @Input() overrideSprintStatus: string | null = null;
-  @Output() backToSprints = new EventEmitter<void>();
-  @Output() sprintStatusChanged = new EventEmitter<void>();
+export class BoardComponent implements OnInit {
+  overrideSprintId: string | null = null;
+  overrideSprintStatus: string | null = null;
+  private route = inject(ActivatedRoute);
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -825,22 +824,22 @@ export class BoardComponent implements OnInit, OnChanges {
     });
   }
 
-  async ngOnInit() {
-    this.sprintStatus.set(this.overrideSprintStatus);
+  ngOnInit() {
+    this.route.queryParamMap.subscribe(params => {
+      this.overrideSprintId = params.get('sprintId');
+      this.overrideSprintStatus = params.get('status');
+      this.sprintStatus.set(this.overrideSprintStatus);
+      this.loadWorkspaceData();
+    });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    const sprintStatusChange = changes['overrideSprintStatus'];
-    const sprintIdChange = changes['overrideSprintId'];
-
-    // Re-run only when inputs change after initial load
-    // (firstChange = false means it's an update, not initial binding)
-    if (
-      (sprintStatusChange && !sprintStatusChange.firstChange) ||
-      (sprintIdChange && !sprintIdChange.firstChange)
-    ) {
-      this.loadWorkspaceData();
-    }
+  onBackToSprints() {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { sprintId: null, status: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   goToAssignment() {
@@ -858,8 +857,8 @@ export class BoardComponent implements OnInit, OnChanges {
     try {
       await this.sprintService.startSprint(projectId, sprintId);
       this.toastService.show('Sprint started successfully', 'success');
-      this.sprintStatusChanged.emit();
-    } catch {
+      this.loadWorkspaceData();
+    } catch (error) {
       this.toastService.show('Failed to start sprint', 'error');
     }
   }
@@ -1253,7 +1252,7 @@ export class BoardComponent implements OnInit, OnChanges {
     try {
       await this.sprintService.completeSprint(projectId, sprintId);
       this.toastService.show('Sprint completed successfully', 'success');
-      this.sprintStatusChanged.emit();
+      this.loadWorkspaceData();
     } catch {
       this.toastService.show('Failed to complete sprint', 'error');
     }
