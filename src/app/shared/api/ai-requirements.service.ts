@@ -27,16 +27,13 @@ export interface GeneratedProjectDTO {
   providedIn: 'root'
 })
 export class AiRequirementsService {
-  async startOrContinueSession(message: string, sessionId: string | null = null): Promise<any> {
-    const { data } = await apiClient.post('/requirements/message', { message, sessionId });
-    return data;
-  }
-
-  async uploadDocument(file: File, chatId: string): Promise<any> {
+  async startOrContinueSession(message: string, file: File | null = null, sessionId: string | null = null): Promise<any> {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('chatId', chatId);
-    const { data } = await apiClient.post('/requirements/document', formData, {
+    if (message) formData.append('Message', message);
+    if (sessionId) formData.append('SessionId', sessionId);
+    if (file) formData.append('Documents', file);
+
+    const { data } = await apiClient.post('/requirements', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

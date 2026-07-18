@@ -134,12 +134,12 @@ interface ChatMessage {
           </div>
 
           <form (submit)="onSendMessage($event)" class="flex gap-2 items-end">
-            <textarea [(ngModel)]="messageInput" name="message" required autocomplete="off" rows="2"
+            <textarea [(ngModel)]="messageInput" name="message" autocomplete="off" rows="2"
                     (keydown)="onKeyDown($event)"
                     placeholder="e.g. A food delivery app with real-time tracking, written in Flutter..." 
                     class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"></textarea>
             <button type="submit" 
-                    [disabled]="isLoading() || !messageInput.trim()"
+                    [disabled]="isLoading() || (!messageInput.trim() && !selectedFile())"
                     class="px-5 py-3 h-[46px] bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center disabled:opacity-50 shrink-0">
               @if (isLoading()) {
                 <div class="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
@@ -287,31 +287,35 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   async onSendMessage(event: Event) {
     event.preventDefault();
-    if (this.isLoading() || !this.messageInput.trim()) return;
+    if (this.isLoading() || (!this.messageInput.trim() && !this.selectedFile())) return;
 
     const userText = this.messageInput.trim();
     this.messageInput = '';
 
     // Add user message locally
-    this.chatHistory.update(history => [...history, {
-      text: userText,
-      sender: 'user',
-      timestamp: new Date()
-    }]);
+    if (userText) {
+      this.chatHistory.update(history => [...history, {
+        text: userText,
+        sender: 'user',
+        timestamp: new Date()
+      }]);
+    } else if (this.selectedFile()) {
+      this.chatHistory.update(history => [...history, {
+        text: `📎 Attached document: ${this.selectedFile()?.name}`,
+        sender: 'user',
+        timestamp: new Date()
+      }]);
+    }
 
     this.isLoading.set(true);
 
     try {
-      // Send message
-      const res = await this.aiRequirements.startOrContinueSession(userText, this.chatId());
+      // Send message and file
+      const res = await this.aiRequirements.startOrContinueSession(userText, this.selectedFile(), this.chatId());
       const currentChatId = res.data?.sessionId || res.sessionId || res.data?.SessionId || res.SessionId || this.chatId();
       this.chatId.set(currentChatId);
 
-      // Upload file if selected
-      if (this.selectedFile() && currentChatId) {
-        await this.aiRequirements.uploadDocument(this.selectedFile()!, currentChatId);
-        this.clearFile();
-      }
+      this.clearFile();
 
       // Query status
       await this.pollStatus(currentChatId);
