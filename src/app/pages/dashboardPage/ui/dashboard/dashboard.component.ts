@@ -719,6 +719,7 @@ export class DashboardComponent implements OnInit {
   }
 
   constructor() {
+
     // Reactively update sprint name whenever selected project ID changes
     effect(() => {
       const projId = this.projectState.selectedProjectId();
