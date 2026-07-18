@@ -16,6 +16,8 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 import { SidebarWidgetComponent } from '../../../../widgets/sidebar/ui/sidebar/sidebar.component';
+import { HeaderWidgetComponent } from '../../../../widgets/header/ui/header/header.component';
+import { MobileNavWidgetComponent } from '../../../../widgets/mobile-nav/ui/mobile-nav/mobile-nav.component';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
@@ -47,7 +49,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     ProjectHistoryModalComponent,
     SprintListComponent,
     NotificationBellComponent,
-    SidebarWidgetComponent
+    SidebarWidgetComponent,
+    HeaderWidgetComponent,
+    MobileNavWidgetComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -69,145 +73,20 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
       <div class="flex-1 flex flex-col min-w-0">
         
         <!-- Header -->
-        <header class="h-16 border-b border-border bg-surface flex items-center justify-between px-6 md:px-8 transition-colors duration-200 shrink-0">
-          <div class="flex items-center gap-3">
-            <h1 class="text-lg font-extrabold text-text-primary font-display flex items-center gap-1.5">
-              @if (currentTab() === 'projects') {
-                Projects Hub
-              } @else if (currentTab() === 'create-project') {
-                Create Project
-              } @else if (currentTab() === 'profile') {
-                My Profile
-              } @else if (currentTab() === 'sprint-planning') {
-                @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
-                  <span class="text-text-secondary font-light">/</span>
-                }
-                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
-                <span class="text-text-secondary font-light">/</span>
-                Sprint Planning
-              } @else if (currentTab() === 'organization') {
-                @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
-              } @else {
-                <!-- Breadcrumbs inside project tabs -->
-                @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
-                  <span class="text-text-secondary font-light">/</span>
-                }
-                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
-              }
-            </h1>
-            
-            @if (projectState.selectedProject()?.status === 'Completed') {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-600 rounded-full font-mono uppercase tracking-wider">
-                Completed
-              </span>
-            } @else if (projectState.selectedProject()?.status === 'Archived') {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
-                Archived
-              </span>
-            } @else if (currentTab() === 'sprint') {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
-                {{ activeSprintName() }}
-              </span>
-            }
-          </div>
-
-          <div class="flex items-center gap-4">
-            <!-- Project selector context dropdown (only shown inside project tabs) -->
-            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'organization' && projectState.projects().length > 0) {
-              <div class="flex items-center gap-2">
-                <!-- Custom Project Dropdown -->
-                <div class="relative">
-                  <button (click)="isProjectDropdownOpen.update(v => !v)"
-                          class="flex items-center gap-2 px-3 py-1.5 bg-background border border-border hover:border-primary/40 rounded-xl text-xs font-bold text-text-primary transition-all duration-200 hover:bg-sidebar focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] group">
-                    <svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
-                    </svg>
-                    <span class="truncate max-w-[100px]">
-                      {{ projectState.selectedProject()?.nameEn || 'Select Project' }}
-                    </span>
-                    <svg class="w-3 h-3 ml-auto text-text-secondary transition-transform duration-200 shrink-0"
-                         [class.rotate-180]="isProjectDropdownOpen()"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                  </button>
-
-                  @if (isProjectDropdownOpen()) {
-                    <!-- Backdrop -->
-                    <div class="fixed inset-0 z-40" (click)="isProjectDropdownOpen.set(false)"></div>
-                    <!-- Dropdown Panel -->
-                    <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both]">
-                      <div class="px-3 py-2 border-b border-border">
-                        <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Your Projects</p>
-                      </div>
-                      <div class="py-1 max-h-60 overflow-y-auto">
-                        @for (p of projectState.projects(); track p.id) {
-                          <button (click)="selectProject(p.id)"
-                                  class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left hover:bg-sidebar transition-colors"
-                                  [class.bg-primary/8]="p.id === projectState.selectedProjectId()">
-                            <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white text-xs font-bold"
-                                 [style.background]="getProjectColor(p.id)">
-                              {{ (p.nameEn || p.name || '?')[0].toUpperCase() }}
-                            </div>
-                            <span class="font-medium text-text-primary truncate">{{ p.nameEn || p.name }}</span>
-                            @if (p.id === projectState.selectedProjectId()) {
-                              <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                              </svg>
-                            }
-                          </button>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-
-            <!-- Create project manual CTA (Header Projects Hub only) -->
-            @if (currentTab() === 'projects') {
-              <button (click)="openCreateProjectPage()"
-                      class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                Create Project
-              </button>
-            }
-
-            <!-- Notification Bell -->
-            <app-notification-bell />
-
-            <!-- Subscription button -->
-            <a routerLink="/subscription"
-               class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-              Subscription
-            </a>
-
-            <!-- Logout button -->
-            <button (click)="logout()"
-                    class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-              Logout
-            </button>
-
-            <!-- Dark mode toggle -->
-            <button (click)="toggleDarkMode()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-border transition-colors">
-              @if (isDark()) {
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              }
-            </button>
-
-            <span class="text-sm font-semibold text-text-secondary hidden sm:inline">{{ currentDate }}</span>
-          </div>
-        </header>
+        <app-header-widget
+          [currentTab]="currentTab()"
+          [isProjectManager]="projectState.isProjectManager()"
+          [selectedProject]="projectState.selectedProject()"
+          [activeSprintName]="activeSprintName()"
+          [projects]="projectState.projects()"
+          [isDark]="isDark()"
+          [currentDate]="currentDate"
+          (tabChange)="currentTab.set($event)"
+          (selectProject)="selectProject($event)"
+          (onCreateProject)="openCreateProjectPage()"
+          (onLogout)="logout()"
+          (onToggleDarkMode)="toggleDarkMode()">
+        </app-header-widget>
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
@@ -362,85 +241,11 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         }
       </div>
 
-      <!-- Mobile Bottom Navigation Bar -->
-      <div class="fixed bottom-4 left-4 right-4 z-40 bg-surface/75 backdrop-blur-xl border border-border flex items-center justify-around py-2.5 md:hidden rounded-2xl shadow-xl transition-all duration-300">
-        
-        <!-- Projects Hub Tab (Mobile PM) -->
-        @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('projects')" 
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'projects'"
-                  [class.scale-105]="currentTab() === 'projects'"
-                  [class.text-text-secondary]="currentTab() !== 'projects'">
-            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-            <span class="text-[9px] font-bold">Projects</span>
-          </button>
-        }
-
-        <!-- Sprint Tab -->
-        <button (click)="currentTab.set('sprint')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'sprint'"
-                [class.scale-105]="currentTab() === 'sprint'"
-                [class.text-text-secondary]="currentTab() !== 'sprint'">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-          </svg>
-          <span class="text-[9px] font-bold">Sprint</span>
-        </button>
-
-        <!-- Sprint Planning Tab (Mobile PM) -->
-        @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('sprint-planning')"
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'sprint-planning'"
-                  [class.scale-105]="currentTab() === 'sprint-planning'"
-                  [class.text-text-secondary]="currentTab() !== 'sprint-planning'">
-            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            <span class="text-[9px] font-bold">Planning</span>
-          </button>
-        }
-
-        <!-- Backlog Tab -->
-        <button (click)="currentTab.set('backlog')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'backlog'"
-                [class.scale-105]="currentTab() === 'backlog'"
-                [class.text-text-secondary]="currentTab() !== 'backlog'">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <span class="text-[9px] font-bold">Backlog</span>
-        </button>
-
-        <!-- Mobile Team Tab -->
-        @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('team')" 
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'team'"
-                  [class.scale-105]="currentTab() === 'team'"
-                  [class.text-text-secondary]="currentTab() !== 'team'">
-            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            <span class="text-[9px] font-bold">Team</span>
-          </button>
-        }
-
-        <!-- Profile Tab -->
-        <button (click)="currentTab.set('profile')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'profile'"
-                [class.scale-105]="currentTab() === 'profile'"
-                [class.text-text-secondary]="currentTab() !== 'profile'">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span class="text-[9px] font-bold">Profile</span>
-        </button>
-      </div>
+      <app-mobile-nav-widget
+        [currentTab]="currentTab()"
+        [isProjectManager]="projectState.isProjectManager()"
+        (tabChange)="currentTab.set($event)">
+      </app-mobile-nav-widget>
 
     </div>
 
