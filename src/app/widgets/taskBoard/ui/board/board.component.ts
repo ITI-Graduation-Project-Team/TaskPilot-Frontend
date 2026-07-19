@@ -792,47 +792,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
       </div>
     }
 
-    @if (showHoursPrompt()) {
-      <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border w-full max-w-sm rounded-2xl shadow-2xl p-6 flex flex-col space-y-4 animate-[scaleUp_0.2s_ease_both]">
-          <div class="flex items-center gap-3 text-primary">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-extrabold text-text-primary">Log Actual Hours</h3>
-              <p class="text-xs text-text-secondary">Task Completion</p>
-            </div>
-          </div>
 
-          <div class="space-y-2">
-            <p class="text-xs text-text-secondary leading-relaxed">
-              Please enter the actual hours spent to complete this task. This is required by the system.
-            </p>
-            
-            <div class="relative mt-2">
-              <input type="number" [(ngModel)]="hoursPromptValue" min="0.1" step="0.5" autofocus
-                     class="w-full px-3.5 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 text-sm font-bold"
-                     placeholder="e.g. 4.5" />
-              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end space-x-2 pt-2 border-t border-border/50">
-            <button (click)="cancelHoursPrompt()" class="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors">
-              Cancel
-            </button>
-            <button (click)="submitHoursPrompt()" 
-                    [disabled]="hoursPromptValue() === null || hoursPromptValue()! <= 0"
-                    class="px-5 py-2 text-xs font-bold bg-primary text-white rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary/10">
-              Complete Task
-            </button>
-          </div>
-        </div>
-      </div>
-    }
 
     @if (isRetroModalOpen() && (activeSprintId() || completedSprintId())) {
       <app-retrospective-modal [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
@@ -854,31 +814,6 @@ export class BoardComponent implements OnInit, OnChanges {
   private tasksService = inject(TasksService);
 
   employeeActualHours = 0;
-
-  showHoursPrompt = signal(false);
-  hoursPromptValue = signal<number | null>(null);
-  private hoursPromptResolve: ((val: number | null) => void) | null = null;
-
-  promptActualHours(): Promise<number | null> {
-    this.hoursPromptValue.set(null);
-    this.showHoursPrompt.set(true);
-    return new Promise(resolve => {
-      this.hoursPromptResolve = resolve;
-    });
-  }
-
-  submitHoursPrompt() {
-    const val = this.hoursPromptValue();
-    this.showHoursPrompt.set(false);
-    this.hoursPromptResolve?.(val);
-    this.hoursPromptResolve = null;
-  }
-
-  cancelHoursPrompt() {
-    this.showHoursPrompt.set(false);
-    this.hoursPromptResolve?.(null);
-    this.hoursPromptResolve = null;
-  }
 
   isBoardReadonly = computed(() => {
     return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
@@ -1273,22 +1208,19 @@ export class BoardComponent implements OnInit, OnChanges {
           });
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
-          let actualHours: number | undefined = undefined;
-          if (statusEnum === TaskItemStatus.Done) {
-            const val = await this.promptActualHours();
-            if (val === null) {
-              await this.loadWorkspaceData();
-              return;
-            }
-            actualHours = val;
-            this.employeeActualHours = actualHours;
+          
+          const response = await this.tasksService.updateTaskStatus(task.id, statusEnum);
+          if (statusEnum === TaskItemStatus.Done && response?.actualHours !== undefined) {
+            this.employeeActualHours = response.actualHours;
+            // Optionally update the task object if it has an actualHours field
+            (task as any).actualHours = response.actualHours;
           }
-          await this.tasksService.updateTaskStatus(task.id, statusEnum, actualHours);
           this.toastService.show('Task status updated successfully.', 'success');
         }
       } catch (err) {
         console.error('Failed to update task status in backend:', err);
         this.toastService.show('Failed to update task status.', 'error');
+        // Rollback status visually? The current logic just re-renders from state
       }
     }
 

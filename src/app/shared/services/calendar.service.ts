@@ -154,9 +154,9 @@ export class CalendarService {
   /**
    * Update task details (title, status, priority, etc.)
    */
-  async updateTask(taskId: string, payload: any): Promise<boolean> {
+  async updateTask(taskId: string, payload: any): Promise<any> {
     try {
-      await apiClient.patch(`/calendar/tasks/${taskId}`, payload);
+      const response = await apiClient.patch(`/calendar/tasks/${taskId}`, payload);
       this.toastService.show('Task updated successfully', 'success');
 
       // Optimistically update
@@ -175,11 +175,11 @@ export class CalendarService {
             : t
         )
       );
-      return true;
+      return response.data?.data || response.data || true;
     } catch (error) {
       console.error('Failed to update task', error);
       this.toastService.show('Failed to update task', 'error');
-      return false;
+      return null;
     }
   }
 

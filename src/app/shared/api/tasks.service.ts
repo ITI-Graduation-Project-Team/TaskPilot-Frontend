@@ -101,10 +101,9 @@ export class TasksService {
     return data.data || data;
   }
 
-  async updateTaskStatus(taskId: string, status: TaskItemStatus, actualHours?: number): Promise<any> {
+  async updateTaskStatus(taskId: string, status: TaskItemStatus): Promise<any> {
     const { data } = await apiClient.patch<any>(`/tasks/${taskId}/status`, {
-      status,
-      actualHours
+      status
     });
     return data.data || data;
   }

@@ -439,47 +439,7 @@ interface CalendarDay {
     </div>
 
     <!-- Beautiful Actual Hours Prompt Modal -->
-    @if (showHoursPrompt()) {
-      <div class="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border w-full max-w-sm rounded-2xl shadow-2xl p-6 flex flex-col space-y-4 animate-[scaleUp_0.2s_ease_both]">
-          <div class="flex items-center gap-3 text-primary">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-extrabold text-text-primary">Log Actual Hours</h3>
-              <p class="text-xs text-text-secondary">Task Completion</p>
-            </div>
-          </div>
 
-          <div class="space-y-2">
-            <p class="text-xs text-text-secondary leading-relaxed">
-              Please enter the actual hours spent to complete this task. This is required by the system.
-            </p>
-            
-            <div class="relative mt-2">
-              <input type="number" [(ngModel)]="hoursPromptValue" min="0.1" step="0.5" autofocus
-                     class="w-full px-3.5 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 text-sm font-bold"
-                     placeholder="e.g. 4.5" />
-              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end space-x-2 pt-2 border-t border-border/50">
-            <button (click)="cancelHoursPrompt()" class="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors">
-              Cancel
-            </button>
-            <button (click)="submitHoursPrompt()" 
-                    [disabled]="hoursPromptValue() === null || hoursPromptValue()! <= 0"
-                    class="px-5 py-2 text-xs font-bold bg-primary text-white rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary/10">
-              Complete Task
-            </button>
-          </div>
-        </div>
-      </div>
-    }
   `,
   styles: [`
     .custom-scrollbar::-webkit-scrollbar {
@@ -545,30 +505,6 @@ export class CalendarViewComponent implements OnInit {
   showDayEventsModal = signal(false);
   selectedDayEvents = signal<CalendarDay | null>(null);
 
-  showHoursPrompt = signal(false);
-  hoursPromptValue = signal<number | null>(null);
-  private hoursPromptResolve: ((val: number | null) => void) | null = null;
-
-  promptActualHours(): Promise<number | null> {
-    this.hoursPromptValue.set(null);
-    this.showHoursPrompt.set(true);
-    return new Promise(resolve => {
-      this.hoursPromptResolve = resolve;
-    });
-  }
-
-  submitHoursPrompt() {
-    const val = this.hoursPromptValue();
-    this.showHoursPrompt.set(false);
-    this.hoursPromptResolve?.(val);
-    this.hoursPromptResolve = null;
-  }
-
-  cancelHoursPrompt() {
-    this.showHoursPrompt.set(false);
-    this.hoursPromptResolve?.(null);
-    this.hoursPromptResolve = null;
-  }
 
   hoveredTask = signal<{ task: CalendarTask, x: number, y: number } | null>(null);
   hoverTimeout: any;
@@ -903,23 +839,15 @@ export class CalendarViewComponent implements OnInit {
     try {
       if (task.eventType === 'AssignedTask') {
         const statusEnum = this.mapStatusToEnum(task.status);
-        let actualHours: number | undefined = undefined;
-        if (statusEnum === TaskItemStatus.Done) {
-          const val = await this.promptActualHours();
-          if (val === null) {
-            return;
-          }
-          actualHours = val;
-        }
-
         const rawTask = task as any;
         const possibleTaskId = rawTask.taskId || rawTask.SprintTaskId || rawTask.referenceId || rawTask.affectedTaskId || task.id;
 
         try {
-          await this.tasksService.updateTaskStatus(possibleTaskId, statusEnum, actualHours);
+          const sprintResponse = await this.tasksService.updateTaskStatus(possibleTaskId, statusEnum);
+          if (statusEnum === TaskItemStatus.Done && sprintResponse?.actualHours !== undefined) {
+            rawTask.actualHours = sprintResponse.actualHours;
+          }
         } catch (err: any) {
-          // If the provided ID is just the calendar event ID and not the sprint task ID, it throws 404.
-          // Fallback: look up the user's active sprint tasks by title to find the real task ID.
           if (err?.response?.status === 404 || err?.status === 404 || err?.message?.includes('404')) {
             const pId = rawTask.projectId || this.projectState.selectedProjectId();
             if (pId) {
@@ -930,9 +858,11 @@ export class CalendarViewComponent implements OnInit {
               );
               
               if (matchingTask && matchingTask.taskId) {
-                await this.tasksService.updateTaskStatus(matchingTask.taskId, statusEnum, actualHours);
+                const sprintResponse = await this.tasksService.updateTaskStatus(matchingTask.taskId, statusEnum);
+                if (statusEnum === TaskItemStatus.Done && sprintResponse?.actualHours !== undefined) {
+                  rawTask.actualHours = sprintResponse.actualHours;
+                }
               } else {
-                // Not found in active sprint, might be a planned task or just truly not found
                 throw err;
               }
             } else {
@@ -943,8 +873,13 @@ export class CalendarViewComponent implements OnInit {
           }
         }
       }
+
+      const response = await this.calendarService.updateTask(task.id, updatePayload);
       
-      await this.calendarService.updateTask(task.id, updatePayload);
+      if (response && response.actualHours !== undefined && updatePayload.status === 'Done') {
+        const rawTask = task as any;
+        rawTask.actualHours = response.actualHours;
+      }
 
       this.closeEditModal();
 
