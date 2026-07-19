@@ -56,7 +56,13 @@ interface ProjectEmployee {
                    (click)="emailField.focus()">
                 
                 @for (email of emailsList(); track email; let idx = $index) {
-                  <span class="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/25 text-primary px-3 py-1 rounded-full text-xs font-semibold animate-[scaleUp_0.15s_ease_both]">
+                  <span [class.bg-red-500/10]="invalidEmailsMap()[email.toLowerCase()]"
+                        [class.border-red-500/20]="invalidEmailsMap()[email.toLowerCase()]"
+                        [class.text-red-500]="invalidEmailsMap()[email.toLowerCase()]"
+                        [class.bg-primary/10]="!invalidEmailsMap()[email.toLowerCase()]"
+                        [class.border-primary/25]="!invalidEmailsMap()[email.toLowerCase()]"
+                        [class.text-primary]="!invalidEmailsMap()[email.toLowerCase()]"
+                        class="inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-xs font-semibold animate-[scaleUp_0.15s_ease_both]">
                     <span>{{ email }}</span>
                     <button type="button" (click)="removeEmail(idx); $event.stopPropagation()"
                             class="hover:bg-primary/20 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold transition-all">
@@ -67,10 +73,20 @@ interface ProjectEmployee {
                 
                 <input type="email" [value]="currentEmailInput()" (input)="currentEmailInput.set(emailField.value)" #emailField
                        (keydown)="onEmailInputKeydown($event)" (blur)="addEmail(emailField.value)"
-                       placeholder="e.g. employee&#64;company.com"
+                       placeholder="e.g. employee@company.com"
                        class="flex-1 min-w-[180px] bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-text-secondary/50 py-1"
                        autocomplete="off">
               </div>
+              @for (email of emailsList(); track email) {
+                @if (invalidEmailsMap()[email.toLowerCase()]) {
+                  <p class="text-[11px] text-red-500 font-semibold mt-1 flex items-center gap-1 animate-[fadeIn_0.2s_ease_both]">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    {{ email }}: {{ invalidEmailsMap()[email.toLowerCase()] }}
+                  </p>
+                }
+              }
               <p class="text-[10px] text-text-secondary mt-1.5">Press <kbd class="px-1 bg-border rounded text-text-primary text-[9px] font-mono">Enter</kbd>, <kbd class="px-1 bg-border rounded text-text-primary text-[9px] font-mono">Space</kbd> or <kbd class="px-1 bg-border rounded text-text-primary text-[9px] font-mono">Comma</kbd> to add the email.</p>
             </div>
             
@@ -105,6 +121,20 @@ interface ProjectEmployee {
               Please select a project from the top dropdown to manage team assignments.
             </div>
           } @else {
+            <!-- Error Banner -->
+            @if (assignError()) {
+              <div class="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-2.5 text-red-600 dark:text-red-400 text-xs animate-[fadeIn_0.2s_ease_both]">
+                <svg class="w-4 h-4 mt-0.5 shrink-0 text-red-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="flex-1">
+                  <p class="font-extrabold text-sm text-red-700 dark:text-red-300">Assignment Failed</p>
+                  <p class="mt-0.5 leading-relaxed">{{ assignError() }}</p>
+                </div>
+                <button (click)="assignError.set(null)" class="text-red-500/70 hover:text-red-600 dark:hover:text-red-400 font-bold text-sm shrink-0">✕</button>
+              </div>
+            }
+
             <!-- Form to assign -->
             @if (projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               <form (submit)="onAssignEmployee($event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-sidebar p-4 rounded-xl border border-border">
@@ -141,7 +171,7 @@ interface ProjectEmployee {
                 </div>
                 <!-- Dropdown List -->
                 @if (isDropdownOpen()) {
-                  <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+                  <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto animate-[fadeDown_0.15s_ease_both]">
                     @for (emp of companyEmployees(); track emp.employeeId) {
                       <div (click)="selectEmployee(emp.employeeId)"
                            class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-sidebar transition-colors"
@@ -158,7 +188,11 @@ interface ProjectEmployee {
                             <span class="text-sm font-semibold text-text-primary truncate">{{ emp.email }}</span>
                           }
                         </div>
-                        @if (emp.employeeId === selectedEmployeeId) {
+                        @if (failedEmployeeIds().includes(emp.employeeId)) {
+                          <span class="text-[10px] text-red-500 font-bold ml-auto px-1.5 py-0.5 bg-red-500/10 rounded border border-red-500/20 shrink-0">
+                            Already in another project
+                          </span>
+                        } @else if (emp.employeeId === selectedEmployeeId) {
                           <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                           </svg>
@@ -246,6 +280,9 @@ export class TeamViewComponent implements OnInit {
   isDropdownOpen = signal(false);
 
   activeProjectName = signal('Loading Project...');
+  assignError = signal<string | null>(null);
+  failedEmployeeIds = signal<string[]>([]);
+  invalidEmailsMap = signal<Record<string, string>>({});
 
   getInitials(fullName: string, email: string): string {
     if (fullName && fullName !== email && fullName.trim()) {
@@ -274,6 +311,8 @@ export class TeamViewComponent implements OnInit {
   selectEmployee(id: string) {
     this.selectedEmployeeId = id;
     this.isDropdownOpen.set(false);
+    this.assignError.set(null);
+    this.failedEmployeeIds.update(ids => ids.filter(x => x !== id));
   }
 
   constructor() {
@@ -346,14 +385,26 @@ export class TeamViewComponent implements OnInit {
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(cleanEmail)) {
+      const lowerEmail = cleanEmail.toLowerCase();
       if (!this.emailsList().includes(cleanEmail)) {
         this.emailsList.update(list => [...list, cleanEmail]);
+      }
+      if (this.invalidEmailsMap()[lowerEmail]) {
+        const newMap = { ...this.invalidEmailsMap() };
+        delete newMap[lowerEmail];
+        this.invalidEmailsMap.set(newMap);
       }
       this.currentEmailInput.set('');
     }
   }
 
   removeEmail(index: number) {
+    const email = this.emailsList()[index];
+    if (email) {
+      const newMap = { ...this.invalidEmailsMap() };
+      delete newMap[email.toLowerCase()];
+      this.invalidEmailsMap.set(newMap);
+    }
     this.emailsList.update(list => list.filter((_, i) => i !== index));
   }
 
@@ -370,8 +421,17 @@ export class TeamViewComponent implements OnInit {
     if (emails.length === 0) return;
 
     this.isInviting.set(true);
+    const cleanEmails = emails.map(email => email.toLowerCase().trim());
+    const newMap = { ...this.invalidEmailsMap() };
+    cleanEmails.forEach(email => delete newMap[email]);
+    this.invalidEmailsMap.set(newMap);
+
     try {
-      await this.teamService.inviteEmployees(emails);
+      const res = await this.teamService.inviteEmployees(emails);
+      if (res && (res.succeeded === false || (res.data?.skippedEmployees && res.data.skippedEmployees.length > 0))) {
+        this.handleInviteError(res, emails);
+        return;
+      }
       this.toastService.show('🎉 Invitations sent successfully to invited members!', 'success');
       this.emailsList.set([]);
       this.currentEmailInput.set('');
@@ -380,11 +440,61 @@ export class TeamViewComponent implements OnInit {
       if (compId) {
         await this.loadCompanyEmployees(compId);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      this.toastService.show('Failed to send invitations. Ensure emails are formatted correctly.', 'error');
+      const errResponse = e?.response?.data || e;
+      this.handleInviteError(errResponse, emails);
     } finally {
       this.isInviting.set(false);
+    }
+  }
+
+  handleInviteError(errResponse: any, emails: string[]) {
+    const data = errResponse?.data;
+    const skipped = data?.skippedEmployees || errResponse?.skippedEmployees || [];
+    const errors = errResponse?.errors || [];
+    const code = errResponse?.code;
+    
+    const hasSkippedBelongs = skipped.some((s: any) => s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY');
+    const isAlreadyBelongsError = hasSkippedBelongs || (code === 'USER_ALREADY_BELONGS_TO_COMPANY') ||
+      errors.some((err: any) => err.code === 'USER_ALREADY_BELONGS_TO_COMPANY');
+
+    if (isAlreadyBelongsError) {
+      const failedEmails: string[] = [];
+      
+      skipped.forEach((s: any) => {
+        if (s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY' && s.email) {
+          failedEmails.push(s.email.toLowerCase().trim());
+        }
+      });
+
+      errors.forEach((err: any) => {
+        if (err.code === 'USER_ALREADY_BELONGS_TO_COMPANY') {
+          if (err.email) {
+            failedEmails.push(err.email.toLowerCase().trim());
+          } else if (err.description) {
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const matches = err.description.match(emailRegex);
+            if (matches) {
+              matches.forEach((m: string) => failedEmails.push(m.toLowerCase().trim()));
+            }
+          }
+        }
+      });
+      
+      if (failedEmails.length === 0 && emails.length === 1) {
+        failedEmails.push(emails[0].toLowerCase().trim());
+      }
+
+      const mapUpdate = { ...this.invalidEmailsMap() };
+      failedEmails.forEach(email => {
+        mapUpdate[email] = 'This user is already registered under another company.';
+      });
+      this.invalidEmailsMap.set(mapUpdate);
+      this.toastService.show('One or more selected users are already registered under another company.', 'error');
+    } else {
+      const errorMsg = errResponse?.message || 'Failed to send invitations. Ensure emails are formatted correctly.';
+      this.toastService.show(errorMsg, 'error');
     }
   }
 
@@ -402,21 +512,66 @@ export class TeamViewComponent implements OnInit {
       return;
     }
 
+    this.assignError.set(null);
+    this.failedEmployeeIds.set([]);
     this.isAssigning.set(true);
     try {
       const assignment: EmployeeAssignmentDto = {
         employeeId: this.selectedEmployeeId,
         role: this.assignedRole
       };
-      await this.teamService.assignEmployees(projId, [assignment]);
+      const res = await this.teamService.assignEmployees(projId, [assignment]);
+      if (res && res.succeeded === false) {
+        this.handleAssignError(res);
+        return;
+      }
       this.toastService.show('🎉 Member assigned successfully to the project!', 'success');
       this.selectedEmployeeId = '';
       await this.loadProjectTeam(projId);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      this.toastService.show('Failed to assign team member. Make sure they are not already assigned.', 'error');
+      const errResponse = e?.response?.data || e;
+      this.handleAssignError(errResponse);
     } finally {
       this.isAssigning.set(false);
+    }
+  }
+
+  handleAssignError(errResponse: any) {
+    const errors = errResponse?.errors || [];
+    const code = errResponse?.code;
+    const isAlreadyAssignedError = (code === 'EmployeeAlreadyAssignedToAnotherProject') ||
+      errors.some((err: any) => err.code === 'EmployeeAlreadyAssignedToAnotherProject');
+
+    if (isAlreadyAssignedError) {
+      this.assignError.set('One or more selected employees are already assigned to another active project.');
+      this.toastService.show('One or more selected employees are already assigned to another active project.', 'error');
+      
+      const failedIds: string[] = [];
+      errors.forEach((err: any) => {
+        if (err.code === 'EmployeeAlreadyAssignedToAnotherProject') {
+          if (err.employeeId) {
+            failedIds.push(err.employeeId);
+          } else if (err.description) {
+            const found = this.companyEmployees().find(emp => 
+              (emp.employeeId && err.description.includes(emp.employeeId)) ||
+              (emp.email && err.description.includes(emp.email)) ||
+              (emp.fullName && err.description.includes(emp.fullName))
+            );
+            if (found) {
+              failedIds.push(found.employeeId);
+            }
+          }
+        }
+      });
+      if (failedIds.length === 0 && this.selectedEmployeeId) {
+        failedIds.push(this.selectedEmployeeId);
+      }
+      this.failedEmployeeIds.set(failedIds);
+    } else {
+      const errorMsg = errResponse?.message || 'Failed to assign team member. Make sure they are not already assigned.';
+      this.assignError.set(errorMsg);
+      this.toastService.show(errorMsg, 'error');
     }
   }
 }

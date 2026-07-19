@@ -43,7 +43,7 @@ function shouldShowLoader(url: string | undefined): boolean {
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (shouldShowLoader(config.url)) {
+    if (shouldShowLoader(config.url) && !config.headers?.['X-Skip-Loader']) {
       getLoadingService()?.show();
     }
     const token = getAccessToken();
@@ -107,14 +107,14 @@ async function refreshAccessToken(): Promise<string> {
 
 apiClient.interceptors.response.use(
   (response) => {
-    if (shouldShowLoader(response.config?.url)) {
+    if (shouldShowLoader(response.config?.url) && !response.config?.headers?.['X-Skip-Loader']) {
       getLoadingService()?.hide();
     }
     return response;
   },
 
   async (error: AxiosError) => {
-    if (shouldShowLoader(error.config?.url)) {
+    if (shouldShowLoader(error.config?.url) && !error.config?.headers?.['X-Skip-Loader']) {
       getLoadingService()?.hide();
     }
     const originalRequest = error.config as InternalAxiosRequestConfig & {

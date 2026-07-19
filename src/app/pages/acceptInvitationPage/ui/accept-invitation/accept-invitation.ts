@@ -22,6 +22,7 @@ export class AcceptInvitationComponent implements OnInit {
   errorMessage = signal<string>('');
   companyName = signal<string>('');
   email = signal<string>('');
+  isAlreadyInCompany = signal<boolean>(false);
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -59,9 +60,19 @@ export class AcceptInvitationComponent implements OnInit {
       }
     } catch (err: any) {
       this.state.set('error');
-      const statusText = err?.response?.status ? ` (Status: ${err.response.status})` : '';
-      const apiErr = extractApiError(err);
-      this.errorMessage.set(apiErr + statusText);
+      const errors = err?.response?.data?.errors || [];
+      const code = err?.response?.data?.code;
+      const isAlreadyInCompanyError = (code === 'EMPLOYEE_ALREADY_IN_COMPANY') ||
+        errors.some((e: any) => e.code === 'EMPLOYEE_ALREADY_IN_COMPANY');
+
+      if (isAlreadyInCompanyError) {
+        this.isAlreadyInCompany.set(true);
+        this.errorMessage.set('You already belong to a company. If you wish to join a different company, please contact your administrator or account support to unlink your current association first.');
+      } else {
+        const statusText = err?.response?.status ? ` (Status: ${err.response.status})` : '';
+        const apiErr = extractApiError(err);
+        this.errorMessage.set(apiErr + statusText);
+      }
     }
   }
 
@@ -77,21 +88,35 @@ export class AcceptInvitationComponent implements OnInit {
       sessionStorage.removeItem('invitationToken');
       this.state.set('success');
       setTimeout(() => {
-        const currentRole = this.authService.getUserRole();
-        const isProfileCompleted = localStorage.getItem('isProfileCompleted') === 'true';
-        if (currentRole === 'Employee') {
-          this.router.navigate([isProfileCompleted ? '/employee-dashboard' : '/complete-profile']);
-        } else if (currentRole === 'ProjectManager') {
-          this.router.navigate([isProfileCompleted ? '/dashboard' : '/company-setup']);
-        } else {
-          this.router.navigate(['/dashboard']);
-        }
+        this.goToDashboard();
       }, 1500);
     } catch (err: any) {
       this.state.set('error');
-      const statusText = err?.response?.status ? ` (Status: ${err.response.status})` : '';
-      const apiErr = extractApiError(err);
-      this.errorMessage.set(apiErr + statusText);
+      const errors = err?.response?.data?.errors || [];
+      const code = err?.response?.data?.code;
+      const isAlreadyInCompanyError = (code === 'EMPLOYEE_ALREADY_IN_COMPANY') ||
+        errors.some((e: any) => e.code === 'EMPLOYEE_ALREADY_IN_COMPANY');
+
+      if (isAlreadyInCompanyError) {
+        this.isAlreadyInCompany.set(true);
+        this.errorMessage.set('You already belong to a company. If you wish to join a different company, please contact your administrator or account support to unlink your current association first.');
+      } else {
+        const statusText = err?.response?.status ? ` (Status: ${err.response.status})` : '';
+        const apiErr = extractApiError(err);
+        this.errorMessage.set(apiErr + statusText);
+      }
+    }
+  }
+
+  goToDashboard() {
+    const currentRole = this.authService.getUserRole();
+    const isProfileCompleted = localStorage.getItem('isProfileCompleted') === 'true';
+    if (currentRole === 'Employee') {
+      this.router.navigate([isProfileCompleted ? '/employee-dashboard' : '/complete-profile']);
+    } else if (currentRole === 'ProjectManager') {
+      this.router.navigate([isProfileCompleted ? '/dashboard' : '/company-setup']);
+    } else {
+      this.router.navigate(['/dashboard']);
     }
   }
 }
