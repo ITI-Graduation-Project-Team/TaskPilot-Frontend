@@ -20,6 +20,11 @@ The project uses a strict, custom color palette configured in Tailwind.
 To ensure maximum scalability, this project strictly follows the FSD methodology. 
 Modules can only import from layers below them.
 
+###  Architecture Rules for AI Agents (Vibe Coding)
+When generating or refactoring Dashboard components (PM or Employee), you MUST strictly follow:
+1. **Nested Routing is Mandatory:** NEVER use `@if`, `@switch`, or manual state to toggle dashboard pages. All internal pages must be routed via `<router-outlet>` and configured in `app.routes.ts`.
+2. **No Data Starvation (State Injection):** Routed child components MUST NOT rely on `@Input()` from the parent layout. Inject State Services (e.g., `ProjectStateService`, `TasksService`) directly into the components to fetch data.
+3. **Layout Isolation:** The Dashboard layout files must ONLY contain layout wrappers (Sidebar, Header) and the `<router-outlet>`. Do NOT wrap the router outlet in logical conditions (like `hasProjects`).
 ### Layers Overview:
 1. **`shared/`**: Reusable UI components and API interceptors.
 2. **`entities/`**: Core business models (User, Project, Task).
