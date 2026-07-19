@@ -101,10 +101,9 @@ export class TasksService {
     return data.data || data;
   }
 
-  async updateTaskStatus(taskId: string, status: TaskItemStatus, actualHours?: number): Promise<any> {
+  async updateTaskStatus(taskId: string, status: TaskItemStatus): Promise<any> {
     const { data } = await apiClient.patch<any>(`/tasks/${taskId}/status`, {
-      status,
-      actualHours
+      status
     });
     return data.data || data;
   }
@@ -115,4 +114,55 @@ export class TasksService {
     });
     return data.data || data;
   }
+
+  async getComments(taskId: string): Promise<TaskCommentDto[]> {
+    const { data } = await apiClient.get<any>(`/tasks/${taskId}/comments`);
+    return data.data || data;
+  }
+
+  async addComment(taskId: string, content: string): Promise<TaskCommentDto> {
+    const { data } = await apiClient.post<any>(`/tasks/${taskId}/comments`, { content });
+    return data.data || data;
+  }
+
+  async getAttachments(taskId: string): Promise<TaskAttachmentDto[]> {
+    const { data } = await apiClient.get<any>(`/tasks/${taskId}/attachments`);
+    return data.data || data;
+  }
+
+  async addAttachment(taskId: string, file: File, lang: string = 'en'): Promise<TaskAttachmentDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await apiClient.post<any>(`/tasks/${taskId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'lang': lang
+      }
+    });
+    return data.data || data;
+  }
+}
+
+export interface TaskCommentDto {
+  id: string;
+  content: string;
+  authorId: string;
+  authorNameEn: string;
+  authorNameAr: string;
+  authorRole: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface TaskAttachmentDto {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  contentType: string;
+  fileSize: number;
+  uploadedAt: string;
+  uploaderId: string;
+  uploaderNameEn: string;
+  uploaderNameAr: string;
+  uploaderRole: string;
 }

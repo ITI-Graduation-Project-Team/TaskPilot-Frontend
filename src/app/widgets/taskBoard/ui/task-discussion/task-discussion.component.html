@@ -1,0 +1,155 @@
+<div class="flex flex-col h-full bg-surface/50 overflow-hidden">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-border bg-sidebar/50">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-text-primary tracking-wide">Task Discussion</h3>
+        <p class="text-[10px] text-text-secondary">Comments and attachments</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-hidden flex flex-col min-h-[350px] max-h-[500px]">
+    <!-- Feed Section -->
+    <div #commentsContainer class="flex-1 overflow-y-auto p-5 space-y-5 bg-background/30 scrollbar-thin">
+      @if (isLoading()) {
+      <div class="flex justify-center p-8">
+        <div class="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
+      </div>
+      } @else if (feedItems().length === 0) {
+      <div
+        class="flex flex-col items-center justify-center h-full text-center text-text-secondary space-y-3 py-12 animate-[fadeUp_0.4s_ease_both]">
+        <div class="w-16 h-16 rounded-full bg-border/40 flex items-center justify-center">
+          <svg class="w-8 h-8 opacity-40 text-text-primary" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-text-primary">No activity yet</p>
+          <p class="text-xs opacity-80 mt-0.5">Start the discussion or attach files.</p>
+        </div>
+      </div>
+      } @else {
+      @for (item of feedItems(); track item.id; let i = $index) {
+      <div class="flex gap-3 max-w-[90%] animate-[fadeIn_0.3s_ease_both]"
+        [ngClass]="{'ml-auto flex-row-reverse': item.authorId === currentUserId, 'mt-1.5': isConsecutive(i), 'mt-6': !isConsecutive(i) && i > 0}">
+
+        @if (!isConsecutive(i)) {
+        <div
+          class="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-sm font-black text-primary shrink-0 shadow-sm"
+          [ngClass]="{'from-indigo-500/20 to-indigo-500/5 border-indigo-500/20 text-indigo-600': item.authorRole === 'ProjectManager'}">
+          {{ item.authorNameEn.charAt(0) }}
+        </div>
+        } @else {
+        <div class="w-9 h-9 shrink-0"></div>
+        }
+
+        <div class="flex flex-col max-w-[calc(100%-2.5rem)]" [ngClass]="{'items-end': item.authorId === currentUserId}">
+          @if (!isConsecutive(i)) {
+          <div class="flex items-baseline gap-2 mb-1.5 px-1"
+            [ngClass]="{'flex-row-reverse': item.authorId === currentUserId}">
+            <span class="text-xs font-extrabold text-text-primary">{{ item.authorNameEn }}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold"
+              [ngClass]="item.authorRole === 'ProjectManager' ? 'bg-indigo-500/10 text-indigo-600' : 'bg-border/50 text-text-secondary'">
+              {{ item.authorRole }}
+            </span>
+            <span class="text-[10px] text-text-secondary/70 font-medium">{{ formatDate(item.timestamp) }}</span>
+          </div>
+          }
+
+          @if (item.type === 'comment') {
+          <div class="px-4 py-3 rounded-2xl text-[13px] leading-relaxed break-words" [ngClass]="{
+                       'bg-primary text-white shadow-md shadow-primary/20': item.authorId === currentUserId,
+                       'bg-surface border border-border text-text-primary shadow-sm': item.authorId !== currentUserId,
+                       'rounded-tr-sm': !isConsecutive(i) && item.authorId === currentUserId,
+                       'rounded-tl-sm': !isConsecutive(i) && item.authorId !== currentUserId
+                     }">
+            {{ item.data.content }}
+          </div>
+          } @else {
+          <a [href]="getAbsoluteUrl(item.data.fileUrl)" target="_blank" rel="noopener noreferrer"
+            class="flex items-center gap-3 p-3 rounded-2xl border border-border bg-surface hover:border-primary/50 hover:shadow-md transition-all group shrink-0 min-w-[200px]"
+            [ngClass]="{
+                     'rounded-tr-sm': !isConsecutive(i) && item.authorId === currentUserId,
+                     'rounded-tl-sm': !isConsecutive(i) && item.authorId !== currentUserId
+                   }">
+            <div class="text-3xl group-hover:scale-110 transition-transform drop-shadow-sm">{{
+              getFileIcon(item.data.contentType) }}</div>
+            <div class="overflow-hidden">
+              <p class="text-sm font-bold text-text-primary truncate group-hover:text-primary transition-colors">{{
+                item.data.fileName }}</p>
+              <p class="text-xs text-text-secondary font-medium">{{ (item.data.fileSize / 1024).toFixed(1) }} KB</p>
+            </div>
+          </a>
+          }
+        </div>
+      </div>
+      }
+      }
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="p-3 border-t border-border bg-surface relative z-10">
+    <div
+      class="flex flex-col gap-1.5 bg-background border border-border rounded-xl p-1.5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all shadow-inner">
+
+      @if (stagedFile()) {
+      <div class="flex items-center justify-between p-2 mx-1 mt-1 bg-surface border border-border rounded-lg shadow-sm">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <span class="text-lg leading-none">📎</span>
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-text-primary truncate max-w-[200px]">{{ stagedFile()!.name }}</span>
+            <span class="text-[10px] text-text-secondary">{{ (stagedFile()!.size / 1024).toFixed(1) }} KB</span>
+          </div>
+        </div>
+        <button type="button" (click)="removeStagedFile()"
+          class="p-1.5 text-text-secondary hover:text-error hover:bg-error/10 rounded-md transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      }
+
+      <div class="flex items-end gap-2 w-full">
+        <button type="button" (click)="triggerFileInput()" [disabled]="isUploading()" title="Attach File"
+          class="p-2.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50">
+          @if (isUploading()) {
+          <div class="w-5 h-5 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+          </svg>
+          }
+        </button>
+        <input type="file" class="hidden" #fileInput (change)="onFileSelected($event)">
+
+        <textarea [ngModel]="newCommentText()" (ngModelChange)="newCommentText.set($event)"
+          (keydown.enter)="$event.preventDefault(); postComment()" rows="1"
+          placeholder="Write a comment... (Press Enter to send)"
+          class="flex-1 max-h-32 min-h-[44px] py-3 px-2 bg-transparent text-[13px] font-medium text-text-primary resize-none outline-none placeholder:text-text-secondary/50 scrollbar-thin"></textarea>
+
+        <button type="button" (click)="postComment()"
+          [disabled]="(!newCommentText().trim() && !stagedFile()) || isPosting()"
+          class="p-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:hover:bg-primary shrink-0 shadow-md shadow-primary/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5  rotate-90" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
