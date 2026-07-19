@@ -1,7 +1,8 @@
-import { Component, inject, computed, Output, EventEmitter } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-current-projects',
@@ -75,8 +76,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 })
 export class CurrentProjects {
   projectState = inject(ProjectStateService);
-
-  @Output() viewBoard = new EventEmitter<string>();
+  private router = inject(Router);
 
   currentProjects = computed(() => {
     return this.projectState.projects().filter((p: any) => p.status !== 'Completed' && p.status !== 'Closed' && p.status !== 'Archived');
@@ -84,7 +84,7 @@ export class CurrentProjects {
 
   selectProject(id: string) {
     this.projectState.setSelectedProject(id);
-    this.viewBoard.emit(id);
+    this.router.navigate(['/employee-dashboard', 'sprint']);
   }
 
   getProjectColor(id: string): string {

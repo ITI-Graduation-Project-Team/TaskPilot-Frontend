@@ -507,7 +507,7 @@ interface CalendarDay {
   `]
 })
 export class CalendarViewComponent implements OnInit {
-  isPM = input<boolean>(false);
+  isPM = computed(() => this.projectState.isProjectManager());
 
   calendarService: CalendarService = inject(CalendarService);
   themeService = inject(ThemeService);

@@ -41,6 +41,14 @@ export const routes: Routes = [
       import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then(
         (m) => m.EmployeeDashboardComponent
       ),
+    children: [
+      { path: '', redirectTo: 'sprint', pathMatch: 'full' },
+      { path: 'sprint', data: { roles: ['Employee'] }, loadComponent: () => import('./widgets/taskBoard/ui/board/board.component').then(m => m.BoardComponent) },
+      { path: 'calendar', data: { roles: ['Employee'] }, loadComponent: () => import('./pages/dashboardPage/ui/calendar-view/calendar-view.component').then(m => m.CalendarViewComponent) },
+      { path: 'current-projects', data: { roles: ['Employee'] }, loadComponent: () => import('./pages/employeeDashboardPage/ui/current-projects/current-projects').then(m => m.CurrentProjects) },
+      { path: 'project-history', data: { roles: ['Employee'] }, loadComponent: () => import('./pages/employeeDashboardPage/ui/project-history/project-history').then(m => m.ProjectHistory) },
+      { path: 'profile', data: { roles: ['Employee'] }, loadComponent: () => import('./pages/employeeDashboardPage/ui/my-profile/my-profile.component').then(m => m.MyProfileComponent) }
+    ]
   },
   {
     path: 'subscription',

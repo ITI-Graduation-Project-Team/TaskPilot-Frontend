@@ -89,9 +89,19 @@ export class ProjectStateService {
       const userId = this._userId();
       if (!userId) return;
 
-      const endpoint = isPM ? '/Projects' : `/employees/${userId}/projects`;
-      const { data } = await apiClient.get<any>(endpoint);
-      const projects: any[] = data.data || [];
+      const endpoint = '/Projects';
+      let projects: any[] = [];
+      try {
+        const { data } = await apiClient.get<any>(endpoint);
+        projects = data.data || [];
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          console.warn('Projects endpoint returned 404, assuming no active projects.');
+        } else {
+          throw err;
+        }
+      }
+
       const accessibleProjects = isPM
         ? projects.filter(p => p.managerId === userId)
         : projects;
