@@ -32,6 +32,7 @@ interface Task {
   description: string;
   priority: 'Low' | 'Medium' | 'High';
   hours: number;
+  actualHours?: number;
   type: 'Feature' | 'Bug' | 'Refactor';
 }
 
@@ -680,7 +681,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       <h4 class="text-2xl font-black text-text-primary leading-tight tracking-tight">{{ modalTask().title }}</h4>
                       <p class="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium bg-background border border-border/50 rounded-xl p-4">{{ modalTask().description || 'No description provided.' }}</p>
                     </div>
-                    <div class="grid grid-cols-3 divide-x divide-border border-t border-border bg-background text-center">
+                    <div class="grid grid-cols-4 divide-x divide-border border-t border-border bg-background text-center">
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
                         <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
@@ -709,19 +710,18 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                           {{ modalTask().hours }}h
                         </span>
                       </div>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Actual</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ modalTask().actualHours || 0 }}h
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">Actual Hours Spent</label>
-                    <div class="relative">
-                      <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
-                             class="w-full px-4 py-3.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-bold"
-                             placeholder="e.g. 4.5" />
-                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-                    </div>
-                    <p class="text-xs text-text-secondary mt-2 font-medium">Update the actual hours you spent working on this task.</p>
-                  </div>
                 }
 
                 <div class="flex-1"></div> <!-- Spacer -->
@@ -738,9 +738,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                     <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
                       Cancel
                     </button>
-                    @if (!isBoardReadonly()) {
+                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
                       <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                        {{ projectState.isProjectManager() ? 'Save Changes' : 'Save Hours' }}
+                        Save Changes
                       </button>
                     }
                   </div>
@@ -812,8 +812,6 @@ export class BoardComponent implements OnInit, OnChanges {
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
   private tasksService = inject(TasksService);
-
-  employeeActualHours = 0;
 
   isBoardReadonly = computed(() => {
     return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
@@ -1211,9 +1209,7 @@ export class BoardComponent implements OnInit, OnChanges {
           
           const response = await this.tasksService.updateTaskStatus(task.id, statusEnum);
           if (statusEnum === TaskItemStatus.Done && response?.actualHours !== undefined) {
-            this.employeeActualHours = response.actualHours;
-            // Optionally update the task object if it has an actualHours field
-            (task as any).actualHours = response.actualHours;
+            task.actualHours = response.actualHours;
           }
           this.toastService.show('Task status updated successfully.', 'success');
         }
@@ -1246,7 +1242,6 @@ export class BoardComponent implements OnInit, OnChanges {
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
     this.modalTask.set({ ...task });
-    this.employeeActualHours = (task as any).actualHours || 0;
     this.showModal.set(true);
   }
 
@@ -1288,10 +1283,6 @@ export class BoardComponent implements OnInit, OnChanges {
             status: 'todo'
           });
         }
-      } else {
-        // Employee saving log actual hours
-        await this.tasksService.logActualHours(taskData.id, this.employeeActualHours);
-        this.toastService.show('Actual hours logged successfully.', 'success');
       }
       this.closeModal();
       await this.loadWorkspaceData();
