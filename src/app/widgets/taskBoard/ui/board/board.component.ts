@@ -882,17 +882,17 @@ export class BoardComponent implements OnInit, OnChanges {
     this.isPrioritySelectOpen.update(v => !v);
     this.isTypeSelectOpen.set(false);
   }
-  
+
   toggleTypeSelect() {
     this.isTypeSelectOpen.update(v => !v);
     this.isPrioritySelectOpen.set(false);
   }
-  
+
   selectPriority(val: any) {
     this.modalTask.update(t => ({ ...t, priority: val }));
     this.isPrioritySelectOpen.set(false);
   }
-  
+
   selectType(val: any) {
     this.modalTask.update(t => ({ ...t, type: val }));
     this.isTypeSelectOpen.set(false);
@@ -1206,24 +1206,19 @@ export class BoardComponent implements OnInit, OnChanges {
           });
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
-          
-          const response = await this.tasksService.updateTaskStatus(task.id, statusEnum);
-          if (statusEnum === TaskItemStatus.Done && response?.actualHours !== undefined) {
-            task.actualHours = response.actualHours;
-          }
+
+          await this.tasksService.updateTaskStatus(task.id, statusEnum);
           this.toastService.show('Task status updated successfully.', 'success');
         }
+        // Fetch updated data from backend to get the automatically calculated actualHours
+        await this.loadWorkspaceData();
       } catch (err) {
         console.error('Failed to update task status in backend:', err);
         this.toastService.show('Failed to update task status.', 'error');
-        // Rollback status visually? The current logic just re-renders from state
+        // Rollback status visually by reloading
+        await this.loadWorkspaceData();
       }
     }
-
-    this.todo.set([...this.todo()]);
-    this.inProgress.set([...this.inProgress()]);
-    this.review.set([...this.review()]);
-    this.done.set([...this.done()]);
   }
 
   private mapColumnToEnum(column: string): TaskItemStatus {
