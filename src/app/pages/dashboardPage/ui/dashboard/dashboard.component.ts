@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
 import { filter } from 'rxjs/operators';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
@@ -42,7 +43,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     MobileNavWidgetComponent
   ],
   template: `
-    <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
+    <div [attr.dir]="isRtl() ? 'rtl' : 'ltr'" 
+         class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
       
       <!-- Desktop Sidebar Navigation -->
       <app-sidebar-widget
@@ -69,6 +71,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           [projects]="projectState.projects()"
           [isDark]="isDark()"
           [currentDate]="currentDate"
+          [currentLang]="currentLang()"
+          (setLanguage)="setLanguage($event)"
           (tabChange)="setTab($event)"
           (selectProject)="selectProject($event)"
           (onCreateProject)="openCreateProjectPage()"
@@ -190,17 +194,20 @@ export class DashboardComponent implements OnInit {
   }
 
   themeService = inject(ThemeService);
-  get isDark() { return this.themeService.isDark; }
   currentDate = '';
   userName = signal('Guest User');
   userJobTitle = signal('');
-  userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
+  activeSprintName = signal('Loading...');
+  currentLang = signal<'en' | 'ar'>('en');
+
+  isDark = this.themeService.isDark;
+  isRtl = computed(() => this.currentLang() === 'ar');
+  userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'E');
 
   // Active navigation tab signal
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
 
   // Component state
-  activeSprintName = signal('No Active Sprint');
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
   
@@ -233,27 +240,33 @@ export class DashboardComponent implements OnInit {
   advisorProjectId = signal<string | null>(null);
 
   public projectState = inject(ProjectStateService);
-  private authService = inject(AuthService);
-  private toastService = inject(ToastService);
+  private auth = inject(AuthService);
+  private toast = inject(ToastService);
+  private tr = inject(TranslateService);
+  private doc = inject(DOCUMENT);
   private confirmDialog = inject(ConfirmDialogService);
-  private  router = inject(Router);
-  private  route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private sprintService = inject(SprintPlanningService);
 
   logout(): void {
-    this.authService.logout();
+    this.auth.logout();
   }
 
   constructor() {
-
-    // Reactively update sprint name whenever selected project ID changes
     effect(() => {
-      const projId = this.projectState.selectedProjectId();
-      if (projId) {
-        this.loadActiveSprint(projId);
-      } else {
-        this.activeSprintName.set('No Active Sprint');
+      if (this.projectState.selectedProjectId()) {
+        untracked(() => {
+          this.loadActiveSprint(this.projectState.selectedProjectId()!);
+        });
       }
+    });
+
+    effect(() => {
+      const lang = this.currentLang();
+      const dir = lang === 'ar' ? 'rtl' : 'ltr';
+      this.doc.documentElement.setAttribute('dir', dir);
+      this.doc.documentElement.setAttribute('lang', lang);
     });
 
     // Eagerly load all project statistics when the "projects" tab is selected
@@ -318,6 +331,12 @@ export class DashboardComponent implements OnInit {
       const storedName = localStorage.getItem('userFullName');
       if (storedName) {
         this.userName.set(storedName);
+      }
+      
+      const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar' | null;
+      if (savedLang) {
+        this.currentLang.set(savedLang);
+        this.tr.use(savedLang);
       }
     }
 
@@ -521,10 +540,10 @@ export class DashboardComponent implements OnInit {
   async onDeleteProject(projectId: string) {
     const success = await this.projectState.deleteProject(projectId);
     if (success) {
-      this.toastService.show('Project deleted successfully', 'success');
+      this.toast.show('Project deleted successfully', 'success');
       this.loadAllProjectStats();
     } else {
-      this.toastService.show('Failed to delete project. Please try again.', 'error');
+      this.toast.show('Failed to delete project. Please try again.', 'error');
     }
   }
 
@@ -547,7 +566,7 @@ export class DashboardComponent implements OnInit {
 
   onHistoryActionCompleted() {
     this.closeHistoryModal();
-    this.toastService.show('Project status updated successfully', 'success');
+    this.toast.show('Project status updated successfully', 'success');
     this.loadAllProjectStats();
   }
 
@@ -576,6 +595,12 @@ export class DashboardComponent implements OnInit {
 
   toggleDarkMode() {
     this.themeService.toggle();
+  }
+
+  setLanguage(lang: 'en' | 'ar') {
+    this.currentLang.set(lang);
+    localStorage.setItem('app_lang', lang);
+    this.tr.use(lang);
   }
 
   onViewBoard(event: { sprintId: string; sprintStatus: string }): void {

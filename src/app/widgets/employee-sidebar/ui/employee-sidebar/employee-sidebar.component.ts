@@ -191,7 +191,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <p class="text-xs font-extrabold truncate transition-colors duration-200"
                style="color: var(--text-primary);">{{ userName() }}</p>
             <p class="text-[10px] truncate mt-0.5" style="color: var(--text-secondary);">
-              {{ userJobTitle() || ('employee.sidebar.employee' | translate) }}
+              {{ userJobTitle() ? ('roles.' + userJobTitle() | translate) : ('employee.sidebar.employee' | translate) }}
             </p>
           </div>
           <!-- Online indicator -->

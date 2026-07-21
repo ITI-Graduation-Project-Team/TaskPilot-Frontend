@@ -5,12 +5,13 @@ import { SprintPlanningService, SprintSuggestionDto } from '../../../../shared/a
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { BacklogService } from '../../../../shared/api/backlog.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sprint-planning-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
       <div class="bg-surface border border-border rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-[scaleUp_0.25s_ease_both]">
@@ -25,8 +26,8 @@ import { ToastService } from '../../../../shared/services/toast.service';
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-text-primary">AI Sprint Planner</h3>
-              <p class="text-xs text-text-secondary">Generate and review sprint schedules suggested by AI based on backlog priority.</p>
+              <h3 class="text-base font-bold text-text-primary">{{ 'dashboard.sprintPlanning.smartPlanner' | translate }}</h3>
+              <p class="text-xs text-text-secondary">{{ 'dashboard.sprintPlanning.modalDesc' | translate }}</p>
             </div>
           </div>
           <button (click)="close.emit()" class="p-2 hover:bg-border rounded-full transition-colors text-text-secondary">
@@ -39,15 +40,15 @@ import { ToastService } from '../../../../shared/services/toast.service';
           @if (isLoadingSuggestions()) {
             <div class="flex flex-col items-center justify-center py-20 text-center space-y-3">
               <div class="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-              <span class="text-sm font-semibold text-text-secondary">AI is grouping backlog items and optimizing velocity...</span>
+              <span class="text-sm font-semibold text-text-secondary">{{ 'dashboard.sprintPlanning.aiGrouping' | translate }}</span>
             </div>
           } @else if (suggestions().length === 0) {
             <div class="flex flex-col items-center justify-center py-12 text-center bg-sidebar border border-border rounded-2xl p-8">
               <svg class="w-12 h-12 mb-2 text-text-secondary opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M12 18a6 6 0 100-12 6 6 0 000 12z"/></svg>
-              <h4 class="text-sm font-bold text-text-primary">No suggestions ready</h4>
-              <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">You need to have user stories in your backlog to run the AI sprint analyzer.</p>
+              <h4 class="text-sm font-bold text-text-primary">{{ 'dashboard.sprintPlanning.noSuggestions' | translate }}</h4>
+              <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">{{ 'dashboard.sprintPlanning.needStories' | translate }}</p>
               <button (click)="loadSuggestions()" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all">
-                Request AI Sprint Schedule
+                {{ 'dashboard.sprintPlanning.requestSchedule' | translate }}
               </button>
             </div>
           } @else {
@@ -55,12 +56,12 @@ import { ToastService } from '../../../../shared/services/toast.service';
             <!-- Workload assignment snapshot card -->
             @if (activeSnapshotSprintId()) {
               <div class="bg-primary/5 border border-primary/15 p-4 rounded-2xl space-y-2 animate-[fadeIn_0.2s_ease_both]">
-                <h4 class="text-xs font-bold text-primary uppercase tracking-wider">Sprint Allocation Snapshot</h4>
+                <h4 class="text-xs font-bold text-primary uppercase tracking-wider">{{ 'dashboard.sprintPlanning.allocationSnapshot' | translate }}</h4>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-text-primary">
                   @for (snap of workloadSnapshot(); track snap.name) {
                     <div class="bg-surface p-2.5 rounded-xl border border-border">
                       <p class="font-semibold truncate">{{ snap.name }}</p>
-                      <p class="text-text-secondary mt-0.5">{{ snap.hours }} hrs assigned</p>
+                      <p class="text-text-secondary mt-0.5">{{ snap.hours }} {{ 'dashboard.sprintPlanning.hrsAssigned' | translate }}</p>
                     </div>
                   }
                 </div>
@@ -69,20 +70,20 @@ import { ToastService } from '../../../../shared/services/toast.service';
 
             <div class="space-y-4">
               <h4 class="text-sm font-bold text-text-primary flex items-center justify-between">
-                <span>AI Proposed Sprints ({{ suggestions().length }})</span>
-                <button (click)="loadSuggestions()" class="text-xs text-primary font-semibold hover:underline">Regenerate Suggestions</button>
+                <span>{{ 'dashboard.sprintPlanning.proposedSprints' | translate }} ({{ suggestions().length }})</span>
+                <button (click)="loadSuggestions()" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.sprintPlanning.regenerateSuggestions' | translate }}</button>
               </h4>
 
               @for (sprint of suggestions(); track sprint.titleEn; let idx = $index) {
                 <div class="border border-border rounded-2xl overflow-hidden bg-sidebar">
                   <div class="p-4 bg-background border-b border-border flex items-center justify-between flex-wrap gap-3">
                     <div class="flex items-center gap-3 flex-1">
-                      <span class="text-xs font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-xl">Sprint {{ idx + 1 }}</span>
+                      <span class="text-xs font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-xl">{{ 'dashboard.sprintPlanning.sprint' | translate }} {{ idx + 1 }}</span>
                       <input type="text" [(ngModel)]="sprint.titleEn" 
                              class="bg-transparent font-bold text-sm text-text-primary outline-none focus:border-b focus:border-primary pb-0.5 flex-1">
                     </div>
                     <button (click)="viewSnapshot(sprint)" class="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-lg transition-colors">
-                      Allocation Preview
+                      {{ 'dashboard.sprintPlanning.allocationPreview' | translate }}
                     </button>
                   </div>
 
@@ -90,12 +91,12 @@ import { ToastService } from '../../../../shared/services/toast.service';
                     <!-- Goals -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                       <div>
-                        <label class="block text-text-secondary font-bold mb-1">Goal (English)</label>
+                        <label class="block text-text-secondary font-bold mb-1">{{ 'dashboard.sprintPlanning.sprintGoalEn' | translate }}</label>
                         <input type="text" [(ngModel)]="sprint.goalEn" 
                                class="w-full bg-background border border-border rounded-lg px-3 py-1.5 outline-none">
                       </div>
                       <div>
-                        <label class="block text-text-secondary font-bold mb-1">الهدف (عربي)</label>
+                        <label class="block text-text-secondary font-bold mb-1">{{ 'dashboard.sprintPlanning.sprintGoalAr' | translate }}</label>
                         <input type="text" [(ngModel)]="sprint.goalAr" dir="rtl"
                                class="w-full bg-background border border-border rounded-lg px-3 py-1.5 outline-none">
                       </div>
@@ -103,7 +104,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 
                     <!-- User stories in sprint -->
                     <div class="space-y-2">
-                      <label class="block text-xs font-bold text-text-secondary uppercase tracking-wider">Associated User Stories</label>
+                      <label class="block text-xs font-bold text-text-secondary uppercase tracking-wider">{{ 'dashboard.sprintPlanning.associatedStories' | translate }}</label>
                       <div class="space-y-1.5">
                         @for (storyId of sprint.userStoryIds; track storyId) {
                           <div class="flex items-center justify-between text-xs bg-background p-2.5 rounded-xl border border-border">
@@ -122,16 +123,16 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <!-- Footer -->
         <div class="p-5 border-t border-border bg-sidebar shrink-0 flex items-center justify-end gap-3">
           <button (click)="close.emit()" class="px-5 py-2.5 border border-border text-text-secondary hover:text-text-primary rounded-xl font-semibold transition-all">
-            Cancel
+            {{ 'dashboard.sprintPlanning.cancel' | translate }}
           </button>
           <button (click)="onConfirmSprints()" 
                   [disabled]="isSaving() || suggestions().length === 0"
                   class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 disabled:opacity-50">
             @if (isSaving()) {
               <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-              Confirming Sprint Structure...
+              {{ 'dashboard.sprintPlanning.confirmingStructure' | translate }}
             } @else {
-              Confirm & Save Sprints
+              {{ 'dashboard.sprintPlanning.confirmAndSave' | translate }}
             }
           </button>
         </div>

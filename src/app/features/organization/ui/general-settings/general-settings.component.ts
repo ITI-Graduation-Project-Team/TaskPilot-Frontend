@@ -4,17 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-general-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-surface rounded-3xl border border-border p-6 md:p-8 shadow-sm">
       <div class="mb-6">
-        <h3 class="text-lg font-bold text-text-primary font-display">General Settings</h3>
-        <p class="text-sm text-text-secondary mt-1">Manage your company's core identity and branding.</p>
+        <h3 class="text-lg font-bold text-text-primary font-display">{{ 'generalSettings.title' | translate }}</h3>
+        <p class="text-sm text-text-secondary mt-1">{{ 'generalSettings.desc' | translate }}</p>
       </div>
 
       <div class="grid gap-8 lg:grid-cols-[1fr_auto]">
@@ -22,7 +23,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <form class="space-y-5" (submit)="saveSettings($event)">
           
           <div>
-            <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Company Name</label>
+            <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'generalSettings.companyName' | translate }}</label>
             <input type="text" [(ngModel)]="companyName" name="companyName" required placeholder="e.g. Acme Corp" 
                    class="w-full max-w-md bg-background border border-border rounded-xl px-4 py-3 text-sm font-semibold text-text-primary outline-none focus:ring-2 focus:ring-primary/20 transition-all">
           </div>
@@ -32,17 +33,17 @@ import { ToastService } from '../../../../shared/services/toast.service';
                     class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
               @if (isSaving()) {
                 <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                Saving...
+                {{ 'generalSettings.saving' | translate }}
               } @else {
-                Save Settings
+                {{ 'generalSettings.saveSettings' | translate }}
               }
             </button>
           </div>
         </form>
 
         <!-- Logo Upload Section -->
-        <div class="lg:border-l lg:border-border lg:pl-8 flex flex-col items-center">
-          <p class="text-xs font-bold text-text-secondary mb-4 uppercase tracking-wider text-center">Company Logo</p>
+        <div class="lg:border-s lg:border-border lg:ps-8 flex flex-col items-center">
+          <p class="text-xs font-bold text-text-secondary mb-4 uppercase tracking-wider text-center">{{ 'generalSettings.companyLogo' | translate }}</p>
           
           <div class="relative group cursor-pointer">
             <!-- Current Logo or Placeholder -->
@@ -54,13 +55,13 @@ import { ToastService } from '../../../../shared/services/toast.service';
             
             <!-- Hover Overlay -->
             <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span class="text-white text-xs font-bold">Change Logo</span>
+              <span class="text-white text-xs font-bold">{{ 'generalSettings.changeLogo' | translate }}</span>
             </div>
             
             <!-- Hidden File Input -->
             <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" title="Upload new logo">
           </div>
-          <p class="text-[10px] text-text-secondary mt-3 text-center max-w-[140px]">Recommended: Square image, SVG or PNG.</p>
+          <p class="text-[10px] text-text-secondary mt-3 text-center max-w-[140px]">{{ 'generalSettings.recommended' | translate }}</p>
         </div>
       </div>
     </div>

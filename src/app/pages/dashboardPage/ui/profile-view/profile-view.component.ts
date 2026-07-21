@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { 
@@ -25,7 +26,7 @@ interface EmployeeProfile {
   selector: 'app-profile-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div class="space-y-6 max-w-3xl mx-auto">
       
@@ -46,10 +47,10 @@ interface EmployeeProfile {
             </div>
             <div class="text-center sm:text-left space-y-1">
               <h2 class="text-2xl font-extrabold text-text-primary">{{ profile()?.firstName }} {{ profile()?.lastName }}</h2>
-              <p class="text-text-secondary text-sm font-medium">{{ profile()?.jobTitle || 'Team Member' }}</p>
+              <p class="text-text-secondary text-sm font-medium">{{ (profile()?.jobTitle | translate) || ('profile.teamMember' | translate) }}</p>
               <div class="flex items-center gap-2 justify-center sm:justify-start pt-1.5 flex-wrap">
                 <span class="px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full">
-                  {{ profile()?.seniorityLevel }}
+                  {{ profile()?.seniorityLevel | translate }}
                 </span>
                 <span class="px-2.5 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">
                   {{ profile()?.email }}
@@ -61,7 +62,7 @@ interface EmployeeProfile {
           <button (click)="openEditModal()" 
                   class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
                          shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 text-sm">
-            Edit Profile
+            {{ 'profile.editProfile' | translate }}
           </button>
         </div>
 
@@ -70,16 +71,16 @@ interface EmployeeProfile {
           
           <!-- Core Info -->
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4 transition-colors duration-200">
-            <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">Job Experience</h3>
+            <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">{{ 'profile.jobExperience' | translate }}</h3>
             
             <div class="flex justify-between items-center text-sm">
-              <span class="text-text-secondary font-medium">Job Title</span>
-              <span class="text-text-primary font-semibold">{{ profile()?.jobTitle || 'N/A' }}</span>
+              <span class="text-text-secondary font-medium">{{ 'profile.jobTitle' | translate }}</span>
+              <span class="text-text-primary font-semibold">{{ (profile()?.jobTitle | translate) || ('profile.teamMember' | translate) }}</span>
             </div>
 
             <div class="flex justify-between items-center text-sm">
-              <span class="text-text-secondary font-medium">Seniority Level</span>
-              <span class="text-text-primary font-semibold">{{ profile()?.seniorityLevel || 'N/A' }}</span>
+              <span class="text-text-secondary font-medium">{{ 'profile.seniorityLevel' | translate }}</span>
+              <span class="text-text-primary font-semibold">{{ profile()?.seniorityLevel ? (profile()!.seniorityLevel | translate) : 'N/A' }}</span>
             </div>
 
             @if (profile()?.isEmployee) {
@@ -92,7 +93,7 @@ interface EmployeeProfile {
 
           <!-- Skills Card -->
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4 transition-colors duration-200">
-            <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">Skills & Technologies</h3>
+            <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">{{ 'profile.skills' | translate }}</h3>
             
             <div class="flex flex-wrap gap-2 pt-1">
               @for (skill of profile()?.skills; track skill) {
@@ -100,7 +101,7 @@ interface EmployeeProfile {
                   {{ skill }}
                 </span>
               } @empty {
-                <span class="text-xs text-text-secondary">No skills listed in profile.</span>
+                <span class="text-xs text-text-secondary">{{ 'profile.noSkills' | translate }}</span>
               }
             </div>
           </div>

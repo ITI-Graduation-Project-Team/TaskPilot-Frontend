@@ -24,4 +24,5 @@ export interface NotificationDto {
   url: string | null;
   isRead: boolean;
   createdAt: string;
+  taskName?: string;
 }

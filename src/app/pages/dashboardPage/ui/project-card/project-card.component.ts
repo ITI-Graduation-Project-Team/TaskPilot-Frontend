@@ -9,11 +9,13 @@ export interface ProjectStats {
   loading: boolean;
 }
 
+import { TranslatePipe } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-project-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   host: {
     'class': 'block bg-surface border border-border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative',
     '[style.box-shadow]': 'isHovered() ? shadowColor() : "none"',
@@ -49,20 +51,20 @@ export interface ProjectStats {
           @if (isMenuOpen()) {
             <!-- Backdrop -->
             <div class="fixed inset-0 z-40" (click)="closeMenu($event)"></div>
-            <div class="absolute right-0 mt-1 z-50 w-32 bg-surface border border-border rounded-xl shadow-xl overflow-hidden py-1 animate-[fadeDown_0.12s_ease_both]">
-              <button (click)="onEdit($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
+            <div class="absolute end-0 mt-1 z-50 w-36 bg-surface border border-border rounded-xl shadow-xl overflow-hidden py-1 animate-[fadeDown_0.12s_ease_both]">
+              <button (click)="onEdit($event)" class="w-full text-left rtl:text-right px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
                 <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                Edit Project
+                {{ 'dashboard.hub.editProject' | translate }}
               </button>
-              <button (click)="onToggleStatus($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
+              <button (click)="onToggleStatus($event)" class="w-full text-left rtl:text-right px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
                 <svg class="w-3.5 h-3.5 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                View Status & History
+                {{ 'dashboard.hub.viewStatus' | translate }}
               </button>
-              <button (click)="onDelete($event)" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2 border-t border-border mt-1 pt-2">
+              <button (click)="onDelete($event)" class="w-full text-left rtl:text-right px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2 border-t border-border mt-1 pt-2">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                Delete
+                {{ 'dashboard.hub.delete' | translate }}
               </button>
             </div>
           }
@@ -71,7 +73,7 @@ export interface ProjectStats {
 
       <!-- Description -->
       <p class="text-xs text-text-secondary line-clamp-2 leading-relaxed mb-6 flex-grow">
-        {{ project().description || 'No description provided.' }}
+        {{ project().description || ('dashboard.hub.noDescription' | translate) }}
       </p>
 
       <!-- Stats / Skeletons -->
@@ -81,11 +83,11 @@ export interface ProjectStats {
           <div class="flex items-center">
             @if (project().status === 'Completed') {
               <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
-                Completed
+                {{ 'dashboard.hub.completedStatus' | translate }}
               </div>
             } @else if (project().status === 'Archived') {
               <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 border border-slate-500/20">
-                Archived
+                {{ 'dashboard.hub.archivedStatus' | translate }}
               </div>
             } @else {
               @if (stats()?.activeSprint && stats()?.activeSprint !== 'No Active Sprint') {
@@ -95,7 +97,7 @@ export interface ProjectStats {
                 </div>
               } @else {
                 <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-text-secondary/10 text-text-secondary border border-border">
-                  No Active Sprint
+                  {{ 'dashboard.hub.noActiveSprint' | translate }}
                 </div>
               }
             }
@@ -110,7 +112,7 @@ export interface ProjectStats {
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
                 <span class="text-xs font-bold font-mono">{{ stats()?.memberCount ?? 0 }}</span>
-                <span class="text-[10px] text-text-secondary uppercase font-semibold">Members</span>
+                <span class="text-[10px] text-text-secondary uppercase font-semibold">{{ 'dashboard.hub.members' | translate }}</span>
               </div>
 
               <!-- Tasks Count -->
@@ -119,7 +121,7 @@ export interface ProjectStats {
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 <span class="text-xs font-bold font-mono">{{ stats()?.taskCount ?? 0 }}</span>
-                <span class="text-[10px] text-text-secondary uppercase font-semibold">Tasks</span>
+                <span class="text-[10px] text-text-secondary uppercase font-semibold">{{ 'dashboard.hub.tasks' | translate }}</span>
               </div>
             </div>
           </div>
@@ -140,11 +142,11 @@ export interface ProjectStats {
       <!-- Actions -->
       <div class="grid grid-cols-2 gap-2 mt-5">
         <button (click)="onSprintClick($event)" class="py-2 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 group/btn">
-          <span>Sprint Board</span>
+          <span>{{ 'dashboard.hub.sprintBoard' | translate }}</span>
           <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
         <button (click)="onBacklogClick($event)" class="py-2 px-3 bg-sidebar hover:bg-primary/10 border border-border hover:border-primary/20 text-text-primary text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5">
-          <span>Backlog</span>
+          <span>{{ 'dashboard.hub.backlog' | translate }}</span>
         </button>
       </div>
     </div>

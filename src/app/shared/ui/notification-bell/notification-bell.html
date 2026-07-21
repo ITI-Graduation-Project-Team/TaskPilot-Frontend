@@ -22,13 +22,13 @@
     <div class="absolute right-0 top-full mt-2 z-50 w-80 md:w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 overflow-hidden">
       
       <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-        <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+        <h3 class="text-sm font-semibold text-gray-900">{{ 'notifications.title' | translate }}</h3>
         @if (unreadCount() > 0) {
           <button 
             (click)="markAllAsRead()"
             class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
           >
-            Mark all as read
+            {{ 'notifications.markAllAsRead' | translate }}
           </button>
         }
       </div>
@@ -37,7 +37,7 @@
         @if (recentNotifications().length === 0) {
           <div class="px-4 py-8 text-center text-gray-500">
             <i class="fas fa-bell-slash text-3xl mb-2 opacity-50"></i>
-            <p class="text-sm">No notifications yet</p>
+            <p class="text-sm">{{ 'notifications.empty' | translate }}</p>
           </div>
         } @else {
           <div class="divide-y divide-gray-100">
@@ -79,8 +79,11 @@
     </div>
     <div class="ml-3 w-0 flex-1">
       <p class="text-sm text-gray-900" [class.font-semibold]="!notification.isRead">
-        <!-- Assuming English for now, ideally use ngx-translate based on lang -->
-        {{ notification.messageEn }}
+        @if (currentLang === 'ar') {
+          {{ notification.taskName ? ('notifications.taskDone' | translate:{ taskName: notification.taskName }) : notification.messageAr }}
+        } @else {
+          {{ notification.taskName ? ('notifications.taskDone' | translate:{ taskName: notification.taskName }) : notification.messageEn }}
+        }
       </p>
       <p class="mt-1 text-xs text-gray-500">
         {{ notification.createdAt | date:'short' }}

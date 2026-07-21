@@ -4,17 +4,21 @@ import { RouterModule } from '@angular/router';
 import { NotificationHubService } from '../../services/notification-hub.service';
 import { NotificationDto } from '../../models/notification.model';
 
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-notification-bell',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslatePipe],
   templateUrl: './notification-bell.html',
   styleUrls: ['./notification-bell.scss']
 })
 export class NotificationBellComponent {
   private el = inject(ElementRef);
   public notificationHubService = inject(NotificationHubService);
+  public translateService = inject(TranslateService);
   
+  currentLang = typeof localStorage !== 'undefined' ? localStorage.getItem('app_lang') || 'en' : 'en';
   isOpen = signal(false);
 
   // Expose signals from service

@@ -57,12 +57,12 @@ interface CalendarDay {
                   [class.cursor-default]="!isNotCurrentMonth()"
                   [disabled]="!isNotCurrentMonth()">
             @if (isNotCurrentMonth()) {
-              <span class="relative flex h-2.5 w-2.5 mr-1">
+              <span class="relative flex h-2.5 w-2.5 me-1">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
               </span>
             }
-            {{ isAr() ? 'اليوم' : 'Today' }}
+            {{ 'calendar.today' | translate }}
           </button>
 
           <button (click)="nextMonth()" class="p-2 hover:bg-background text-text-secondary hover:text-primary rounded-xl transition-all hover:translate-x-0.5 active:scale-95">
@@ -93,11 +93,11 @@ interface CalendarDay {
 
       <!-- Legend -->
       <div class="flex flex-wrap items-center gap-4 mb-4 text-[11px] md:text-xs font-bold text-text-secondary px-2">
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#3b82f6]"></div> {{ isAr() ? 'معينة' : 'Assigned' }}</div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#22c55e]"></div> {{ isAr() ? 'شخصية' : 'Personal' }}</div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#a855f7]"></div> {{ isAr() ? 'اجتماع' : 'Meeting' }}</div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#f97316]"></div> {{ isAr() ? 'أخرى' : 'Other' }}</div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#94a3b8]"></div> {{ isAr() ? 'مكتملة' : 'Done' }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#3b82f6]"></div> {{ 'calendar.assigned' | translate }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#22c55e]"></div> {{ 'calendar.personal' | translate }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#a855f7]"></div> {{ 'calendar.meeting' | translate }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#f97316]"></div> {{ 'calendar.other' | translate }}</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-[#94a3b8]"></div> {{ 'calendar.done' | translate }}</div>
       </div>
 
       <!-- Calendar Grid -->
@@ -117,7 +117,7 @@ interface CalendarDay {
              cdkDropListGroup>
           @for (day of calendarDays(); track day.date.toISOString(); let idx = $index) {
             <div 
-              class="border-b border-r border-border/50 p-1 md:p-2 flex flex-col transition-colors min-h-0"
+              class="border-b border-e border-border/50 p-1 md:p-2 flex flex-col transition-colors min-h-0"
               [class.bg-background]="!day.isCurrentMonth"
               [class.opacity-60]="!day.isCurrentMonth"
               [class.bg-primary/5]="day.isToday"
@@ -141,7 +141,7 @@ interface CalendarDay {
               </div>
 
               <!-- Tasks -->
-              <div class="flex-1 flex flex-wrap gap-1.5 overflow-y-auto custom-scrollbar min-h-0 pr-0.5 items-start content-start mt-1">
+              <div class="flex-1 flex flex-wrap gap-1.5 overflow-y-auto custom-scrollbar min-h-0 pe-0.5 items-start content-start mt-1">
                 @for (task of day.tasks; track task.id) {
                   <div 
                     cdkDrag
@@ -189,7 +189,7 @@ interface CalendarDay {
                   class="p-4 rounded-xl border shadow-sm transition-all relative flex flex-col gap-2 bg-background hover:border-primary/30"
                   [class.border-border]="task.status !== 'Done'"
                   [class.opacity-70]="task.status === 'Done'"
-                  [style.border-left]="'4px solid ' + getTaskColor(task)"
+                  [style.border-inline-start]="'4px solid ' + getTaskColor(task)"
                   (click)="!isPM() ? closeDayEventsModal() : null; openEditModal(task, $event)"
                   [class.cursor-pointer]="!isPM()"
                   [class.hover:shadow-md]="!isPM()">
@@ -215,7 +215,7 @@ interface CalendarDay {
                     <span class="text-[10px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap"
                           [style.background]="getTaskColor(task) + '20'"
                           [style.color]="getTaskColor(task)">
-                      {{ task.eventType || 'Task' }}
+                      {{ task.eventType || ('calendar.task' | translate) }}
                     </span>
                   </div>
                   
@@ -243,44 +243,44 @@ interface CalendarDay {
           <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeCreateModal()"></div>
           
           <div class="relative bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 animate-[scaleUp_0.2s_ease_both]">
-            <h3 class="text-xl font-bold mb-4 font-display">Add Personal Task</h3>
+            <h3 class="text-xl font-bold mb-4 font-display">{{ 'calendar.addPersonalTask' | translate }}</h3>
             
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Title *</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.titleLabel' | translate }}</label>
                 <input type="text" [(ngModel)]="newTask().title" 
                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors"
-                       placeholder="e.g. Prepare for meeting">
+                       [placeholder]="'calendar.titlePlaceholder' | translate">
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Description</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.description' | translate }}</label>
                 <textarea [(ngModel)]="newTask().description" rows="2"
                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar"
-                       placeholder="Task details..."></textarea>
+                       [placeholder]="'calendar.descriptionPlaceholder' | translate"></textarea>
               </div>
               
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Start</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.start' | translate }}</label>
                   <input type="datetime-local" [(ngModel)]="newTask().startDateTime" 
                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">End</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.end' | translate }}</label>
                   <input type="datetime-local" [(ngModel)]="newTask().endDateTime" 
                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
                 </div>
               </div>
 
               <div class="mt-4">
-                <label class="block text-sm font-bold text-text-secondary mb-1">Priority</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.priority' | translate }}</label>
                 <select [(ngModel)]="newTask().priority" 
                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
+                  <option value="Low">{{ 'calendar.low' | translate }}</option>
+                  <option value="Medium">{{ 'calendar.medium' | translate }}</option>
+                  <option value="High">{{ 'calendar.high' | translate }}</option>
                 </select>
               </div>
             </div>
@@ -288,12 +288,12 @@ interface CalendarDay {
             <div class="flex items-center justify-end gap-3 mt-8">
               <button (click)="closeCreateModal()" 
                       class="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
-                Cancel
+                {{ 'calendar.cancel' | translate }}
               </button>
               <button (click)="saveNewTask()" 
                       [disabled]="!newTask().title"
                       class="px-6 py-2 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Save Task
+                {{ 'calendar.saveTask' | translate }}
               </button>
             </div>
           </div>
@@ -306,21 +306,21 @@ interface CalendarDay {
           <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeEditModal()"></div>
           
           <div class="relative bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 animate-[scaleUp_0.2s_ease_both]">
-            <h3 class="text-xl font-bold mb-4 font-display">Edit Task</h3>
+            <h3 class="text-xl font-bold mb-4 font-display">{{ 'calendar.editTask' | translate }}</h3>
             
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Title *</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.titleLabel' | translate }}</label>
                 <input type="text" [(ngModel)]="editingTask()!.title" 
                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors"
-                       placeholder="e.g. Prepare for meeting">
+                       [placeholder]="'calendar.titlePlaceholder' | translate">
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Description</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.description' | translate }}</label>
                 <textarea [(ngModel)]="editingTask()!.description" rows="2"
                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar"
-                       placeholder="Task details..."></textarea>
+                       [placeholder]="'calendar.descriptionPlaceholder' | translate"></textarea>
               </div>
 
               <div class="grid grid-cols-2 gap-4">
@@ -339,23 +339,23 @@ interface CalendarDay {
 
               <div class="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Priority</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.priority' | translate }}</label>
                   <select [(ngModel)]="editingTask()!.priority" 
                           class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
+                    <option value="Low">{{ 'calendar.low' | translate }}</option>
+                    <option value="Medium">{{ 'calendar.medium' | translate }}</option>
+                    <option value="High">{{ 'calendar.high' | translate }}</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Status</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ 'calendar.status' | translate }}</label>
                   <select [(ngModel)]="editingTask()!.status" 
                           class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
-                    <option value="ToDo">To Do</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="Review">Review</option>
-                    <option value="Done">Done</option>
+                    <option value="ToDo">{{ 'calendar.todo' | translate }}</option>
+                    <option value="InProgress">{{ 'calendar.inProgress' | translate }}</option>
+                    <option value="Review">{{ 'calendar.review' | translate }}</option>
+                    <option value="Done">{{ 'calendar.doneStatus' | translate }}</option>
                   </select>
                 </div>
               </div>
@@ -364,17 +364,17 @@ interface CalendarDay {
             <div class="flex items-center justify-between mt-8 pt-4 border-t border-border/50">
               <button (click)="deleteEditedTask()" 
                       class="px-4 py-2 text-sm font-bold text-error hover:bg-error/10 transition-colors rounded-xl">
-                Delete
+                {{ 'calendar.delete' | translate }}
               </button>
               <div class="flex items-center gap-2">
                 <button (click)="closeEditModal()" 
                         class="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
-                  Cancel
+                  {{ 'calendar.cancel' | translate }}
                 </button>
                 <button (click)="saveEditedTask()" 
                         [disabled]="!editingTask()!.title"
                         class="px-6 py-2 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                  Save
+                  {{ 'calendar.save' | translate }}
                 </button>
               </div>
             </div>
@@ -384,12 +384,12 @@ interface CalendarDay {
 
       <!-- Custom Hover Tooltip Card -->
       @if (hoveredTask(); as hover) {
-        <div class="fixed z-[120] -translate-x-1/2 -translate-y-full pb-3 animate-[fadeIn_0.15s_ease_both] pointer-events-auto"
+        <div class="fixed z-[120] -translate-x-1/2 rtl:translate-x-1/2 -translate-y-full pb-3 animate-[fadeIn_0.15s_ease_both] pointer-events-auto"
              [style.left.px]="hover.x" [style.top.px]="hover.y"
              (mouseenter)="onTooltipMouseEnter()"
              (mouseleave)="onTooltipMouseLeave()">
           <div class="w-72 md:w-80 bg-surface rounded-2xl shadow-[0_12px_40px_-10px_rgba(0,0,0,0.2)] border border-border p-5 flex flex-col gap-4 relative">
-             <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-surface border-b border-r border-border rotate-45"></div>
+             <div class="absolute -bottom-1.5 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 w-3 h-3 bg-surface border-b border-e border-border rotate-45"></div>
              
              <div class="flex items-start gap-3 relative z-10">
                 <div class="flex flex-col items-center justify-center w-11 h-12 bg-background border border-border rounded-xl overflow-hidden shadow-sm shrink-0">
@@ -407,14 +407,14 @@ interface CalendarDay {
                    </h4>
                    <p class="text-text-secondary text-[11px] truncate mt-0.5 flex items-center gap-1.5 font-medium">
                       <span class="w-2 h-2 rounded-full inline-block" [style.background]="getTaskColor(hover.task)"></span>
-                      {{ hover.task.eventType || 'Task' }} • {{ hover.task.priority || 'Medium' }}
+                      {{ hover.task.eventType || ('calendar.task' | translate) }} • {{ hover.task.priority || ('calendar.medium' | translate) }}
                    </p>
                 </div>
              </div>
 
              @if (hover.task.descriptionEn || hover.task.descriptionAr) {
                <div class="flex flex-col gap-1.5 relative z-10">
-                 <span class="text-[11px] font-bold text-text-primary">{{ isAr() ? 'الملاحظات' : 'Notes' }}</span>
+                 <span class="text-[11px] font-bold text-text-primary">{{ 'calendar.notes' | translate }}</span>
                  <div class="bg-background rounded-xl p-3 text-xs text-text-secondary border border-border/50 leading-relaxed max-h-24 overflow-y-auto custom-scrollbar">
                    {{ isAr() ? (hover.task.descriptionAr || hover.task.descriptionEn) : (hover.task.descriptionEn || hover.task.descriptionAr) }}
                  </div>
@@ -425,11 +425,11 @@ interface CalendarDay {
                <div class="flex items-center gap-3 mt-1 pt-4 border-t border-border/50 relative z-10">
                  <button (click)="openEditModal(hover.task, $event); hoveredTask.set(null)" class="flex-1 py-1.5 text-xs font-bold text-text-primary bg-background hover:bg-black/5 border border-border rounded-xl transition-colors flex justify-center items-center gap-1.5">
                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg> 
-                   {{ isAr() ? 'تعديل' : 'Edit' }}
+                   {{ 'calendar.edit' | translate }}
                  </button>
                  <button (click)="$event.stopPropagation(); deleteTask(hover.task.id); hoveredTask.set(null)" class="flex-1 py-1.5 text-xs font-bold text-error bg-error/5 hover:bg-error/10 border border-error/20 rounded-xl transition-colors flex justify-center items-center gap-1.5">
                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> 
-                   {{ isAr() ? 'حذف' : 'Delete' }}
+                   {{ 'calendar.delete' | translate }}
                  </button>
                </div>
              }

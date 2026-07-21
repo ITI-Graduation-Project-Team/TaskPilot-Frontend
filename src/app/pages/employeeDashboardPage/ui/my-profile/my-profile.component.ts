@@ -86,16 +86,15 @@ interface EmployeeProfile {
                 <h2 class="text-3xl font-extrabold font-display tracking-tight" style="color: var(--text-primary);">
                   {{ p.firstName }} {{ p.lastName }}
                 </h2>
-                <!-- Seniority Badge -->
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold tracking-widest uppercase shadow-sm"
                       [style.background]="getSeniorityBg(p.seniorityLevel)"
                       [style.color]="getSeniorityColor(p.seniorityLevel)">
-                  {{ p.seniorityLevel }}
+                  {{ 'seniority.' + p.seniorityLevel | translate }}
                 </span>
               </div>
               
               <p class="text-base font-semibold" style="color: var(--primary);">
-                {{ p.jobTitle || ('employee.profile.noJobTitle' | translate) }}
+                {{ p.jobTitle ? ('roles.' + p.jobTitle | translate) : ('employee.profile.noJobTitle' | translate) }}
               </p>
               
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-3 text-sm font-medium" style="color: var(--text-secondary);">
@@ -194,7 +193,7 @@ interface EmployeeProfile {
                   <div class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0 border me-4"
                        style="background: var(--surface); border-color: var(--border);">
                     <span class="text-base font-extrabold" style="color: var(--primary);">{{ skill.yearsOfExperience }}</span>
-                    <span class="text-[9px] font-bold uppercase tracking-wider" style="color: var(--text-secondary);">Yrs</span>
+                    <span class="text-[9px] font-bold uppercase tracking-wider" style="color: var(--text-secondary);">{{ 'employee.profile.yrs' | translate }}</span>
                   </div>
 
                   <!-- Center Content -->
@@ -225,7 +224,7 @@ interface EmployeeProfile {
                           [style.background]="getSkillLevelBg(skill.level)"
                           [style.color]="getSkillLevelColor(skill.level)"
                           [style.border-color]="getSkillLevelBorder(skill.level)">
-                      {{ skill.level }}
+                      {{ 'skillLevel.' + skill.level | translate }}
                     </span>
                   </div>
                 </div>

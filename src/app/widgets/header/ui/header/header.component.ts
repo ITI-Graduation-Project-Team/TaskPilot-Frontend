@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 
 type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 'organization' | 'profile' | 'create-project';
@@ -8,7 +9,7 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
 @Component({
   selector: 'app-header-widget',
   standalone: true,
-  imports: [CommonModule, RouterLink, NotificationBellComponent],
+  imports: [CommonModule, RouterLink, NotificationBellComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Header -->
@@ -16,38 +17,38 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
       <div class="flex items-center gap-3">
         <h1 class="text-lg font-extrabold text-text-primary font-display flex items-center gap-1.5">
           @if (currentTab === 'projects') {
-            Projects Hub
+            {{ 'dashboard.header.projectsHub' | translate }}
           } @else if (currentTab === 'create-project') {
-            Create Project
+            {{ 'dashboard.header.createProject' | translate }}
           } @else if (currentTab === 'profile') {
-            My Profile
+            {{ 'dashboard.header.myProfile' | translate }}
           } @else if (currentTab === 'sprint-planning') {
             @if (isProjectManager) {
-              <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="onTabChange('projects')">All Projects</span>
+              <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="onTabChange('projects')">{{ 'dashboard.header.allProjects' | translate }}</span>
               <span class="text-text-secondary font-light">/</span>
             }
-            <span class="truncate max-w-[200px]">{{ selectedProject?.nameEn || 'Workspace' }}</span>
+            <span class="truncate max-w-[200px]">{{ selectedProject?.nameEn || ('dashboard.header.workspace' | translate) }}</span>
             <span class="text-text-secondary font-light">/</span>
-            Sprint Planning
+            {{ 'dashboard.header.sprintPlanning' | translate }}
           } @else if (currentTab === 'organization') {
-            @if (isProjectManager) { Organization Hub } @else { Company Policies }
+            @if (isProjectManager) { {{ 'dashboard.header.organizationHub' | translate }} } @else { {{ 'dashboard.header.companyPolicies' | translate }} }
           } @else {
             <!-- Breadcrumbs inside project tabs -->
             @if (isProjectManager) {
-              <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="onTabChange('projects')">All Projects</span>
+              <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="onTabChange('projects')">{{ 'dashboard.header.allProjects' | translate }}</span>
               <span class="text-text-secondary font-light">/</span>
             }
-            <span class="truncate max-w-[200px]">{{ selectedProject?.nameEn || 'Workspace' }}</span>
+            <span class="truncate max-w-[200px]">{{ selectedProject?.nameEn || ('dashboard.header.workspace' | translate) }}</span>
           }
         </h1>
         
         @if (selectedProject?.status === 'Completed') {
           <span class="px-2.5 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-600 rounded-full font-mono uppercase tracking-wider">
-            Completed
+            {{ 'dashboard.header.completed' | translate }}
           </span>
         } @else if (selectedProject?.status === 'Archived') {
           <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
-            Archived
+            {{ 'dashboard.header.archived' | translate }}
           </span>
         } @else if (currentTab === 'sprint') {
           <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
@@ -68,9 +69,9 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                 </svg>
                 <span class="truncate max-w-[100px]">
-                  {{ selectedProject?.nameEn || 'Select Project' }}
+                  {{ selectedProject?.nameEn || ('dashboard.header.selectProject' | translate) }}
                 </span>
-                <svg class="w-3 h-3 ml-auto text-text-secondary transition-transform duration-200 shrink-0"
+                <svg class="w-3 h-3 ms-auto text-text-secondary transition-transform duration-200 shrink-0"
                      [class.rotate-180]="isProjectDropdownOpen()"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
@@ -81,14 +82,14 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
                 <!-- Backdrop -->
                 <div class="fixed inset-0 z-40" (click)="isProjectDropdownOpen.set(false)"></div>
                 <!-- Dropdown Panel -->
-                <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both]">
+                <div class="absolute end-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both]">
                   <div class="px-3 py-2 border-b border-border">
-                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Your Projects</p>
+                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">{{ 'dashboard.header.yourProjects' | translate }}</p>
                   </div>
                   <div class="py-1 max-h-60 overflow-y-auto">
                     @for (p of projects; track p.id) {
                       <button (click)="onSelectProject(p.id)"
-                              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left hover:bg-sidebar transition-colors"
+                              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-start hover:bg-sidebar transition-colors"
                               [class.bg-primary/8]="p.id === selectedProject?.id">
                         <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white text-xs font-bold"
                              [style.background]="getProjectColor(p.id)">
@@ -96,7 +97,7 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
                         </div>
                         <span class="font-medium text-text-primary truncate">{{ p.nameEn || p.name }}</span>
                         @if (p.id === selectedProject?.id) {
-                          <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <svg class="w-4 h-4 text-primary ms-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                           </svg>
                         }
@@ -114,7 +115,7 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
           <button (click)="onCreateProject.emit()"
                   class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-            Create Project
+            {{ 'dashboard.header.createProject' | translate }}
           </button>
         }
 
@@ -125,14 +126,19 @@ type TabType = 'projects' | 'sprint' | 'backlog' | 'sprint-planning' | 'team' | 
         <a routerLink="/subscription"
            class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-          Subscription
+          {{ 'dashboard.header.subscription' | translate }}
         </a>
 
         <!-- Logout button -->
         <button (click)="onLogout.emit()"
                 class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-          Logout
+          {{ 'dashboard.header.logout' | translate }}
+        </button>
+
+        <!-- Language toggle -->
+        <button (click)="onToggleLanguage()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-border transition-colors font-bold text-xs uppercase">
+          {{ currentLang === 'en' ? 'عربي' : 'EN' }}
         </button>
 
         <!-- Dark mode toggle -->
@@ -161,14 +167,20 @@ export class HeaderWidgetComponent {
   @Input() projects!: any[];
   @Input({ required: true }) isDark!: boolean;
   @Input({ required: true }) currentDate!: string;
+  @Input() currentLang: 'en' | 'ar' = 'en';
 
   @Output() tabChange = new EventEmitter<TabType>();
   @Output() selectProject = new EventEmitter<string>();
   @Output() onCreateProject = new EventEmitter<void>();
   @Output() onLogout = new EventEmitter<void>();
   @Output() onToggleDarkMode = new EventEmitter<void>();
+  @Output() setLanguage = new EventEmitter<'en' | 'ar'>();
 
   isProjectDropdownOpen = signal(false);
+
+  onToggleLanguage() {
+    this.setLanguage.emit(this.currentLang === 'en' ? 'ar' : 'en');
+  }
 
   onTabChange(tab: TabType) {
     this.tabChange.emit(tab);

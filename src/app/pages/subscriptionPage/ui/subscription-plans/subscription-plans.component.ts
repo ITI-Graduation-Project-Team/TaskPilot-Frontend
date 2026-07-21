@@ -8,13 +8,14 @@ import { PaypalPaymentService } from '../../../../shared/services/paypal-payment
 import { ToastService } from '../../../../shared/services/toast.service';
 import { SubscriptionPlanDto, UserSubscriptionDto, BillingCycle, PaymentGateway } from '../../../../shared/api/subscription.models';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 type PageState = 'loading' | 'loaded' | 'error_403' | 'error_generic';
 
 @Component({
   selector: 'app-subscription-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './subscription-plans.component.html',
   styleUrls: ['./subscription-plans.component.scss']
 })

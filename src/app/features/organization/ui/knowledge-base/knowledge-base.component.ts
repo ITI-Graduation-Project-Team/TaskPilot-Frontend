@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { CompanyPoliciesService, PolicyDocument } from '../../../../shared/api/company-policies.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-knowledge-base',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-surface rounded-3xl border border-border p-6 md:p-8 shadow-sm">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-bold text-text-primary font-display">Knowledge Base</h3>
-          <p class="text-sm text-text-secondary mt-1">Upload company policies and documents. The AI Assistant will read these to answer team questions.</p>
+          <h3 class="text-lg font-bold text-text-primary font-display">{{ 'knowledgeBase.title' | translate }}</h3>
+          <p class="text-sm text-text-secondary mt-1">{{ 'knowledgeBase.desc' | translate }}</p>
         </div>
       </div>
 
@@ -36,12 +37,12 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </svg>
         </div>
         
-        <p class="text-sm font-bold text-text-primary mb-1">Drag and drop your policy documents here</p>
-        <p class="text-xs text-text-secondary mb-4">Supported formats: PDF, DOCX (Max 10MB)</p>
+        <p class="text-sm font-bold text-text-primary mb-1">{{ 'knowledgeBase.dragDrop' | translate }}</p>
+        <p class="text-xs text-text-secondary mb-4">{{ 'knowledgeBase.supportedFormats' | translate }}</p>
         
         <label class="cursor-pointer">
           <span class="px-5 py-2.5 bg-background border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all">
-            Browse Files
+            {{ 'knowledgeBase.browseFiles' | translate }}
           </span>
           <input type="file" class="hidden" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)">
         </label>
@@ -51,15 +52,15 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <div class="mt-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-4">
           <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
           <div>
-            <p class="text-sm font-bold text-text-primary">Uploading document...</p>
-            <p class="text-xs text-text-secondary">Please wait while the AI processes the file.</p>
+            <p class="text-sm font-bold text-text-primary">{{ 'knowledgeBase.uploading' | translate }}</p>
+            <p class="text-xs text-text-secondary">{{ 'knowledgeBase.uploadingDesc' | translate }}</p>
           </div>
         </div>
       }
 
       <!-- Uploaded Documents List -->
       <div class="mt-8">
-        <h4 class="text-xs font-bold text-text-secondary mb-4 uppercase tracking-wider">Uploaded Documents</h4>
+        <h4 class="text-xs font-bold text-text-secondary mb-4 uppercase tracking-wider">{{ 'knowledgeBase.uploadedDocs' | translate }}</h4>
         
         @if (isLoading()) {
           <div class="flex items-center justify-center py-8">
@@ -67,7 +68,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </div>
         } @else if (documents().length === 0) {
           <div class="text-center py-8 bg-background border border-border border-dashed rounded-2xl">
-            <p class="text-sm text-text-secondary">No policies uploaded yet.</p>
+            <p class="text-sm text-text-secondary">{{ 'knowledgeBase.noPolicies' | translate }}</p>
           </div>
         } @else {
           <div class="grid gap-3">
@@ -81,7 +82,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
                   </div>
                   <div class="min-w-0">
                     <p class="text-sm font-bold text-text-primary truncate">{{ doc.fileName }}</p>
-                    <p class="text-[10px] text-text-secondary">Uploaded on {{ doc.uploadedAt | date:'mediumDate' }}</p>
+                    <p class="text-[10px] text-text-secondary">{{ 'knowledgeBase.uploadedOn' | translate }} {{ doc.uploadedAt | date:'mediumDate' }}</p>
                   </div>
                 </div>
                 

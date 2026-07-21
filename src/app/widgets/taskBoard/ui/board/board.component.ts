@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import {
   BacklogService,
@@ -32,6 +33,7 @@ interface Task {
   description: string;
   priority: 'Low' | 'Medium' | 'High';
   hours: number;
+  actualHours?: number;
   type: 'Feature' | 'Bug' | 'Refactor';
 }
 
@@ -41,7 +43,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent],
   template: `
     <div class="space-y-6">
       
@@ -110,7 +112,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
+            <h3 class="text-xl font-bold text-text-primary">{{ 'dashboard.board.noActiveProject' | translate }}</h3>
             <p class="text-text-secondary text-sm mt-2 max-w-md">
               You are currently not viewing an active project. Please select an active project from the dropdown, or ask your Project Manager to assign you to one.
             </p>
@@ -122,7 +124,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
-              <p class="text-text-secondary text-sm font-medium">Total Tasks</p>
+              <p class="text-text-secondary text-sm font-medium">{{ 'dashboard.board.totalTasks' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ totalTasksCount() }}</h3>
             </div>
             <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
@@ -134,7 +136,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
-              <p class="text-text-secondary text-sm font-medium">In Progress</p>
+              <p class="text-text-secondary text-sm font-medium">{{ 'dashboard.board.inProgress' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ inProgress().length }}</h3>
             </div>
             <div class="w-10 h-10 bg-warning/10 text-warning rounded-xl flex items-center justify-center">
@@ -146,7 +148,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
-              <p class="text-text-secondary text-sm font-medium">Under Review</p>
+              <p class="text-text-secondary text-sm font-medium">{{ 'dashboard.board.underReview' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ review().length }}</h3>
             </div>
             <div class="w-10 h-10 bg-info/10 text-info rounded-xl flex items-center justify-center">
@@ -159,7 +161,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
-              <p class="text-text-secondary text-sm font-medium">Completed</p>
+              <p class="text-text-secondary text-sm font-medium">{{ 'dashboard.board.done' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ done().length }}</h3>
             </div>
             <div class="w-10 h-10 bg-success/10 text-success rounded-xl flex items-center justify-center">
@@ -179,35 +181,35 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  Back to Sprints
+                  {{ 'dashboard.board.backToSprints' | translate }}
                 </button>
               </div>
             }
-            <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
-            <p class="text-text-secondary text-sm mt-1">Drag and drop tasks to update their current progress state.</p>
+            <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} {{ 'dashboard.board.workspace' | translate }}</h2>
+            <p class="text-text-secondary text-sm mt-1">{{ 'dashboard.board.dragDropTasks' | translate }}</p>
           </div>
           
           <div class="flex items-center gap-3">
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
                       class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                👥 Assign Tasks
+                👥 {{ 'dashboard.board.assignTasks' | translate }}
               </button>
               <button (click)="startSprint()" 
                       class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                ▶ Start Sprint
+                ▶ {{ 'dashboard.board.startSprint' | translate }}
               </button>
             }
             @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
               <button (click)="completeSprintFromBoard()" 
                       class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                Complete Sprint
+                {{ 'dashboard.board.completeSprint' | translate }}
               </button>
             }
             @if (projectState.isProjectManager() && sprintStatus() === 'Completed') {
               <button (click)="isRetroModalOpen.set(true)" 
                       class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                📋 Sprint Retro
+                📋 {{ 'dashboard.board.sprintRetro' | translate }}
               </button>
             }
           </div>
@@ -223,43 +225,43 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm">
           <div class="grid grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_auto_auto_auto] gap-3 items-end">
             <label class="block">
-              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">Search tasks</span>
+              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">{{ 'dashboard.board.searchTasks' | translate }}</span>
               <div class="relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
                 </svg>
                 <input
                   type="search"
                   [ngModel]="boardSearch()"
                   (ngModelChange)="boardSearch.set($event)"
-                  placeholder="Search by title or description"
-                  class="w-full h-11 bg-background border border-border rounded-xl pl-9 pr-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  [placeholder]="'dashboard.board.searchPlaceholder' | translate"
+                  class="w-full h-11 bg-background border border-border rounded-xl ps-9 pe-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
             </label>
 
             <label class="block min-w-40">
-              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">Priority</span>
+              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">{{ 'dashboard.board.priority' | translate }}</span>
               <select
                 [ngModel]="priorityFilter()"
                 (ngModelChange)="priorityFilter.set($event)"
                 class="w-full h-11 bg-background border border-border rounded-xl px-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                <option value="All">All priorities</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                <option value="All">{{ 'dashboard.board.allPriorities' | translate }}</option>
+                <option value="High">{{ 'dashboard.board.high' | translate }}</option>
+                <option value="Medium">{{ 'dashboard.board.medium' | translate }}</option>
+                <option value="Low">{{ 'dashboard.board.low' | translate }}</option>
               </select>
             </label>
 
             <label class="block min-w-40">
-              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">Type</span>
+              <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">{{ 'dashboard.board.type' | translate }}</span>
               <select
                 [ngModel]="typeFilter()"
                 (ngModelChange)="typeFilter.set($event)"
                 class="w-full h-11 bg-background border border-border rounded-xl px-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-                <option value="All">All types</option>
-                <option value="Feature">Feature</option>
-                <option value="Bug">Bug</option>
-                <option value="Refactor">Refactor</option>
+                <option value="All">{{ 'dashboard.board.allTypes' | translate }}</option>
+                <option value="Feature">{{ 'dashboard.board.feature' | translate }}</option>
+                <option value="Bug">{{ 'dashboard.board.bug' | translate }}</option>
+                <option value="Refactor">{{ 'dashboard.board.refactor' | translate }}</option>
               </select>
             </label>
 
@@ -268,16 +270,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               (click)="resetBoardFilters()"
               [disabled]="!hasActiveBoardFilters()"
               class="h-11 px-4 border border-border text-text-secondary hover:text-text-primary hover:bg-background disabled:opacity-45 disabled:cursor-not-allowed rounded-xl text-sm font-semibold transition-all">
-              Clear filters
+              {{ 'dashboard.board.clearFilters' | translate }}
             </button>
           </div>
 
           <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
-            <span>Showing {{ visibleTasksCount() }} of {{ totalTasksCount() }} tasks. Each column loads in focused batches.</span>
+            <span>{{ 'dashboard.board.showingBatch' | translate:{ visible: visibleTasksCount(), total: totalTasksCount() } }}</span>
             @if (isBoardReadonly()) {
-              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is disabled (Project is {{ projectState.selectedProject()?.status }})</span>
+              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">{{ 'dashboard.board.dragDisabled' | translate:{ status: projectState.selectedProject()?.status } }}</span>
             } @else if (hasActiveBoardFilters()) {
-              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">Drag is paused while filters are active</span>
+              <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning font-semibold">{{ 'dashboard.board.dragPaused' | translate }}</span>
             }
           </div>
         </div>
@@ -287,7 +289,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <!-- TO DO -->
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
             <div class="flex items-center justify-between mb-4 px-1">
-              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">To Do</span>
+              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'dashboard.board.todo' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">{{ todo().length }}</span>
             </div>
             
@@ -326,7 +328,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                      {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                      {{ projectState.isProjectManager() && !isBoardReadonly() ? ('dashboard.board.edit' | translate) : ('dashboard.board.view' | translate) }}
                     </button>
                   </div>
                 </div>
@@ -350,7 +352,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <!-- IN PROGRESS -->
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
             <div class="flex items-center justify-between mb-4 px-1">
-              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">In Progress</span>
+              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'dashboard.board.inProgress' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-warning/15 text-warning rounded-full">{{ inProgress().length }}</span>
             </div>
 
@@ -388,7 +390,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.board.edit' | translate }}</button>
                   </div>
                 </div>
               } @empty {
@@ -411,7 +413,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <!-- UNDER REVIEW -->
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
             <div class="flex items-center justify-between mb-4 px-1">
-              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">Review</span>
+              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'dashboard.board.reviewCol' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-info/15 text-info rounded-full">{{ review().length }}</span>
             </div>
 
@@ -449,7 +451,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.board.edit' | translate }}</button>
                   </div>
                 </div>
               } @empty {
@@ -472,7 +474,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <!-- DONE -->
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
             <div class="flex items-center justify-between mb-4 px-1">
-              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">Done</span>
+              <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'dashboard.board.doneCol' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full">{{ done().length }}</span>
             </div>
 
@@ -510,7 +512,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.board.edit' | translate }}</button>
                   </div>
                 </div>
               } @empty {
@@ -550,10 +552,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </div>
               <div>
                 <h3 class="text-xl font-black text-text-primary tracking-tight">
-                  {{ isEditing() ? 'Task Details' : 'Create New Task' }}
+                  {{ isEditing() ? ('dashboard.board.taskDetails' | translate) : ('dashboard.board.createNewTask' | translate) }}
                 </h3>
                 <p class="text-[11px] font-bold text-text-secondary uppercase tracking-wider mt-0.5">
-                  {{ isEditing() ? 'Manage task info and chat' : 'Add to your backlog' }}
+                  {{ isEditing() ? ('dashboard.board.manageTask' | translate) : ('dashboard.board.addToBacklog' | translate) }}
                 </p>
               </div>
             </div>
@@ -572,22 +574,22 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               <div class="space-y-6 flex flex-col">
                 @if (projectState.isProjectManager()) {
                   <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Task Title</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.taskTitle' | translate }}</label>
                     <input type="text" [(ngModel)]="modalTask().title" 
-                           placeholder="What needs to be done?"
+                           [placeholder]="'dashboard.board.taskTitlePlaceholder' | translate"
                            class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-extrabold text-[15px] shadow-sm placeholder:text-text-secondary/50" />
                   </div>
 
                   <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Description</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.description' | translate }}</label>
                     <textarea [(ngModel)]="modalTask().description" rows="5"
-                              placeholder="Provide more context..."
+                              [placeholder]="'dashboard.board.descriptionPlaceholder' | translate"
                               class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 resize-none font-medium text-[13px] shadow-sm leading-relaxed placeholder:text-text-secondary/50"></textarea>
                   </div>
 
                   <div class="grid grid-cols-2 gap-5 relative">
                     <div class="relative">
-                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</label>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.priority' | translate }}</label>
                       <button type="button" (click)="togglePrioritySelect()"
                               class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
                         <div class="flex items-center gap-2">
@@ -621,7 +623,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                     </div>
 
                     <div class="relative">
-                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</label>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.type' | translate }}</label>
                       <button type="button" (click)="toggleTypeSelect()"
                               class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
                         <div class="flex items-center gap-2">
@@ -662,16 +664,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   </div>
 
                   <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimation</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.estimation' | translate }}</label>
                     <div class="relative">
-                      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
+                      <div class="absolute start-4 top-1/2 -translate-y-1/2 text-text-secondary">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <input type="number" [(ngModel)]="modalTask().hours" 
-                             class="w-full pl-10 pr-16 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-bold text-[13px] shadow-sm" />
-                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary uppercase">hrs</span>
+                             class="w-full ps-10 pe-16 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-bold text-[13px] shadow-sm" />
+                      <span class="absolute end-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary uppercase">{{ 'dashboard.board.hrs' | translate }}</span>
                     </div>
                   </div>
                 } @else {
@@ -680,9 +682,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       <h4 class="text-2xl font-black text-text-primary leading-tight tracking-tight">{{ modalTask().title }}</h4>
                       <p class="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium bg-background border border-border/50 rounded-xl p-4">{{ modalTask().description || 'No description provided.' }}</p>
                     </div>
-                    <div class="grid grid-cols-3 divide-x divide-border border-t border-border bg-background text-center">
+                    <div class="grid grid-cols-4 divide-x divide-border border-t border-border bg-background text-center">
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.type' | translate }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
                           <span class="text-lg leading-none" [ngSwitch]="modalTask().type">
                             <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
@@ -693,7 +695,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                         </span>
                       </div>
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.priority' | translate }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
                           <span class="w-2.5 h-2.5 rounded-full" 
                                 [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
@@ -701,7 +703,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                         </span>
                       </div>
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimated</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.estimated' | translate }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
                           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -709,19 +711,18 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                           {{ modalTask().hours }}h
                         </span>
                       </div>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ 'dashboard.board.actual' | translate }}</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ modalTask().actualHours || 0 }}h
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">Actual Hours Spent</label>
-                    <div class="relative">
-                      <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
-                             class="w-full px-4 py-3.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 font-bold"
-                             placeholder="e.g. 4.5" />
-                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-                    </div>
-                    <p class="text-xs text-text-secondary mt-2 font-medium">Update the actual hours you spent working on this task.</p>
-                  </div>
                 }
 
                 <div class="flex-1"></div> <!-- Spacer -->
@@ -731,16 +732,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   <div class="flex items-center space-x-3 pt-6 border-t border-border mt-6">
                     @if (projectState.isProjectManager() && !isBoardReadonly()) {
                       <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
-                        Delete Task
+                        {{ 'dashboard.board.deleteTask' | translate }}
                       </button>
                     }
                     <div class="flex-1"></div>
                     <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
-                      Cancel
+                      {{ 'dashboard.board.cancel' | translate }}
                     </button>
-                    @if (!isBoardReadonly()) {
+                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
                       <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                        {{ projectState.isProjectManager() ? 'Save Changes' : 'Save Hours' }}
+                        {{ 'dashboard.board.saveChanges' | translate }}
                       </button>
                     }
                   </div>
@@ -749,7 +750,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
               <!-- RIGHT COLUMN: Discussion & AI Coach -->
               @if (isEditing()) {
-                <div class="flex flex-col h-full border-border lg:border-l lg:pl-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
+                <div class="flex flex-col h-full border-border lg:border-s lg:ps-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
                   <!-- Agile Coach Features -->
                   @if (projectState.isProjectManager()) {
                     <div class="space-y-4 shrink-0">
@@ -781,10 +782,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           @if (!isEditing()) {
             <div class="p-6 border-t border-border flex items-center justify-end space-x-3 bg-surface rounded-b-2xl shrink-0">
               <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-background font-bold rounded-xl transition-colors">
-                Cancel
+                {{ 'dashboard.board.cancel' | translate }}
               </button>
               <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                Create Task
+                {{ 'dashboard.board.createTask' | translate }}
               </button>
             </div>
           }
@@ -811,8 +812,7 @@ export class BoardComponent implements OnInit {
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
   private tasksService = inject(TasksService);
-
-  employeeActualHours = 0;
+  private translateService = inject(TranslateService);
 
   isBoardReadonly = computed(() => {
     return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
@@ -883,17 +883,17 @@ export class BoardComponent implements OnInit {
     this.isPrioritySelectOpen.update(v => !v);
     this.isTypeSelectOpen.set(false);
   }
-  
+
   toggleTypeSelect() {
     this.isTypeSelectOpen.update(v => !v);
     this.isPrioritySelectOpen.set(false);
   }
-  
+
   selectPriority(val: any) {
     this.modalTask.update(t => ({ ...t, priority: val }));
     this.isPrioritySelectOpen.set(false);
   }
-  
+
   selectType(val: any) {
     this.modalTask.update(t => ({ ...t, type: val }));
     this.isTypeSelectOpen.set(false);
@@ -1164,15 +1164,16 @@ export class BoardComponent implements OnInit {
   }
 
   emptyColumnMessage(column: ColumnKey): string {
-    if (this.hasActiveBoardFilters()) return 'No matching tasks';
-    if (column === 'todo') return 'No tasks to do';
-    if (column === 'inProgress') return 'Drop tasks here to start';
-    if (column === 'review') return 'Drop tasks for validation';
-    return 'No completed tasks yet';
+    if (this.hasActiveBoardFilters()) return this.translateService.instant('dashboard.board.noMatchingTasks');
+    if (column === 'todo') return this.translateService.instant('dashboard.board.todoEmpty');
+    if (column === 'inProgress') return this.translateService.instant('dashboard.board.inProgressEmpty');
+    if (column === 'review') return this.translateService.instant('dashboard.board.reviewEmpty');
+    return this.translateService.instant('dashboard.board.doneEmpty');
   }
+
   async drop(event: CdkDragDrop<Task[]>) {
     if (this.hasActiveBoardFilters()) {
-      this.toastService.show('Clear filters before moving tasks on the board.', 'error');
+      this.toastService.show(this.translateService.instant('dashboard.board.clearFiltersError'), 'error');
       return;
     }
 
@@ -1207,26 +1208,19 @@ export class BoardComponent implements OnInit {
           });
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
-          
-          const response = await this.tasksService.updateTaskStatus(task.id, statusEnum);
-          if (statusEnum === TaskItemStatus.Done && response?.actualHours !== undefined) {
-            this.employeeActualHours = response.actualHours;
-            // Optionally update the task object if it has an actualHours field
-            (task as any).actualHours = response.actualHours;
-          }
+
+          await this.tasksService.updateTaskStatus(task.id, statusEnum);
           this.toastService.show('Task status updated successfully.', 'success');
         }
+        // Fetch updated data from backend to get the automatically calculated actualHours
+        await this.loadWorkspaceData();
       } catch (err) {
         console.error('Failed to update task status in backend:', err);
         this.toastService.show('Failed to update task status.', 'error');
-        // Rollback status visually? The current logic just re-renders from state
+        // Rollback status visually by reloading
+        await this.loadWorkspaceData();
       }
     }
-
-    this.todo.set([...this.todo()]);
-    this.inProgress.set([...this.inProgress()]);
-    this.review.set([...this.review()]);
-    this.done.set([...this.done()]);
   }
 
   private mapColumnToEnum(column: string): TaskItemStatus {
@@ -1245,7 +1239,6 @@ export class BoardComponent implements OnInit {
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
     this.modalTask.set({ ...task });
-    this.employeeActualHours = (task as any).actualHours || 0;
     this.showModal.set(true);
   }
 
@@ -1287,10 +1280,6 @@ export class BoardComponent implements OnInit {
             status: 'todo'
           });
         }
-      } else {
-        // Employee saving log actual hours
-        await this.tasksService.logActualHours(taskData.id, this.employeeActualHours);
-        this.toastService.show('Actual hours logged successfully.', 'success');
       }
       this.closeModal();
       await this.loadWorkspaceData();

@@ -18,6 +18,7 @@ import {
 import { BacklogService, UserStoryDto } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslatePipe } from '@ngx-translate/core';
 
 type PageState = 'empty' | 'loading' | 'suggestion' | 'confirming';
 
@@ -48,7 +49,7 @@ const LOADING_HINTS = [
   selector: 'app-sprint-planning-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
@@ -63,11 +64,11 @@ const LOADING_HINTS = [
               </svg>
             </div>
             <h2 class="text-xl font-extrabold text-text-primary font-display">
-              {{ currentLang() === 'ar' ? 'تخطيط السبرينت بالذكاء الاصطناعي' : 'AI Sprint Planning' }}
+              {{ 'dashboard.sprintPlanning.title' | translate }}
             </h2>
           </div>
           <p class="text-sm text-text-secondary max-w-xl">
-            {{ currentLang() === 'ar' ? 'دع الذكاء الاصطناعي يحلل المهام ويقترح السبرينت الأفضل تلقائياً — ثم راجع، عدّل، وأكّد.' : 'Let the AI analyze your backlog and automatically propose an optimal sprint — then review, adjust, and confirm.' }}
+            {{ 'dashboard.sprintPlanning.description' | translate }}
           </p>
         </div>
 
@@ -81,7 +82,7 @@ const LOADING_HINTS = [
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              {{ currentLang() === 'ar' ? 'إعادة التوليد' : 'Regenerate' }}
+              {{ 'dashboard.sprintPlanning.regenerate' | translate }}
             </button>
 
             <button
@@ -90,12 +91,12 @@ const LOADING_HINTS = [
               class="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               @if (pageState() === 'confirming') {
                 <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                {{ currentLang() === 'ar' ? 'جاري التأكيد…' : 'Confirming…' }}
+                {{ 'dashboard.sprintPlanning.confirming' | translate }}
               } @else {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                {{ currentLang() === 'ar' ? 'تأكيد السبرينت' : 'Confirm Sprint' }}
+                {{ 'dashboard.sprintPlanning.confirmSprint' | translate }}
               }
             </button>
           </div>
@@ -132,10 +133,10 @@ const LOADING_HINTS = [
             </div>
 
             <h3 class="text-xl font-bold text-text-primary mb-2">
-              {{ currentLang() === 'ar' ? 'المخطط الذكي للسبرينت' : 'AI Sprint Planner' }}
+              {{ 'dashboard.sprintPlanning.smartPlanner' | translate }}
             </h3>
             <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
-              {{ currentLang() === 'ar' ? 'قائمة المهام جاهزة. دع الذكاء الاصطناعي يحلل الأولويات، ويقدّر القدرة الاستيعابية، لإنشاء أفضل مقترح للسبرينت الخاص بفريقك.' : 'Your backlog is ready. Let the AI analyze task priorities, estimate capacity, and build the optimal sprint proposal for your team.' }}
+              {{ 'dashboard.sprintPlanning.plannerDesc' | translate }}
             </p>
 
             @if (projectState.selectedProject(); as sp) {
@@ -171,7 +172,7 @@ const LOADING_HINTS = [
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              {{ currentLang() === 'ar' ? 'توليد المقترح بالذكاء الاصطناعي' : 'Generate AI Sprint Suggestion' }}
+              {{ 'dashboard.sprintPlanning.generateAi' | translate }}
             </button>
           </div>
         }
@@ -194,7 +195,7 @@ const LOADING_HINTS = [
           </div>
 
           <h3 class="text-xl font-bold text-text-primary mb-3">
-            {{ currentLang() === 'ar' ? 'الذكاء الاصطناعي يعمل...' : 'AI is working...' }}
+            {{ 'dashboard.sprintPlanning.aiWorking' | translate }}
           </h3>
           
           <div class="min-h-[2.5rem] flex items-center justify-center mt-2">
@@ -224,7 +225,7 @@ const LOADING_HINTS = [
               <!-- Sprint header -->
               <div class="px-5 py-4 bg-sidebar border-b border-border flex items-center gap-3 flex-wrap">
                 <span class="px-3 py-1 text-xs font-extrabold bg-primary/10 text-primary rounded-full">
-                  {{ currentLang() === 'ar' ? 'السبرينت ' + (idx + 1) : 'Sprint ' + (idx + 1) }}
+                  {{ 'dashboard.sprintPlanning.sprint' | translate }} {{ idx + 1 }}
                 </span>
                 <div class="flex-1 min-w-0">
                   <input
@@ -234,10 +235,10 @@ const LOADING_HINTS = [
                     [id]="'sprint-title-' + idx"
                     [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'"
                     class="bg-transparent text-sm font-bold text-text-primary outline-none focus:border-b focus:border-primary pb-0.5 w-full transition-all"
-                    [placeholder]="currentLang() === 'ar' ? 'عنوان السبرينت' : 'Sprint Title'">
+                    [placeholder]="'dashboard.sprintPlanning.sprintTitle' | translate">
                 </div>
                 <span class="text-xs text-text-secondary font-semibold shrink-0">
-                  {{ visibleStoryCount(card) }} {{ currentLang() === 'ar' ? 'قصة' : 'stories' }}
+                  {{ visibleStoryCount(card) }} {{ 'dashboard.sprintPlanning.stories' | translate }}
                 </span>
               </div>
 
@@ -247,25 +248,25 @@ const LOADING_HINTS = [
 
                   <!-- Story count -->
                   <div class="rounded-xl bg-sidebar border border-border p-3">
-                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'قصص المستخدم' : 'User Stories' }}</p>
+                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ 'dashboard.sprintPlanning.userStories' | translate }}</p>
                     <p class="text-xl font-extrabold text-text-primary">{{ visibleStoryCount(card) }}</p>
                   </div>
 
                   <!-- Total hours -->
                   <div class="rounded-xl bg-sidebar border border-border p-3">
-                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'الساعات التقديرية' : 'Est. Hours' }}</p>
+                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ 'dashboard.sprintPlanning.estHours' | translate }}</p>
                     <p class="text-xl font-extrabold text-text-primary">{{ calcHours(card) }}</p>
                   </div>
 
                   <!-- Duration -->
                   <div class="rounded-xl bg-sidebar border border-border p-3">
-                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'المدة' : 'Duration' }}</p>
-                    <p class="text-xl font-extrabold text-text-primary">{{ currentLang() === 'ar' ? 'أسبوعين' : '2 wks' }}</p>
+                    <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ 'dashboard.sprintPlanning.duration' | translate }}</p>
+                    <p class="text-xl font-extrabold text-text-primary">{{ 'dashboard.sprintPlanning.twoWeeks' | translate }}</p>
                   </div>
 
                   <!-- Capacity -->
                   <div class="rounded-xl bg-primary/5 border border-primary/15 p-3">
-                    <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'نسبة الاستيعاب %' : 'Capacity %' }}</p>
+                    <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{{ 'dashboard.sprintPlanning.capacity' | translate }}</p>
                     <p class="text-xl font-extrabold text-primary">{{ calcCapacity(card) }}%</p>
                   </div>
                 </div>
@@ -273,7 +274,7 @@ const LOADING_HINTS = [
                 <!-- Capacity bar -->
                 <div class="mb-4">
                   <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{{ currentLang() === 'ar' ? 'الاستيعاب المستخدم' : 'Capacity Used' }}</span>
+                    <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{{ 'dashboard.sprintPlanning.capacityUsed' | translate }}</span>
                     <span class="text-[10px] font-bold"
                       [class.text-emerald-600]="calcCapacity(card) <= 80"
                       [class.text-warning]="calcCapacity(card) > 80 && calcCapacity(card) <= 100"
@@ -295,7 +296,7 @@ const LOADING_HINTS = [
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
                   <div>
                     <label [for]="'goal-en-' + idx" class="block text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                      {{ currentLang() === 'ar' ? 'هدف السبرينت (EN)' : 'Sprint Goal (EN)' }}
+                      {{ 'dashboard.sprintPlanning.sprintGoalEn' | translate }}
                     </label>
                     <input
                       type="text"
@@ -303,11 +304,11 @@ const LOADING_HINTS = [
                       [id]="'goal-en-' + idx"
                       dir="ltr"
                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all text-text-primary"
-                      placeholder="What should this sprint achieve?">
+                      [placeholder]="'dashboard.sprintPlanning.goalPlaceholder' | translate">
                   </div>
                   <div>
                     <label [for]="'goal-ar-' + idx" class="block text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">
-                      {{ currentLang() === 'ar' ? 'هدف السبرينت (AR)' : 'Sprint Goal (AR)' }}
+                      {{ 'dashboard.sprintPlanning.sprintGoalAr' | translate }}
                     </label>
                     <input
                       type="text"
@@ -315,7 +316,7 @@ const LOADING_HINTS = [
                       [id]="'goal-ar-' + idx"
                       dir="rtl"
                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all text-text-primary"
-                      placeholder="ما الذي يجب أن ينجزه هذا السبرينت؟">
+                      [placeholder]="'dashboard.sprintPlanning.goalPlaceholder' | translate">
                   </div>
                 </div>
               </div>
@@ -329,7 +330,7 @@ const LOADING_HINTS = [
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                       </svg>
                       <p class="text-[10px] font-bold text-warning uppercase tracking-wider">
-                        {{ currentLang() === 'ar' ? 'تنبيهات المخاطر (AI)' : 'AI Risk Alerts' }}
+                        {{ 'dashboard.sprintPlanning.aiRiskAlerts' | translate }}
                       </p>
                     </div>
                     @for (risk of risks(); track risk) {
@@ -342,7 +343,7 @@ const LOADING_HINTS = [
               <!-- User Story list -->
               <div class="px-5 pb-5 space-y-2" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
                 <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">
-                  {{ currentLang() === 'ar' ? 'قصص المستخدم' : 'User Stories' }}
+                  {{ 'dashboard.sprintPlanning.userStories' | translate }}
                 </p>
 
                 @for (storyId of card.sprint.userStoryIds; track storyId) {
@@ -364,8 +365,8 @@ const LOADING_HINTS = [
                           <p class="text-sm font-semibold text-text-primary truncate">{{ currentLang() === 'ar' ? story.titleAr : story.titleEn }}</p>
                           @if (story.tasks && story.tasks.length > 0) {
                             <p class="text-xs text-text-secondary mt-0.5">
-                              {{ story.tasks.length }} {{ currentLang() === 'ar' ? 'مهمة' : (story.tasks.length !== 1 ? 'tasks' : 'task') }}
-                              · {{ storyHours(story) }} {{ currentLang() === 'ar' ? 'ساعة (تقدير)' : 'h est.' }}
+                              {{ story.tasks.length }} {{ story.tasks.length !== 1 ? ('dashboard.sprintPlanning.tasks' | translate) : ('dashboard.sprintPlanning.task' | translate) }}
+                              · {{ storyHours(story) }} {{ 'dashboard.sprintPlanning.hoursEst' | translate }}
                             </p>
                           }
                           @if (getStoryMeta(storyId); as meta) {
@@ -394,7 +395,7 @@ const LOADING_HINTS = [
                           (click)="removeStory(card, storyId)"
                           [id]="'remove-story-' + storyId"
                           class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-lg text-text-secondary hover:text-error hover:bg-error/10 transition-all duration-150"
-                          [title]="currentLang() === 'ar' ? 'إزالة من السبرينت' : 'Remove from sprint'">
+                          [title]="'dashboard.sprintPlanning.removeFromSprint' | translate">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                           </svg>

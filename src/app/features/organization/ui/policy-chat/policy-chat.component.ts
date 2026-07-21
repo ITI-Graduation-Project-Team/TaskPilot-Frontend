@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CompanyPoliciesService } from '../../../../shared/api/company-policies.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 interface ChatMessage {
   id: string;
@@ -15,7 +16,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-policy-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-[650px] max-h-[75vh] bg-surface rounded-3xl border border-border shadow-sm overflow-hidden relative">
@@ -27,12 +28,12 @@ interface ChatMessage {
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
           </div>
           <div>
-            <h3 class="text-base font-bold text-text-primary font-display">HR Policy Assistant</h3>
-            <p class="text-xs text-text-secondary">Ask questions about company guidelines, leave policies, etc.</p>
+            <h3 class="text-base font-bold text-text-primary font-display">{{ 'policyChat.title' | translate }}</h3>
+            <p class="text-xs text-text-secondary">{{ 'policyChat.desc' | translate }}</p>
           </div>
         </div>
         <button (click)="clearChat()" class="text-[11px] font-bold text-text-secondary hover:text-error transition-colors px-3 py-1.5 rounded-lg hover:bg-error/10">
-          Clear Chat
+          {{ 'policyChat.clearChat' | translate }}
         </button>
       </div>
 
@@ -43,13 +44,13 @@ interface ChatMessage {
             <div class="w-16 h-16 rounded-full bg-primary/5 border-2 border-primary/10 flex items-center justify-center text-primary mb-4">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
             </div>
-            <h4 class="text-lg font-bold text-text-primary mb-2 font-display">How can I help you today?</h4>
-            <p class="text-sm text-text-secondary mb-6">I have read all the company policies uploaded by your manager. Ask me anything about vacations, remote work, or code of conduct.</p>
+            <h4 class="text-lg font-bold text-text-primary mb-2 font-display">{{ 'policyChat.helpGreeting' | translate }}</h4>
+            <p class="text-sm text-text-secondary mb-6">{{ 'policyChat.helpDesc' | translate }}</p>
             
             <div class="flex flex-wrap justify-center gap-2">
-              <button (click)="suggestQuestion('How many vacation days do I have?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">Vacation days</button>
-              <button (click)="suggestQuestion('What is the remote work policy?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">Remote work</button>
-              <button (click)="suggestQuestion('How do I request an equipment upgrade?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">Equipment upgrade</button>
+              <button (click)="suggestQuestion(translateService.instant('policyChat.q1'))" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">{{ 'policyChat.suggestion1' | translate }}</button>
+              <button (click)="suggestQuestion(translateService.instant('policyChat.q2'))" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">{{ 'policyChat.suggestion2' | translate }}</button>
+              <button (click)="suggestQuestion(translateService.instant('policyChat.q3'))" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">{{ 'policyChat.suggestion3' | translate }}</button>
             </div>
           </div>
         }
@@ -101,7 +102,7 @@ interface ChatMessage {
             [(ngModel)]="currentInput"
             name="chatInput"
             rows="1"
-            placeholder="Ask about company policies..."
+            [placeholder]="'policyChat.placeholder' | translate"
             (keydown.enter)="onEnterPressed($event)"
             class="w-full bg-background border border-border rounded-2xl pl-5 pr-14 py-3.5 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[52px]"
           ></textarea>
@@ -112,7 +113,7 @@ interface ChatMessage {
           </button>
         </form>
         <div class="text-center mt-2">
-          <span class="text-[9px] font-semibold text-text-secondary/70">AI can make mistakes. Always verify with official HR documents.</span>
+          <span class="text-[9px] font-semibold text-text-secondary/70">{{ 'policyChat.disclaimer' | translate }}</span>
         </div>
       </div>
     </div>
@@ -124,6 +125,7 @@ export class PolicyChatComponent implements AfterViewChecked {
   policyService = inject(CompanyPoliciesService);
   projectState = inject(ProjectStateService);
   toastService = inject(ToastService);
+  translateService = inject(TranslateService);
 
   messages = signal<ChatMessage[]>([]);
   currentInput = '';

@@ -9,6 +9,7 @@ import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -49,14 +50,14 @@ const EMPTY_TASK: TaskFormModel = {
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       @if (projectState.loading() || isLoading()) {
         <div class="flex items-center justify-center rounded-2xl border border-border bg-surface p-12 shadow-sm">
           <div class="flex flex-col items-center gap-3">
             <div class="h-8 w-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-            <span class="text-sm font-semibold text-text-secondary">Loading backlog...</span>
+            <span class="text-sm font-semibold text-text-secondary">{{ 'backlog.loading' | translate }}</span>
           </div>
         </div>
       } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
@@ -70,58 +71,58 @@ const EMPTY_TASK: TaskFormModel = {
               </svg>
             </div>
             <div>
-              <h3 class="text-xl font-bold text-text-primary">Create Your First Project</h3>
-              <p class="text-xs text-text-secondary mt-0.5">Let's set up a workspace for your team.</p>
+              <h3 class="text-xl font-bold text-text-primary">{{ 'backlog.createFirstProj' | translate }}</h3>
+              <p class="text-xs text-text-secondary mt-0.5">{{ 'backlog.setupWorkspace' | translate }}</p>
             </div>
           </div>
           <form (submit)="onCreateProject($event)" class="space-y-4">
             <div>
-              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'backlog.projNameEn' | translate }}</label>
               <input type="text" name="projNameEn" required placeholder="e.g. E-Commerce Platform"
                      class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold placeholder:text-gray-400/70">
             </div>
 
             <div>
-              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'backlog.projNameAr' | translate }}</label>
               <input type="text" name="projNameAr" required placeholder="مثال: منصة التجارة الإلكترونية" dir="rtl"
                      class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold text-right placeholder:text-gray-400/70">
             </div>
 
             <div>
-              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">Description (English)</label>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'backlog.descEn' | translate }}</label>
               <textarea name="projDescEn" required rows="3" placeholder="Brief details about the project scope..."
                         class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-gray-400/70"></textarea>
             </div>
 
             <div>
-              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">الوصف (عربي)</label>
+              <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'backlog.descAr' | translate }}</label>
               <textarea name="projDescAr" required rows="3" placeholder="تفاصيل مختصرة عن نطاق المشروع..." dir="rtl"
                         class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-right placeholder:text-gray-400/70"></textarea>
             </div>
 
-            <button type="submit" class="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white hover:bg-primary-hover shadow-md transition-all active:scale-[0.99] mt-2">Create Project</button>
+            <button type="submit" class="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white hover:bg-primary-hover shadow-md transition-all active:scale-[0.99] mt-2">{{ 'backlog.createProj' | translate }}</button>
           </form>
         </div>
       } @else if (!isAssigned() || projectState.selectedProject()?.status === 'Completed' || projectState.selectedProject()?.status === 'Archived') {
         <div class="mx-auto my-12 max-w-xl rounded-2xl border border-warning/30 bg-surface p-8 text-center shadow-sm">
-          <h3 class="text-xl font-bold text-text-primary">No Active Project</h3>
-          <p class="mt-2 text-sm text-text-secondary">Please select an active project, or contact your Project Manager to assign you to one.</p>
+          <h3 class="text-xl font-bold text-text-primary">{{ 'backlog.noActiveProj' | translate }}</h3>
+          <p class="mt-2 text-sm text-text-secondary">{{ 'backlog.noActiveProjDesc' | translate }}</p>
         </div>
       } @else {
         <header class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Product backlog</p>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">{{ 'backlog.productBacklog' | translate }}</p>
             <h2 class="mt-1 text-2xl font-extrabold text-text-primary font-display">{{ localizedProjectName() }}</h2>
-            <p class="mt-1 text-sm text-text-secondary">{{ label('backlogSubtitle') }}</p>
+            <p class="mt-1 text-sm text-text-secondary">{{ 'backlog.backlogSubtitle' | translate }}</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               @if ((backlog()?.userStories?.length || 0) > 0) {
-                <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">AI Sprint Planner</button>
+                <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">{{ 'backlog.aiSprintPlanner' | translate }}</button>
               }
-              <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">Edit Backlog</button>
-              <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">Add user story</button>
+              <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">{{ 'backlog.editBacklog' | translate }}</button>
+              <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">{{ 'backlog.addUserStory' | translate }}</button>
             }
           </div>
         </header>
@@ -129,10 +130,10 @@ const EMPTY_TASK: TaskFormModel = {
         @if ((backlog()?.userStories?.length || 0) > 0) {
           <section class="rounded-2xl border border-border bg-surface shadow-sm">
             <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
-              <span>{{ label('story') }}</span>
-              <span class="hidden sm:block">{{ label('priority') }}</span>
-              <span class="hidden md:block">{{ label('tasks') }}</span>
-              <span>{{ label('actions') }}</span>
+              <span>{{ 'backlog.story' | translate }}</span>
+              <span class="hidden sm:block">{{ 'backlog.priorityLabel' | translate }}</span>
+              <span class="hidden md:block">{{ 'backlog.task' | translate }}s</span>
+              <span>{{ 'backlog.actions' | translate }}</span>
             </div>
 
             <div class="divide-y divide-border">
@@ -142,17 +143,17 @@ const EMPTY_TASK: TaskFormModel = {
                     <button type="button" (click)="toggleStory(story.id)" class="min-w-0 text-left">
                       <div class="flex flex-wrap items-center gap-2">
                         <h3 class="truncate text-sm font-extrabold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyTitle(story) }}</h3>
-                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ story.status }}</span>
+                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ 'status.' + story.status | translate }}</span>
                       </div>
                       <p class="mt-1 line-clamp-1 text-xs text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyDescription(story) }}</p>
                     </button>
-                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ story.priority }}</span>
+                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ 'priority.' + story.priority | translate }}</span>
                     <span class="hidden text-xs font-bold text-text-secondary md:block">{{ story.tasks.length }}</span>
                     @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
                       <div class="flex justify-end gap-2">
-                        <button type="button" (click)="openTaskModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Task</button>
-                        <button type="button" (click)="openStoryModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Edit</button>
-                        <button type="button" (click)="deleteStory(story)" class="rounded-lg border border-error/30 px-2.5 py-1.5 text-[11px] font-bold text-error hover:bg-error/10">Delete</button>
+                        <button type="button" (click)="openTaskModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">{{ 'backlog.task' | translate }}</button>
+                        <button type="button" (click)="openStoryModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">{{ 'backlog.edit' | translate }}</button>
+                        <button type="button" (click)="deleteStory(story)" class="rounded-lg border border-error/30 px-2.5 py-1.5 text-[11px] font-bold text-error hover:bg-error/10">{{ 'backlog.delete' | translate }}</button>
                       </div>
                     } @else {
                       <span></span>
@@ -162,7 +163,7 @@ const EMPTY_TASK: TaskFormModel = {
                   @if (expandedStoryIds().includes(story.id)) {
                     <div class="border-t border-border bg-background/40 px-4 py-4">
                       <div class="rounded-xl border border-border bg-surface p-3" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">
-                        <p class="text-[11px] font-bold uppercase text-text-secondary">{{ isArabic() ? label('acceptanceCriteriaAr') : label('acceptanceCriteriaEn') }}</p>
+                        <p class="text-[11px] font-bold uppercase text-text-secondary">{{ isArabic() ? ('backlog.accCriteriaAr' | translate) : ('backlog.accCriteriaEn' | translate) }}</p>
                         <p class="mt-1 whitespace-pre-wrap text-xs text-text-primary">{{ storyAcceptanceCriteria(story) }}</p>
                       </div>
 
@@ -170,13 +171,13 @@ const EMPTY_TASK: TaskFormModel = {
                         <table class="w-full min-w-[820px] text-left text-xs">
                           <thead class="bg-sidebar text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
                             <tr>
-                              <th class="px-3 py-2">{{ label('task') }}</th>
-                              <th class="px-3 py-2">{{ label('status') }}</th>
-                              <th class="px-3 py-2">{{ label('type') }}</th>
-                              <th class="px-3 py-2">{{ label('priority') }}</th>
-                              <th class="px-3 py-2">{{ label('effort') }}</th>
-                              <th class="px-3 py-2">{{ label('hours') }}</th>
-                              <th class="px-3 py-2 text-right">{{ label('actions') }}</th>
+                              <th class="px-3 py-2">{{ 'backlog.task' | translate }}</th>
+                              <th class="px-3 py-2">{{ 'backlog.statusLabel' | translate }}</th>
+                              <th class="px-3 py-2">{{ 'backlog.typeLabel' | translate }}</th>
+                              <th class="px-3 py-2">{{ 'backlog.priorityLabel' | translate }}</th>
+                              <th class="px-3 py-2">{{ 'backlog.effortLabel' | translate }}</th>
+                              <th class="px-3 py-2">{{ 'backlog.estHoursLabel' | translate }}</th>
+                              <th class="px-3 py-2 text-right">{{ 'backlog.actions' | translate }}</th>
                             </tr>
                           </thead>
                           <tbody class="divide-y divide-border">
@@ -186,20 +187,20 @@ const EMPTY_TASK: TaskFormModel = {
                                   <p class="font-bold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskTitle(task) }}</p>
                                   <p class="mt-0.5 line-clamp-1 text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskDescription(task) }}</p>
                                 </td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.status }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.type }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.priority }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.effortSize }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ 'status.' + task.status | translate }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ 'type.' + task.type | translate }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ 'priority.' + task.priority | translate }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ 'effortSize.' + task.effortSize | translate }}</td>
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.estimatedHours }}</td>
                                 <td class="px-3 py-3 text-right">
                                   @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
-                                    <button type="button" (click)="openTaskModal(story, task)" class="mr-2 font-bold text-primary hover:underline">Edit</button>
-                                    <button type="button" (click)="deleteTask(task)" class="font-bold text-error hover:underline">Delete</button>
+                                    <button type="button" (click)="openTaskModal(story, task)" class="mr-2 rtl:mr-0 rtl:ml-2 font-bold text-primary hover:underline">{{ 'backlog.edit' | translate }}</button>
+                                    <button type="button" (click)="deleteTask(task)" class="font-bold text-error hover:underline">{{ 'backlog.delete' | translate }}</button>
                                   }
                                 </td>
                               </tr>
                             } @empty {
-                              <tr><td colspan="7" class="px-3 py-6 text-center text-text-secondary">{{ label('noTasks') }}</td></tr>
+                              <tr><td colspan="7" class="px-3 py-6 text-center text-text-secondary">{{ 'backlog.noTasks' | translate }}</td></tr>
                             }
                           </tbody>
                         </table>
@@ -212,14 +213,14 @@ const EMPTY_TASK: TaskFormModel = {
           </section>
         } @else {
           <section class="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface p-12 text-center shadow-sm">
-            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Empty backlog</p>
-            <h3 class="mt-2 text-lg font-extrabold text-text-primary">Create stories manually or generate with AI</h3>
-            <p class="mt-2 max-w-md text-sm text-text-secondary">AI generation will first confirm the tech stack, then persist bilingual user stories and implementation tasks.</p>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">{{ 'backlog.emptyBacklog' | translate }}</p>
+            <h3 class="mt-2 text-lg font-extrabold text-text-primary">{{ 'backlog.createStoriesTitle' | translate }}</h3>
+            <p class="mt-2 max-w-md text-sm text-text-secondary">{{ 'backlog.createStoriesDesc' | translate }}</p>
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               <div class="mt-5 flex flex-wrap justify-center gap-3">
-                <button type="button" (click)="openStoryModal()" class="rounded-xl border border-border px-4 py-2.5 text-xs font-bold hover:bg-sidebar">Add story manually</button>
+                <button type="button" (click)="openStoryModal()" class="rounded-xl border border-border px-4 py-2.5 text-xs font-bold hover:bg-sidebar">{{ 'backlog.addStoryManually' | translate }}</button>
                 <button type="button" (click)="generateWbs()" [disabled]="isGeneratingWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover disabled:opacity-50">
-                  {{ isGeneratingWbs() ? 'Generating backlog...' : 'Generate WBS with AI' }}
+                  {{ isGeneratingWbs() ? ('backlog.generatingBacklog' | translate) : ('backlog.generateWbs' | translate) }}
                 </button>
               </div>
             }
@@ -239,9 +240,9 @@ const EMPTY_TASK: TaskFormModel = {
                   </svg>
                 </div>
                 <div>
-                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ storyForm().id ? 'Update story' : 'New story' }}</p>
-                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ storyForm().id ? 'Edit user story' : 'Add user story' }}</h3>
-                  <p class="mt-1 text-sm text-text-secondary">Maintain English and Arabic backlog columns in one pass.</p>
+                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ storyForm().id ? ('backlog.updateStory' | translate) : ('backlog.newStory' | translate) }}</p>
+                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ storyForm().id ? ('backlog.editUserStory' | translate) : ('backlog.addUserStory' | translate) }}</h3>
+                  <p class="mt-1 text-sm text-text-secondary">{{ 'backlog.maintainLangs' | translate }}</p>
                 </div>
               </div>
               <button type="button" (click)="isStoryModalOpen.set(false)" aria-label="Close story form" class="rounded-xl border border-border p-2 text-text-secondary hover:bg-background hover:text-text-primary">
@@ -256,45 +257,45 @@ const EMPTY_TASK: TaskFormModel = {
             <div class="grid gap-5 lg:grid-cols-2">
               <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4">
                 <div class="flex items-center justify-between border-b border-border pb-2">
-                  <h4 class="text-sm font-extrabold text-text-primary">English story</h4>
+                  <h4 class="text-sm font-extrabold text-text-primary">{{ 'backlog.enStory' | translate }}</h4>
                   <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">EN</span>
                 </div>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title EN
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.titleEn' | translate }}
                   <input name="titleEn" required [(ngModel)]="storyForm().titleEn" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description EN
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.descEn' | translate }}
                   <textarea name="descriptionEn" rows="4" [(ngModel)]="storyForm().descriptionEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaEn') }}
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.accCriteriaEn' | translate }}
                   <textarea name="acceptanceCriteriaEn" rows="4" [(ngModel)]="storyForm().acceptanceCriteriaEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                 </label>
               </section>
 
               <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4" dir="rtl">
                 <div class="flex items-center justify-between border-b border-border pb-2">
-                  <h4 class="text-sm font-extrabold text-text-primary">Arabic story</h4>
+                  <h4 class="text-sm font-extrabold text-text-primary">{{ 'backlog.arStory' | translate }}</h4>
                   <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">AR</span>
                 </div>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title AR
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.titleAr' | translate }}
                   <input name="titleAr" [(ngModel)]="storyForm().titleAr" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description AR
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.descAr' | translate }}
                   <textarea name="descriptionAr" rows="4" [(ngModel)]="storyForm().descriptionAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaAr') }}
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.accCriteriaAr' | translate }}
                   <textarea name="acceptanceCriteriaAr" rows="4" [(ngModel)]="storyForm().acceptanceCriteriaAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                 </label>
               </section>
             </div>
 
-            <label class="mt-5 block max-w-xs space-y-1.5 text-xs font-bold text-text-secondary">Priority
+            <label class="mt-5 block max-w-xs space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.priorityLabel' | translate }}
               <select name="priority" [(ngModel)]="storyForm().priority" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Low</option><option>Medium</option><option>High</option></select>
             </label>
           </div>
 
           <div class="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border bg-sidebar px-6 py-4">
-            <button type="button" (click)="isStoryModalOpen.set(false)" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary">Cancel</button>
-            <button type="submit" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-hover">Save story</button>
+            <button type="button" (click)="isStoryModalOpen.set(false)" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary">{{ 'backlog.cancel' | translate }}</button>
+            <button type="submit" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-hover">{{ 'backlog.saveStory' | translate }}</button>
           </div>
         </form>
       </div>
@@ -311,9 +312,9 @@ const EMPTY_TASK: TaskFormModel = {
                   </svg>
                 </div>
                 <div>
-                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ taskForm().id ? 'Update task' : 'New task' }}</p>
-                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ taskForm().id ? 'Edit implementation task' : 'Add implementation task' }}</h3>
-                  <p class="mt-1 text-sm text-text-secondary">Fill the English and Arabic task columns, then set delivery metadata.</p>
+                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ taskForm().id ? ('backlog.updateStory' | translate) : ('backlog.newStory' | translate) }}</p>
+                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ taskForm().id ? ('backlog.editUserStory' | translate) : ('backlog.addUserStory' | translate) }}</h3>
+                  <p class="mt-1 text-sm text-text-secondary">{{ 'backlog.maintainLangs' | translate }}</p>
                 </div>
               </div>
               <button type="button" (click)="isTaskModalOpen.set(false)" aria-label="Close task form" class="rounded-xl border border-border p-2 text-text-secondary hover:bg-background hover:text-text-primary">
@@ -329,38 +330,38 @@ const EMPTY_TASK: TaskFormModel = {
               <div class="grid gap-5 lg:grid-cols-2">
                 <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4">
                   <div class="flex items-center justify-between border-b border-border pb-2">
-                    <h4 class="text-sm font-extrabold text-text-primary">English task</h4>
+                    <h4 class="text-sm font-extrabold text-text-primary">{{ 'backlog.enTask' | translate }}</h4>
                     <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">EN</span>
                   </div>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title EN
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.titleEn' | translate }}
                     <input name="taskTitleEn" required [(ngModel)]="taskForm().titleEn" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description EN
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.descEn' | translate }}
                     <textarea name="taskDescriptionEn" rows="3" [(ngModel)]="taskForm().descriptionEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary EN
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.techSummaryEn' | translate }}
                     <textarea name="technicalSummaryEn" rows="3" [(ngModel)]="taskForm().technicalSummaryEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaEn') }}
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.accCriteriaEn' | translate }}
                     <textarea name="taskAcceptanceCriteriaEn" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
                 </section>
 
                 <section class="space-y-4 rounded-xl border border-border bg-background/50 p-4" dir="rtl">
                   <div class="flex items-center justify-between border-b border-border pb-2">
-                    <h4 class="text-sm font-extrabold text-text-primary">Arabic task</h4>
+                    <h4 class="text-sm font-extrabold text-text-primary">{{ 'backlog.arTask' | translate }}</h4>
                     <span class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">AR</span>
                   </div>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Title AR
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.titleAr' | translate }}
                     <input name="taskTitleAr" [(ngModel)]="taskForm().titleAr" class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description AR
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.descAr' | translate }}
                     <textarea name="taskDescriptionAr" rows="3" [(ngModel)]="taskForm().descriptionAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary AR
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.techSummaryAr' | translate }}
                     <textarea name="technicalSummaryAr" rows="3" [(ngModel)]="taskForm().technicalSummaryAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaAr') }}
+                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.accCriteriaAr' | translate }}
                     <textarea name="taskAcceptanceCriteriaAr" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
                 </section>
@@ -368,22 +369,22 @@ const EMPTY_TASK: TaskFormModel = {
 
               <aside class="space-y-4 rounded-xl border border-border bg-background/60 p-4">
                 <div>
-                  <h4 class="text-sm font-extrabold text-text-primary">Delivery details</h4>
-                  <p class="mt-1 text-xs text-text-secondary">Status, sizing, and planning values.</p>
+                  <h4 class="text-sm font-extrabold text-text-primary">{{ 'backlog.deliveryDetails' | translate }}</h4>
+                  <p class="mt-1 text-xs text-text-secondary">{{ 'backlog.deliveryDetailsDesc' | translate }}</p>
                 </div>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Priority
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.priorityLabel' | translate }}
                   <select name="taskPriority" [(ngModel)]="taskForm().priority" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Low</option><option>Medium</option><option>High</option></select>
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Effort
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.effortLabel' | translate }}
                   <select name="effortSize" [(ngModel)]="taskForm().effortSize" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Small</option><option>Medium</option><option>Large</option></select>
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Type
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.typeLabel' | translate }}
                   <select name="taskType" [(ngModel)]="taskForm().type" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>Technical</option><option>NonTechnical</option></select>
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Status
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.statusLabel' | translate }}
                   <select name="taskStatus" [(ngModel)]="taskForm().status" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"><option>ToDo</option><option>InProgress</option><option>Review</option><option>Done</option></select>
                 </label>
-                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Estimated hours
+                <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ 'backlog.estHoursLabel' | translate }}
                   <input type="number" name="estimatedHours" min="0.1" step="0.5" required [(ngModel)]="taskForm().estimatedHours" class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20">
                 </label>
               </aside>
@@ -391,8 +392,8 @@ const EMPTY_TASK: TaskFormModel = {
           </div>
 
           <div class="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border bg-sidebar px-6 py-4">
-            <button type="button" (click)="isTaskModalOpen.set(false)" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary">Cancel</button>
-            <button type="submit" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-hover">Save task</button>
+            <button type="button" (click)="isTaskModalOpen.set(false)" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary">{{ 'backlog.cancel' | translate }}</button>
+            <button type="submit" class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-primary-hover">{{ 'backlog.saveTask' | translate }}</button>
           </div>
         </form>
       </div>
