@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
+import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
 
 interface Task {
   id: string;
@@ -42,7 +43,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
   template: `
     <div class="space-y-6">
       
@@ -119,8 +120,28 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       } @else {
         
-        <!-- Metrics overview -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Tabs Navigation -->
+        <div class="flex items-center gap-6 border-b border-border mb-6">
+          <button (click)="activeTab.set('board')"
+                  [class.border-primary]="activeTab() === 'board'" [class.text-primary]="activeTab() === 'board'"
+                  [class.border-transparent]="activeTab() !== 'board'" [class.text-text-secondary]="activeTab() !== 'board'"
+                  class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
+            Kanban Board
+          </button>
+          @if (projectState.isProjectManager() && sprintStatus() !== 'Planned') {
+            <button (click)="activeTab.set('health')"
+                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
+                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
+                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+              Health & Team Pulse
+            </button>
+          }
+        </div>
+
+        @if (activeTab() === 'board') {
+          <!-- Metrics overview -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">Total Tasks</p>
@@ -185,7 +206,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </div>
             }
             <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
-            <p class="text-text-secondary text-sm mt-1">Drag and drop tasks to update their current progress state.</p>
+            <p class="text-text-secondary text-sm mt-1">Manage and monitor your sprint progress.</p>
           </div>
           
           <div class="flex items-center gap-3">
@@ -530,8 +551,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               }
             </div>
           </div>
-
         </div>
+        } @else if (activeTab() === 'health' && activeSprintId()) {
+          <app-sprint-health-dashboard [sprintId]="activeSprintId()!"></app-sprint-health-dashboard>
+        }
       }
     </div>
 
@@ -845,6 +868,9 @@ export class BoardComponent implements OnInit, OnChanges {
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
   });
+
+  activeTab = signal<'board' | 'health'>('board');
+
   readonly boardPageSize = 8;
   boardSearch = signal('');
   priorityFilter = signal<'All' | Task['priority']>('All');
