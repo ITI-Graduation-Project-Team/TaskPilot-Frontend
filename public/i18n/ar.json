@@ -251,5 +251,36 @@
       "completed": "مكتمل",
       "noDescription": "لا يوجد وصف."
     }
+  },
+  "DASHBOARD": {
+    "ACTIVE_PROJECTS": "تقدم السبرينت",
+    "SPRINT_VELOCITY": "سرعة السبرينت",
+    "SPRINT_HEALTH": "صحة السبرينت",
+    "TEAM_BURNOUT_RISK": "خطر الإرهاق",
+    "TEAM_PULSE": "نبض الفريق",
+    "MEMBERS": "عضو",
+    "HOVER_FOR_DETAILS": "مرر للتفاصيل",
+    "LIVE_ACTIVITY": "النشاط المباشر",
+    "LIVE": "مباشر",
+    "NO_ACTIVITY": "لا يوجد نشاط حديث.",
+    "WORKLOAD": "حجم العمل",
+    "PACE": "معدل الإنجاز",
+    "ENGAGEMENT": "مستوى التفاعل",
+    "BURNDOWN_CHART": "مخطط الإنجاز",
+    "WORKLOAD_DIST": "توزيع الأعباء",
+    "TOP_CONTRIBUTORS": "أبرز المساهمين",
+    "TASKS_DONE": "مهمة منجزة",
+    "NO_CONTRIBUTORS_YET": "لا توجد مهام منجزة بعد.",
+    "7_DAY_TREND": "اتجاه 7 أيام",
+    "BURNOUT_RISK_SCORE": "درجة خطر الإرهاق",
+    "RISK_FACTORS": "عوامل الخطر",
+    "DEPT": "القسم",
+    "ANALYZED_BY": "تحليل بالذكاء الاصطناعي",
+    "TREND_IMPROVING": "↘ تحسن",
+    "TREND_RISING": "↗ ارتفاع",
+    "TREND_STABLE": "→ مستقر"
+  },
+  "SPRINT_HEALTH": {
+    "ERROR_LOADING": "فشل في تحميل بيانات صحة السبرينت"
   }
 }

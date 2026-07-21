@@ -251,5 +251,36 @@
       "completed": "Completed",
       "noDescription": "No description provided."
     }
+  },
+  "DASHBOARD": {
+    "ACTIVE_PROJECTS": "Sprint Progress",
+    "SPRINT_VELOCITY": "Sprint Velocity",
+    "SPRINT_HEALTH": "Sprint Health",
+    "TEAM_BURNOUT_RISK": "Team Burnout Risk",
+    "TEAM_PULSE": "Team Pulse",
+    "MEMBERS": "members",
+    "HOVER_FOR_DETAILS": "Hover for details",
+    "LIVE_ACTIVITY": "Live Activity",
+    "LIVE": "Live",
+    "NO_ACTIVITY": "No recent activity.",
+    "WORKLOAD": "Workload",
+    "PACE": "Pace",
+    "ENGAGEMENT": "Engagement",
+    "BURNDOWN_CHART": "Sprint Burndown",
+    "WORKLOAD_DIST": "Workload Distribution",
+    "TOP_CONTRIBUTORS": "Top Contributors",
+    "TASKS_DONE": "tasks done",
+    "NO_CONTRIBUTORS_YET": "No completed tasks yet.",
+    "7_DAY_TREND": "7-Day Trend",
+    "BURNOUT_RISK_SCORE": "Burnout Risk Score",
+    "RISK_FACTORS": "Risk Factors",
+    "DEPT": "Dept",
+    "ANALYZED_BY": "Analyzed by AI",
+    "TREND_IMPROVING": "↘ improving",
+    "TREND_RISING": "↗ rising",
+    "TREND_STABLE": "→ stable"
+  },
+  "SPRINT_HEALTH": {
+    "ERROR_LOADING": "Failed to load sprint health data"
   }
 }
