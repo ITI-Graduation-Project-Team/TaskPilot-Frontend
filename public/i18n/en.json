@@ -130,17 +130,126 @@
     "title2": "with",
     "title3": "Ultimate Clarity",
     "subtitle": "TaskPilot is the clean, fast, and intelligent way to manage your daily tasks, team projects, and focus time. All in one beautiful workspace.",
+    "quote1": "Empower your team with AI-driven insights to achieve more in less time.",
+    "quote2": "Streamline your workflow seamlessly and focus on what truly matters.",
+    "quote3": "Experience unprecedented productivity with our beautifully crafted workspace.",
     "getStarted": "Get Started for Free",
     "exploreFeatures": "Explore Features",
     "goToDashboard": "Go to Dashboard",
-    "featuresTitle": "Everything you need to work faster",
-    "featuresSubtitle": "Designed with a minimalist flat UI to eliminate distractions and boost your productivity.",
-    "aiTitle": "AI-Powered Assistant",
-    "aiDesc": "Chat directly with our intelligent assistant to summarize tasks, generate project ideas, and organize your day instantly.",
-    "timeTitle": "Smart Time Tracking",
-    "timeDesc": "Monitor your focus time effortlessly. Keep track of how much time goes into each task and optimize your workflow.",
-    "workspaceTitle": "Clean Workspace",
-    "workspaceDesc": "A distraction-free, beautifully crafted flat UI with seamless light and dark modes to keep your eyes rested.",
+    "smarterSolutions": "Smarter solutions. Greater velocity of work.",
+    "tabs": {
+      "ai": "AI",
+      "projects": "Projects and portfolios",
+      "digital": "Digital and IT",
+      "operations": "Operations",
+      "client": "Client delivery"
+    },
+    "tabContent": {
+      "ai": {
+        "title": "AI-powered intelligence",
+        "features": [
+          "Make work management your team's superpower with TaskPilot AI.",
+          "Get personalized insights and deeper analysis.",
+          "Tailored solutions to tackle any challenge.",
+          "No expert skills required."
+        ],
+        "linkText": "AI vision >"
+      },
+      "projects": {
+        "title": "Project and portfolio management",
+        "features": [
+          "Real-time project/portfolio visibility",
+          "Connected workflows across tools",
+          "Cross-team resource planning",
+          "Portfolio-level dashboards"
+        ],
+        "linkText": "Project management >"
+      },
+      "digital": {
+        "title": "Digital and IT portfolio leadership",
+        "features": [
+          "Milestone and dependency tracking",
+          "Workload balancing and capacity planning",
+          "Centralized intake and approval workflows",
+          "Role-based visibility (Gantt, Kanban, Dashboards)"
+        ],
+        "linkText": "IT portfolio management >"
+      },
+      "operations": {
+        "title": "Operational excellence",
+        "features": [
+          "Scale with ease",
+          "Deliver excellence",
+          "Unlock insights",
+          "Confidently mitigate risk"
+        ],
+        "linkText": "Operations management >"
+      },
+      "client": {
+        "title": "Client delivery success",
+        "features": [
+          "On-time delivery and execution",
+          "Transparent client communication",
+          "Resource allocation optimization",
+          "Automated reporting and billing"
+        ],
+        "linkText": "Client delivery overview >"
+      }
+    },
+    "journeyTitle": "How TaskPilot Works",
+    "journeySubtitle": "A seamless collaborative journey from setup to success.",
+    "journey": {
+      "step1": {
+        "title": "Setup & Invite",
+        "desc": "Project Manager registers the company and invites the team.",
+        "role": "Project Manager"
+      },
+      "step2": {
+        "title": "Onboarding",
+        "desc": "Employee accepts the invitation, sets up their account, and uploads their CV.",
+        "role": "Employee"
+      },
+      "step3": {
+        "title": "AI Project Creation",
+        "desc": "Project Manager creates a new project effortlessly with the help of AI.",
+        "role": "Project Manager"
+      },
+      "step4": {
+        "title": "Task Assignment",
+        "desc": "Project Manager assigns specific tasks and deadlines to the team.",
+        "role": "Project Manager"
+      },
+      "step5": {
+        "title": "Execution & Completion",
+        "desc": "Employee executes tasks, syncs them to the calendar, and marks them as completed or finished.",
+        "role": "Employee"
+      },
+      "step6": {
+        "title": "Review & Insights",
+        "desc": "Project Manager studies the sprint retrospective, gathers final articles, and reviews information diagrams.",
+        "role": "Project Manager"
+      }
+    },
+    "integrationsTitle": "Seamlessly Integrated",
+    "integrationsSubtitle": "TaskPilot works with the tools you already use every day.",
+    "integrations": {
+      "googleAuth": {
+        "title": "Google Authentication",
+        "desc": "Secure and fast one-click login."
+      },
+      "googleCalendar": {
+        "title": "Google Calendar",
+        "desc": "Two-way sync for all your tasks and meetings."
+      },
+      "gmail": {
+        "title": "Gmail",
+        "desc": "Instant email notifications and updates."
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "Link your commits and branches directly to tasks."
+      }
+    },
     "aboutUs": "About Us",
     "ourStory": "Our Story",
     "team": "Team",

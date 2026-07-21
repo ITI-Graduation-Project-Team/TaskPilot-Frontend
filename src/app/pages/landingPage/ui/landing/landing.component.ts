@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, Inject, inject } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, Inject, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -11,9 +11,27 @@ import { ThemeService } from '../../../../shared/services/theme.service';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss'],
 })
-export class LandingComponent implements OnInit {
+export class LandingComponent implements OnInit, OnDestroy {
   themeService = inject(ThemeService);
   currentLang = signal('en');
+
+  // Quotes logic
+  quotes = [
+    { text: 'landing.quote1', author: 'TaskPilot' },
+    { text: 'landing.quote2', author: 'Agile Team' },
+    { text: 'landing.quote3', author: 'Productivity' }
+  ];
+  currentQuoteIndex = signal(0);
+  isFading = signal(false);
+  private quoteInterval: any;
+
+  // Tabs logic for Features Section
+  tabIds = ['ai', 'projects', 'digital', 'operations', 'client'];
+  activeTabId = signal('ai');
+
+  selectTab(id: string) {
+    this.activeTabId.set(id);
+  }
 
   private router = inject(Router);
 
@@ -29,6 +47,27 @@ export class LandingComponent implements OnInit {
 
   ngOnInit() {
     // ThemeService handles initialization automatically
+    this.startQuoteRotation();
+  }
+
+  ngOnDestroy() {
+    if (this.quoteInterval) {
+      clearInterval(this.quoteInterval);
+    }
+  }
+
+  private startQuoteRotation() {
+    // Rotate every 5 seconds
+    this.quoteInterval = setInterval(() => {
+      // Trigger fade out
+      this.isFading.set(true);
+      
+      // Wait for fade out animation to finish (e.g., 500ms), then change quote and fade in
+      setTimeout(() => {
+        this.currentQuoteIndex.update(idx => (idx + 1) % this.quotes.length);
+        this.isFading.set(false);
+      }, 500);
+    }, 5000);
   }
 
   toggleTheme() {
