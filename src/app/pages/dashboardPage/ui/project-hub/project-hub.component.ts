@@ -82,9 +82,9 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
-          <h3 class="text-base font-extrabold text-text-primary font-display">{{ 'dashboard.hub.noMatching' | translate }}</h3>
-          <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">{{ 'dashboard.hub.noMatchingDesc' | translate }} "{{ searchQuery() }}". {{ 'dashboard.hub.tryAdjusting' | translate }}</p>
-          <button (click)="searchQuery.set('')" class="text-xs text-primary font-bold hover:underline">{{ 'dashboard.hub.clearSearch' | translate }}</button>
+          <h3 class="text-base font-extrabold text-text-primary font-display">No matching projects</h3>
+          <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">We couldn't find any projects matching "{{ searchQuery() }}". Try adjusting your search query.</p>
+          <button (click)="searchQuery.set('')" class="text-xs text-primary font-bold hover:underline">Clear Search</button>
         </div>
       } @else {
         <!-- Empty State -->
@@ -96,9 +96,9 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
           </div>
           
           <div class="space-y-2">
-            <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'dashboard.hub.noProjectsYet' | translate }}</h2>
+            <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">No projects yet</h2>
             <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
-              {{ 'dashboard.hub.noProjectsDesc' | translate }}
+              Start by building your first workspace. You can set it up manually or chat with our AI agent to structure your requirements automatically.
             </p>
           </div>
 
@@ -108,14 +108,14 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               <svg class="w-4 h-4 animate-pulse text-yellow-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              <span>{{ 'dashboard.hub.generateAi' | translate }}</span>
+              <span>Generate with AI</span>
             </button>
             <button (click)="onCreateProject()" 
                     class="bg-sidebar hover:bg-primary/10 border border-border hover:border-primary/20 text-text-primary text-sm font-bold px-5 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
-              <span>{{ 'dashboard.hub.createManually' | translate }}</span>
+              <span>Create Manually</span>
             </button>
           </div>
         </div>
@@ -130,7 +130,7 @@ export class ProjectHubComponent {
   private toastService = inject(ToastService);
 
   projectStatsMap = signal<Map<string, ProjectStats>>(new Map());
-  
+
   constructor() {
     this.loadAllProjectStats();
   }
@@ -143,9 +143,9 @@ export class ProjectHubComponent {
   filteredProjects = computed(() => {
     const tab = this.activeTab();
     const query = this.searchQuery().toLowerCase().trim();
-    
+
     let result = this.projectState.projects();
-    
+
     if (tab === 'active') {
       result = result.filter((p: ProjectInfo) => p.status === 'Active' || p.status === 'Draft' || !p.status);
     } else if (tab === 'completed') {
@@ -155,10 +155,10 @@ export class ProjectHubComponent {
     }
 
     if (!query) return result;
-    
-    return result.filter((p: ProjectInfo) => 
-      (p.nameEn || '').toLowerCase().includes(query) || 
-      (p.nameAr || '').toLowerCase().includes(query) || 
+
+    return result.filter((p: ProjectInfo) =>
+      (p.nameEn || '').toLowerCase().includes(query) ||
+      (p.nameAr || '').toLowerCase().includes(query) ||
       (p.description || '').toLowerCase().includes(query)
     );
   });
