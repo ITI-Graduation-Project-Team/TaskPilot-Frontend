@@ -48,122 +48,346 @@
   </header>
 
   <!-- Hero Section -->
-  <main
-    class="flex-grow flex flex-col items-center justify-center text-center px-6 py-16 md:py-24 max-w-4xl mx-auto w-full">
-    <!-- Hero Text -->
-    <h1
-      class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-3xl mb-6 text-text-primary">
-      {{ 'landing.title1' | translate }} <br class="hidden sm:inline" />
-      {{ 'landing.title2' | translate }}
-      <span class="bg-gradient-to-r from-primary to-[#0EA5E9] bg-clip-text text-transparent">
-        {{ 'landing.title3' | translate }}
-      </span>
-    </h1>
+  <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-12 items-center px-6 py-16 md:py-24 max-w-7xl mx-auto w-full">
+    <!-- Left Column: Hero Text & Actions -->
+    <div class="flex flex-col items-center text-center lg:items-start lg:text-start">
+      <!-- Fading Quotes as Main Heading -->
+      <div class="mb-6 min-h-[180px] sm:min-h-[160px] flex items-center justify-center lg:justify-start w-full">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-[#121338] dark:text-white transition-opacity duration-500 ease-in-out"
+            [class.opacity-0]="isFading()"
+            [class.opacity-100]="!isFading()">
+          "{{ quotes[currentQuoteIndex()].text | translate }}"
+          <span class="block text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-[#0EA5E9] bg-clip-text text-transparent mt-4">
+            — {{ quotes[currentQuoteIndex()].author }}
+          </span>
+        </h1>
+      </div>
 
-    <p class="text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mb-8 leading-relaxed">
-      {{ 'landing.subtitle' | translate }}
-    </p>
+      <p class="text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mb-8 leading-relaxed">
+        {{ 'landing.subtitle' | translate }}
+      </p>
 
-    <!-- Hero Actions -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-      <a routerLink="/register"
-        class="w-full sm:w-auto px-6 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-all duration-200 text-center shadow-md hover:scale-[1.02] no-underline cursor-pointer">
-        {{ 'landing.getStarted' | translate }}
-      </a>
-      <a href="#features"
-        class="w-full sm:w-auto px-6 py-3.5 bg-surface text-text-primary border border-border font-bold rounded-lg hover:bg-background transition-all duration-200 text-center hover:scale-[1.02] no-underline">
-        {{ 'landing.exploreFeatures' | translate }}
-      </a>
+      <!-- Hero Actions -->
+      <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+        <a routerLink="/register"
+          class="w-full sm:w-auto px-6 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-all duration-200 text-center shadow-md hover:scale-[1.02] no-underline cursor-pointer">
+          {{ 'landing.getStarted' | translate }}
+        </a>
+        <a href="#features"
+          class="w-full sm:w-auto px-6 py-3.5 bg-surface text-text-primary border border-border font-bold rounded-lg hover:bg-background transition-all duration-200 text-center hover:scale-[1.02] no-underline">
+          {{ 'landing.exploreFeatures' | translate }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Column: 3D Floating Video -->
+    <div class="relative flex justify-center items-center w-full mt-8 lg:mt-0 perspective-1000 mx-auto">
+      <div class="video-3d-wrapper rounded-3xl overflow-hidden shadow-2xl border border-border/30 bg-surface animate-float3d w-full max-w-2xl aspect-video flex items-center justify-center mx-auto">
+        <video 
+          autoplay 
+          loop 
+          muted
+          [muted]="true"
+          playsinline
+          class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300">
+          <source src="/assets/hero-3d-video.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <!-- Decorative Glow -->
+        <div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent rounded-3xl mix-blend-overlay pointer-events-none"></div>
+      </div>
+      <!-- Background Decorative Blobs -->
+      <div class="absolute -top-10 -right-10 w-48 h-48 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
+      <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-[#0EA5E9]/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
     </div>
   </main>
 
-  <!-- Mid Section: Features Header -->
-  <section id="features"
-    class="scroll-mt-20 border-t border-border w-full transition-colors duration-300">
-    <div
-      class="flex flex-col md:flex-row md:items-center justify-between max-w-7xl mx-auto w-full px-6 py-12 md:px-12 gap-6">
-      <h2
-        class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-text-primary leading-tight md:max-w-md">
-        {{ 'landing.featuresTitle' | translate }}
+  <!-- Mid Section: Interactive Features Tabs -->
+  <section id="features" class="max-w-7xl mx-auto w-full px-6 py-16 md:py-24 md:px-12">
+    
+    <!-- Main Heading -->
+    <div class="text-center mb-12">
+      <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text-primary leading-tight">
+        {{ 'landing.smarterSolutions' | translate }}
       </h2>
-      <p class="text-sm sm:text-base text-text-secondary max-w-lg leading-relaxed">
-        {{ 'landing.featuresSubtitle' | translate }}
-      </p>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="flex flex-wrap justify-center gap-2 mb-12 border-b border-border overflow-x-auto">
+      <button *ngFor="let tab of tabIds"
+              (click)="selectTab(tab)"
+              class="px-6 py-3 font-semibold text-sm sm:text-base rounded-t-lg transition-all duration-300 relative whitespace-nowrap"
+              [class.text-primary]="activeTabId() === tab"
+              [class.text-text-secondary]="activeTabId() !== tab"
+              [class.hover:bg-surface]="activeTabId() !== tab">
+        {{ 'landing.tabs.' + tab | translate }}
+        <!-- Active indicator -->
+        <span *ngIf="activeTabId() === tab" class="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-md"></span>
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="bg-card border border-border rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col lg:flex-row gap-12 items-center min-h-[500px]">
+      
+      <!-- Left Column: Content -->
+      <div class="flex-1 w-full lg:w-1/2 flex flex-col items-start text-start">
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-text-primary leading-tight mb-8">
+          {{ 'landing.tabContent.' + activeTabId() + '.title' | translate }}
+        </h3>
+        
+        <ul class="space-y-4 mb-8">
+          <li *ngFor="let feature of [0, 1, 2, 3]" class="flex items-start text-base md:text-lg text-text-secondary">
+            <!-- Checkmark Icon -->
+            <svg class="w-6 h-6 text-primary flex-shrink-0 mr-3 rtl:ml-3 rtl:mr-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ 'landing.tabContent.' + activeTabId() + '.features.' + feature | translate }}</span>
+          </li>
+        </ul>
+
+        <a href="#features" class="text-primary font-bold text-lg hover:underline transition-all flex items-center gap-2">
+          {{ 'landing.tabContent.' + activeTabId() + '.linkText' | translate }}
+        </a>
+      </div>
+
+      <!-- Right Column: Media Placeholder -->
+      <div class="flex-1 w-full lg:w-1/2 h-[400px] bg-surface border border-border/50 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-inner">
+        <!-- Placeholder text telling user to add images -->
+        <div class="text-center p-6 z-10 bg-card/80 backdrop-blur-sm rounded-xl border border-border max-w-sm mx-4">
+          <svg class="w-12 h-12 text-primary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p class="text-text-primary font-bold mb-2">Image Placeholder for {{ 'landing.tabs.' + activeTabId() | translate }}</p>
+          <p class="text-sm text-text-secondary">Please add the respective image/video in `public/assets/` and update the code.</p>
+        </div>
+        <!-- Abstract shape to make it look nice -->
+        <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+      </div>
+
     </div>
   </section>
 
-  <!-- Feature Cards Grid -->
-  <section class="max-w-7xl mx-auto w-full px-6 pb-24 md:px-12">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+  <!-- Journey Section: Git Branch Timeline -->
+  <section id="journey" class="w-full bg-surface border-t border-border overflow-hidden relative py-20 md:py-32">
+    
+    <!-- Background Decor -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 to-transparent rounded-full pointer-events-none"></div>
 
-      <!-- Card 1: AI Assistant -->
-      <div
-        class="bg-card border border-border rounded-2xl p-8 flex flex-col items-start hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-        <div
-          class="p-3 rounded-xl bg-surface border border-border shadow-sm text-primary mb-6">
-          <!-- Robot Icon -->
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <h3 class="text-lg sm:text-xl font-bold mb-3 text-text-primary leading-snug">
-          {{ 'landing.aiTitle' | translate }}
-        </h3>
-        <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
-          {{ 'landing.aiDesc' | translate }}
-        </p>
+    <div class="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+      
+      <!-- Heading -->
+      <div class="text-center mb-20">
+        <h2 class="text-3xl md:text-5xl font-extrabold text-text-primary mb-4">{{ 'landing.journeyTitle' | translate }}</h2>
+        <p class="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto">{{ 'landing.journeySubtitle' | translate }}</p>
       </div>
 
-      <!-- Card 2: Time Tracking -->
-      <div
-        class="bg-card border border-border rounded-2xl p-8 flex flex-col items-start hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-        <div
-          class="p-3 rounded-xl bg-surface border border-border shadow-sm text-primary mb-6">
-          <!-- Clock Icon -->
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+      <!-- Timeline Container -->
+      <div class="relative w-full max-w-4xl mx-auto flex flex-col items-center">
+        
+        <!-- Center Main Line (PM Branch - Red) -->
+        <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] top-0 bottom-0 w-[4px] bg-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 rounded-full z-0 shadow-[0_0_10px_rgba(213,28,57,0.5)]">
         </div>
-        <h3 class="text-lg sm:text-xl font-bold mb-3 text-text-primary leading-snug">
-          {{ 'landing.timeTitle' | translate }}
-        </h3>
-        <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
-          {{ 'landing.timeDesc' | translate }}
-        </p>
+
+        <!-- Right Side Line (Employee Branch - Blue) -->
+        <!-- Only visible on md+ screens -->
+        <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] top-48 bottom-32 w-[4px] bg-[#0EA5E9] rounded-full ltr:-translate-x-1/2 rtl:translate-x-1/2 z-0 shadow-[0_0_10px_rgba(14,165,233,0.5)]">
+        </div>
+
+        <!-- SVG Connection 1 (Branch Out: PM to Employee) -->
+        <svg class="hidden md:block absolute top-[130px] ltr:left-[30%] rtl:right-[30%] w-[40%] h-[120px] pointer-events-none rtl:-scale-x-100 z-0" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <path d="M 0 0 C 0 100, 100 0, 100 100" fill="none" stroke="#0EA5E9" stroke-width="4" vector-effect="non-scaling-stroke" />
+        </svg>
+
+        <!-- SVG Connection 2 (Merge In: Employee to PM) -->
+        <svg class="hidden md:block absolute top-[920px] ltr:left-[30%] rtl:right-[30%] w-[40%] h-[120px] pointer-events-none rtl:-scale-x-100 z-0" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <path d="M 100 0 C 100 100, 0 0, 0 100" fill="none" stroke="#0EA5E9" stroke-width="4" vector-effect="non-scaling-stroke" />
+        </svg>
+
+        <!-- Step 1: PM Setup -->
+        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-16 md:mb-24">
+          <!-- Commit Node -->
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
+            <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
+              <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step1.role' | translate }}</span>
+              <h3 class="text-lg font-bold text-text-primary mb-2">{{ 'landing.journey.step1.title' | translate }}</h3>
+              <p class="text-text-secondary text-sm">{{ 'landing.journey.step1.desc' | translate }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Employee Onboarding -->
+        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-end md:rtl:justify-start mb-16 md:mb-24 mt-0 md:-mt-12">
+          <!-- Commit Node Mobile -->
+          <div class="md:hidden absolute ltr:left-4 rtl:right-4 w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <!-- Commit Node Desktop -->
+          <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <div class="w-[85%] md:w-[25%] ltr:md:pl-10 rtl:md:pr-10">
+            <div class="bg-card border border-[#0EA5E9]/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start">
+              <span class="inline-block px-3 py-1 bg-[#0EA5E9]/10 text-[#0EA5E9] text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step2.role' | translate }}</span>
+              <h3 class="text-lg font-bold text-text-primary mb-2">{{ 'landing.journey.step2.title' | translate }}</h3>
+              <p class="text-text-secondary text-sm">{{ 'landing.journey.step2.desc' | translate }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: PM AI Creation -->
+        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-16 md:mb-24">
+          <!-- Commit Node -->
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
+            <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
+              <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step3.role' | translate }}</span>
+              <h3 class="text-lg font-bold text-text-primary mb-2">{{ 'landing.journey.step3.title' | translate }}</h3>
+              <p class="text-text-secondary text-sm">{{ 'landing.journey.step3.desc' | translate }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: PM Task Assignment -->
+        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-16 md:mb-24">
+          <!-- Commit Node -->
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
+            <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
+              <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step4.role' | translate }}</span>
+              <h3 class="text-lg font-bold text-text-primary mb-2">{{ 'landing.journey.step4.title' | translate }}</h3>
+              <p class="text-text-secondary text-sm">{{ 'landing.journey.step4.desc' | translate }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Employee Execution -->
+        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-end md:rtl:justify-start mb-16 md:mb-24 mt-0 md:-mt-12">
+          <!-- Commit Node Mobile -->
+          <div class="md:hidden absolute ltr:left-4 rtl:right-4 w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <!-- Commit Node Desktop -->
+          <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <div class="w-[85%] md:w-[25%] ltr:md:pl-10 rtl:md:pr-10">
+            <div class="bg-card border border-[#0EA5E9]/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start">
+              <span class="inline-block px-3 py-1 bg-[#0EA5E9]/10 text-[#0EA5E9] text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step5.role' | translate }}</span>
+              <h3 class="text-lg font-bold text-text-primary mb-2">{{ 'landing.journey.step5.title' | translate }}</h3>
+              <p class="text-text-secondary text-sm">{{ 'landing.journey.step5.desc' | translate }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6: PM Review & Insights -->
+        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-8 mt-0 md:mt-16">
+          <!-- Commit Node -->
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
+            <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
+              <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step6.role' | translate }}</span>
+              <h3 class="text-lg font-bold text-text-primary mb-2">{{ 'landing.journey.step6.title' | translate }}</h3>
+              <p class="text-text-secondary text-sm">{{ 'landing.journey.step6.desc' | translate }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Integrations Section -->
+  <section id="integrations" class="w-full bg-background border-t border-border overflow-hidden relative py-20 md:py-32">
+    <div class="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+      
+      <!-- Heading -->
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-extrabold text-text-primary mb-4">{{ 'landing.integrationsTitle' | translate }}</h2>
+        <p class="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto">{{ 'landing.integrationsSubtitle' | translate }}</p>
       </div>
 
-      <!-- Card 3: Clean Workspace -->
-      <div
-        class="bg-card border border-border rounded-2xl p-8 flex flex-col items-start hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-        <div
-          class="p-3 rounded-xl bg-surface border border-border shadow-sm text-primary mb-6">
-          <!-- Stack/Layers Icon -->
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-        </div>
-        <h3 class="text-lg sm:text-xl font-bold mb-3 text-text-primary leading-snug">
-          {{ 'landing.workspaceTitle' | translate }}
-        </h3>
-        <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
-          {{ 'landing.workspaceDesc' | translate }}
-        </p>
-      </div>
+      <!-- Integrations Marquee -->
+      <div class="relative w-full max-w-5xl mx-auto overflow-hidden mt-8">
+        <!-- Fade masks on the edges -->
+        <div class="absolute inset-y-0 ltr:left-0 rtl:right-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-20 pointer-events-none"></div>
+        <div class="absolute inset-y-0 ltr:right-0 rtl:left-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-20 pointer-events-none"></div>
 
+        <div class="animate-marquee flex items-center py-4">
+          
+          <!-- Repeated Group 1 -->
+          <div class="flex items-center justify-around w-full min-w-[800px]">
+            <!-- Google Auth Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+            </div>
+            <!-- Google Calendar Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M42 4H6C4.895 4 4 4.895 4 6v36c0 1.105.895 2 2 2h36c1.105 0 2-.895 2-2V6c0-1.105-.895-2-2-2z" fill="#4285F4"/>
+                <path d="M4 14h40v2H4v-2z" fill="#E8EAED"/>
+                <text x="14" y="32" font-size="20" font-weight="bold" font-family="sans-serif" fill="#FFF">31</text>
+              </svg>
+            </div>
+            <!-- Gmail Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
+                <path d="M12 16.64L24 7.636v-2.18c0-2.023-2.309-3.178-3.927-1.964L12 9.548 3.927 3.492C2.309 2.278 0 3.433 0 5.456v2.18l12 9.004z" fill="#C5221F"/>
+              </svg>
+            </div>
+            <!-- GitHub Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300 text-text-primary">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Repeated Group 2 (for seamless loop) -->
+          <div class="flex items-center justify-around w-full min-w-[800px]">
+            <!-- Google Auth Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+            </div>
+            <!-- Google Calendar Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M42 4H6C4.895 4 4 4.895 4 6v36c0 1.105.895 2 2 2h36c1.105 0 2-.895 2-2V6c0-1.105-.895-2-2-2z" fill="#4285F4"/>
+                <path d="M4 14h40v2H4v-2z" fill="#E8EAED"/>
+                <text x="14" y="32" font-size="20" font-weight="bold" font-family="sans-serif" fill="#FFF">31</text>
+              </svg>
+            </div>
+            <!-- Gmail Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
+                <path d="M12 16.64L24 7.636v-2.18c0-2.023-2.309-3.178-3.927-1.964L12 9.548 3.927 3.492C2.309 2.278 0 3.433 0 5.456v2.18l12 9.004z" fill="#C5221F"/>
+              </svg>
+            </div>
+            <!-- GitHub Logo -->
+            <div class="flex items-center justify-center p-4 mx-8 opacity-90 hover:opacity-100 hover:scale-110 transition-all duration-300 text-text-primary">
+              <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+            </div>
+          </div>
+          
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-card text-text-secondary border-t border-border w-full transition-colors duration-300">
+  <footer class="bg-[#121338] text-gray-300 border-t border-[#121338] w-full transition-colors duration-300">
     <div class="max-w-7xl mx-auto px-6 py-12 md:px-12 md:py-16 flex flex-col md:flex-row md:justify-between gap-12">
       <!-- Left Brand Column -->
       <div class="flex flex-col items-start max-w-sm">
         <img [src]="theme() === 'dark' ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo"
           class="h-8 md:h-10 mb-4 transition-transform hover:scale-105" />
-        <p class="text-xs sm:text-sm text-text-secondary leading-relaxed mt-2">
+        <p class="text-xs sm:text-sm text-gray-300 leading-relaxed mt-2">
           {{ 'landing.title1' | translate }} {{ 'landing.title2' | translate }} {{ 'landing.title3' | translate }}.
         </p>
       </div>
@@ -172,41 +396,41 @@
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-8 md:gap-16">
         <!-- Col 1 -->
         <div class="flex flex-col gap-3">
-          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
+          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
             {{ 'landing.aboutUs' | translate }}
           </span>
-          <a class="text-xs sm:text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer no-underline">
+          <a class="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors cursor-pointer no-underline">
             {{ 'landing.ourStory' | translate }}
           </a>
-          <a class="text-xs sm:text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer no-underline">
+          <a class="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors cursor-pointer no-underline">
             {{ 'landing.team' | translate }}
           </a>
-          <a class="text-xs sm:text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer no-underline">
+          <a class="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors cursor-pointer no-underline">
             {{ 'landing.careers' | translate }}
           </a>
         </div>
 
         <!-- Col 2 -->
         <div class="flex flex-col gap-3">
-          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
+          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
             {{ 'landing.contactUs' | translate }}
           </span>
-          <a class="text-xs sm:text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer no-underline">
+          <a class="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors cursor-pointer no-underline">
             {{ 'landing.support' | translate }}
           </a>
-          <a class="text-xs sm:text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer no-underline">
+          <a class="text-xs sm:text-sm text-gray-300 hover:text-white transition-colors cursor-pointer no-underline">
             {{ 'landing.sales' | translate }}
           </a>
         </div>
 
         <!-- Col 3 -->
         <div class="col-span-2 sm:col-span-1 flex flex-col gap-4">
-          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
+          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
             {{ 'landing.followUs' | translate }}
           </span>
           <div class="flex items-center gap-3">
             <!-- LinkedIn -->
-            <a class="p-2.5 rounded-lg bg-background hover:bg-surface text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+            <a class="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-colors cursor-pointer"
               aria-label="LinkedIn">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path
@@ -214,7 +438,7 @@
               </svg>
             </a>
             <!-- Facebook -->
-            <a class="p-2.5 rounded-lg bg-background hover:bg-surface text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+            <a class="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-colors cursor-pointer"
               aria-label="Facebook">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path
@@ -222,7 +446,7 @@
               </svg>
             </a>
             <!-- WhatsApp -->
-            <a class="p-2.5 rounded-lg bg-background hover:bg-surface text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+            <a class="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-colors cursor-pointer"
               aria-label="WhatsApp">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path

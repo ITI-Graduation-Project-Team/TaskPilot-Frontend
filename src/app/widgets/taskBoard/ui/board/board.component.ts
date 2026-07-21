@@ -16,6 +16,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
+import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
