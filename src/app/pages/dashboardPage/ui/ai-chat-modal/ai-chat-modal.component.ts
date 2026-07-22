@@ -436,7 +436,17 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
-        } else {
+        }
+         else if (lastMsg && lastMsg.sender === 'user') {
+          // If no direct textual reply was added from backend POST response, provide a clean acknowledgment
+          const ackMsg = `Thank you! Requirements updated (${scorePercentage}% completeness). Please check the remaining clarifying questions below to reach 100%.`;
+          this.chatHistory.update(h => [...h, {
+            text: ackMsg,
+            sender: 'ai',
+            timestamp: new Date()
+          }]);
+        }
+        else {
           const completionMsg = `Requirements gathering is complete (${scorePercentage}%). You can now finalize and generate your project draft!`;
           if (!lastMsg || lastMsg.text !== completionMsg || lastMsg.sender !== 'ai') {
             this.chatHistory.update(h => [...h, {
@@ -445,14 +455,6 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
-        } else if (lastMsg && lastMsg.sender === 'user') {
-          // If no direct textual reply was added from backend POST response, provide a clean acknowledgment
-          const ackMsg = `Thank you! Requirements updated (${scorePercentage}% completeness). Please check the remaining clarifying questions below to reach 100%.`;
-          this.chatHistory.update(h => [...h, {
-            text: ackMsg,
-            sender: 'ai',
-            timestamp: new Date()
-          }]);
         }
       }
     } catch (err) {
