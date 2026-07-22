@@ -139,8 +139,7 @@ interface ChatMessage {
           <form (submit)="onSendMessage($event)" class="flex gap-2 items-end">
             <textarea [(ngModel)]="messageInput" name="message" autocomplete="off" rows="2"
                     (keydown)="onKeyDown($event)"
-                    [dir]="detectTextDir(messageInput)"
-                    placeholder="مثال: تطبيق توصيل طلبات مع تتبع فوري..." 
+                    placeholder="Describe your project requirements, goals, or preferred tech stack (e.g. A food delivery app with real-time tracking...)" 
                     class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"></textarea>
             <button type="submit" 
                     [disabled]="isLoading() || (!messageInput.trim() && !selectedFile())"
@@ -191,7 +190,7 @@ interface ChatMessage {
                      <textarea [value]="projectDescriptionEnInput()" (input)="projectDescriptionEnInput.set(descEnField.value)" #descEnField rows="3"
                                [disabled]="isGeneratingDraft()"
                                class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium disabled:opacity-50"
-                               [placeholder]="descriptionHint() || 'Describe the project goal, core features, and target audience...'"></textarea>
+                               placeholder="Describe the project goal, core features, and target audience..."></textarea>
                   </div>
 
                   <div>
@@ -199,7 +198,7 @@ interface ChatMessage {
                      <textarea [value]="projectDescriptionArInput()" (input)="projectDescriptionArInput.set(descArField.value)" #descArField rows="3" dir="rtl"
                                [disabled]="isGeneratingDraft()"
                                class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium disabled:opacity-50 text-right"
-                               [placeholder]="descriptionHint() || 'اكتب وصفاً مختصراً لأهداف ومميزات هذا المشروع...'"></textarea>
+                               placeholder="اكتب وصفاً مختصراً لأهداف ومميزات هذا المشروع..."></textarea>
                   </div>
                 </div>
 
@@ -208,6 +207,7 @@ interface ChatMessage {
                     <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">Sprint Duration (Days)</label>
                     <input type="number" [value]="sprintDurationInput() ?? ''" (input)="sprintDurationInput.set(+durationField.value || null)" #durationField
                            [disabled]="isGeneratingDraft()" min="1" max="90"
+                           [placeholder]="'e.g. ' + sprintDurationPlaceholder()"
                            class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50">
                   </div>
 
@@ -215,6 +215,7 @@ interface ChatMessage {
                     <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">Target Sprint Hours</label>
                     <input type="number" [value]="targetSprintHoursInput() ?? ''" (input)="targetSprintHoursInput.set(+hoursField.value || null)" #hoursField
                            [disabled]="isGeneratingDraft()" min="1" max="1000"
+                           [placeholder]="'e.g. ' + targetSprintHoursPlaceholder()"
                            class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50">
                   </div>
                 </div>
@@ -225,7 +226,7 @@ interface ChatMessage {
                         class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
                   Cancel
                 </button>
-                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim() || !sprintDurationInput() || !targetSprintHoursInput()"
+                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft()"
                         class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[140px] justify-center">
                   @if (isGeneratingDraft()) {
                     <span class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
@@ -333,6 +334,18 @@ export class AiChatModalComponent implements AfterViewChecked {
       const currentChatId = res.data?.sessionId || res.sessionId || res.data?.SessionId || res.SessionId || this.chatId();
       this.chatId.set(currentChatId);
 
+      // Extract direct AI reply from backend response if available
+      const resData = res.data || res;
+      const aiReply = resData.reply || resData.Reply || resData.aiResponse || resData.AiResponse || resData.message || resData.Message || resData.response || resData.Response;
+
+      if (aiReply && typeof aiReply === 'string' && aiReply.trim()) {
+        this.chatHistory.update(history => [...history, {
+          text: aiReply.trim(),
+          sender: 'ai',
+          timestamp: new Date()
+        }]);
+      }
+
       this.clearFile();
 
       // Query status
@@ -397,15 +410,13 @@ export class AiChatModalComponent implements AfterViewChecked {
         const isReady = data.status === 'Planning' || data.Status === 'Planning' || unanswered.length === 0 || scorePercentage >= 85;
         this.isReadyForFinalization.set(isReady);
 
-
         // Cache sprint config suggestions from session status if the backend provides them
         const sprintDays = data.suggestedSprintDurationInDays || data.sprintDurationInDays || data.SprintDurationInDays || null;
         const sprintHours = data.suggestedTargetSprintHours || data.targetSprintHours || data.TargetSprintHours || null;
         if (sprintDays) this.suggestedSprintDuration.set(sprintDays);
         if (sprintHours) this.suggestedTargetHours.set(sprintHours);
 
-
-        // Retrieve AI clarifying response or follow-up without duplicating
+        // Update chat stream status message
         const history = this.chatHistory();
         const lastMsg = history[history.length - 1];
 
@@ -434,6 +445,14 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
+        } else if (lastMsg && lastMsg.sender === 'user') {
+          // If no direct textual reply was added from backend POST response, provide a clean acknowledgment
+          const ackMsg = `Thank you! Requirements updated (${scorePercentage}% completeness). Please check the remaining clarifying questions below to reach 100%.`;
+          this.chatHistory.update(h => [...h, {
+            text: ackMsg,
+            sender: 'ai',
+            timestamp: new Date()
+          }]);
         }
       }
     } catch (err) {
@@ -449,9 +468,10 @@ export class AiChatModalComponent implements AfterViewChecked {
   projectNameArInput = signal('');
   projectDescriptionEnInput = signal('');
   projectDescriptionArInput = signal('');
-  descriptionHint = signal('');   // shown as textarea placeholder
   sprintDurationInput = signal<number | null>(null);
   targetSprintHoursInput = signal<number | null>(null);
+  sprintDurationPlaceholder = signal('14');
+  targetSprintHoursPlaceholder = signal('80');
 
   onGenerateDraft() {
     const activeChatId = this.chatId();
@@ -460,26 +480,16 @@ export class AiChatModalComponent implements AfterViewChecked {
 
     if (!activeChatId || !companyId || !managerId) return;
 
-    // All typed user messages (skip "📎 Attached document:" notifications)
-    const userMsgs = this.chatHistory()
-      .filter(m => m.sender === 'user' && !m.text.startsWith('📎'))
-      .map(m => m.text.trim());
+    const suggestedDuration = this.suggestedSprintDuration() ?? 14;
+    const suggestedHours = this.suggestedTargetHours() ?? 80;
 
-    // NAME: first sentence of the first typed message
-    const firstName = userMsgs[0] || '';
-    const shortName = (firstName.split(/[.!?]/)[0] || firstName).trim().slice(0, 60);
-
-    // DESCRIPTION: all user messages joined — set as placeholder hint, not as value
-    const desc = userMsgs.join(' ').slice(0, 1000);
-    this.descriptionHint.set(desc);
-
-    // Pre-fill ALL fields — user can confirm immediately
-    this.projectNameInput.set(shortName);
-    this.projectNameArInput.set(shortName);
+    this.projectNameInput.set('');
+    this.projectNameArInput.set('');
     this.projectDescriptionEnInput.set('');
     this.projectDescriptionArInput.set('');
-    this.sprintDurationInput.set(this.suggestedSprintDuration() ?? 14);
-    this.targetSprintHoursInput.set(this.suggestedTargetHours() ?? 80);
+    this.sprintDurationInput.set(suggestedDuration);
+    this.targetSprintHoursInput.set(suggestedHours);
+
     this.showNamePrompt.set(true);
   }
 
@@ -487,15 +497,16 @@ export class AiChatModalComponent implements AfterViewChecked {
     const activeChatId = this.chatId();
     const companyId = this.projectState.userCompanyId();
     const managerId = this.projectState.userId();
-    const nameEn = this.projectNameInput().trim();
-    const nameAr = this.projectNameArInput().trim();
-    // Use typed value, or fall back to the hint (placeholder) if user left the field empty
-    const descEn = this.projectDescriptionEnInput().trim() || this.descriptionHint();
-    const descAr = this.projectDescriptionArInput().trim() || this.descriptionHint();
-    const sprintDuration = this.sprintDurationInput();
-    const targetHours = this.targetSprintHoursInput();
 
-    if (!activeChatId || !companyId || !managerId || !nameEn || !nameAr) return;
+    // Use typed input, or fall back to simple defaults if left empty
+    const nameEn = this.projectNameInput().trim() || 'New AI Project';
+    const nameAr = this.projectNameArInput().trim() || nameEn;
+    const descEn = this.projectDescriptionEnInput().trim() || 'Project requirements collected via AI Assistant.';
+    const descAr = this.projectDescriptionArInput().trim() || descEn;
+    const sprintDuration = this.sprintDurationInput() ?? (this.suggestedSprintDuration() ?? 14);
+    const targetHours = this.targetSprintHoursInput() ?? (this.suggestedTargetHours() ?? 80);
+
+    if (!activeChatId || !companyId || !managerId) return;
 
     this.isGeneratingDraft.set(true);
     

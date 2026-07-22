@@ -118,7 +118,6 @@ const EMPTY_TASK: TaskFormModel = {
           <div class="flex flex-wrap items-center gap-3">
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               @if ((backlog()?.userStories?.length || 0) > 0) {
-                <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">AI Sprint Planner</button>
               }
               <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">Edit Backlog</button>
               <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">Add user story</button>
@@ -535,7 +534,7 @@ export class BacklogViewComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   async fetchBacklog(projectId: string) {
     this.isLoading.set(true);

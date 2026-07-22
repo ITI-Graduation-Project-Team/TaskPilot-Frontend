@@ -366,8 +366,6 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 <div class="mt-1 flex w-full rounded-2xl border border-border bg-surface p-1 shadow-sm sm:w-auto xl:justify-self-end">
                   <button type="button" (click)="showManualForm.set(false)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
                           [class.bg-primary]="!showManualForm()" [class.text-white]="!showManualForm()" [class.text-text-secondary]="showManualForm()">AI assisted</button>
-                  <button type="button" (click)="showManualForm.set(true)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
-                          [class.bg-primary]="showManualForm()" [class.text-white]="showManualForm()" [class.text-text-secondary]="!showManualForm()">Manual setup</button>
                 </div>
               </div>
 
@@ -466,17 +464,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           }
         </main>
         
-        <!-- Floating AI Chat Button -->
-        <button (click)="isAiChatOpen.set(true)"
-                class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center hover:scale-110 transition-transform duration-300 z-50 group">
-          <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-          </svg>
-          <!-- Tooltip -->
-          <span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-sidebar border border-border text-text-primary text-xs font-bold rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none">
-            Ask AI Assistant
-          </span>
-        </button>
+
 
         <!-- AI Chat Modal (Floating mode) -->
         @if (isAiChatOpen()) {
@@ -657,7 +645,7 @@ export class DashboardComponent implements OnInit {
   activeSprintName = signal('No Active Sprint');
   showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
-  
+
   selectedSprintId = signal<string | null>(null);
   selectedSprintStatus = signal<string | null>(null);
   cachedSprints = signal<SprintListItem[]>([]);
@@ -665,7 +653,7 @@ export class DashboardComponent implements OnInit {
 
   // Status History Modal state
   isHistoryModalOpen = signal(false);
-  selectedHistoryProject = signal<{id: string, nameEn: string, status: string} | null>(null);
+  selectedHistoryProject = signal<{ id: string, nameEn: string, status: string } | null>(null);
 
   // Edit Project properties
   isEditProjectModalOpen = signal(false);
