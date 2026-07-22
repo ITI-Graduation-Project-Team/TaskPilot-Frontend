@@ -536,7 +536,7 @@ export class BacklogViewComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   async fetchBacklog(projectId: string) {
     this.isLoading.set(true);

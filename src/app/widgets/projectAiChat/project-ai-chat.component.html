@@ -6,7 +6,7 @@
   
   <div class="progress-section" *ngIf="!projectId">
     <div class="score-row">
-      <span>Completeness Score</span>
+      <span>{{ completenessLabel() }}</span>
       <span>{{ completenessScore() }}%</span>
     </div>
     <div class="progress-bar">
@@ -21,7 +21,7 @@
     </div>
 
     <div class="loading-spinner" *ngIf="isLoading() && messages().length === 0">Loading...</div>
-    <div class="message" *ngFor="let msg of messages()" [ngClass]="msg.role.toLowerCase()">
+    <div class="message" *ngFor="let msg of messages()" [ngClass]="msg.role.toLowerCase()" [dir]="detectTextDir(msg.content)" [class.text-right]="detectTextDir(msg.content) === 'rtl'">
       <div class="bubble">
         <span class="role">{{ msg.role.toLowerCase() === 'user' ? 'You' : 'TaskPilot AI' }}</span>
         <p>{{ msg.content }}</p>
@@ -52,7 +52,8 @@
         [ngModel]="inputText()" 
         (ngModelChange)="inputText.set($event)" 
         (keyup.enter)="sendMessage()" 
-        placeholder="Ask AI to edit backlog..." 
+        [dir]="detectTextDir(inputText())"
+        placeholder="مثال: تطبيق توصيل طلبات مع تتبع فوري..." 
         [disabled]="isLoading()"
       />
       <button (click)="sendMessage()" [disabled]="isLoading() || !inputText().trim()">Send</button>

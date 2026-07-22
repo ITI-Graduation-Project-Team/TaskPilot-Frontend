@@ -1,59 +1,106 @@
-<div class="h-[calc(100vh-64px)] flex flex-col bg-surface-base">
+<div class="h-screen flex flex-col bg-background text-text-primary overflow-hidden font-dashboard animate-[fadeIn_0.25s_ease_both]">
   
-  <div *ngIf="isLoadingPage()" class="flex-1 flex flex-col items-center justify-center">
-    <div class="animate-spin h-8 w-8 text-primary-base mb-4">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-    </div>
-    <p class="text-content-muted">Loading assignment data...</p>
+  <!-- Loading Screen -->
+  <div *ngIf="isLoadingPage()" class="flex-1 flex flex-col items-center justify-center p-12">
+    <div class="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4"></div>
+    <p class="text-sm font-semibold text-text-secondary animate-pulse">Analyzing developer skills and matching sprint workload...</p>
   </div>
 
   <ng-container *ngIf="!isLoadingPage()">
-    <!-- Top Header -->
-    <div class="px-6 py-4 border-b border-border-base bg-surface-base flex justify-between items-center relative">
-      <div>
-        <h1 class="text-xl font-bold text-content-base">Sprint Assignment</h1>
-        <p class="text-sm text-content-muted">Review AI suggestions and configure team workload</p>
+    <!-- Top Header Bar -->
+    <header class="px-6 py-4 border-b border-border bg-sidebar shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+      <div class="flex items-center gap-4">
+        <button (click)="goBackToDashboard()" 
+                class="p-2 border border-border rounded-xl text-text-secondary hover:text-text-primary hover:bg-background transition-all flex items-center justify-center shrink-0"
+                title="Back to Dashboard">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-black text-text-primary font-display tracking-tight">Sprint Task Assignment</h1>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/20 tracking-wider uppercase flex items-center gap-1">
+              ✨ AI Auto-Match
+            </span>
+          </div>
+          <p class="text-xs text-text-secondary mt-0.5">Review AI developer recommendations, balance workload, and assign tasks.</p>
+        </div>
       </div>
-    </div>
 
-    <!-- Main Content: 2 Columns -->
-    <div class="flex-1 flex overflow-hidden">
+      <!-- Header Metrics & Actions -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Progress Bar Card -->
+        <div class="bg-surface border border-border px-4 py-2 rounded-xl flex items-center gap-3 min-w-[200px]">
+          <div class="flex-1">
+            <div class="flex items-center justify-between text-[11px] font-bold mb-1">
+              <span class="text-text-secondary uppercase">Progress</span>
+              <span class="text-primary font-black">{{ assignedCount() }}/{{ totalTasksCount() }} Tasks</span>
+            </div>
+            <div class="w-full h-2 bg-border/60 rounded-full overflow-hidden">
+              <div class="h-full bg-primary transition-all duration-500 rounded-full" [style.width.%]="completionPercentage()"></div>
+            </div>
+          </div>
+          <span class="text-xs font-black text-primary font-mono shrink-0">{{ completionPercentage() }}%</span>
+        </div>
+
+        <!-- Quick Auto Assign Button -->
+        <button (click)="autoAssignTopMatches()" 
+                title="Automatically assign rank #1 AI matched candidate for unassigned tasks"
+                class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+          <svg class="w-4 h-4 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          Auto-Assign Top Matches
+        </button>
+      </div>
+    </header>
+
+    <!-- Main 2-Column Split Workspace -->
+    <div class="flex-1 flex min-h-0 overflow-hidden">
       
-      <!-- Left Column: Task List (40%) -->
-      <div class="w-2/5 h-full">
+      <!-- Left Column: Task List (38%) -->
+      <div class="w-full md:w-[38%] h-full flex flex-col border-r border-border bg-sidebar/30">
         <app-task-list 
           [tasks]="suggestions()"
           [selectedTaskId]="selectedTaskId()"
           [localAssignments]="localAssignments()"
           (taskSelected)="onTaskSelected($event)"
+          class="flex-1 h-full overflow-hidden flex flex-col"
         ></app-task-list>
       </div>
 
-      <!-- Right Column: Developer Cards (60%) -->
-      <div class="w-3/5 h-full">
+      <!-- Right Column: Developer Candidate Selector (62%) -->
+      <div class="w-full md:w-[62%] h-full flex flex-col bg-background">
         <app-employee-selector
           [selectedTask]="selectedTask()"
           [currentAssigneeId]="currentAssigneeId()"
           (assignEmployee)="onAssignEmployee($event)"
+          class="flex-1 h-full overflow-hidden flex flex-col"
         ></app-employee-selector>
       </div>
 
     </div>
 
-    <!-- Bottom Footer: Confirm Button -->
-    <div class="p-4 border-t border-border-base bg-surface-elevated flex justify-end">
-      <button 
-        [disabled]="!canConfirm()"
-        (click)="confirmAssignments()"
-        class="px-4 py-2 rounded-md font-medium text-brandWhite bg-brandPrimary w-full transition-opacity"
-        [class.opacity-50]="!canConfirm()"
-        [class.pointer-events-none]="!canConfirm()"
-      >
-        {{ isConfirming() ? 'Confirming...' : 'Confirm Assignments' }}
-      </button>
-    </div>
+    <!-- Bottom Sticky Action Footer Bar -->
+    <footer class="px-6 py-3.5 border-t border-border bg-surface shrink-0 flex items-center justify-between shadow-lg relative z-20">
+      <div class="flex items-center gap-2 text-xs font-bold text-text-secondary">
+        <span class="w-2 h-2 rounded-full" [ngClass]="assignedCount() > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
+        <span>{{ assignedCount() }} of {{ totalTasksCount() }} tasks assigned</span>
+        <span *ngIf="unassignedCount() > 0" class="text-text-secondary/60">({{ unassignedCount() }} remaining)</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button (click)="goBackToDashboard()" 
+                class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all">
+          Cancel
+        </button>
+        <button [disabled]="!canConfirm()"
+                (click)="confirmAssignments()"
+                class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px active:translate-y-0 min-w-[180px] justify-center">
+          <div *ngIf="isConfirming()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <svg *ngIf="!isConfirming()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          <span>{{ isConfirming() ? 'Saving Assignments...' : 'Confirm Assignments' }}</span>
+        </button>
+      </div>
+    </footer>
   </ng-container>
 </div>

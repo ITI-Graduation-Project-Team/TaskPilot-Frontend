@@ -31,24 +31,72 @@ html {
   scroll-margin-top: 5rem;
 }
 
-// 3D perspective setup
+// 3D Perspective and Floating Animation
 .perspective-1000 {
   perspective: 1000px;
 }
 
-// Float animation with 3D rotation
+.video-3d-wrapper {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
 @keyframes float3d {
-  0% { transform: rotateY(-12deg) rotateX(8deg) translateY(0px); }
-  50% { transform: rotateY(-8deg) rotateX(12deg) translateY(-15px); }
-  100% { transform: rotateY(-12deg) rotateX(8deg) translateY(0px); }
+  0% {
+    transform: rotateX(5deg) rotateY(-5deg) translateY(0px);
+  }
+  50% {
+    transform: rotateX(2deg) rotateY(-8deg) translateY(-15px);
+  }
+  100% {
+    transform: rotateX(5deg) rotateY(-5deg) translateY(0px);
+  }
 }
 
 .animate-float3d {
-  animation: float3d 8s ease-in-out infinite;
-  transform-style: preserve-3d;
+  animation: float3d 6s ease-in-out infinite;
 }
 
-.video-3d-wrapper:hover video {
-  transform: scale(1.02);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+// Background blob animations
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+// Marquee animation for integrations
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+[dir="rtl"] .animate-marquee {
+  animation-direction: reverse;
 }

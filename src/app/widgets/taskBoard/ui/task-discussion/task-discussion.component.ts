@@ -5,6 +5,7 @@ import { TasksService, TaskCommentDto, TaskAttachmentDto } from '../../../../sha
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
+import { apiClient } from '../../../../shared/api/axios.instance';
 
 @Component({
   selector: 'app-task-discussion',
@@ -61,6 +62,11 @@ export class TaskDiscussionComponent implements OnInit {
     effect(() => {
       const id = this.taskId();
       if (id) {
+        this.stagedFile.set(null);
+        this.newCommentText.set('');
+        if (this.fileInput?.nativeElement) {
+          this.fileInput.nativeElement.value = '';
+        }
         this.loadData();
       }
     }, { allowSignalWrites: true });
@@ -98,6 +104,9 @@ export class TaskDiscussionComponent implements OnInit {
         const newAttachment = await this.tasksService.addAttachment(this.taskId(), file);
         this.attachments.update(a => [...a, newAttachment]);
         this.stagedFile.set(null);
+        if (this.fileInput?.nativeElement) {
+          this.fileInput.nativeElement.value = '';
+        }
         this.isUploading.set(false);
       }
       
@@ -124,6 +133,9 @@ export class TaskDiscussionComponent implements OnInit {
   
   removeStagedFile() {
     this.stagedFile.set(null);
+    if (this.fileInput?.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
   
   triggerFileInput() {
@@ -144,11 +156,13 @@ export class TaskDiscussionComponent implements OnInit {
 
   getAbsoluteUrl(url: string): string {
     if (!url) return '#';
-    let absUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      absUrl = 'https://' + url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
     }
-    return absUrl;
+    const baseURL = apiClient.defaults.baseURL || window.location.origin;
+    const apiHost = baseURL.replace(/\/api(\/v\d+)?\/?$/, '');
+    const cleanPath = url.startsWith('/') ? url : '/' + url;
+    return `${apiHost}${cleanPath}`;
   }
 
   private scrollToBottom() {

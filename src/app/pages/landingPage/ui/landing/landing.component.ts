@@ -15,11 +15,23 @@ export class LandingComponent implements OnInit, OnDestroy {
   themeService = inject(ThemeService);
   currentLang = signal('en');
 
-  // Quotation rotator
-  quotes = ['landing.quote1', 'landing.quote2', 'landing.quote3'];
-  activeQuoteIndex = signal(0);
-  isFadingOut = signal(false);
+  // Quotes logic
+  quotes = [
+    { text: 'landing.quote1', author: 'TaskPilot' },
+    { text: 'landing.quote2', author: 'Agile Team' },
+    { text: 'landing.quote3', author: 'Productivity' }
+  ];
+  currentQuoteIndex = signal(0);
+  isFading = signal(false);
   private quoteInterval: any;
+
+  // Tabs logic for Features Section
+  tabIds = ['ai', 'projects', 'digital', 'operations', 'client'];
+  activeTabId = signal('ai');
+
+  selectTab(id: string) {
+    this.activeTabId.set(id);
+  }
 
   private router = inject(Router);
 
@@ -35,7 +47,7 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // ThemeService handles initialization automatically
-    this.startQuoteRotator();
+    this.startQuoteRotation();
   }
 
   ngOnDestroy() {
@@ -44,14 +56,18 @@ export class LandingComponent implements OnInit, OnDestroy {
     }
   }
 
-  private startQuoteRotator() {
+  private startQuoteRotation() {
+    // Rotate every 5 seconds
     this.quoteInterval = setInterval(() => {
-      this.isFadingOut.set(true);
+      // Trigger fade out
+      this.isFading.set(true);
+      
+      // Wait for fade out animation to finish (e.g., 500ms), then change quote and fade in
       setTimeout(() => {
-        this.activeQuoteIndex.update(i => (i + 1) % this.quotes.length);
-        this.isFadingOut.set(false);
-      }, 500); // 500ms fade duration
-    }, 4500);
+        this.currentQuoteIndex.update(idx => (idx + 1) % this.quotes.length);
+        this.isFading.set(false);
+      }, 500);
+    }, 5000);
   }
 
   toggleTheme() {

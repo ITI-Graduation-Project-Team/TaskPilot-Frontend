@@ -18,6 +18,7 @@ import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
+// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
@@ -25,6 +26,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
+import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
 
 interface Task {
   id: string;
@@ -43,7 +45,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
   template: `
     <div class="space-y-6">
       
@@ -120,8 +122,30 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       } @else {
         
-        <!-- Metrics overview -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Tabs Navigation -->
+        <div class="flex items-center gap-6 border-b border-border mb-6">
+          <button (click)="activeTab.set('board')"
+                  [class.border-primary]="activeTab() === 'board'" [class.text-primary]="activeTab() === 'board'"
+                  [class.border-transparent]="activeTab() !== 'board'" [class.text-text-secondary]="activeTab() !== 'board'"
+                  class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
+            Kanban Board
+          </button>
+          @if (projectState.isProjectManager() && sprintStatus() !== 'Planned') {
+            <button (click)="activeTab.set('health')"
+                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
+                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
+                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
+              @if (sprintStatus() === 'Active') {
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+              }
+              Health & Team Pulse
+            </button>
+          }
+        </div>
+
+        @if (activeTab() === 'board') {
+          <!-- Metrics overview -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'dashboard.board.totalTasks' | translate }}</p>
@@ -327,9 +351,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                      {{ projectState.isProjectManager() && !isBoardReadonly() ? ('dashboard.board.edit' | translate) : ('dashboard.board.view' | translate) }}
-                    </button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('dashboard.board.edit' | translate) : ('dashboard.board.view' | translate) }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -390,7 +422,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.board.edit' | translate }}</button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('dashboard.board.edit' | translate) : ('dashboard.board.view' | translate) }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -451,7 +493,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.board.edit' | translate }}</button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('dashboard.board.edit' | translate) : ('dashboard.board.view' | translate) }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -512,7 +564,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">{{ 'dashboard.board.edit' | translate }}</button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('dashboard.board.edit' | translate) : ('dashboard.board.view' | translate) }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -531,8 +593,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               }
             </div>
           </div>
-
         </div>
+        } @else if (activeTab() === 'health' && (activeSprintId() || completedSprintId())) {
+          <app-sprint-health-dashboard [sprintId]="(activeSprintId() || completedSprintId())!"></app-sprint-health-dashboard>
+        }
       }
     </div>
 
@@ -568,7 +632,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Modal Body (Grid for Trello-like layout) -->
           <div class="p-6 overflow-y-auto flex-1 scrollbar-thin">
-            <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="isEditing() ? 'lg:grid-cols-[1fr_1fr]' : ''">
+            <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="(isEditing() || modalTask().id) ? 'lg:grid-cols-[1fr_1fr]' : ''">
               
               <!-- LEFT COLUMN: Main Task Info & Form -->
               <div class="space-y-6 flex flex-col">
@@ -749,7 +813,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </div>
 
               <!-- RIGHT COLUMN: Discussion & AI Coach -->
-              @if (isEditing()) {
+              @if (isEditing() || modalTask().id) {
                 <div class="flex flex-col h-full border-border lg:border-s lg:ps-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
                   <!-- Agile Coach Features -->
                   @if (projectState.isProjectManager()) {
@@ -768,7 +832,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       />
                     </div>
                   }
-
                   <!-- Task Discussion Component -->
                   <div class="flex-1 min-h-[400px] flex flex-col bg-background rounded-2xl border border-border shadow-inner overflow-hidden">
                     <app-task-discussion [taskId]="modalTask().id" class="flex-1" />
@@ -797,6 +860,24 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
     @if (isRetroModalOpen() && (activeSprintId() || completedSprintId())) {
       <app-retrospective-modal [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
+    }
+
+    <!-- Summarize Chat Modal -->
+    @if (chatTask()) {
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-end p-4 sm:p-6 animate-fade-in"
+           (click)="closeSummarizeChat()">
+        <div class="w-full max-w-md h-[82vh] flex flex-col" (click)="$event.stopPropagation()">
+          <app-agile-coach-chat
+            [taskItemId]="chatTask()!.id"
+            [taskTitle]="currentLang === 'ar' ? (chatTask()!.titleAr || chatTask()!.titleEn) : chatTask()!.titleEn"
+            [lang]="currentLang"
+            [isOpen]="true"
+            [loadInitialSummary]="true"
+            (closed)="closeSummarizeChat()"
+            class="h-full"
+          />
+        </div>
+      </div>
     }
   `
 })
@@ -833,6 +914,16 @@ export class BoardComponent implements OnInit {
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
 
+  chatTask = signal<TaskItemDto | null>(null);
+
+  openSummarizeChat(task: any) {
+    this.chatTask.set(task);
+  }
+
+  closeSummarizeChat() {
+    this.chatTask.set(null);
+  }
+
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';
   }
@@ -846,6 +937,9 @@ export class BoardComponent implements OnInit {
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
   });
+
+  activeTab = signal<'board' | 'health'>('board');
+
   readonly boardPageSize = 8;
   boardSearch = signal('');
   priorityFilter = signal<'All' | Task['priority']>('All');
@@ -1206,6 +1300,7 @@ export class BoardComponent implements OnInit {
             type: task.type,
             status: newStatus
           });
+          this.toastService.show('Task status updated successfully.', 'success');
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
 
@@ -1214,9 +1309,10 @@ export class BoardComponent implements OnInit {
         }
         // Fetch updated data from backend to get the automatically calculated actualHours
         await this.loadWorkspaceData();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to update task status in backend:', err);
-        this.toastService.show('Failed to update task status.', 'error');
+        const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to update task status.';
+        this.toastService.show(errorMsg, 'error');
         // Rollback status visually by reloading
         await this.loadWorkspaceData();
       }
@@ -1269,6 +1365,7 @@ export class BoardComponent implements OnInit {
             type: taskData.type,
             status: this.originalColumn
           });
+          this.toastService.show('Task updated successfully.', 'success');
         } else {
           await this.backlogService.createTask(this.activeUserStoryId, {
             titleEn: taskData.title,
@@ -1279,12 +1376,15 @@ export class BoardComponent implements OnInit {
             type: taskData.type,
             status: 'todo'
           });
+          this.toastService.show('Task created successfully.', 'success');
         }
       }
       this.closeModal();
       await this.loadWorkspaceData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving task:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to save task. Please try again.';
+      this.toastService.show(errorMsg, 'error');
     } finally {
       this.isLoading.set(false);
     }
@@ -1325,6 +1425,9 @@ export class BoardComponent implements OnInit {
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       form.reset();
+      this.toastService.show('Project created successfully.', 'success');
+    } else {
+      this.toastService.show('Failed to create project.', 'error');
     }
   }
 
