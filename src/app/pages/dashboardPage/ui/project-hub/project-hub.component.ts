@@ -104,13 +104,6 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               </svg>
               <span>Generate with AI</span>
             </button>
-            <button (click)="createProject.emit()" 
-                    class="bg-sidebar hover:bg-primary/10 border border-border hover:border-primary/20 text-text-primary text-sm font-bold px-5 py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-              <span>Create Manually</span>
-            </button>
           </div>
         </div>
       }
@@ -135,9 +128,9 @@ export class ProjectHubComponent {
   filteredProjects = computed(() => {
     const tab = this.activeTab();
     const query = this.searchQuery().toLowerCase().trim();
-    
+
     let result = this.projects();
-    
+
     if (tab === 'active') {
       result = result.filter(p => p.status === 'Active' || p.status === 'Draft' || !p.status);
     } else if (tab === 'completed') {
@@ -147,10 +140,10 @@ export class ProjectHubComponent {
     }
 
     if (!query) return result;
-    
-    return result.filter(p => 
-      (p.nameEn || '').toLowerCase().includes(query) || 
-      (p.nameAr || '').toLowerCase().includes(query) || 
+
+    return result.filter(p =>
+      (p.nameEn || '').toLowerCase().includes(query) ||
+      (p.nameAr || '').toLowerCase().includes(query) ||
       (p.description || '').toLowerCase().includes(query)
     );
   });

@@ -42,13 +42,99 @@ import { ToastService } from '../../../../shared/services/toast.service';
               <span class="text-sm font-semibold text-text-secondary">AI is grouping backlog items and optimizing velocity...</span>
             </div>
           } @else if (suggestions().length === 0) {
-            <div class="flex flex-col items-center justify-center py-12 text-center bg-sidebar border border-border rounded-2xl p-8">
-              <svg class="w-12 h-12 mb-2 text-text-secondary opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M12 18a6 6 0 100-12 6 6 0 000 12z"/></svg>
-              <h4 class="text-sm font-bold text-text-primary">No suggestions ready</h4>
-              <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">You need to have user stories in your backlog to run the AI sprint analyzer.</p>
-              <button (click)="loadSuggestions()" class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all">
-                Request AI Sprint Schedule
-              </button>
+            <div class="flex flex-col items-center justify-center py-10 px-6 text-center bg-sidebar border border-border/80 rounded-3xl shadow-sm max-w-2xl mx-auto my-4 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+              
+              <!-- Icon Badge with glow -->
+              <div class="relative mb-5">
+                <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto ring-8 ring-amber-500/5 shadow-inner">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Status Tag -->
+              <div class="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-extrabold tracking-wide">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                {{ currentLang() === 'ar' ? 'لا توجد سبرينتات متوفرة' : 'No Sprints Available' }}
+              </div>
+
+              <h4 class="text-lg font-extrabold text-text-primary mb-2 font-display">
+                {{ currentLang() === 'ar' ? 'لم يتم العثور على سبرينتات مقترحة' : 'No Sprint Proposals Ready' }}
+              </h4>
+              <p class="text-xs text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
+                {{ currentLang() === 'ar'
+                  ? 'تحتاج إلى وجود قصص مستخدمين غير معينة في قائمة المهام (Backlog) ليتمكن الذكاء الاصطناعي من تقسيم السبرينت وتوزيع القدرات.'
+                  : 'You need unassigned user stories in your project backlog to generate an AI sprint schedule. Add stories or refresh backlog data.' }}
+              </p>
+
+              <!-- Status Info Cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 w-full max-w-lg text-left" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+                <!-- Card 1: Stories Count -->
+                <div class="p-3.5 rounded-2xl bg-surface border border-border/80 flex flex-col justify-between shadow-xs">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">
+                      {{ currentLang() === 'ar' ? 'قصص قائمة المهام' : 'Backlog Stories' }}
+                    </span>
+                    <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="storiesMap.size > 0" [class.bg-amber-500]="storiesMap.size === 0"></span>
+                  </div>
+                  <p class="text-base font-black text-text-primary">
+                    {{ storiesMap.size }} {{ currentLang() === 'ar' ? 'قصة' : 'Stories' }}
+                  </p>
+                </div>
+
+                <!-- Card 2: AI Status -->
+                <div class="p-3.5 rounded-2xl bg-surface border border-border/80 flex flex-col justify-between shadow-xs">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">
+                      {{ currentLang() === 'ar' ? 'محلل AI' : 'AI Analyzer' }}
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                  </div>
+                  <p class="text-xs font-bold text-text-primary">
+                    {{ currentLang() === 'ar' ? 'جاهز للتوليد' : 'Ready' }}
+                  </p>
+                </div>
+
+                <!-- Card 3: Project -->
+                <div class="p-3.5 rounded-2xl bg-surface border border-border/80 flex flex-col justify-between shadow-xs">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">
+                      {{ currentLang() === 'ar' ? 'المشروع' : 'Workspace' }}
+                    </span>
+                    <span class="text-xs">📁</span>
+                  </div>
+                  <p class="text-xs font-bold text-text-primary truncate" [title]="projectState.selectedProject()?.nameEn">
+                    {{ (currentLang() === 'ar' ? projectState.selectedProject()?.nameAr : projectState.selectedProject()?.nameEn) || 'Workspace' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex items-center justify-center gap-3 flex-wrap">
+                <button
+                  (click)="loadProjectBacklogStories()"
+                  [disabled]="isBacklogLoading()"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-surface hover:bg-border border border-border text-text-primary font-bold rounded-xl shadow-xs transition-all text-xs disabled:opacity-50">
+                  <svg class="w-3.5 h-3.5 text-text-secondary" [class.animate-spin]="isBacklogLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  {{ currentLang() === 'ar' ? 'تحديث قائمة المهام' : 'Refresh Backlog' }}
+                </button>
+
+                <button
+                  (click)="loadSuggestions()"
+                  class="inline-flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  {{ currentLang() === 'ar' ? 'طلب الجدول الزمني للسبرينت' : 'Request AI Sprint Schedule' }}
+                </button>
+              </div>
+
             </div>
           } @else {
             
@@ -155,8 +241,10 @@ export class SprintPlanningModalComponent implements OnInit {
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
 
+  currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
   suggestions = signal<SprintSuggestionDto[]>([]);
   isLoadingSuggestions = signal(false);
+  isBacklogLoading = signal(false);
   isSaving = signal(false);
 
   // Snapshot details
@@ -175,14 +263,18 @@ export class SprintPlanningModalComponent implements OnInit {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
 
+    this.isBacklogLoading.set(true);
     try {
       const res = await this.backlogService.getBacklog(projId);
       const stories = res?.userStories || [];
+      this.storiesMap.clear();
       stories.forEach((s: any) => {
         this.storiesMap.set(s.id, s.titleEn || s.title || 'Untitled Story');
       });
     } catch (e) {
       console.warn('Failed to load stories for planning list:', e);
+    } finally {
+      this.isBacklogLoading.set(false);
     }
   }
 
