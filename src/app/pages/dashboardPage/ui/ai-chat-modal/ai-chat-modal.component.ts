@@ -134,12 +134,12 @@ interface ChatMessage {
           </div>
 
           <form (submit)="onSendMessage($event)" class="flex gap-2 items-end">
-            <textarea [(ngModel)]="messageInput" name="message" required autocomplete="off" rows="2"
+            <textarea [(ngModel)]="messageInput" name="message" autocomplete="off" rows="2"
                     (keydown)="onKeyDown($event)"
-                    placeholder="e.g. A food delivery app with real-time tracking, written in Flutter..." 
+                    placeholder="Describe your project requirements, goals, or preferred tech stack (e.g. A food delivery app with real-time tracking...)" 
                     class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"></textarea>
             <button type="submit" 
-                    [disabled]="isLoading() || !messageInput.trim()"
+                    [disabled]="isLoading() || (!messageInput.trim() && !selectedFile())"
                     class="px-5 py-3 h-[46px] bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center disabled:opacity-50 shrink-0">
               @if (isLoading()) {
                 <div class="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
@@ -184,33 +184,35 @@ interface ChatMessage {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">Description (English)</label>
-                    <textarea [value]="projectDescriptionEnInput()" (input)="projectDescriptionEnInput.set(descEnField.value)" #descEnField rows="3"
-                              [disabled]="isGeneratingDraft()"
-                              class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium disabled:opacity-50"
-                              placeholder="Describe the project goal, core features, and target audience..."></textarea>
+                     <textarea [value]="projectDescriptionEnInput()" (input)="projectDescriptionEnInput.set(descEnField.value)" #descEnField rows="3"
+                               [disabled]="isGeneratingDraft()"
+                               class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium disabled:opacity-50"
+                               placeholder="Describe the project goal, core features, and target audience..."></textarea>
                   </div>
 
                   <div>
                     <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">الوصف (عربي)</label>
-                    <textarea [value]="projectDescriptionArInput()" (input)="projectDescriptionArInput.set(descArField.value)" #descArField rows="3" dir="rtl"
-                              [disabled]="isGeneratingDraft()"
-                              class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium disabled:opacity-50 text-right"
-                              placeholder="اكتب وصفاً مختصراً لأهداف ومميزات هذا المشروع..."></textarea>
+                     <textarea [value]="projectDescriptionArInput()" (input)="projectDescriptionArInput.set(descArField.value)" #descArField rows="3" dir="rtl"
+                               [disabled]="isGeneratingDraft()"
+                               class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all font-medium disabled:opacity-50 text-right"
+                               placeholder="اكتب وصفاً مختصراً لأهداف ومميزات هذا المشروع..."></textarea>
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border/60 pt-4">
                   <div>
                     <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">Sprint Duration (Days)</label>
-                    <input type="number" [value]="sprintDurationInput()" (input)="sprintDurationInput.set(+durationField.value)" #durationField
+                    <input type="number" [value]="sprintDurationInput() ?? ''" (input)="sprintDurationInput.set(+durationField.value || null)" #durationField
                            [disabled]="isGeneratingDraft()" min="1" max="90"
+                           [placeholder]="'e.g. ' + sprintDurationPlaceholder()"
                            class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50">
                   </div>
 
                   <div>
                     <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">Target Sprint Hours</label>
-                    <input type="number" [value]="targetSprintHoursInput()" (input)="targetSprintHoursInput.set(+hoursField.value)" #hoursField
+                    <input type="number" [value]="targetSprintHoursInput() ?? ''" (input)="targetSprintHoursInput.set(+hoursField.value || null)" #hoursField
                            [disabled]="isGeneratingDraft()" min="1" max="1000"
+                           [placeholder]="'e.g. ' + targetSprintHoursPlaceholder()"
                            class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50">
                   </div>
                 </div>
@@ -221,7 +223,7 @@ interface ChatMessage {
                         class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
                   Cancel
                 </button>
-                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft() || !projectNameInput().trim() || !projectNameArInput().trim() || !projectDescriptionEnInput().trim() || !projectDescriptionArInput().trim() || !sprintDurationInput() || !targetSprintHoursInput()"
+                <button (click)="submitFinalization()" [disabled]="isGeneratingDraft()"
                         class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[140px] justify-center">
                   @if (isGeneratingDraft()) {
                     <span class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
@@ -264,6 +266,9 @@ export class AiChatModalComponent implements AfterViewChecked {
   messageInput = '';
   selectedFile = signal<File | null>(null);
   selectedFileName = signal<string>('');
+  // Persist document info even after clearFile() so onGenerateDraft can use it
+  lastUploadedFileName = signal<string>('');
+  lastUploadedDocText = signal<string>('');
 
   isLoading = signal(false);
   isGeneratingDraft = signal(false);
@@ -287,31 +292,47 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   async onSendMessage(event: Event) {
     event.preventDefault();
-    if (this.isLoading() || !this.messageInput.trim()) return;
+    if (this.isLoading() || (!this.messageInput.trim() && !this.selectedFile())) return;
 
     const userText = this.messageInput.trim();
     this.messageInput = '';
 
     // Add user message locally
-    this.chatHistory.update(history => [...history, {
-      text: userText,
-      sender: 'user',
-      timestamp: new Date()
-    }]);
+    if (userText) {
+      this.chatHistory.update(history => [...history, {
+        text: userText,
+        sender: 'user',
+        timestamp: new Date()
+      }]);
+    } else if (this.selectedFile()) {
+      this.chatHistory.update(history => [...history, {
+        text: `📎 Attached document: ${this.selectedFile()?.name}`,
+        sender: 'user',
+        timestamp: new Date()
+      }]);
+    }
 
     this.isLoading.set(true);
 
     try {
-      // Send message
-      const res = await this.aiRequirements.startOrContinueSession(userText, this.chatId());
+      // Send message and file
+      const res = await this.aiRequirements.startOrContinueSession(userText, this.selectedFile(), this.chatId());
       const currentChatId = res.data?.sessionId || res.sessionId || res.data?.SessionId || res.SessionId || this.chatId();
       this.chatId.set(currentChatId);
 
-      // Upload file if selected
-      if (this.selectedFile() && currentChatId) {
-        await this.aiRequirements.uploadDocument(this.selectedFile()!, currentChatId);
-        this.clearFile();
+      // Extract direct AI reply from backend response if available
+      const resData = res.data || res;
+      const aiReply = resData.reply || resData.Reply || resData.aiResponse || resData.AiResponse || resData.message || resData.Message || resData.response || resData.Response;
+
+      if (aiReply && typeof aiReply === 'string' && aiReply.trim()) {
+        this.chatHistory.update(history => [...history, {
+          text: aiReply.trim(),
+          sender: 'ai',
+          timestamp: new Date()
+        }]);
       }
+
+      this.clearFile();
 
       // Query status
       await this.pollStatus(currentChatId);
@@ -333,6 +354,20 @@ export class AiChatModalComponent implements AfterViewChecked {
     if (file) {
       this.selectedFile.set(file);
       this.selectedFileName.set(file.name);
+      // Persist the name so onGenerateDraft can use it as a project name hint
+      const nameWithoutExt = file.name.replace(/\.[^.]+$/, '');
+      this.lastUploadedFileName.set(nameWithoutExt);
+      // For plain-text files, read the content to use as description
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.lastUploadedDocText.set((e.target?.result as string) || '');
+        };
+        reader.readAsText(file);
+      } else {
+        // PDF/DOCX: we can't parse content on the frontend — clear any previous text
+        this.lastUploadedDocText.set('');
+      }
     }
   }
 
@@ -361,20 +396,17 @@ export class AiChatModalComponent implements AfterViewChecked {
         const isReady = data.status === 'Planning' || data.Status === 'Planning' || unanswered.length === 0 || scorePercentage >= 85;
         this.isReadyForFinalization.set(isReady);
 
-        // Retrieve AI clarifying response or follow-up without duplicating
+        // Cache sprint config suggestions from session status if the backend provides them
+        const sprintDays = data.suggestedSprintDurationInDays || data.sprintDurationInDays || data.SprintDurationInDays || null;
+        const sprintHours = data.suggestedTargetSprintHours || data.targetSprintHours || data.TargetSprintHours || null;
+        if (sprintDays) this.suggestedSprintDuration.set(sprintDays);
+        if (sprintHours) this.suggestedTargetHours.set(sprintHours);
+
+        // Update chat stream status message
         const history = this.chatHistory();
         const lastMsg = history[history.length - 1];
 
-        if (questionsList.length > 0) {
-          const nextQuestion = questionsList[0];
-          if (!lastMsg || lastMsg.text !== nextQuestion || lastMsg.sender !== 'ai') {
-            this.chatHistory.update(h => [...h, {
-              text: nextQuestion,
-              sender: 'ai',
-              timestamp: new Date()
-            }]);
-          }
-        } else {
+        if (unanswered.length === 0 || scorePercentage >= 85) {
           const completionMsg = `Requirements gathering is complete (${scorePercentage}%). You can now finalize and generate your project draft!`;
           if (!lastMsg || lastMsg.text !== completionMsg || lastMsg.sender !== 'ai') {
             this.chatHistory.update(h => [...h, {
@@ -383,6 +415,14 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
+        } else if (lastMsg && lastMsg.sender === 'user') {
+          // If no direct textual reply was added from backend POST response, provide a clean acknowledgment
+          const ackMsg = `Thank you! Requirements updated (${scorePercentage}% completeness). Please check the remaining clarifying questions below to reach 100%.`;
+          this.chatHistory.update(h => [...h, {
+            text: ackMsg,
+            sender: 'ai',
+            timestamp: new Date()
+          }]);
         }
       }
     } catch (err) {
@@ -390,13 +430,18 @@ export class AiChatModalComponent implements AfterViewChecked {
     }
   }
 
+  // AI-suggested sprint config extracted from session status
+  private suggestedSprintDuration = signal<number | null>(null);
+  private suggestedTargetHours = signal<number | null>(null);
   showNamePrompt = signal(false);
-  projectNameInput = signal('My Awesome AI Project');
-  projectNameArInput = signal('مشروعي الذكي الجديد');
-  projectDescriptionEnInput = signal('An AI-designed enterprise product backlog.');
-  projectDescriptionArInput = signal('نظام مخصص لإدارة عمليات المشروع الذكي.');
-  sprintDurationInput = signal(14);
-  targetSprintHoursInput = signal(80);
+  projectNameInput = signal('');
+  projectNameArInput = signal('');
+  projectDescriptionEnInput = signal('');
+  projectDescriptionArInput = signal('');
+  sprintDurationInput = signal<number | null>(null);
+  targetSprintHoursInput = signal<number | null>(null);
+  sprintDurationPlaceholder = signal('14');
+  targetSprintHoursPlaceholder = signal('80');
 
   onGenerateDraft() {
     const activeChatId = this.chatId();
@@ -404,14 +449,17 @@ export class AiChatModalComponent implements AfterViewChecked {
     const managerId = this.projectState.userId();
 
     if (!activeChatId || !companyId || !managerId) return;
-    
-    // Open custom name input dialog
-    this.projectNameInput.set('My Awesome AI Project');
-    this.projectNameArInput.set('مشروعي الذكي الجديد');
-    this.projectDescriptionEnInput.set('An AI-designed enterprise product backlog.');
-    this.projectDescriptionArInput.set('نظام مخصص لإدارة عمليات المشروع الذكي.');
-    this.sprintDurationInput.set(14);
-    this.targetSprintHoursInput.set(80);
+
+    const suggestedDuration = this.suggestedSprintDuration() ?? 14;
+    const suggestedHours = this.suggestedTargetHours() ?? 80;
+
+    this.projectNameInput.set('');
+    this.projectNameArInput.set('');
+    this.projectDescriptionEnInput.set('');
+    this.projectDescriptionArInput.set('');
+    this.sprintDurationInput.set(suggestedDuration);
+    this.targetSprintHoursInput.set(suggestedHours);
+
     this.showNamePrompt.set(true);
   }
 
@@ -419,14 +467,16 @@ export class AiChatModalComponent implements AfterViewChecked {
     const activeChatId = this.chatId();
     const companyId = this.projectState.userCompanyId();
     const managerId = this.projectState.userId();
-    const nameEn = this.projectNameInput().trim();
-    const nameAr = this.projectNameArInput().trim();
-    const descEn = this.projectDescriptionEnInput().trim();
-    const descAr = this.projectDescriptionArInput().trim();
-    const sprintDuration = this.sprintDurationInput();
-    const targetHours = this.targetSprintHoursInput();
 
-    if (!activeChatId || !companyId || !managerId || !nameEn || !nameAr) return;
+    // Use typed input, or fall back to simple defaults if left empty
+    const nameEn = this.projectNameInput().trim() || 'New AI Project';
+    const nameAr = this.projectNameArInput().trim() || nameEn;
+    const descEn = this.projectDescriptionEnInput().trim() || 'Project requirements collected via AI Assistant.';
+    const descAr = this.projectDescriptionArInput().trim() || descEn;
+    const sprintDuration = this.sprintDurationInput() ?? (this.suggestedSprintDuration() ?? 14);
+    const targetHours = this.targetSprintHoursInput() ?? (this.suggestedTargetHours() ?? 80);
+
+    if (!activeChatId || !companyId || !managerId) return;
 
     this.isGeneratingDraft.set(true);
     
@@ -436,8 +486,8 @@ export class AiChatModalComponent implements AfterViewChecked {
         projectNameEn: nameEn,
         projectNameAr: nameAr,
         companyId: companyId,
-        sprintDurationInDays: sprintDuration,
-        targetSprintHours: targetHours,
+        sprintDurationInDays: sprintDuration || 0,
+        targetSprintHours: targetHours || 0,
         descriptionEn: descEn,
         descriptionAr: descAr
       });

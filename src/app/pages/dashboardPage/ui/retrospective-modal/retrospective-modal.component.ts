@@ -88,7 +88,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     {{ currentLang === 'ar' ? 'معدل الإنجاز' : 'Completion Rate' }}
                   </span>
                   <span class="text-text-primary text-2xl font-black mt-1 block">
-                    {{ retro()?.completionRate }}%
+                    {{ retro()?.completionRate | number:'1.0-2' }}%
                   </span>
                 </div>
                 <div class="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl text-center">
@@ -96,7 +96,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     {{ currentLang === 'ar' ? 'دقة التقدير' : 'Estimation Accuracy' }}
                   </span>
                   <span class="text-text-primary text-2xl font-black mt-1 block">
-                    {{ retro()?.estimationAccuracy }}%
+                    {{ retro()?.estimationAccuracy | number:'1.0-2' }}%
                   </span>
                 </div>
               </div>

@@ -1,0 +1,66 @@
+<div class="chat-drawer" [class.open]="isOpen">
+  <div class="chat-header">
+    <h3>Backlog AI Assistant</h3>
+    <button class="close-btn" (click)="close()">&times;</button>
+  </div>
+  
+  <div class="progress-section" *ngIf="!projectId">
+    <div class="score-row">
+      <span>Completeness Score</span>
+      <span>{{ completenessScore() }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="fill" [style.width.%]="completenessScore()"></div>
+    </div>
+  </div>
+
+  <div class="chat-body" #scrollContainer>
+    <div class="upload-section" *ngIf="messages().length === 0 && !projectId">
+      <p>Please upload your Business Requirement Document (BRD).</p>
+      <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.txt" [disabled]="isLoading()" />
+    </div>
+
+    <div class="loading-spinner" *ngIf="isLoading() && messages().length === 0">Loading...</div>
+    <div class="message" *ngFor="let msg of messages()" [ngClass]="msg.role.toLowerCase()">
+      <div class="bubble">
+        <span class="role">{{ msg.role.toLowerCase() === 'user' ? 'You' : 'TaskPilot AI' }}</span>
+        <p>{{ msg.content }}</p>
+        <span class="time">{{ msg.timestamp | date:'shortTime' }}</span>
+      </div>
+    </div>
+    
+    <div class="message assistant" *ngIf="isTyping()">
+      <div class="bubble">
+        <span class="role">TaskPilot AI</span>
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="message assistant" *ngIf="isLoading() && !isTyping() && messages().length > 0">
+      <div class="bubble typing">
+        <p>Thinking...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-footer">
+    <div class="input-row">
+      <input 
+        type="text" 
+        [ngModel]="inputText()" 
+        (ngModelChange)="inputText.set($event)" 
+        (keyup.enter)="sendMessage()" 
+        placeholder="Ask AI to edit backlog..." 
+        [disabled]="isLoading()"
+      />
+      <button (click)="sendMessage()" [disabled]="isLoading() || !inputText().trim()">Send</button>
+    </div>
+    <div class="actions-row">
+      <button class="confirm-btn" (click)="generateBacklog()" [disabled]="isLoading() || messages().length === 0">
+        {{ projectId ? 'Confirm Backlog' : 'Generate Backlog' }}
+      </button>
+    </div>
+  </div>
+</div>

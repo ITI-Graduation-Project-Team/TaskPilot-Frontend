@@ -23,6 +23,16 @@ export function saveTokens(accessToken: string, refreshToken: string): void {
 export function clearTokens(): void {
   Cookies.remove(environment.auth.tokenKey);
   Cookies.remove(environment.auth.refreshTokenKey);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(environment.auth.tokenKey);
+    localStorage.removeItem(environment.auth.refreshTokenKey);
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userFullName');
+    localStorage.removeItem('selectedProjectId');
+    localStorage.removeItem('localCompletedIds');
+    localStorage.removeItem('isProfileCompleted');
+    localStorage.removeItem('taskPilotJwtToken');
+  }
 }
 export function getRoleFromToken(): string | null {
   const token = getAccessToken(); // your existing cookie reader

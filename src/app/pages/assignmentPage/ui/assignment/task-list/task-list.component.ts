@@ -1,11 +1,12 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AssignmentSuggestion } from '../../../../../entities/assignment.entity';
 
 @Component({
   selector: 'app-task-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './task-list.component.html',
   styleUrls: ['./task-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -17,6 +18,25 @@ export class TaskListComponent {
 
   @Output() taskSelected = new EventEmitter<string>();
 
+  searchQuery = signal('');
+  filterTab = signal<'all' | 'unassigned' | 'assigned'>('all');
+
+  filteredTasks(): AssignmentSuggestion[] {
+    const q = this.searchQuery().trim().toLowerCase();
+    const tab = this.filterTab();
+
+    return this.tasks.filter(task => {
+      const matchesSearch = !q || (task.taskTitleEn || task.taskTitleAr || '').toLowerCase().includes(q) ||
+        (task.type || '').toLowerCase().includes(q) ||
+        (task.priority || '').toLowerCase().includes(q);
+
+      const isAssigned = !!this.localAssignments[task.taskId];
+      const matchesTab = tab === 'all' || (tab === 'assigned' && isAssigned) || (tab === 'unassigned' && !isAssigned);
+
+      return matchesSearch && matchesTab;
+    });
+  }
+
   selectTask(taskId: string) {
     this.taskSelected.emit(taskId);
   }
@@ -25,8 +45,13 @@ export class TaskListComponent {
     const empId = this.localAssignments[task.taskId];
     if (!empId) return 'Unassigned';
     
-    // Look up developer name in the rankedDevelopers list
-    const dev = task.rankedDevelopers.find(d => d.employeeId === empId);
-    return dev?.employeeName || empId; // Fallback to ID if somehow not in top 3
+    const dev = task.rankedDevelopers?.find(d => d.employeeId === empId);
+    return dev?.employeeName || 'Assigned';
+  }
+
+  getAssigneeInitials(task: AssignmentSuggestion): string {
+    const name = this.getAssigneeName(task);
+    if (!name || name === 'Unassigned') return '?';
+    return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
   }
 }

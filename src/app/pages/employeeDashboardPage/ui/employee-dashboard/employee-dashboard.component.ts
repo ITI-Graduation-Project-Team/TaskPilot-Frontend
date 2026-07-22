@@ -13,7 +13,7 @@ import { CurrentProjects } from '../current-projects/current-projects';
 import { ProjectHistory } from '../project-history/project-history';
 import { MyProfileComponent } from '../my-profile/my-profile.component';
 import { CalendarViewComponent } from '../../../dashboardPage/ui/calendar-view/calendar-view.component';
-
+import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar';
 
 @Component({
@@ -28,6 +28,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
     ProjectHistory,
     MyProfileComponent,
     CalendarViewComponent,
+    NotificationBellComponent
   ],
   template: `
     <div
@@ -344,6 +345,9 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 }
               </div>
             }
+
+            <!-- Notification Bell -->
+            <app-notification-bell />
 
             <!-- Language Switcher -->
             <div class="flex items-center gap-0.5 p-1 rounded-xl border"
