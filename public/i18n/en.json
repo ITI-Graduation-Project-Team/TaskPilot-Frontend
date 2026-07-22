@@ -391,5 +391,15 @@
   },
   "SPRINT_HEALTH": {
     "ERROR_LOADING": "Failed to load sprint health data"
+  },
+  "SPRINT_VALIDATION": {
+    "NO_EMPLOYEES_BANNER_TITLE": "No Team Members Assigned",
+    "NO_EMPLOYEES_BANNER_DESC": "You cannot create or plan sprints until at least one employee is assigned to this project.",
+    "CTA_ASSIGN_EMPLOYEES": "Assign Employees",
+    "CTA_INVITE_TEAM": "Invite Team",
+    "NO_EMPLOYEES_MODAL_TITLE": "Employees Required for Sprint Planning",
+    "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
+    "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
+    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
   }
 }

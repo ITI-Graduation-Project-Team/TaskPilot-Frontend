@@ -436,7 +436,7 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
-        } else {
+        } else if (scorePercentage >= 100) {
           const completionMsg = `Requirements gathering is complete (${scorePercentage}%). You can now finalize and generate your project draft!`;
           if (!lastMsg || lastMsg.text !== completionMsg || lastMsg.sender !== 'ai') {
             this.chatHistory.update(h => [...h, {

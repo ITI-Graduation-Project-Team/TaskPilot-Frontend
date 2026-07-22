@@ -362,6 +362,7 @@ export class TeamViewComponent implements OnInit {
         role: e.role || 'Contributor'
       }));
       this.projectTeam.set(mapped);
+      this.projectState.setProjectEmployeeCount(mapped.length);
     } catch (e) {
       console.warn('Failed to load project team:', e);
     } finally {

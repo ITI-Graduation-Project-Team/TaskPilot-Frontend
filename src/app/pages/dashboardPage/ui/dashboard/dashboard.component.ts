@@ -441,7 +441,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 [overrideSprintId]="selectedSprintId()"
                 [overrideSprintStatus]="selectedSprintStatus()"
                 (backToSprints)="onBackToSprints()"
-                (sprintStatusChanged)="onSprintStatusChanged()">
+                (sprintStatusChanged)="onSprintStatusChanged()"
+                (navigateToTeam)="currentTab.set('team')">
               </app-board>
             } @else {
               <app-sprint-list
@@ -453,10 +454,11 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             }
           } @else if (currentTab() === 'sprint-planning') {
             <app-sprint-planning-view 
-              (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)">
+              (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)"
+              (navigateToTeam)="currentTab.set('team')">
             </app-sprint-planning-view>
           } @else if (currentTab() === 'backlog') {
-            <app-backlog-view></app-backlog-view>
+            <app-backlog-view (navigateToTeam)="currentTab.set('team')"></app-backlog-view>
           } @else if (currentTab() === 'team') {
             <app-team-view></app-team-view>
           } @else if (currentTab() === 'profile') {
