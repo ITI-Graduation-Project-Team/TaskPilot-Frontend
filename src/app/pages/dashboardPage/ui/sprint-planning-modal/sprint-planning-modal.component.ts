@@ -1,10 +1,19 @@
-import { Component, ChangeDetectionStrategy, signal, inject, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintSuggestionDto } from '../../../../shared/api/sprint-planning.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { BacklogService } from '../../../../shared/api/backlog.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+
+const LOADING_HINTS = [
+  { en: 'Analyzing your backlog...', ar: 'جاري تحليل قائمة المهام...' },
+  { en: 'Calculating team capacity...', ar: 'حساب قدرة الفريق الاستيعابية...' },
+  { en: 'Optimizing sprint scope...', ar: 'تحسين نطاق السبرينت...' },
+  { en: 'Grouping user stories by priority...', ar: 'تجميع المهام حسب الأولوية...' },
+  { en: 'Balancing workload across the team...', ar: 'موازنة أعباء العمل على الفريق...' },
+  { en: 'Finalizing sprint proposal...', ar: 'وضع اللمسات الأخيرة على المقترح...' },
+];
 
 @Component({
   selector: 'app-sprint-planning-modal',
@@ -37,12 +46,39 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <!-- Body content -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
           @if (isLoadingSuggestions()) {
-            <div class="flex flex-col items-center justify-center py-20 text-center space-y-3">
-              <div class="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-              <span class="text-sm font-semibold text-text-secondary">AI is grouping backlog items and optimizing velocity...</span>
+            <div class="flex flex-col items-center justify-center text-center rounded-2xl border border-border bg-surface px-6 py-16 shadow-sm max-w-3xl mx-auto mt-8 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+              <!-- Glowing orb -->
+              <div class="relative mb-8 mt-4">
+                <div class="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-50" style="animation-duration: 2s;"></div>
+                <div class="absolute inset-[-12px] rounded-full bg-primary/10 animate-pulse" style="animation-duration: 3s;"></div>
+                <div class="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 flex items-center justify-center shadow-xl shadow-primary/20">
+                  <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m15.364 6.364l-.707-.707M6.343 17.657l-.707-.707m12.728-11.314l-.707.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <h3 class="text-xl font-bold text-text-primary mb-3">
+                {{ currentLang() === 'ar' ? 'الذكاء الاصطناعي يعمل...' : 'AI is working...' }}
+              </h3>
+              
+              <div class="min-h-[2.5rem] flex items-center justify-center mt-2">
+                <p class="text-sm font-semibold text-text-secondary transition-all duration-500 animate-[pulse_1.5s_ease-in-out_infinite]">
+                  {{ currentLang() === 'ar' ? loadingHint().ar : loadingHint().en }}
+                </p>
+              </div>
+
+              <!-- Progress dots -->
+              <div class="flex items-center justify-center gap-2 mt-8 mb-4">
+                @for (dot of [0,1,2]; track dot) {
+                  <div class="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                       [style.animation-delay]="dot * 150 + 'ms'"></div>
+                }
+              </div>
             </div>
           } @else if (suggestions().length === 0) {
-            <div class="flex flex-col items-center justify-center py-10 px-6 text-center bg-sidebar border border-border/80 rounded-3xl shadow-sm max-w-2xl mx-auto my-4 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="flex flex-col items-center justify-center text-center rounded-3xl border border-border bg-surface px-6 py-12 shadow-sm max-w-3xl mx-auto my-4 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
               
               <!-- Icon Badge with glow -->
               <div class="relative mb-5">
@@ -60,37 +96,37 @@ import { ToastService } from '../../../../shared/services/toast.service';
                 {{ currentLang() === 'ar' ? 'لا توجد سبرينتات متوفرة' : 'No Sprints Available' }}
               </div>
 
-              <h4 class="text-lg font-extrabold text-text-primary mb-2 font-display">
+              <h4 class="text-xl font-extrabold text-text-primary mb-2 font-display">
                 {{ currentLang() === 'ar' ? 'لم يتم العثور على سبرينتات مقترحة' : 'No Sprint Proposals Ready' }}
               </h4>
-              <p class="text-xs text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
+              <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
                 {{ currentLang() === 'ar'
                   ? 'تحتاج إلى وجود قصص مستخدمين غير معينة في قائمة المهام (Backlog) ليتمكن الذكاء الاصطناعي من تقسيم السبرينت وتوزيع القدرات.'
                   : 'You need unassigned user stories in your project backlog to generate an AI sprint schedule. Add stories or refresh backlog data.' }}
               </p>
 
               <!-- Status Info Cards -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 w-full max-w-lg text-left" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-8 w-full max-w-xl text-left" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
                 <!-- Card 1: Stories Count -->
-                <div class="p-3.5 rounded-2xl bg-surface border border-border/80 flex flex-col justify-between shadow-xs">
-                  <div class="flex items-center justify-between mb-1.5">
+                <div class="p-4 rounded-2xl bg-sidebar border border-border/80 flex flex-col justify-between shadow-xs">
+                  <div class="flex items-center justify-between mb-2">
                     <span class="text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">
                       {{ currentLang() === 'ar' ? 'قصص قائمة المهام' : 'Backlog Stories' }}
                     </span>
                     <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="storiesMap.size > 0" [class.bg-amber-500]="storiesMap.size === 0"></span>
                   </div>
-                  <p class="text-base font-black text-text-primary">
+                  <p class="text-lg font-black text-text-primary">
                     {{ storiesMap.size }} {{ currentLang() === 'ar' ? 'قصة' : 'Stories' }}
                   </p>
                 </div>
 
                 <!-- Card 2: AI Status -->
-                <div class="p-3.5 rounded-2xl bg-surface border border-border/80 flex flex-col justify-between shadow-xs">
-                  <div class="flex items-center justify-between mb-1.5">
+                <div class="p-4 rounded-2xl bg-sidebar border border-border/80 flex flex-col justify-between shadow-xs">
+                  <div class="flex items-center justify-between mb-2">
                     <span class="text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">
                       {{ currentLang() === 'ar' ? 'محلل AI' : 'AI Analyzer' }}
                     </span>
-                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                   </div>
@@ -100,8 +136,8 @@ import { ToastService } from '../../../../shared/services/toast.service';
                 </div>
 
                 <!-- Card 3: Project -->
-                <div class="p-3.5 rounded-2xl bg-surface border border-border/80 flex flex-col justify-between shadow-xs">
-                  <div class="flex items-center justify-between mb-1.5">
+                <div class="p-4 rounded-2xl bg-sidebar border border-border/80 flex flex-col justify-between shadow-xs">
+                  <div class="flex items-center justify-between mb-2">
                     <span class="text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">
                       {{ currentLang() === 'ar' ? 'المشروع' : 'Workspace' }}
                     </span>
@@ -118,8 +154,8 @@ import { ToastService } from '../../../../shared/services/toast.service';
                 <button
                   (click)="loadProjectBacklogStories()"
                   [disabled]="isBacklogLoading()"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-surface hover:bg-border border border-border text-text-primary font-bold rounded-xl shadow-xs transition-all text-xs disabled:opacity-50">
-                  <svg class="w-3.5 h-3.5 text-text-secondary" [class.animate-spin]="isBacklogLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-sidebar hover:bg-border border border-border text-text-primary font-bold rounded-xl shadow-xs transition-all text-xs disabled:opacity-50">
+                  <svg class="w-4 h-4 text-text-secondary" [class.animate-spin]="isBacklogLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                   </svg>
                   {{ currentLang() === 'ar' ? 'تحديث قائمة المهام' : 'Refresh Backlog' }}
@@ -127,8 +163,8 @@ import { ToastService } from '../../../../shared/services/toast.service';
 
                 <button
                   (click)="loadSuggestions()"
-                  class="inline-flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
                   {{ currentLang() === 'ar' ? 'طلب الجدول الزمني للسبرينت' : 'Request AI Sprint Schedule' }}
@@ -232,7 +268,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   `]
 })
-export class SprintPlanningModalComponent implements OnInit {
+export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() sprintConfirmed = new EventEmitter<void>();
 
@@ -251,12 +287,37 @@ export class SprintPlanningModalComponent implements OnInit {
   activeSnapshotSprintId = signal<string | null>(null);
   workloadSnapshot = signal<Array<{ name: string; hours: number }>>([]);
 
+  loadingHint = signal(LOADING_HINTS[0]);
+  private hintIndex = 0;
+  private hintTimer: ReturnType<typeof setInterval> | null = null;
+
   // Store user stories mapped by ID for titles lookup
   storiesMap = new Map<string, string>();
 
   async ngOnInit() {
     await this.loadProjectBacklogStories();
     await this.loadSuggestions();
+  }
+
+  ngOnDestroy() {
+    this.clearHintTimer();
+  }
+
+  private startHintCycle() {
+    this.clearHintTimer();
+    this.hintIndex = 0;
+    this.loadingHint.set(LOADING_HINTS[0]);
+    this.hintTimer = setInterval(() => {
+      this.hintIndex = (this.hintIndex + 1) % LOADING_HINTS.length;
+      this.loadingHint.set(LOADING_HINTS[this.hintIndex]);
+    }, 2500);
+  }
+
+  private clearHintTimer() {
+    if (this.hintTimer) {
+      clearInterval(this.hintTimer);
+      this.hintTimer = null;
+    }
   }
 
   async loadProjectBacklogStories() {
@@ -283,6 +344,7 @@ export class SprintPlanningModalComponent implements OnInit {
     if (!projId) return;
 
     this.isLoadingSuggestions.set(true);
+    this.startHintCycle();
     try {
       const res = await this.sprintService.getSprintSuggestions(projId);
       this.suggestions.set(res.data || res || []);
@@ -290,6 +352,7 @@ export class SprintPlanningModalComponent implements OnInit {
       console.warn('Failed to load suggested sprints from AI:', e);
     } finally {
       this.isLoadingSuggestions.set(false);
+      this.clearHintTimer();
     }
   }
 
