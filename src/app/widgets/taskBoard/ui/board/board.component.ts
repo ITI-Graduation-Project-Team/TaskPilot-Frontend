@@ -134,7 +134,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                     [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
                     [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
                     class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+              @if (sprintStatus() === 'Active') {
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+              }
               Health & Team Pulse
             </button>
           }
@@ -591,8 +593,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
         </div>
-        } @else if (activeTab() === 'health' && activeSprintId()) {
-          <app-sprint-health-dashboard [sprintId]="activeSprintId()!"></app-sprint-health-dashboard>
+        } @else if (activeTab() === 'health' && (activeSprintId() || completedSprintId())) {
+          <app-sprint-health-dashboard [sprintId]="(activeSprintId() || completedSprintId())!"></app-sprint-health-dashboard>
         }
       }
     </div>
