@@ -1,9 +1,10 @@
-import { Component, Input, Output, EventEmitter, signal, inject, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiProjectService } from '../../shared/api/ai-project.service';
 import { ProjectChatApi } from '../../shared/api/projectChat.api';
 import { AiChatMessageDto, SendAiMessageDto } from '../../shared/models/ai-chat.models';
+import { detectTextDir } from '../../shared/utils/text-direction.util';
 
 @Component({
   selector: 'app-project-ai-chat',
@@ -30,6 +31,18 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
   completenessScore = signal<number>(0);
   isReadyToGenerate = signal<boolean>(false);
   isTyping = signal<boolean>(false);
+
+  detectTextDir = detectTextDir;
+  
+  completenessLabel = computed(() => {
+    const history = this.messages();
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].role === 'user') {
+        return detectTextDir(history[i].content) === 'rtl' ? 'اكتمال المتطلبات' : 'Completeness Score';
+      }
+    }
+    return 'Completeness Score';
+  });
 
   ngOnInit(): void {
     if (this.isOpen && this.projectId) {

@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, signal, inject, input, Output, EventEmitter, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, input, Output, EventEmitter, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { detectTextDir } from '../../../../shared/utils/text-direction.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
@@ -43,7 +44,7 @@ interface ChatMessage {
           <div class="px-6 py-4 bg-primary/5 border-b border-primary/10 shrink-0 flex items-center justify-between gap-4">
             <div class="flex-1">
               <div class="flex items-center justify-between text-xs font-bold text-primary mb-1">
-                <span>Requirements Completeness</span>
+                <span>{{ completenessLabel() }}</span>
                 <span>{{ completenessScore() }}%</span>
               </div>
               <div class="w-full h-2.5 bg-border rounded-full overflow-hidden">
@@ -78,7 +79,9 @@ interface ChatMessage {
           <!-- Chat History -->
           @for (msg of chatHistory(); track msg.timestamp) {
             <div class="flex gap-3 max-w-[85%] animate-[fadeUp_0.2s_ease_both]"
-                 [ngClass]="msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''">
+                 [ngClass]="msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''"
+                 [dir]="detectTextDir(msg.text)"
+                 [class.text-right]="detectTextDir(msg.text) === 'rtl'">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                    [ngClass]="msg.sender === 'user' ? 'bg-primary text-white font-bold' : 'bg-primary/10 text-primary'">
                 {{ msg.sender === 'user' ? 'PM' : '🤖' }}
@@ -125,7 +128,7 @@ interface ChatMessage {
                     [title]="!chatId() ? 'Send a message first to start session' : 'Upload requirements document'"
                     class="p-2 border border-border text-text-secondary hover:text-text-primary rounded-xl hover:bg-background transition-colors flex items-center gap-1.5 text-xs font-semibold disabled:opacity-50">
               <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-              Attach Document
+              إرفاق مستند
             </button>
             @if (selectedFileName()) {
               <span class="text-xs text-primary font-semibold truncate max-w-xs">{{ selectedFileName() }}</span>
@@ -259,6 +262,17 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   chatId = signal<string | null>(null);
   completenessScore = signal(0);
+  
+  detectTextDir = detectTextDir;
+  completenessLabel = computed(() => {
+    const history = this.chatHistory();
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].sender === 'user') {
+        return detectTextDir(history[i].text) === 'rtl' ? 'اكتمال المتطلبات' : 'Requirements Completeness';
+      }
+    }
+    return 'Requirements Completeness';
+  });
   isReadyForFinalization = signal(false);
   clarifyingQuestions = signal<string[]>([]);
   chatHistory = signal<ChatMessage[]>([]);
@@ -406,7 +420,23 @@ export class AiChatModalComponent implements AfterViewChecked {
         const history = this.chatHistory();
         const lastMsg = history[history.length - 1];
 
-        if (unanswered.length === 0 || scorePercentage >= 85) {
+        if (questionsList.length > 0) {
+          // Combine ALL unanswered questions into one AI message
+          const isArabic = questionsList.length > 0 && detectTextDir(questionsList[0]) === 'rtl';
+          const prefix = isArabic ? 'يرجى الإجابة على الأسئلة التالية:\n' : 'Please answer the following questions:\n';
+          const allQuestions = questionsList.length === 1
+            ? questionsList[0]
+            : prefix +
+              questionsList.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n');
+
+          if (!lastMsg || lastMsg.text !== allQuestions || lastMsg.sender !== 'ai') {
+            this.chatHistory.update(h => [...h, {
+              text: allQuestions,
+              sender: 'ai',
+              timestamp: new Date()
+            }]);
+          }
+        } else {
           const completionMsg = `Requirements gathering is complete (${scorePercentage}%). You can now finalize and generate your project draft!`;
           if (!lastMsg || lastMsg.text !== completionMsg || lastMsg.sender !== 'ai') {
             this.chatHistory.update(h => [...h, {
