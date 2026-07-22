@@ -33,9 +33,17 @@ export class AssignmentComponent implements OnInit {
   readonly isConfirming = signal<boolean>(false);
   sprintId: string = '';
 
-  // Derived State
+  // Derived Metrics & State
+  readonly totalTasksCount = computed(() => this.suggestions().length);
+  readonly assignedCount = computed(() => Object.keys(this.localAssignments()).length);
+  readonly unassignedCount = computed(() => Math.max(0, this.totalTasksCount() - this.assignedCount()));
+  readonly completionPercentage = computed(() => {
+    const total = this.totalTasksCount();
+    return total > 0 ? Math.round((this.assignedCount() / total) * 100) : 0;
+  });
+
   readonly canConfirm = computed(() => {
-    return Object.keys(this.localAssignments()).length > 0 && !this.isConfirming();
+    return this.assignedCount() > 0 && !this.isConfirming();
   });
 
   readonly selectedTask = computed(() => {
@@ -65,8 +73,11 @@ export class AssignmentComponent implements OnInit {
       const suggestionsData = await this.assignmentService.getSuggestions(this.sprintId);
       this.suggestions.set(suggestionsData);
 
-      // Suggestions are display-only. We do not auto-populate localAssignments.
-      // The user must manually select assignments.
+      // Auto-select first task if available
+      if (suggestionsData.length > 0) {
+        this.selectedTaskId.set(suggestionsData[0].taskId);
+      }
+
       this.localAssignments.set({});
 
     } catch (error: any) {
@@ -81,7 +92,6 @@ export class AssignmentComponent implements OnInit {
   }
 
   onAssignEmployee(event: { taskId: string, employeeId: string }) {
-    // Update local state ONLY
     this.localAssignments.update(current => {
       const updated = { ...current };
       if (event.employeeId) {
@@ -90,6 +100,37 @@ export class AssignmentComponent implements OnInit {
         delete updated[event.taskId];
       }
       return updated;
+    });
+  }
+
+  autoAssignTopMatches() {
+    const newAssignments = { ...this.localAssignments() };
+    let countAdded = 0;
+
+    for (const task of this.suggestions()) {
+      if (!newAssignments[task.taskId] && task.rankedDevelopers && task.rankedDevelopers.length > 0) {
+        const topDev = task.rankedDevelopers.find(d => d.rank === 1) || task.rankedDevelopers[0];
+        if (topDev) {
+          newAssignments[task.taskId] = topDev.employeeId;
+          countAdded++;
+        }
+      }
+    }
+
+    this.localAssignments.set(newAssignments);
+    if (countAdded > 0) {
+      this.toastService.show(`Auto-assigned ${countAdded} task(s) to top AI matched candidates!`, 'success');
+    } else {
+      this.toastService.show('All tasks are already assigned.', 'info');
+    }
+  }
+
+  goBackToDashboard() {
+    this.router.navigate(['/dashboard'], {
+      queryParams: {
+        sprintId: this.sprintId,
+        sprintStatus: 'Planned'
+      }
     });
   }
 
@@ -107,15 +148,9 @@ export class AssignmentComponent implements OnInit {
         assignments: assignmentsPayload
       });
       
-      this.toastService.show('Assignments confirmed. Tasks are ready to be started.', 'success');
+      this.toastService.show('Assignments confirmed successfully!', 'success');
       
-      // Navigate back to sprint board
-      this.router.navigate(['/dashboard'], {
-        queryParams: {
-          sprintId: this.sprintId,
-          sprintStatus: 'Planned'
-        }
-      });
+      this.goBackToDashboard();
       
     } catch (error: any) {
       this.toastService.show(error.message || 'Failed to confirm assignments', 'error');

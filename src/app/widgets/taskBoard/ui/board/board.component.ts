@@ -628,7 +628,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
           <!-- Modal Body (Grid for Trello-like layout) -->
           <div class="p-6 overflow-y-auto flex-1 scrollbar-thin">
-            <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="isEditing() ? 'lg:grid-cols-[1fr_1fr]' : ''">
+            <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="(isEditing() || modalTask().id) ? 'lg:grid-cols-[1fr_1fr]' : ''">
               
               <!-- LEFT COLUMN: Main Task Info & Form -->
               <div class="space-y-6 flex flex-col">
@@ -809,7 +809,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </div>
 
               <!-- RIGHT COLUMN: Discussion -->
-              @if (isEditing()) {
+              @if (isEditing() || modalTask().id) {
                 <div class="flex flex-col h-full border-border lg:border-l lg:pl-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
                   <!-- Task Discussion Component -->
                   <div class="flex-1 min-h-[400px] flex flex-col bg-background rounded-2xl border border-border shadow-inner overflow-hidden">
@@ -1278,6 +1278,7 @@ export class BoardComponent implements OnInit, OnChanges {
             type: task.type,
             status: newStatus
           });
+          this.toastService.show('Task status updated successfully.', 'success');
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
 
@@ -1286,9 +1287,10 @@ export class BoardComponent implements OnInit, OnChanges {
         }
         // Fetch updated data from backend to get the automatically calculated actualHours
         await this.loadWorkspaceData();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to update task status in backend:', err);
-        this.toastService.show('Failed to update task status.', 'error');
+        const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to update task status.';
+        this.toastService.show(errorMsg, 'error');
         // Rollback status visually by reloading
         await this.loadWorkspaceData();
       }
@@ -1341,6 +1343,7 @@ export class BoardComponent implements OnInit, OnChanges {
             type: taskData.type,
             status: this.originalColumn
           });
+          this.toastService.show('Task updated successfully.', 'success');
         } else {
           await this.backlogService.createTask(this.activeUserStoryId, {
             titleEn: taskData.title,
@@ -1351,12 +1354,15 @@ export class BoardComponent implements OnInit, OnChanges {
             type: taskData.type,
             status: 'todo'
           });
+          this.toastService.show('Task created successfully.', 'success');
         }
       }
       this.closeModal();
       await this.loadWorkspaceData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving task:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to save task. Please try again.';
+      this.toastService.show(errorMsg, 'error');
     } finally {
       this.isLoading.set(false);
     }
@@ -1397,6 +1403,9 @@ export class BoardComponent implements OnInit, OnChanges {
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       form.reset();
+      this.toastService.show('Project created successfully.', 'success');
+    } else {
+      this.toastService.show('Failed to create project.', 'error');
     }
   }
 
