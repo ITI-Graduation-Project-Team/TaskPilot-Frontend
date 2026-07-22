@@ -30,17 +30,17 @@
       <div class="bg-surface rounded-xl border-l-4 border-l-brandPrimary shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 class="text-lg font-bold text-text-primary mb-1">
-            {{ 'subscription.youAreOn' | translate:{ planName: sub.planName, status: sub.status } }}
+            {{ 'subscription.youAreOn' | translate:{ planName: ('subscription.plans.' + (sub.planName | lowercase) | translate), status: ('subscription.status.' + (sub.status | lowercase) | translate) } }}
           </h3>
           <p class="text-sm text-text-secondary">
             <ng-container *ngIf="sub.status === 'Pending'">
               {{ 'subscription.paymentProcessing' | translate }}
             </ng-container>
             <ng-container *ngIf="sub.status === 'Trialing'">
-              {{ 'subscription.trialEnds' | translate:{ date: (sub.trialEndDate | date:'mediumDate'), cycle: sub.billingCycle } }}
+              {{ 'subscription.trialEnds' | translate:{ date: (sub.trialEndDate | date:'mediumDate'), cycle: ('subscription.' + (sub.billingCycle | lowercase) | translate) } }}
             </ng-container>
             <ng-container *ngIf="sub.status !== 'Pending' && sub.status !== 'Trialing'">
-              {{ sub.status === 'Active' ? ('subscription.renewsOn' | translate:{ date: (sub.endDate | date:'mediumDate'), cycle: sub.billingCycle }) : ('subscription.expiresOn' | translate:{ date: (sub.endDate | date:'mediumDate'), cycle: sub.billingCycle }) }}
+              {{ sub.status === 'Active' ? ('subscription.renewsOn' | translate:{ date: (sub.endDate | date:'mediumDate'), cycle: ('subscription.' + (sub.billingCycle | lowercase) | translate) }) : ('subscription.expiresOn' | translate:{ date: (sub.endDate | date:'mediumDate'), cycle: ('subscription.' + (sub.billingCycle | lowercase) | translate) }) }}
             </ng-container>
           </p>
         </div>
@@ -161,7 +161,7 @@
 
           <!-- Plan Info -->
           <div class="mb-6">
-            <h3 class="text-xl font-bold text-text-primary mb-2">{{ plan.name }}</h3>
+            <h3 class="text-xl font-bold text-text-primary mb-2">{{ 'subscription.plans.' + (plan.name | lowercase) | translate }}</h3>
             <div class="flex items-baseline gap-1">
               <span class="text-4xl font-extrabold text-text-primary">
                 {{ (billingCycle() === 'Monthly' ? plan.monthlyPrice : plan.annualPrice) | currency:plan.currency:'symbol-narrow':'1.0-0' }}
@@ -216,7 +216,7 @@
           
           <button *ngIf="isCurrentPlan(plan.id)" disabled
                   class="w-full py-3.5 rounded-xl font-bold bg-surface border border-border text-text-secondary opacity-70 cursor-not-allowed">
-            Current Plan
+            {{ 'subscription.currentPlanBtn' | translate }}
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, Inject, inject } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, Inject, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -11,9 +11,15 @@ import { ThemeService } from '../../../../shared/services/theme.service';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss'],
 })
-export class LandingComponent implements OnInit {
+export class LandingComponent implements OnInit, OnDestroy {
   themeService = inject(ThemeService);
   currentLang = signal('en');
+
+  // Quotation rotator
+  quotes = ['landing.quote1', 'landing.quote2', 'landing.quote3'];
+  activeQuoteIndex = signal(0);
+  isFadingOut = signal(false);
+  private quoteInterval: any;
 
   private router = inject(Router);
 
@@ -29,6 +35,23 @@ export class LandingComponent implements OnInit {
 
   ngOnInit() {
     // ThemeService handles initialization automatically
+    this.startQuoteRotator();
+  }
+
+  ngOnDestroy() {
+    if (this.quoteInterval) {
+      clearInterval(this.quoteInterval);
+    }
+  }
+
+  private startQuoteRotator() {
+    this.quoteInterval = setInterval(() => {
+      this.isFadingOut.set(true);
+      setTimeout(() => {
+        this.activeQuoteIndex.update(i => (i + 1) % this.quotes.length);
+        this.isFadingOut.set(false);
+      }, 500); // 500ms fade duration
+    }, 4500);
   }
 
   toggleTheme() {

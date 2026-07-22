@@ -149,7 +149,10 @@
     "support": "الدعم الفني",
     "sales": "المبيعات",
     "followUs": "تابعنا",
-    "copyright": "© 2026 TaskPilot. جميع الحقوق محفوظة."
+    "copyright": "© 2026 TaskPilot. جميع الحقوق محفوظة.",
+    "quote1": "مكّن فريقك من بلوغ آفاق جديدة.",
+    "quote2": "حوّل المشاريع المعقدة إلى إنجازات بسيطة.",
+    "quote3": "تعاون بسلاسة، وحقق المزيد معاً."
   },
   "calendar": {
     "title": "التقويم",
@@ -722,7 +725,16 @@
     "redirectPaypalDesc": "ستتم إعادة توجيهك إلى PayPal لإكمال عملية الدفع بأمان.",
     "autoRenew": "تجديد الاشتراك تلقائياً",
     "processing": "جاري المعالجة...",
-    "subscribeNow": "اشترك الآن"
+    "subscribeNow": "اشترك الآن",
+    "plans": {
+      "free": "مجانية",
+      "premium": "مميزة",
+      "enterprise": "مؤسسات"
+    },
+    "status": {
+      "active": "نشطة"
+    },
+    "currentPlanBtn": "الخطة الحالية"
   },
   "notifications": {
     "title": "الإشعارات",

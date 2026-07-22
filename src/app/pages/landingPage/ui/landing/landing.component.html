@@ -48,32 +48,55 @@
   </header>
 
   <!-- Hero Section -->
-  <main
-    class="flex-grow flex flex-col items-center justify-center text-center px-6 py-16 md:py-24 max-w-4xl mx-auto w-full">
-    <!-- Hero Text -->
-    <h1
-      class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-3xl mb-6 text-text-primary">
-      {{ 'landing.title1' | translate }} <br class="hidden sm:inline" />
-      {{ 'landing.title2' | translate }}
-      <span class="bg-gradient-to-r from-primary to-[#0EA5E9] bg-clip-text text-transparent">
-        {{ 'landing.title3' | translate }}
-      </span>
-    </h1>
+  <main class="flex-grow flex items-center px-6 py-16 md:py-24 max-w-7xl mx-auto w-full">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center w-full">
+      
+      <!-- Left Column: Hero Text & Actions -->
+      <div class="text-center md:text-start flex flex-col items-center md:items-start z-10" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-2xl mb-6 text-text-primary">
+          {{ 'landing.title1' | translate }} <br class="hidden sm:inline" />
+          {{ 'landing.title2' | translate }}
+          <span class="bg-gradient-to-r from-primary to-[#0EA5E9] bg-clip-text text-transparent">
+            {{ 'landing.title3' | translate }}
+          </span>
+        </h1>
 
-    <p class="text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mb-8 leading-relaxed">
-      {{ 'landing.subtitle' | translate }}
-    </p>
+        <!-- Rotating Quotes -->
+        <div class="h-20 sm:h-16 mb-8 w-full max-w-lg">
+          <p class="text-base sm:text-lg md:text-xl text-text-secondary leading-relaxed transition-all duration-500 ease-in-out"
+             [ngClass]="{'opacity-0 translate-y-2': isFadingOut(), 'opacity-100 translate-y-0': !isFadingOut()}">
+            {{ quotes[activeQuoteIndex()] | translate }}
+          </p>
+        </div>
 
-    <!-- Hero Actions -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-      <a routerLink="/register"
-        class="w-full sm:w-auto px-6 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-all duration-200 text-center shadow-md hover:scale-[1.02] no-underline cursor-pointer">
-        {{ 'landing.getStarted' | translate }}
-      </a>
-      <a href="#features"
-        class="w-full sm:w-auto px-6 py-3.5 bg-surface text-text-primary border border-border font-bold rounded-lg hover:bg-background transition-all duration-200 text-center hover:scale-[1.02] no-underline">
-        {{ 'landing.exploreFeatures' | translate }}
-      </a>
+        <!-- Hero Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 w-full sm:w-auto">
+          <a routerLink="/register"
+            class="w-full sm:w-auto px-8 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-all duration-200 text-center shadow-lg hover:shadow-primary/30 hover:-translate-y-1 no-underline cursor-pointer">
+            {{ 'landing.getStarted' | translate }}
+          </a>
+          <a href="#features"
+            class="w-full sm:w-auto px-8 py-3.5 bg-surface text-text-primary border border-border font-bold rounded-lg hover:bg-background transition-all duration-200 text-center hover:-translate-y-1 no-underline shadow-sm">
+            {{ 'landing.exploreFeatures' | translate }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: 3D Floating Video -->
+      <div class="relative w-full max-w-lg mx-auto md:max-w-full flex justify-center perspective-1000 z-0">
+        <!-- Floating container -->
+        <div class="video-3d-wrapper animate-float3d relative group cursor-pointer">
+          <!-- Decorative blurred backdrop to enhance 3D effect -->
+          <div class="absolute inset-0 bg-gradient-to-tr from-primary/30 to-[#0EA5E9]/30 rounded-2xl blur-2xl transform scale-105 opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
+          
+          <video 
+            class="relative rounded-2xl shadow-2xl border-4 border-white/10 object-cover w-full h-auto max-h-[500px] transition-transform duration-500"
+            autoplay loop muted playsinline>
+            <source src="/assets/hero-video.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+      
     </div>
   </main>
 

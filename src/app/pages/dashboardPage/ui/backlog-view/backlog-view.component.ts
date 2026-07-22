@@ -132,7 +132,7 @@ const EMPTY_TASK: TaskFormModel = {
             <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
               <span>{{ 'backlog.story' | translate }}</span>
               <span class="hidden sm:block">{{ 'backlog.priorityLabel' | translate }}</span>
-              <span class="hidden md:block">{{ 'backlog.task' | translate }}s</span>
+              <span class="hidden md:block">{{ 'backlog.task' | translate }}</span>
               <span>{{ 'backlog.actions' | translate }}</span>
             </div>
 

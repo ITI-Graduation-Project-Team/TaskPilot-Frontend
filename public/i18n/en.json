@@ -149,7 +149,10 @@
     "support": "Support",
     "sales": "Sales",
     "followUs": "Follow Us",
-    "copyright": "© 2026 TaskPilot. All rights reserved."
+    "copyright": "© 2026 TaskPilot. All rights reserved.",
+    "quote1": "Empower your team to reach new heights.",
+    "quote2": "Turn complex projects into simple milestones.",
+    "quote3": "Collaborate seamlessly, achieve more together."
   },
   "calendar": {
     "title": "Calendar View",
@@ -530,10 +533,10 @@
     "loading": "Loading backlog...",
     "createFirstProj": "Create Your First Project",
     "setupWorkspace": "Let's set up a workspace for your team.",
-    "projNameEn": "Project Name (English)",
-    "projNameAr": "اسم المشروع (عربي)",
-    "descEn": "Description EN",
-    "descAr": "Description AR",
+    "projNameEn": "Project Name",
+    "projNameAr": "اسم المشروع",
+    "descEn": "Description",
+    "descAr": "Description",
     "createProj": "Create Project",
     "noActiveProj": "No Active Project",
     "noActiveProjDesc": "Please select an active project, or contact your Project Manager to assign you to one.",
@@ -558,12 +561,12 @@
     "arStory": "Arabic story",
     "enTask": "English task",
     "arTask": "Arabic task",
-    "titleEn": "Title EN",
-    "accCriteriaEn": "Acceptance Criteria EN",
-    "techSummaryEn": "Technical summary EN",
-    "titleAr": "Title AR",
-    "accCriteriaAr": "Acceptance Criteria AR",
-    "techSummaryAr": "Technical summary AR",
+    "titleEn": "Title",
+    "accCriteriaEn": "Acceptance Criteria",
+    "techSummaryEn": "Technical summary",
+    "titleAr": "Title",
+    "accCriteriaAr": "Acceptance Criteria",
+    "techSummaryAr": "Technical summary",
     "priorityLabel": "Priority",
     "effortLabel": "Effort",
     "typeLabel": "Type",
@@ -722,7 +725,16 @@
     "redirectPaypalDesc": "You will be redirected to PayPal to complete your payment securely.",
     "autoRenew": "Auto-renew subscription",
     "processing": "Processing...",
-    "subscribeNow": "Subscribe Now"
+    "subscribeNow": "Subscribe Now",
+    "plans": {
+      "free": "Free",
+      "premium": "Premium",
+      "enterprise": "Enterprise"
+    },
+    "status": {
+      "active": "Active"
+    },
+    "currentPlanBtn": "Current Plan"
   },
   "notifications": {
     "title": "Notifications",
