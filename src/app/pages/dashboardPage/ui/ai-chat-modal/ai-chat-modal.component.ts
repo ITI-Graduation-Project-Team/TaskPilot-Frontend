@@ -20,7 +20,7 @@ interface ChatMessage {
   template: `
     <div class="flex items-center justify-center animate-[fadeIn_0.2s_ease_both]" [class.fixed]="!embedded()" [class.inset-0]="!embedded()" [class.z-50]="!embedded()" [class.p-4]="!embedded()" [class.bg-black\/60]="!embedded()" [class.backdrop-blur-sm]="!embedded()" [class.w-full]="embedded()">
       <div class="bg-surface border border-border rounded-3xl w-full flex flex-col shadow-sm overflow-hidden animate-[scaleUp_0.25s_ease_both]" [class.max-w-3xl]="!embedded()" [class.h-[85vh]]="!embedded()" [class.max-w-none]="embedded()" [class.min-h-[520px]]="embedded()">
-        
+
         <!-- Header -->
         <div class="p-5 border-b border-border bg-sidebar flex items-center justify-between shrink-0">
           <div class="flex items-center gap-3">
@@ -52,7 +52,7 @@ interface ChatMessage {
               </div>
             </div>
             @if (isReadyForFinalization()) {
-              <button (click)="onGenerateDraft()" 
+              <button (click)="onGenerateDraft()"
                       class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0 animate-bounce">
                 Generate Project Draft
               </button>
@@ -62,12 +62,12 @@ interface ChatMessage {
 
         <!-- Chat Area -->
         <div class="flex-1 overflow-y-auto p-6 space-y-4" [class.max-h-[360px]]="embedded()" #chatScrollContainer>
-          
+
           <!-- Welcome Message -->
           <div class="flex gap-3 max-w-[85%]">
             <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">🤖</div>
             <div class="p-4 bg-sidebar border border-border rounded-2xl text-sm text-text-primary rounded-tl-none leading-relaxed">
-              Hello! I am your AI assistant. 
+              Hello! I am your AI assistant.
               @if (projectState.isProjectManager()) {
                 Tell me about the project you want to build. You can describe it in text, upload technical documentation, or specify platforms and stack you prefer.
               } @else {
@@ -87,8 +87,8 @@ interface ChatMessage {
                 {{ msg.sender === 'user' ? 'PM' : '🤖' }}
               </div>
               <div class="p-4 rounded-2xl text-sm leading-relaxed border"
-                   [ngClass]="msg.sender === 'user' 
-                     ? 'bg-primary/10 border-primary/20 text-text-primary rounded-tr-none' 
+                   [ngClass]="msg.sender === 'user'
+                     ? 'bg-primary/10 border-primary/20 text-text-primary rounded-tr-none'
                      : 'bg-sidebar border-border text-text-primary rounded-tl-none'">
                 {{ msg.text }}
               </div>
@@ -123,7 +123,7 @@ interface ChatMessage {
           <!-- Quick document uploader -->
           <div class="flex items-center gap-2">
             <input type="file" #fileInput (change)="onFileSelected($event)" class="hidden" accept=".pdf,.docx,.txt">
-            <button (click)="fileInput.click()" 
+            <button (click)="fileInput.click()"
                     [disabled]="!chatId()"
                     [title]="!chatId() ? 'Send a message first to start session' : 'Upload requirements document'"
                     class="p-2 border border-border text-text-secondary hover:text-text-primary rounded-xl hover:bg-background transition-colors flex items-center gap-1.5 text-xs font-semibold disabled:opacity-50">
@@ -139,9 +139,9 @@ interface ChatMessage {
           <form (submit)="onSendMessage($event)" class="flex gap-2 items-end">
             <textarea [(ngModel)]="messageInput" name="message" autocomplete="off" rows="2"
                     (keydown)="onKeyDown($event)"
-                    placeholder="Describe your project requirements, goals, or preferred tech stack (e.g. A food delivery app with real-time tracking...)" 
+                    placeholder="Describe your project requirements, goals, or preferred tech stack (e.g. A food delivery app with real-time tracking...)"
                     class="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"></textarea>
-            <button type="submit" 
+            <button type="submit"
                     [disabled]="isLoading() || (!messageInput.trim() && !selectedFile())"
                     class="px-5 py-3 h-[46px] bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center disabled:opacity-50 shrink-0">
               @if (isLoading()) {
@@ -164,7 +164,7 @@ interface ChatMessage {
                   <p class="text-xs text-text-secondary">Provide initial metadata and sprint settings to create the workspace.</p>
                 </div>
               </div>
-              
+
               <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -220,7 +220,7 @@ interface ChatMessage {
                   </div>
                 </div>
               </div>
-              
+
               <div class="flex items-center justify-end gap-2.5 mt-2 border-t border-border/60 pt-4 shrink-0">
                 <button (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
                         class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
@@ -262,7 +262,7 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   chatId = signal<string | null>(null);
   completenessScore = signal(0);
-  
+
   detectTextDir = detectTextDir;
   completenessLabel = computed(() => {
     const history = this.chatHistory();
@@ -403,7 +403,7 @@ export class AiChatModalComponent implements AfterViewChecked {
         const pool = data.questionPool || data.QuestionPool || [];
         const unanswered = pool.filter((q: any) => !q.isAnswered && !q.IsAnswered);
         const questionsList = unanswered.map((q: any) => q.question || q.Question);
-        
+
         this.clarifyingQuestions.set(questionsList);
 
         // Check if ready for finalization (status is Planning, score is high, or all questions are answered)
@@ -436,7 +436,7 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
-        } else if (scorePercentage >= 100) {
+        } else {
           const completionMsg = `Requirements gathering is complete (${scorePercentage}%). You can now finalize and generate your project draft!`;
           if (!lastMsg || lastMsg.text !== completionMsg || lastMsg.sender !== 'ai') {
             this.chatHistory.update(h => [...h, {
@@ -445,14 +445,6 @@ export class AiChatModalComponent implements AfterViewChecked {
               timestamp: new Date()
             }]);
           }
-        } else if (lastMsg && lastMsg.sender === 'user') {
-          // If no direct textual reply was added from backend POST response, provide a clean acknowledgment
-          const ackMsg = `Thank you! Requirements updated (${scorePercentage}% completeness). Please check the remaining clarifying questions below to reach 100%.`;
-          this.chatHistory.update(h => [...h, {
-            text: ackMsg,
-            sender: 'ai',
-            timestamp: new Date()
-          }]);
         }
       }
     } catch (err) {
@@ -509,7 +501,7 @@ export class AiChatModalComponent implements AfterViewChecked {
     if (!activeChatId || !companyId || !managerId) return;
 
     this.isGeneratingDraft.set(true);
-    
+
     try {
       // Step 1: Finalize session and save project draft with user-defined configuration DTO
       const res = await this.aiRequirements.finalizeSession(activeChatId, {
@@ -522,7 +514,7 @@ export class AiChatModalComponent implements AfterViewChecked {
         descriptionAr: descAr
       });
       const finalizeResult = res.data || res;
-      
+
       if (finalizeResult && finalizeResult.projectId) {
         await this.projectState.loadProjects();
         this.showNamePrompt.set(false);
