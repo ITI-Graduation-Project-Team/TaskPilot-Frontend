@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, untracked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamCollaborationService, EmployeeAssignmentDto } from '../../../../shared/api/team-collaboration.service';
@@ -172,7 +172,7 @@ interface ProjectEmployee {
                 <!-- Dropdown List -->
                 @if (isDropdownOpen()) {
                   <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto animate-[fadeDown_0.15s_ease_both]">
-                    @for (emp of companyEmployees(); track emp.employeeId) {
+                    @for (emp of unassignedCompanyEmployees(); track emp.employeeId) {
                       <div (click)="selectEmployee(emp.employeeId)"
                            class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-sidebar transition-colors"
                            [class.bg-primary/10]="emp.employeeId === selectedEmployeeId">
@@ -197,6 +197,10 @@ interface ProjectEmployee {
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                           </svg>
                         }
+                      </div>
+                    } @empty {
+                      <div class="p-4 text-center text-xs text-text-secondary">
+                        All company members are already assigned to this project.
                       </div>
                     }
                   </div>
@@ -273,6 +277,11 @@ export class TeamViewComponent implements OnInit {
   companyEmployees = signal<CompanyEmployee[]>([]);
   projectTeam = signal<ProjectEmployee[]>([]);
   
+  readonly unassignedCompanyEmployees = computed(() => {
+    const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
+    return this.companyEmployees().filter(emp => !assignedIds.has(emp.employeeId || emp.id || ''));
+  });
+
   selectedEmployeeId = '';
   assignedRole = 'Developer';
   isAssigning = signal(false);
