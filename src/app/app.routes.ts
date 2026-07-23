@@ -48,6 +48,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'select-role',
+    loadComponent: () =>
+      import('./pages/selectRolePage/ui/select-role/select-role').then(
+        (m) => m.SelectRoleComponent
+      )
+  },
+  {
     path: 'register',
     loadComponent: () =>
       import('./pages/registerPage/ui/register/register.component').then(
