@@ -97,7 +97,7 @@ interface ChatMessage {
           >
             <div class="flex-1">
               <div class="flex items-center justify-between text-xs font-bold text-primary mb-1">
-                <span>{{ completenessLabel() }}</span>
+                <span [dir]="detectTextDir(completenessLabel())">{{ completenessLabel() }}</span>
                 <span>{{ completenessScore() }}%</span>
               </div>
               <div class="w-full h-2.5 bg-border rounded-full overflow-hidden">
@@ -236,7 +236,7 @@ interface ChatMessage {
                   d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
                 />
               </svg>
-              إرفاق مستند
+              Attach Document
             </button>
             @if (selectedFileName()) {
               <span class="text-xs text-primary font-semibold truncate max-w-xs">{{
@@ -488,6 +488,19 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   detectTextDir = detectTextDir;
   completenessLabel = computed(() => {
+    const score = this.completenessScore();
+    if (score >= 85 && score < 100) {
+      const history = this.chatHistory();
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].sender === 'user') {
+          return detectTextDir(history[i].text) === 'rtl'
+            ? 'اكتمال قريب'
+            : 'Almost Complete';
+        }
+      }
+      return 'Almost Complete';
+    }
+
     const history = this.chatHistory();
     for (let i = history.length - 1; i >= 0; i--) {
       if (history[i].sender === 'user') {
@@ -662,12 +675,13 @@ export class AiChatModalComponent implements AfterViewChecked {
 
         this.clarifyingQuestions.set(questionsList);
 
-        // Check if ready for finalization (status is Planning, score is high, or all questions are answered)
+        // Check if ready for finalization (status is Planning, score is 85%+, or all questions are answered)
         const isReady =
           data.status === 'Planning' ||
           data.Status === 'Planning' ||
           unanswered.length === 0 ||
-          scorePercentage >= 85;
+          scorePercentage >= 85 ||
+          data.completenessReport?.readyForFinalization === true;
         this.isReadyForFinalization.set(isReady);
 
         // Cache sprint config suggestions from session status if the backend provides them
@@ -711,7 +725,15 @@ export class AiChatModalComponent implements AfterViewChecked {
           }
         } else if (lastMsg && lastMsg.sender === 'user') {
           // If no direct textual reply was added from backend POST response, provide a clean acknowledgment
-          const ackMsg = `Thank you! Requirements updated (${scorePercentage}% completeness). Please check the remaining clarifying questions below to reach 100%.`;
+          const isRtl = detectTextDir(lastMsg.text) === 'rtl';
+          const ackMsg = scorePercentage >= 100
+            ? (isRtl
+                ? 'شكراً لك! تم تحديث المتطلبات (100% اكتمال). تم تحليل وثيقة المتطلبات بنجاح ولا يوجد المزيد من الأسئلة.'
+                : 'Thank you! Requirements updated (100% completeness). Requirements analysis complete — no further questions required.')
+            : (isRtl
+                ? `شكراً لك! تم تحديث المتطلبات (${scorePercentage}% اكتمال). يمكنك النقر على "Generate Project Draft" للمتابعة.`
+                : `Thank you! Requirements updated (${scorePercentage}% completeness). You can click "Generate Project Draft" to proceed.`);
+
           this.chatHistory.update((h) => [
             ...h,
             {

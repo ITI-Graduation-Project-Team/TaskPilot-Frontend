@@ -401,5 +401,8 @@
     "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
     "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
     "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
+  },
+  "REQUIREMENTS": {
+    "ALMOST_COMPLETE": "Almost Complete"
   }
 }

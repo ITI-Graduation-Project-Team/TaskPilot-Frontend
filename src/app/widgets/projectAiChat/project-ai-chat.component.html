@@ -6,7 +6,7 @@
   
   <div class="progress-section" *ngIf="!projectId">
     <div class="score-row">
-      <span>{{ completenessLabel() }}</span>
+      <span [dir]="detectTextDir(completenessLabel())">{{ completenessLabel() }}</span>
       <span>{{ completenessScore() }}%</span>
     </div>
     <div class="progress-bar">
