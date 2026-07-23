@@ -15,7 +15,7 @@ import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
-import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
+// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
 // import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -44,7 +44,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
   template: `
     <div class="space-y-6">
       
