@@ -221,12 +221,10 @@ interface ChatMessage {
               accept=".pdf,.docx,.txt"
             />
             <button
+              type="button"
               (click)="fileInput.click()"
-              [disabled]="!chatId()"
-              [title]="
-                !chatId() ? 'Send a message first to start session' : 'Upload requirements document'
-              "
               class="p-2 border border-border text-text-secondary hover:text-text-primary rounded-xl hover:bg-background transition-colors flex items-center gap-1.5 text-xs font-semibold disabled:opacity-50"
+              title="Upload requirements document"
             >
               <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

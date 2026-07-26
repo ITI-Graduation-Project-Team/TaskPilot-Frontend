@@ -24,14 +24,19 @@ export function clearTokens(): void {
   Cookies.remove(environment.auth.tokenKey);
   Cookies.remove(environment.auth.refreshTokenKey);
   if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem(environment.auth.tokenKey);
-    localStorage.removeItem(environment.auth.refreshTokenKey);
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userFullName');
-    localStorage.removeItem('selectedProjectId');
-    localStorage.removeItem('localCompletedIds');
-    localStorage.removeItem('isProfileCompleted');
-    localStorage.removeItem('taskPilotJwtToken');
+    // Keep app_lang and theme if they exist, clear user session state to prevent leakage
+    const lang = localStorage.getItem('app_lang');
+    const theme = localStorage.getItem('theme');
+    localStorage.clear();
+    if (lang) {
+      localStorage.setItem('app_lang', lang);
+    }
+    if (theme) {
+      localStorage.setItem('theme', theme);
+    }
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.clear();
   }
 }
 export function getRoleFromToken(): string | null {

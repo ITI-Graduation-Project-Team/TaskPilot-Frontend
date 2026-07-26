@@ -1,13 +1,14 @@
 import { Component, inject, computed, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { NotificationHubService } from '../../services/notification-hub.service';
 import { NotificationDto } from '../../models/notification.model';
 
 @Component({
   selector: 'app-notification-bell',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslatePipe],
   templateUrl: './notification-bell.html',
   styleUrls: ['./notification-bell.scss']
 })
