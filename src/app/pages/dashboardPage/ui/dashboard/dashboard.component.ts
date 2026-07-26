@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
 import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
 import { ProfileViewComponent } from '../profile-view/profile-view.component';
@@ -24,6 +24,7 @@ import { SprintPlanningService } from '../../../../shared/api/sprint-planning.se
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -67,8 +68,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
               <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="sp.nameEn">
-                  📁 {{ sp.nameEn }}
+                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="getSprintName(sp)">
+                  📁 {{ getSprintName(sp) }}
                 </span>
                 <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
                   Switch
@@ -213,7 +214,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                   <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
-                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
                 <span class="text-text-secondary font-light">/</span>
                 Sprint Planning
               } @else {
@@ -222,7 +223,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                   <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
-                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
               }
             </h1>
             
@@ -253,7 +254,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                     </svg>
                     <span class="truncate max-w-[100px]">
-                      {{ projectState.selectedProject()?.nameEn || 'Select Project' }}
+                      {{ getProjectName(projectState.selectedProject()) || 'Select Project' }}
                     </span>
                     <svg class="w-3 h-3 ml-auto text-text-secondary transition-transform duration-200 shrink-0"
                          [class.rotate-180]="isProjectDropdownOpen()"
@@ -277,9 +278,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                                   [class.bg-primary/8]="p.id === projectState.selectedProjectId()">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white text-xs font-bold"
                                  [style.background]="getProjectColor(p.id)">
-                              {{ (p.nameEn || p.name || '?')[0].toUpperCase() }}
+                              {{ (getProjectName(p) || '?')[0].toUpperCase() }}
                             </div>
-                            <span class="font-medium text-text-primary truncate">{{ p.nameEn || p.name }}</span>
+                            <span class="font-medium text-text-primary truncate">{{ getProjectName(p) }}</span>
                             @if (p.id === projectState.selectedProjectId()) {
                               <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -616,7 +617,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     @if (isHistoryModalOpen() && selectedHistoryProject()) {
       <app-project-history-modal 
         [projectId]="selectedHistoryProject()!.id"
-        [projectName]="selectedHistoryProject()!.nameEn || 'Project'"
+        [projectName]="getProjectName(selectedHistoryProject()) || 'Project'"
         [currentStatus]="selectedHistoryProject()!.status"
         (close)="closeHistoryModal()"
         (actionCompleted)="onHistoryActionCompleted()">
@@ -640,6 +641,10 @@ export class DashboardComponent implements OnInit {
   userJobTitle = signal('');
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
+  private doc = inject(DOCUMENT);
+  private tr = inject(TranslateService);
+  currentLang = signal<'en' | 'ar'>('en');
+
   // Active navigation tab signal
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
 
@@ -655,7 +660,7 @@ export class DashboardComponent implements OnInit {
 
   // Status History Modal state
   isHistoryModalOpen = signal(false);
-  selectedHistoryProject = signal<{ id: string, nameEn: string, status: string } | null>(null);
+  selectedHistoryProject = signal<{ id: string, nameEn: string, nameAr?: string, status: string } | null>(null);
 
   // Edit Project properties
   isEditProjectModalOpen = signal(false);
@@ -718,7 +723,7 @@ export class DashboardComponent implements OnInit {
       if (initialized && isPM && projCount === 0) {
         untracked(() => {
           this.currentTab.set('create-project');
-          this.isAiChatOpen.set(true);
+          this.isAiChatOpen.set(false);
           this.showManualForm.set(false);
         });
       }
@@ -743,6 +748,12 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
+    const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar';
+    if (savedLang) {
+      this.currentLang.set(savedLang);
+      this.applyDirection(savedLang);
+    }
+
     this.currentDate = new Date().toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -970,6 +981,7 @@ export class DashboardComponent implements OnInit {
       this.selectedHistoryProject.set({
         id: p.id,
         nameEn: p.nameEn || 'Project',
+        nameAr: p.nameAr,
         status: p.status || 'Active'
       });
       this.isHistoryModalOpen.set(true);
@@ -1056,4 +1068,32 @@ export class DashboardComponent implements OnInit {
       }
     }
   }
+
+  setLanguage(lang: 'en' | 'ar') {
+    this.currentLang.set(lang);
+    localStorage.setItem('app_lang', lang);
+    this.tr.use(lang);
+    this.applyDirection(lang);
+  }
+
+  toggleLanguage() {
+    this.setLanguage(this.currentLang() === 'en' ? 'ar' : 'en');
+  }
+
+  getProjectName(p: any): string {
+    if (!p) return '';
+    return this.currentLang() === 'ar' ? (p.nameAr || p.nameEn || p.name) : (p.nameEn || p.nameAr || p.name);
+  }
+
+  getSprintName(sp: any): string {
+    if (!sp) return '';
+    return this.currentLang() === 'ar' ? (sp.titleAr || sp.nameAr || sp.titleEn || sp.nameEn || sp.name) : (sp.titleEn || sp.nameEn || sp.titleAr || sp.nameAr || sp.name);
+  }
+
+  private applyDirection(lang: 'en' | 'ar') {
+    const dir = lang === 'ar' ? 'rtl' : 'ltr';
+    this.doc.documentElement.setAttribute('dir', dir);
+    this.doc.documentElement.setAttribute('lang', lang);
+  }
 }
+

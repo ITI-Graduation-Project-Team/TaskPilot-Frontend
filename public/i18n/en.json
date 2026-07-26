@@ -302,7 +302,9 @@
     "header": {
       "selectProject": "Select Project",
       "yourProjects": "Your Projects",
-      "logout": "Logout"
+      "logout": "Logout",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode"
     },
     "sidebar": {
       "employee": "Employee"
@@ -404,5 +406,10 @@
   },
   "REQUIREMENTS": {
     "ALMOST_COMPLETE": "Almost Complete"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notifications",
+    "MARK_ALL_READ": "Mark all as read",
+    "EMPTY": "No notifications yet"
   }
 }

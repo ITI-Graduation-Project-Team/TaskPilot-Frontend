@@ -302,7 +302,9 @@
     "header": {
       "selectProject": "اختر مشروعاً",
       "yourProjects": "مشاريعك",
-      "logout": "تسجيل الخروج"
+      "logout": "تسجيل الخروج",
+      "lightMode": "الوضع النهاري",
+      "darkMode": "الوضع الليلي"
     },
     "sidebar": {
       "employee": "موظف"
@@ -404,5 +406,10 @@
   },
   "REQUIREMENTS": {
     "ALMOST_COMPLETE": "اكتمال قريب"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "الإشعارات",
+    "MARK_ALL_READ": "تحديد الكل كمقروء",
+    "EMPTY": "لا توجد إشعارات بعد"
   }
 }
