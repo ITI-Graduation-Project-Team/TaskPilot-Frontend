@@ -302,7 +302,9 @@
     "header": {
       "selectProject": "اختر مشروعاً",
       "yourProjects": "مشاريعك",
-      "logout": "تسجيل الخروج"
+      "logout": "تسجيل الخروج",
+      "lightMode": "الوضع النهاري",
+      "darkMode": "الوضع الليلي"
     },
     "sidebar": {
       "employee": "موظف"
@@ -390,6 +392,24 @@
     "TREND_STABLE": "→ مستقر"
   },
   "SPRINT_HEALTH": {
-    "ERROR_LOADING": "فشل في تحميل بيانات صحة السبرينت"
+    "ERROR_LOADING": "فشل تحميل بيانات صحة السبرينت"
+  },
+  "SPRINT_VALIDATION": {
+    "NO_EMPLOYEES_BANNER_TITLE": "لم يتم تعيين أعضاء للفريق",
+    "NO_EMPLOYEES_BANNER_DESC": "لا يمكنك إنشاء أو تخطيط السبرينتات حتى يتم تعيين موظف واحد على الأقل لهذا المشروع.",
+    "CTA_ASSIGN_EMPLOYEES": "تعيين الموظفين",
+    "CTA_INVITE_TEAM": "دعوة الفريق",
+    "NO_EMPLOYEES_MODAL_TITLE": "مطلوب موظفين لتخطيط السبرينت",
+    "NO_EMPLOYEES_MODAL_DESC": "لا يمكن تنفيذ تخطيط السبرينت لمشروع بدون موظفين معينين. يرجى تعيين أعضاء في الفريق أولاً.",
+    "TOOLTIP_NO_EMPLOYEES": "يجب تعيين موظف واحد على الأقل للمشروع أولاً.",
+    "TOOLTIP_NO_EMPLOYEES_START": "يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت."
+  },
+  "REQUIREMENTS": {
+    "ALMOST_COMPLETE": "اكتمال قريب"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "الإشعارات",
+    "MARK_ALL_READ": "تحديد الكل كمقروء",
+    "EMPTY": "لا توجد إشعارات بعد"
   }
 }

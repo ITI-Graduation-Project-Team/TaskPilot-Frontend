@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BacklogService, BacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
@@ -398,7 +398,7 @@ const EMPTY_TASK: TaskFormModel = {
     }
 
     @if (isSprintPlanningModalOpen()) {
-      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
+      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)" (navigateToTeam)="navigateToTeam.emit()"></app-sprint-planning-modal>
     }
 
     @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {
@@ -415,6 +415,7 @@ const EMPTY_TASK: TaskFormModel = {
   `,
 })
 export class BacklogViewComponent implements OnInit {
+  @Output() navigateToTeam = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
   private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);

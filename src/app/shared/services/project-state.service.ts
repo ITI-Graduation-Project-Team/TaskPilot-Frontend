@@ -30,6 +30,7 @@ export class ProjectStateService {
   private _userId = signal<string | null>(null);
   private _loading = signal<boolean>(false);
   private _localCompletedIds = signal<string[]>([]);
+  private _projectEmployeeCount = signal<number>(0);
 
   readonly projects = this._projects.asReadonly();
   readonly selectedProjectId = this._selectedProjectId.asReadonly();
@@ -38,6 +39,7 @@ export class ProjectStateService {
   readonly companyName = this._companyName.asReadonly();
   readonly userId = this._userId.asReadonly();
   readonly loading = this._loading.asReadonly();
+  readonly projectEmployeeCount = this._projectEmployeeCount.asReadonly();
 
   readonly selectedProject = computed(() => {
     const id = this._selectedProjectId();
@@ -117,7 +119,7 @@ export class ProjectStateService {
       if (typeof localStorage !== 'undefined') {
         const savedId = localStorage.getItem('selectedProjectId');
         if (savedId && filtered.some(p => p.id === savedId)) {
-          this._selectedProjectId.set(savedId);
+          this.setSelectedProject(savedId);
           return;
         }
       }
@@ -125,7 +127,7 @@ export class ProjectStateService {
       if (filtered.length > 0) {
         this.setSelectedProject(filtered[0].id);
       } else {
-        this._selectedProjectId.set(null);
+        this.setSelectedProject(null);
       }
     } catch (e) {
       console.error('Failed to load projects in state service:', e);
@@ -136,9 +138,28 @@ export class ProjectStateService {
     this._selectedProjectId.set(projectId);
     if (projectId) {
       localStorage.setItem('selectedProjectId', projectId);
+      this.loadProjectEmployeeCount(projectId);
     } else {
       localStorage.removeItem('selectedProjectId');
+      this._projectEmployeeCount.set(0);
     }
+  }
+
+  async loadProjectEmployeeCount(projectId: string): Promise<number> {
+    try {
+      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees`);
+      const list = data.data || data || [];
+      const count = Array.isArray(list) ? list.length : 0;
+      this._projectEmployeeCount.set(count);
+      return count;
+    } catch (e) {
+      console.warn('Failed to load project employee count:', e);
+      return this._projectEmployeeCount();
+    }
+  }
+
+  setProjectEmployeeCount(count: number): void {
+    this._projectEmployeeCount.set(count);
   }
 
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {

@@ -35,6 +35,17 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
   detectTextDir = detectTextDir;
   
   completenessLabel = computed(() => {
+    const score = this.completenessScore();
+    if (score >= 85 && score < 100) {
+      const history = this.messages();
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].role === 'user') {
+          return detectTextDir(history[i].content) === 'rtl' ? 'اكتمال قريب' : 'Almost Complete';
+        }
+      }
+      return 'Almost Complete';
+    }
+
     const history = this.messages();
     for (let i = history.length - 1; i >= 0; i--) {
       if (history[i].role === 'user') {
@@ -108,7 +119,7 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
         next: (result) => {
           if (result.succeeded && result.data) {
             this.completenessScore.set(result.data.completenessScore);
-            this.isReadyToGenerate.set(result.data.completenessScore >= 85);
+            this.isReadyToGenerate.set(result.data.completenessScore >= 100);
             // Add a system message locally to show it was parsed
             const msg: AiChatMessageDto = {
               role: 'assistant',
@@ -179,7 +190,7 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
             setTimeout(() => this.scrollToBottom(), 0);
             if (result.data && typeof result.data !== 'string' && result.data.completenessScore !== undefined) {
               this.completenessScore.set(result.data.completenessScore);
-              this.isReadyToGenerate.set(result.data.isReadyToGenerate);
+              this.isReadyToGenerate.set(result.data.isReadyToGenerate || result.data.completenessScore >= 85);
             }
           }
           this.isTyping.set(false);

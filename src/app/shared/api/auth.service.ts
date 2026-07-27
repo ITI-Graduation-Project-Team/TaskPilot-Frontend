@@ -12,6 +12,7 @@ export interface AuthResponse {
     token: string;
     refreshToken: string;
     roles: string[];
+    requireRoleSelection?: boolean;
   };
 }
 
@@ -39,5 +40,9 @@ export class AuthService {
 
   googleLogin(idToken: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { idToken });
+  }
+
+  googleCompleteSignup(idToken: string, role: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/google/complete-signup`, { idToken, role });
   }
 }

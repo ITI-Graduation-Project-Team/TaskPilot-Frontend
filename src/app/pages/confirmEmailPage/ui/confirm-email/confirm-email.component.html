@@ -102,11 +102,12 @@
       </button>
 
       <!-- Footer -->
-      <p class="text-sm text-gray-500">
+      <p class="text-sm text-gray-500 flex items-center justify-center gap-1 mt-2">
         Didn't receive the code?
-        <a routerLink="/register" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity ml-1">
-          Try registering again
-        </a>
+        <button (click)="onResend()" [disabled]="resendState() === 'loading' || resendState() === 'sent'"
+                class="text-brandPrimary font-semibold hover:opacity-75 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ resendState() === 'loading' ? 'Sending...' : (resendState() === 'sent' ? 'Sent!' : 'Resend code') }}
+        </button>
       </p>
     }
 

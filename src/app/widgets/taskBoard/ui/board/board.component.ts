@@ -15,7 +15,7 @@ import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
-import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
+// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
 // import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -44,7 +44,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
   template: `
     <div class="space-y-6">
       
@@ -219,7 +219,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 👥 Assign Tasks
               </button>
               <button (click)="startSprint()" 
-                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                      [disabled]="projectState.projectEmployeeCount() === 0"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
+                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ Start Sprint
               </button>
             }
@@ -861,6 +863,40 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       </div>
     }
+
+    <!-- ─── NO EMPLOYEES REQUIRED MODAL ─── -->
+    @if (showNoEmployeesModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 text-center animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-2xl">
+            ⚠️
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">
+              {{ currentLang === 'ar' ? 'مطلوب موظفين لبدء السبرينت' : 'Employees Required to Start Sprint' }}
+            </h3>
+            <p class="text-xs text-text-secondary mt-2 leading-relaxed">
+              {{ currentLang === 'ar' ? 'لا يمكن بدء السبرينت لمشروع بدون موظفين معينين. يرجى تعيين أعضاء في الفريق أولاً.' : 'Cannot start sprint for a project with no assigned employees. Please assign team members to this project first.' }}
+            </p>
+          </div>
+          <div class="flex items-center justify-center gap-3 pt-2">
+            <button
+              (click)="showNoEmployeesModal.set(false)"
+              class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-semibold rounded-xl transition-all">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button
+              (click)="showNoEmployeesModal.set(false); navigateToTeam.emit()"
+              class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+              </svg>
+              {{ currentLang === 'ar' ? 'تعيين الموظفين' : 'Assign Employees' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class BoardComponent implements OnInit, OnChanges {
@@ -868,6 +904,9 @@ export class BoardComponent implements OnInit, OnChanges {
   @Input() overrideSprintStatus: string | null = null;
   @Output() backToSprints = new EventEmitter<void>();
   @Output() sprintStatusChanged = new EventEmitter<void>();
+  @Output() navigateToTeam = new EventEmitter<void>();
+
+  showNoEmployeesModal = signal(false);
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -1028,12 +1067,22 @@ export class BoardComponent implements OnInit, OnChanges {
     const sprintId = this.plannedSprintId();
     if (!projectId || !sprintId) return;
 
+    if (this.projectState.projectEmployeeCount() === 0) {
+      this.showNoEmployeesModal.set(true);
+      return;
+    }
+
     try {
       await this.sprintService.startSprint(projectId, sprintId);
       this.toastService.show('Sprint started successfully', 'success');
       this.sprintStatusChanged.emit();
-    } catch {
-      this.toastService.show('Failed to start sprint', 'error');
+    } catch (e: any) {
+      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
+        this.showNoEmployeesModal.set(true);
+      } else {
+        this.toastService.show('Failed to start sprint', 'error');
+      }
     }
   }
 

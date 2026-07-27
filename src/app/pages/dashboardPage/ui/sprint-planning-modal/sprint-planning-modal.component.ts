@@ -45,6 +45,34 @@ const LOADING_HINTS = [
 
         <!-- Body content -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+          <!-- ─── NO EMPLOYEES WARNING BANNER ─── -->
+          @if (projectState.selectedProjectId() && projectState.projectEmployeeCount() === 0) {
+            <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 flex-wrap" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+              <div class="flex items-start gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-lg">
+                  ⚠️
+                </div>
+                <div>
+                  <h4 class="text-sm font-extrabold text-amber-800 dark:text-amber-300">
+                    {{ currentLang() === 'ar' ? '⚠️ لم يتم تعيين أعضاء للفريق' : '⚠️ No Team Members Assigned' }}
+                  </h4>
+                  <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5 leading-relaxed">
+                    {{ currentLang() === 'ar' ? 'لا يمكنك إنشاء أو تخطيط السبرينتات حتى يتم تعيين موظف واحد على الأقل لهذا المشروع.' : 'You cannot create or plan sprints until at least one employee is assigned to this project.' }}
+                  </p>
+                </div>
+              </div>
+              <button
+                (click)="close.emit(); navigateToTeam.emit()"
+                class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                {{ currentLang() === 'ar' ? 'تعيين الموظفين' : 'Assign Employees' }}
+              </button>
+            </div>
+          }
+
           @if (isLoadingSuggestions()) {
             <div class="flex flex-col items-center justify-center text-center rounded-2xl border border-border bg-surface px-6 py-16 shadow-sm max-w-3xl mx-auto mt-8 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
               <!-- Glowing orb -->
@@ -163,7 +191,9 @@ const LOADING_HINTS = [
 
                 <button
                   (click)="loadSuggestions()"
-                  class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-xs">
+                  [disabled]="projectState.projectEmployeeCount() === 0"
+                  [title]="projectState.projectEmployeeCount() === 0 ? (currentLang() === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً' : 'At least one employee must be assigned to this project first') : ''"
+                  class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
@@ -192,7 +222,7 @@ const LOADING_HINTS = [
             <div class="space-y-4">
               <h4 class="text-sm font-bold text-text-primary flex items-center justify-between">
                 <span>AI Proposed Sprints ({{ suggestions().length }})</span>
-                <button (click)="loadSuggestions()" class="text-xs text-primary font-semibold hover:underline">Regenerate Suggestions</button>
+                <button (click)="loadSuggestions()" [disabled]="projectState.projectEmployeeCount() === 0" class="text-xs text-primary font-semibold hover:underline disabled:opacity-50">Regenerate Suggestions</button>
               </h4>
 
               @for (sprint of suggestions(); track sprint.titleEn; let idx = $index) {
@@ -247,8 +277,9 @@ const LOADING_HINTS = [
             Cancel
           </button>
           <button (click)="onConfirmSprints()" 
-                  [disabled]="isSaving() || suggestions().length === 0"
-                  class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 disabled:opacity-50">
+                  [disabled]="isSaving() || suggestions().length === 0 || projectState.projectEmployeeCount() === 0"
+                  [title]="projectState.projectEmployeeCount() === 0 ? (currentLang() === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً' : 'At least one employee must be assigned to this project first') : ''"
+                  class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
             @if (isSaving()) {
               <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
               Confirming Sprint Structure...
@@ -259,6 +290,41 @@ const LOADING_HINTS = [
         </div>
 
       </div>
+
+      <!-- ─── NO EMPLOYEES REQUIRED MODAL ─── -->
+      @if (showNoEmployeesModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+          <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 text-center animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-2xl">
+              ⚠️
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-text-primary">
+                {{ currentLang() === 'ar' ? 'مطلوب موظفين لتخطيط السبرينت' : 'Employees Required for Sprint Planning' }}
+              </h3>
+              <p class="text-xs text-text-secondary mt-2 leading-relaxed">
+                {{ currentLang() === 'ar' ? 'لا يمكن تنفيذ تخطيط السبرينت لمشروع بدون موظفين معينين. يرجى تعيين أعضاء في الفريق أولاً.' : 'Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.' }}
+              </p>
+            </div>
+            <div class="flex items-center justify-center gap-3 pt-2">
+              <button
+                (click)="showNoEmployeesModal.set(false)"
+                class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-semibold rounded-xl transition-all">
+                {{ currentLang() === 'ar' ? 'إلغاء' : 'Cancel' }}
+              </button>
+              <button
+                (click)="showNoEmployeesModal.set(false); close.emit(); navigateToTeam.emit()"
+                class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                {{ currentLang() === 'ar' ? 'تعيين الموظفين' : 'Assign Employees' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
   `,
   styles: [`
@@ -271,6 +337,7 @@ const LOADING_HINTS = [
 export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() sprintConfirmed = new EventEmitter<void>();
+  @Output() navigateToTeam = new EventEmitter<void>();
 
   private sprintService = inject(SprintPlanningService);
   private backlogService = inject(BacklogService);
@@ -278,6 +345,7 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   private toastService = inject(ToastService);
 
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
+  showNoEmployeesModal = signal<boolean>(false);
   suggestions = signal<SprintSuggestionDto[]>([]);
   isLoadingSuggestions = signal(false);
   isBacklogLoading = signal(false);
@@ -343,13 +411,23 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
 
+    if (this.projectState.projectEmployeeCount() === 0) {
+      this.showNoEmployeesModal.set(true);
+      return;
+    }
+
     this.isLoadingSuggestions.set(true);
     this.startHintCycle();
     try {
       const res = await this.sprintService.getSprintSuggestions(projId);
       this.suggestions.set(res.data || res || []);
-    } catch (e) {
-      console.warn('Failed to load suggested sprints from AI:', e);
+    } catch (e: any) {
+      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
+        this.showNoEmployeesModal.set(true);
+      } else {
+        console.warn('Failed to load suggested sprints from AI:', e);
+      }
     } finally {
       this.isLoadingSuggestions.set(false);
       this.clearHintTimer();
@@ -381,15 +459,25 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
     const projId = this.projectState.selectedProjectId();
     if (!projId || this.suggestions().length === 0) return;
 
+    if (this.projectState.projectEmployeeCount() === 0) {
+      this.showNoEmployeesModal.set(true);
+      return;
+    }
+
     this.isSaving.set(true);
     try {
       await this.sprintService.confirmSprints(projId, this.suggestions());
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      this.toastService.show('Failed to save sprints configuration. Please try again.', 'error');
+      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
+        this.showNoEmployeesModal.set(true);
+      } else {
+        this.toastService.show('Failed to save sprints configuration. Please try again.', 'error');
+      }
     } finally {
       this.isSaving.set(false);
     }
