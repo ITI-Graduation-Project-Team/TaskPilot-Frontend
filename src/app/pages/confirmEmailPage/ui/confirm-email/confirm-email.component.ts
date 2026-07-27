@@ -1,6 +1,6 @@
 import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router,  } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
 import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
 import { environment } from '../../../../../environments/environment';
@@ -11,7 +11,7 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
   selector: 'app-confirm-email',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, ],
   templateUrl: './confirm-email.component.html',
   styleUrls: ['./confirm-email.component.scss'],
 })

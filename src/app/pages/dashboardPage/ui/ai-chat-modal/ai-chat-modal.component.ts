@@ -583,7 +583,18 @@ export class AiChatModalComponent implements AfterViewChecked {
         res.sessionId ||
         res.data?.SessionId ||
         res.SessionId ||
+        res.data?.chatId ||
+        res.chatId ||
+        res.data?.id ||
+        res.id ||
+        res.data?.SessionID ||
+        res.SessionID ||
         this.chatId();
+      
+      if (!currentChatId) {
+        console.warn('Failed to extract chat ID from response:', res);
+      }
+        
       this.chatId.set(currentChatId);
 
       // Extract direct AI reply from backend response if available
@@ -777,7 +788,21 @@ export class AiChatModalComponent implements AfterViewChecked {
     const companyId = this.projectState.userCompanyId();
     const managerId = this.projectState.userId();
 
-    if (!activeChatId || !companyId || !managerId) return;
+    if (!activeChatId) {
+      this.toastService.show('Missing chat session ID. Please try sending a message again.', 'error');
+      console.error('Missing activeChatId:', activeChatId);
+      return;
+    }
+    if (!companyId) {
+      this.toastService.show('Missing company ID in your profile. Please contact support.', 'error');
+      console.error('Missing companyId:', companyId);
+      return;
+    }
+    if (!managerId) {
+      this.toastService.show('Missing user ID. Please log in again.', 'error');
+      console.error('Missing managerId:', managerId);
+      return;
+    }
 
     const suggestedDuration = this.suggestedSprintDuration() ?? 14;
     const suggestedHours = this.suggestedTargetHours() ?? 80;
@@ -797,8 +822,10 @@ export class AiChatModalComponent implements AfterViewChecked {
     const companyId = this.projectState.userCompanyId();
     const managerId = this.projectState.userId();
 
-    // Use typed input, or fall back to simple defaults if left empty
-    const nameEn = this.projectNameInput().trim() || 'New AI Project';
+    // Use typed input, or fall back to simple defaults if left empty. 
+    // Append a random number to the default name to avoid database unique constraint violations if left blank multiple times.
+    const defaultName = `New AI Project ${Math.floor(Math.random() * 10000)}`;
+    const nameEn = this.projectNameInput().trim() || defaultName;
     const nameAr = this.projectNameArInput().trim() || nameEn;
     const descEn =
       this.projectDescriptionEnInput().trim() || 'Project requirements collected via AI Assistant.';
@@ -806,7 +833,18 @@ export class AiChatModalComponent implements AfterViewChecked {
     const sprintDuration = this.sprintDurationInput() ?? this.suggestedSprintDuration() ?? 14;
     const targetHours = this.targetSprintHoursInput() ?? this.suggestedTargetHours() ?? 80;
 
-    if (!activeChatId || !companyId || !managerId) return;
+    if (!activeChatId) {
+      this.toastService.show('Missing chat session ID. Cannot create workspace.', 'error');
+      return;
+    }
+    if (!companyId) {
+      this.toastService.show('Missing company ID in your profile.', 'error');
+      return;
+    }
+    if (!managerId) {
+      this.toastService.show('Missing user ID. Please log in again.', 'error');
+      return;
+    }
 
     this.isGeneratingDraft.set(true);
 

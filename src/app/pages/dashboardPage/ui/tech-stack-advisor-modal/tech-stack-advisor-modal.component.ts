@@ -305,7 +305,9 @@ export class TechStackAdvisorModalComponent implements OnInit {
       this.completed.emit(this.projectId);
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.response?.data?.error?.message || error?.message || 'Please check the backend logs and try again.';
-      this.toastService.show(`Backlog generation failed: ${message}`, 'error');
+      this.toastService.show(`Backlog generation timed out or failed (${message}). The AI may still be processing in the background, or you can create tasks manually.`, 'warning');
+      // Always proceed to the backlog view so the user isn't permanently stuck on this modal
+      this.completed.emit(this.projectId);
     } finally {
       this.isConfirming.set(false);
     }

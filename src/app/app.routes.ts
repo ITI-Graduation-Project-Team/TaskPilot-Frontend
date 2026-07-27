@@ -13,23 +13,29 @@ export const routes: Routes = [
         (m) => m.LandingComponent
       ),
   },
-  {
+    {
     path: 'dashboard',
     canActivate: [authGuard, roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] },
-    loadComponent: () =>
-      import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
-        (m) => m.DashboardComponent
-      ),
+    children: [
+      { path: '', redirectTo: 'projects', pathMatch: 'full' },
+      { 
+        path: ':tab', 
+        loadComponent: () => import('./pages/dashboardPage/ui/dashboard/dashboard.component').then((m) => m.DashboardComponent)
+      }
+    ]
   },
-  {
+    {
     path: 'employee-dashboard',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Employee'] },
-    loadComponent: () =>
-      import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then(
-        (m) => m.EmployeeDashboardComponent
-      ),
+    children: [
+      { path: '', redirectTo: 'sprint', pathMatch: 'full' },
+      { 
+        path: ':tab', 
+        loadComponent: () => import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then((m) => m.EmployeeDashboardComponent)
+      }
+    ]
   },
   {
     path: 'subscription',

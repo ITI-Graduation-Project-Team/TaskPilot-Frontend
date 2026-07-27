@@ -572,8 +572,12 @@ export class BacklogViewComponent implements OnInit {
       this.toastService.show('AI WBS user stories and task items generated successfully.', 'success');
       await this.fetchBacklog(projId);
     } catch (e: any) {
-      const message = e?.response?.data?.message || e?.response?.data?.error?.message || e?.message || 'Check backend API logs.';
-      this.toastService.show(`Failed to generate WBS: ${message}`, 'error');
+      if (e.message === 'Network Error' || e.code === 'ECONNABORTED' || e.code === 'ERR_NETWORK' || e.status === 504 || e.status === 0) {
+        this.toastService.show('The AI is taking longer than expected. Generation is continuing in the background. Please refresh in a minute.', 'info');
+      } else {
+        const message = e?.response?.data?.message || e?.response?.data?.error?.message || e?.message || 'Check backend API logs.';
+        this.toastService.show(`Failed to generate WBS: ${message}`, 'error');
+      }
     } finally {
       this.isGeneratingWbs.set(false);
     }
