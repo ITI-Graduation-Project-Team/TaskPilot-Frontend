@@ -71,7 +71,7 @@ import { TranslateService } from '@ngx-translate/core';
                 <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="getSprintName(sp)">
                   📁 {{ getSprintName(sp) }}
                 </span>
-                <button [routerLink]="['/dashboard', 'projects']" class="text-[10px] text-primary font-bold hover:underline shrink-0">
+                <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
                   Switch
                 </button>
               </div>
@@ -83,7 +83,7 @@ import { TranslateService } from '@ngx-translate/core';
         <nav class="flex-1 space-y-1.5">
           <!-- All Projects Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <a [routerLink]="['/dashboard', 'projects']"
+            <a (click)="currentTab.set('projects')"
                [class.bg-primary/10]="currentTab() === 'projects'"
                [class.text-primary]="currentTab() === 'projects'"
                [class.font-bold]="currentTab() === 'projects'"
@@ -100,7 +100,7 @@ import { TranslateService } from '@ngx-translate/core';
             </a>
           }
 
-          <a [routerLink]="['/dashboard', 'sprint']"
+          <a (click)="currentTab.set('sprint')"
              [class.bg-primary/10]="currentTab() === 'sprint'"
              [class.text-primary]="currentTab() === 'sprint'"
              [class.font-bold]="currentTab() === 'sprint'"
@@ -115,7 +115,7 @@ import { TranslateService } from '@ngx-translate/core';
             </svg>
             Sprints
           </a>
-          <a [routerLink]="['/dashboard', 'backlog']"
+          <a (click)="currentTab.set('backlog')"
              [class.bg-primary/10]="currentTab() === 'backlog'"
              [class.text-primary]="currentTab() === 'backlog'"
              [class.font-bold]="currentTab() === 'backlog'"
@@ -132,7 +132,7 @@ import { TranslateService } from '@ngx-translate/core';
           </a>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
-            <a [routerLink]="['/dashboard', 'sprint-planning']"
+            <a (click)="currentTab.set('sprint-planning')"
                [class.bg-primary/10]="currentTab() === 'sprint-planning'"
                [class.text-primary]="currentTab() === 'sprint-planning'"
                [class.font-bold]="currentTab() === 'sprint-planning'"
@@ -151,7 +151,7 @@ import { TranslateService } from '@ngx-translate/core';
           }
 
           @if (projectState.isProjectManager()) {
-            <a [routerLink]="['/dashboard', 'team']"
+            <a (click)="currentTab.set('team')"
                [class.bg-primary/10]="currentTab() === 'team'"
                [class.text-primary]="currentTab() === 'team'"
                [class.font-bold]="currentTab() === 'team'"
@@ -165,7 +165,7 @@ import { TranslateService } from '@ngx-translate/core';
               Project Team
             </a>
           }
-          <a [routerLink]="['/dashboard', 'profile']"
+          <a (click)="currentTab.set('profile')"
              [class.bg-primary/10]="currentTab() === 'profile'"
              [class.text-primary]="currentTab() === 'profile'"
              [class.font-bold]="currentTab() === 'profile'"
@@ -184,7 +184,7 @@ import { TranslateService } from '@ngx-translate/core';
 
         <!-- Footer / Profile Quick view & Dark mode -->
         <div class="border-t border-border pt-6 mt-6 space-y-4">
-          <div [routerLink]="['/dashboard', 'profile']" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
+          <div (click)="currentTab.set('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
             <div class="w-9 h-9 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">
               {{ userInitial() }}
             </div>
@@ -211,7 +211,7 @@ import { TranslateService } from '@ngx-translate/core';
                 My Profile
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" [routerLink]="['/dashboard', 'projects']">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
@@ -220,7 +220,7 @@ import { TranslateService } from '@ngx-translate/core';
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" [routerLink]="['/dashboard', 'projects']">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
@@ -356,7 +356,7 @@ import { TranslateService } from '@ngx-translate/core';
             <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
               <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
                 <div>
-                  <button type="button" [routerLink]="['/dashboard', 'projects']" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
+                  <button type="button" (click)="currentTab.set('projects')" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                     Back to projects
                   </button>
@@ -417,7 +417,7 @@ import { TranslateService } from '@ngx-translate/core';
                       <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description AR<textarea name="projDescAr" required rows="7" placeholder="&#1605;&#1575; &#1575;&#1604;&#1584;&#1610; &#1587;&#1610;&#1602;&#1583;&#1605;&#1607; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1588;&#1585;&#1608;&#1593;&#1567;" dir="rtl" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
                     </div>
                     <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-border pt-5">
-                      <button type="button" [routerLink]="['/dashboard', 'projects']" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
+                      <button type="button" (click)="currentTab.set('projects')" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
                       <button type="submit" class="rounded-xl bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-primary-hover">Create project</button>
                     </div>
                   </div>
@@ -484,7 +484,7 @@ import { TranslateService } from '@ngx-translate/core';
         
         <!-- Projects Hub Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {
-          <button [routerLink]="['/dashboard', 'projects']" 
+          <button (click)="currentTab.set('projects')" 
                   class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                   [class.text-primary]="currentTab() === 'projects'"
                   [class.scale-105]="currentTab() === 'projects'"
@@ -497,7 +497,7 @@ import { TranslateService } from '@ngx-translate/core';
         }
 
         <!-- Sprint Tab -->
-        <button [routerLink]="['/dashboard', 'sprint']" 
+        <button (click)="currentTab.set('sprint')" 
                 class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                 [class.text-primary]="currentTab() === 'sprint'"
                 [class.scale-105]="currentTab() === 'sprint'"
@@ -510,7 +510,7 @@ import { TranslateService } from '@ngx-translate/core';
 
         <!-- Sprint Planning Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {
-          <button [routerLink]="['/dashboard', 'sprint-planning']"
+          <button (click)="currentTab.set('sprint-planning')"
                   class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                   [class.text-primary]="currentTab() === 'sprint-planning'"
                   [class.scale-105]="currentTab() === 'sprint-planning'"
@@ -523,7 +523,7 @@ import { TranslateService } from '@ngx-translate/core';
         }
 
         <!-- Backlog Tab -->
-        <button [routerLink]="['/dashboard', 'backlog']" 
+        <button (click)="currentTab.set('backlog')" 
                 class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                 [class.text-primary]="currentTab() === 'backlog'"
                 [class.scale-105]="currentTab() === 'backlog'"
@@ -536,7 +536,7 @@ import { TranslateService } from '@ngx-translate/core';
 
         <!-- Mobile Team Tab -->
         @if (projectState.isProjectManager()) {
-          <button [routerLink]="['/dashboard', 'team']" 
+          <button (click)="currentTab.set('team')" 
                   class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                   [class.text-primary]="currentTab() === 'team'"
                   [class.scale-105]="currentTab() === 'team'"
@@ -547,7 +547,7 @@ import { TranslateService } from '@ngx-translate/core';
         }
 
         <!-- Profile Tab -->
-        <button [routerLink]="['/dashboard', 'profile']" 
+        <button (click)="currentTab.set('profile')" 
                 class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
                 [class.text-primary]="currentTab() === 'profile'"
                 [class.scale-105]="currentTab() === 'profile'"
@@ -634,8 +634,6 @@ import { TranslateService } from '@ngx-translate/core';
   `
 })
 export class DashboardComponent implements OnInit {
-  private router = inject(Router);
-
   themeService = inject(ThemeService);
   get isDark() { return this.themeService.isDark; }
   currentDate = '';
@@ -687,7 +685,7 @@ export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
-
+  private router = inject(Router);
   private route = inject(ActivatedRoute);
   private sprintService = inject(SprintPlanningService);
 
@@ -696,12 +694,6 @@ export class DashboardComponent implements OnInit {
   }
 
   constructor() {
-    this.route.paramMap.subscribe(params => {
-      const tab = params.get('tab');
-      if (tab) {
-        this.currentTab.set(tab as any);
-      }
-    });
     // Reactively update sprint name whenever selected project ID changes
     effect(() => {
       const projId = this.projectState.selectedProjectId();
@@ -730,7 +722,7 @@ export class DashboardComponent implements OnInit {
       const initialized = !this.projectState.loading();
       if (initialized && isPM && projCount === 0) {
         untracked(() => {
-          this.router.navigate(['/dashboard', 'create-project']);
+          this.currentTab.set('create-project');
           this.isAiChatOpen.set(false);
           this.showManualForm.set(false);
         });
@@ -871,12 +863,12 @@ export class DashboardComponent implements OnInit {
 
   openCreateProjectPage() {
     this.showManualForm.set(false);
-    this.router.navigate(['/dashboard', 'create-project']);
+    this.currentTab.set('create-project');
   }
 
   openAiProjectFlow() {
     this.showManualForm.set(false);
-    this.router.navigate(['/dashboard', 'create-project']);
+    this.currentTab.set('create-project');
     this.isAiChatOpen.set(true);
   }
 
@@ -904,7 +896,7 @@ export class DashboardComponent implements OnInit {
     this.advisorProjectId.set(null);
     await this.projectState.loadProjects();
     this.projectState.setSelectedProject(projectId);
-    this.router.navigate(['/dashboard', 'backlog']);
+    this.currentTab.set('backlog');
     this.loadAllProjectStats();
   }
 
@@ -924,7 +916,7 @@ export class DashboardComponent implements OnInit {
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       this.showManualForm.set(false);
-      this.router.navigate(['/dashboard', 'projects']);
+      this.currentTab.set('projects');
       form.reset();
       this.loadAllProjectStats();
     }
@@ -1009,7 +1001,7 @@ export class DashboardComponent implements OnInit {
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {
     this.projectState.setSelectedProject(projectId);
-    this.router.navigate(['/dashboard', tab]);
+    this.currentTab.set(tab);
   }
 
   selectProject(id: string) {
