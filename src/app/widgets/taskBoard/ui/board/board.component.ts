@@ -15,14 +15,17 @@ import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
-import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
+// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
+// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
 import { Router } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
+import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
+import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
 
 interface Task {
   id: string;
@@ -31,6 +34,7 @@ interface Task {
   description: string;
   priority: 'Low' | 'Medium' | 'High';
   hours: number;
+  actualHours?: number;
   type: 'Feature' | 'Bug' | 'Refactor';
 }
 
@@ -40,7 +44,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachSummaryComponent, AgileCoachChatComponent, SprintRiskListComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent],
   template: `
     <div class="space-y-6">
       
@@ -117,8 +121,30 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       } @else {
         
-        <!-- Metrics overview -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Tabs Navigation -->
+        <div class="flex items-center gap-6 border-b border-border mb-6">
+          <button (click)="activeTab.set('board')"
+                  [class.border-primary]="activeTab() === 'board'" [class.text-primary]="activeTab() === 'board'"
+                  [class.border-transparent]="activeTab() !== 'board'" [class.text-text-secondary]="activeTab() !== 'board'"
+                  class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
+            Kanban Board
+          </button>
+          @if (projectState.isProjectManager() && sprintStatus() !== 'Planned') {
+            <button (click)="activeTab.set('health')"
+                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
+                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
+                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
+              @if (sprintStatus() === 'Active') {
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+              }
+              Health & Team Pulse
+            </button>
+          }
+        </div>
+
+        @if (activeTab() === 'board') {
+          <!-- Metrics overview -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">Total Tasks</p>
@@ -183,7 +209,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </div>
             }
             <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} Workspace</h2>
-            <p class="text-text-secondary text-sm mt-1">Drag and drop tasks to update their current progress state.</p>
+            <p class="text-text-secondary text-sm mt-1">Manage and monitor your sprint progress.</p>
           </div>
           
           <div class="flex items-center gap-3">
@@ -193,7 +219,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 👥 Assign Tasks
               </button>
               <button (click)="startSprint()" 
-                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                      [disabled]="projectState.projectEmployeeCount() === 0"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
+                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ Start Sprint
               </button>
             }
@@ -324,9 +352,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                      {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
-                    </button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -387,7 +423,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -448,7 +494,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -509,7 +565,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       </svg>
                       {{ task.hours }}h
                     </span>
-                    <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">Edit</button>
+                    <div class="flex items-center gap-3">
+                      @if (!projectState.isProjectManager()) {
+                        <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          Summarize
+                        </button>
+                      }
+                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                        {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Edit' : 'View' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               } @empty {
@@ -528,174 +594,308 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               }
             </div>
           </div>
-
         </div>
+        } @else if (activeTab() === 'health' && (activeSprintId() || completedSprintId())) {
+          <app-sprint-health-dashboard [sprintId]="(activeSprintId() || completedSprintId())!"></app-sprint-health-dashboard>
+        }
       }
     </div>
 
     <!-- Edit/Add Task Modal Overlay -->
     @if (showModal()) {
       <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
-        <div class="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 flex flex-col space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-border">
-            <h3 class="text-lg font-bold text-text-primary">
-              Modify Task Details
-            </h3>
-            <button (click)="closeModal()" class="text-text-secondary hover:text-text-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div class="bg-surface border border-border w-full rounded-2xl shadow-2xl flex flex-col transition-all duration-300"
+             [ngClass]="isEditing() ? 'max-w-6xl max-h-[90vh]' : 'max-w-md'">
+          
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-border shrink-0 bg-background rounded-t-2xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-black text-text-primary tracking-tight">
+                  {{ isEditing() ? 'Task Details' : 'Create New Task' }}
+                </h3>
+                <p class="text-[11px] font-bold text-text-secondary uppercase tracking-wider mt-0.5">
+                  {{ isEditing() ? 'Manage task info and chat' : 'Add to your backlog' }}
+                </p>
+              </div>
+            </div>
+            <button (click)="closeModal()" class="w-9 h-9 flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface hover:text-text-primary transition-colors border border-border shadow-sm hover:shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <!-- Form -->
-          <div class="space-y-4">
-            @if (projectState.isProjectManager()) {
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Task Title</label>
-                <input type="text" [(ngModel)]="modalTask().title" 
-                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
+          <!-- Modal Body (Grid for Trello-like layout) -->
+          <div class="p-6 overflow-y-auto flex-1 scrollbar-thin">
+            <div class="grid grid-cols-1 gap-8 h-full" [ngClass]="(isEditing() || modalTask().id) ? 'lg:grid-cols-[1fr_1fr]' : ''">
+              
+              <!-- LEFT COLUMN: Main Task Info & Form -->
+              <div class="space-y-6 flex flex-col">
+                @if (projectState.isProjectManager()) {
+                  <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Task Title</label>
+                    <input type="text" [(ngModel)]="modalTask().title" 
+                           placeholder="What needs to be done?"
+                           class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-extrabold text-[15px] shadow-sm placeholder:text-text-secondary/50" />
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Description</label>
+                    <textarea [(ngModel)]="modalTask().description" rows="5"
+                              placeholder="Provide more context..."
+                              class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 resize-none font-medium text-[13px] shadow-sm leading-relaxed placeholder:text-text-secondary/50"></textarea>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-5 relative">
+                    <div class="relative">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</label>
+                      <button type="button" (click)="togglePrioritySelect()"
+                              class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
+                        <div class="flex items-center gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full" 
+                                [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
+                          {{ modalTask().priority }}
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary transition-transform" [ngClass]="{'rotate-180': isPrioritySelectOpen()}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      @if (isPrioritySelectOpen()) {
+                        <div class="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-xl py-1 overflow-hidden animate-[fadeUp_0.2s_ease_out]">
+                          @for (p of ['High', 'Medium', 'Low']; track p) {
+                            <button type="button" (click)="selectPriority(p)" 
+                                    class="w-full px-4 py-2.5 flex items-center justify-between hover:bg-background transition-colors text-left font-bold text-[13px]">
+                              <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full" 
+                                      [ngClass]="{'bg-error': p === 'High', 'bg-amber-500': p === 'Medium', 'bg-emerald-500': p === 'Low'}"></span>
+                                {{ p }}
+                              </div>
+                              @if (modalTask().priority === p) {
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              }
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <div class="relative">
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</label>
+                      <button type="button" (click)="toggleTypeSelect()"
+                              class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
+                        <div class="flex items-center gap-2">
+                          <span class="text-lg leading-none" [ngSwitch]="modalTask().type">
+                            <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
+                            <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
+                            <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
+                          </span>
+                          {{ modalTask().type }}
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary transition-transform" [ngClass]="{'rotate-180': isTypeSelectOpen()}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      @if (isTypeSelectOpen()) {
+                        <div class="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-xl py-1 overflow-hidden animate-[fadeUp_0.2s_ease_out]">
+                          @for (t of ['Feature', 'Bug', 'Refactor']; track t) {
+                            <button type="button" (click)="selectType(t)" 
+                                    class="w-full px-4 py-2.5 flex items-center justify-between hover:bg-background transition-colors text-left font-bold text-[13px]">
+                              <div class="flex items-center gap-2">
+                                <span class="text-lg leading-none" [ngSwitch]="t">
+                                  <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
+                                  <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
+                                  <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
+                                </span>
+                                {{ t }}
+                              </div>
+                              @if (modalTask().type === t) {
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              }
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimation</label>
+                    <div class="relative">
+                      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <input type="number" [(ngModel)]="modalTask().hours" 
+                             class="w-full pl-10 pr-16 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-bold text-[13px] shadow-sm" />
+                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary uppercase">hrs</span>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+                    <div class="p-6 space-y-4">
+                      <h4 class="text-2xl font-black text-text-primary leading-tight tracking-tight">{{ modalTask().title }}</h4>
+                      <p class="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium bg-background border border-border/50 rounded-xl p-4">{{ modalTask().description || 'No description provided.' }}</p>
+                    </div>
+                    <div class="grid grid-cols-4 divide-x divide-border border-t border-border bg-background text-center">
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
+                          <span class="text-lg leading-none" [ngSwitch]="modalTask().type">
+                            <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
+                            <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
+                            <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
+                          </span>
+                          {{ modalTask().type }}
+                        </span>
+                      </div>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full" 
+                                [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
+                          {{ modalTask().priority }}
+                        </span>
+                      </div>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimated</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ modalTask().hours }}h
+                        </span>
+                      </div>
+                      <div class="p-4 hover:bg-surface transition-colors cursor-default">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Actual</span>
+                        <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ modalTask().actualHours || 0 }}h
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                }
+
+                <div class="flex-1"></div> <!-- Spacer -->
+
+                <!-- Buttons inside left column if it's editing -->
+                @if (isEditing()) {
+                  <div class="flex items-center space-x-3 pt-6 border-t border-border mt-6">
+                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                      <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
+                        Delete Task
+                      </button>
+                    }
+                    <div class="flex-1"></div>
+                    <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
+                      Cancel
+                    </button>
+                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                      <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
+                        Save Changes
+                      </button>
+                    }
+                  </div>
+                }
               </div>
 
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Description</label>
-                <textarea [(ngModel)]="modalTask().description" rows="3"
-                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"></textarea>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Priority</label>
-                  <select [(ngModel)]="modalTask().priority" 
-                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
+              <!-- RIGHT COLUMN: Discussion -->
+              @if (isEditing() || modalTask().id) {
+                <div class="flex flex-col h-full border-border lg:border-l lg:pl-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
+                  <!-- Task Discussion Component -->
+                  <div class="flex-1 min-h-[400px] flex flex-col bg-background rounded-2xl border border-border shadow-inner overflow-hidden">
+                    <app-task-discussion [taskId]="modalTask().id" class="flex-1" />
+                  </div>
                 </div>
-
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Type</label>
-                  <select [(ngModel)]="modalTask().type" 
-                          class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200">
-                    <option value="Feature">Feature</option>
-                    <option value="Bug">Bug</option>
-                    <option value="Refactor">Refactor</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Estimation (Hours)</label>
-                <input type="number" [(ngModel)]="modalTask().hours" 
-                       class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200" />
-              </div>
-            } @else {
-              <div class="p-4 bg-background rounded-xl border border-border space-y-3">
-                <div>
-                  <h4 class="text-sm font-bold text-text-primary">{{ modalTask().title }}</h4>
-                  <p class="text-xs text-text-secondary mt-1">{{ modalTask().description || 'No description provided.' }}</p>
-                </div>
-                <div class="grid grid-cols-3 gap-2 pt-2 text-[11px] font-semibold text-text-secondary border-t border-border/50">
-                  <div>Type: <span class="text-text-primary font-bold">{{ modalTask().type }}</span></div>
-                  <div>Priority: <span class="text-text-primary font-bold">{{ modalTask().priority }}</span></div>
-                  <div>Estimated: <span class="text-text-primary font-bold">{{ modalTask().hours }}h</span></div>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Actual Hours Spent</label>
-                <div class="relative">
-                  <input type="number" [(ngModel)]="employeeActualHours" min="0" step="0.5"
-                         class="w-full px-3.5 py-2 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200"
-                         placeholder="e.g. 4.5" />
-                  <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-                </div>
-                <p class="text-[10px] text-text-secondary mt-1 font-medium">Update the actual hours you spent working on this task.</p>
-              </div>
-            }
-
-            <!-- Agile Coach Features (only for existing tasks and Project Managers) -->
-            @if (isEditing() && projectState.isProjectManager()) {
-              <app-agile-coach-summary
-                [taskItemId]="modalTask().id"
-                [lang]="currentLang"
-                (openChat)="isChatOpen.set(true)"
-              />
-
-              <app-agile-coach-chat
-                [taskItemId]="modalTask().id"
-                [lang]="currentLang"
-                [isOpen]="isChatOpen()"
-                (closed)="isChatOpen.set(false)"
-              />
-            }
+              }
+            </div>
           </div>
-
-          <!-- Buttons -->
-          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-border">
-            @if (isEditing() && projectState.isProjectManager() && !isBoardReadonly()) {
-              <button (click)="deleteTask()" class="px-4 py-2 text-error hover:bg-error/10 font-semibold rounded-xl mr-auto">
-                Delete Task
+          
+          <!-- Bottom Buttons (For Add Mode) -->
+          @if (!isEditing()) {
+            <div class="p-6 border-t border-border flex items-center justify-end space-x-3 bg-surface rounded-b-2xl shrink-0">
+              <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-background font-bold rounded-xl transition-colors">
+                Cancel
               </button>
-            }
-            <button (click)="closeModal()" class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary rounded-xl">
-              {{ projectState.isProjectManager() && !isBoardReadonly() ? 'Cancel' : 'Close' }}
-            </button>
-            @if (!isBoardReadonly()) {
-              <button (click)="saveTask()" class="px-5 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md shadow-primary/10">
-                {{ projectState.isProjectManager() ? 'Save changes' : 'Save actual hours' }}
+              <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
+                Create Task
               </button>
-            }
-          </div>
+            </div>
+          }
         </div>
       </div>
     }
 
-    @if (showHoursPrompt()) {
-      <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border w-full max-w-sm rounded-2xl shadow-2xl p-6 flex flex-col space-y-4 animate-[scaleUp_0.2s_ease_both]">
-          <div class="flex items-center gap-3 text-primary">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-extrabold text-text-primary">Log Actual Hours</h3>
-              <p class="text-xs text-text-secondary">Task Completion</p>
-            </div>
-          </div>
 
-          <div class="space-y-2">
-            <p class="text-xs text-text-secondary leading-relaxed">
-              Please enter the actual hours spent to complete this task. This is required by the system.
-            </p>
-            
-            <div class="relative mt-2">
-              <input type="number" [(ngModel)]="hoursPromptValue" min="0.1" step="0.5" autofocus
-                     class="w-full px-3.5 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary transition-all duration-200 text-sm font-bold"
-                     placeholder="e.g. 4.5" />
-              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary">hours</span>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end space-x-2 pt-2 border-t border-border/50">
-            <button (click)="cancelHoursPrompt()" class="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors">
-              Cancel
-            </button>
-            <button (click)="submitHoursPrompt()" 
-                    [disabled]="hoursPromptValue() === null || hoursPromptValue()! <= 0"
-                    class="px-5 py-2 text-xs font-bold bg-primary text-white rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary/10">
-              Complete Task
-            </button>
-          </div>
-        </div>
-      </div>
-    }
 
     @if (isRetroModalOpen() && (activeSprintId() || completedSprintId())) {
       <app-retrospective-modal [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
+    }
+
+    <!-- Summarize Chat Modal -->
+    @if (chatTask()) {
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-end p-4 sm:p-6 animate-fade-in"
+           (click)="closeSummarizeChat()">
+        <div class="w-full max-w-md h-[82vh] flex flex-col" (click)="$event.stopPropagation()">
+          <app-agile-coach-chat
+            [taskItemId]="chatTask()!.id"
+            [taskTitle]="currentLang === 'ar' ? (chatTask()!.titleAr || chatTask()!.titleEn) : chatTask()!.titleEn"
+            [lang]="currentLang"
+            [isOpen]="true"
+            [loadInitialSummary]="true"
+            (closed)="closeSummarizeChat()"
+            class="h-full"
+          />
+        </div>
+      </div>
+    }
+
+    <!-- ─── NO EMPLOYEES REQUIRED MODAL ─── -->
+    @if (showNoEmployeesModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 text-center animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-2xl">
+            ⚠️
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">
+              {{ currentLang === 'ar' ? 'مطلوب موظفين لبدء السبرينت' : 'Employees Required to Start Sprint' }}
+            </h3>
+            <p class="text-xs text-text-secondary mt-2 leading-relaxed">
+              {{ currentLang === 'ar' ? 'لا يمكن بدء السبرينت لمشروع بدون موظفين معينين. يرجى تعيين أعضاء في الفريق أولاً.' : 'Cannot start sprint for a project with no assigned employees. Please assign team members to this project first.' }}
+            </p>
+          </div>
+          <div class="flex items-center justify-center gap-3 pt-2">
+            <button
+              (click)="showNoEmployeesModal.set(false)"
+              class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-semibold rounded-xl transition-all">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            <button
+              (click)="showNoEmployeesModal.set(false); navigateToTeam.emit()"
+              class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+              </svg>
+              {{ currentLang === 'ar' ? 'تعيين الموظفين' : 'Assign Employees' }}
+            </button>
+          </div>
+        </div>
+      </div>
     }
   `
 })
@@ -704,6 +904,9 @@ export class BoardComponent implements OnInit, OnChanges {
   @Input() overrideSprintStatus: string | null = null;
   @Output() backToSprints = new EventEmitter<void>();
   @Output() sprintStatusChanged = new EventEmitter<void>();
+  @Output() navigateToTeam = new EventEmitter<void>();
+
+  showNoEmployeesModal = signal(false);
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -712,33 +915,6 @@ export class BoardComponent implements OnInit, OnChanges {
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
   private tasksService = inject(TasksService);
-
-  employeeActualHours = 0;
-
-  showHoursPrompt = signal(false);
-  hoursPromptValue = signal<number | null>(null);
-  private hoursPromptResolve: ((val: number | null) => void) | null = null;
-
-  promptActualHours(): Promise<number | null> {
-    this.hoursPromptValue.set(null);
-    this.showHoursPrompt.set(true);
-    return new Promise(resolve => {
-      this.hoursPromptResolve = resolve;
-    });
-  }
-
-  submitHoursPrompt() {
-    const val = this.hoursPromptValue();
-    this.showHoursPrompt.set(false);
-    this.hoursPromptResolve?.(val);
-    this.hoursPromptResolve = null;
-  }
-
-  cancelHoursPrompt() {
-    this.showHoursPrompt.set(false);
-    this.hoursPromptResolve?.(null);
-    this.hoursPromptResolve = null;
-  }
 
   isBoardReadonly = computed(() => {
     return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
@@ -759,6 +935,16 @@ export class BoardComponent implements OnInit, OnChanges {
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
 
+  chatTask = signal<TaskItemDto | null>(null);
+
+  openSummarizeChat(task: any) {
+    this.chatTask.set(task);
+  }
+
+  closeSummarizeChat() {
+    this.chatTask.set(null);
+  }
+
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';
   }
@@ -772,6 +958,9 @@ export class BoardComponent implements OnInit, OnChanges {
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
   });
+
+  activeTab = signal<'board' | 'health'>('board');
+
   readonly boardPageSize = 8;
   boardSearch = signal('');
   priorityFilter = signal<'All' | Task['priority']>('All');
@@ -801,6 +990,29 @@ export class BoardComponent implements OnInit, OnChanges {
 
   showModal = signal(false);
   isEditing = signal(false);
+
+  isPrioritySelectOpen = signal(false);
+  isTypeSelectOpen = signal(false);
+
+  togglePrioritySelect() {
+    this.isPrioritySelectOpen.update(v => !v);
+    this.isTypeSelectOpen.set(false);
+  }
+
+  toggleTypeSelect() {
+    this.isTypeSelectOpen.update(v => !v);
+    this.isPrioritySelectOpen.set(false);
+  }
+
+  selectPriority(val: any) {
+    this.modalTask.update(t => ({ ...t, priority: val }));
+    this.isPrioritySelectOpen.set(false);
+  }
+
+  selectType(val: any) {
+    this.modalTask.update(t => ({ ...t, type: val }));
+    this.isTypeSelectOpen.set(false);
+  }
 
   modalTask = signal<Task>({
     id: '',
@@ -855,12 +1067,22 @@ export class BoardComponent implements OnInit, OnChanges {
     const sprintId = this.plannedSprintId();
     if (!projectId || !sprintId) return;
 
+    if (this.projectState.projectEmployeeCount() === 0) {
+      this.showNoEmployeesModal.set(true);
+      return;
+    }
+
     try {
       await this.sprintService.startSprint(projectId, sprintId);
       this.toastService.show('Sprint started successfully', 'success');
       this.sprintStatusChanged.emit();
-    } catch {
-      this.toastService.show('Failed to start sprint', 'error');
+    } catch (e: any) {
+      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
+        this.showNoEmployeesModal.set(true);
+      } else {
+        this.toastService.show('Failed to start sprint', 'error');
+      }
     }
   }
 
@@ -958,33 +1180,30 @@ export class BoardComponent implements OnInit, OnChanges {
       }
     }
 
-    // 4. Load backlog
+    // 4. Load only the tasks that belong to the sprint being viewed.
     let tasks: any[] = [];
+    const sprintId = this.overrideSprintId
+      || this.activeSprintId()
+      || this.plannedSprintId()
+      || this.completedSprintId();
 
-    if (this.projectState.isProjectManager()) {
+    if (!sprintId) {
+      tasks = [];
+    } else if (this.projectState.isProjectManager()) {
       try {
-        let backlog = await this.backlogService.getBacklog(this.activeProjectId);
-        let userStory = backlog?.userStories?.[0];
-
-        if (userStory) {
-          this.activeUserStoryId = userStory.id;
-          tasks = backlog?.userStories?.flatMap(us => us.tasks) || [];
-        } else {
-          this.activeUserStoryId = '';
-          tasks = [];
-        }
+        tasks = await this.tasksService.getSprintTasks(this.activeProjectId, sprintId);
+        this.activeUserStoryId = tasks[0]?.userStoryId || '';
       } catch (err) {
-        console.error('Failed to load project backlog:', err);
+        console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
         tasks = [];
       }
     } else {
-      // Load employee's own assigned tasks
+      // Load only this employee's assignments for the selected sprint.
       try {
-        const myTasksRes = await this.tasksService.getMyTasks(this.activeProjectId);
-        tasks = myTasksRes.tasks || [];
+        tasks = await this.tasksService.getMySprintTasks(this.activeProjectId, sprintId);
       } catch (err) {
-        console.error('Error loading employee tasks:', err);
+        console.error('Error loading employee sprint tasks:', err);
         tasks = [];
       }
     }
@@ -1111,31 +1330,23 @@ export class BoardComponent implements OnInit, OnChanges {
             type: task.type,
             status: newStatus
           });
+          this.toastService.show('Task status updated successfully.', 'success');
         } else {
           const statusEnum = this.mapColumnToEnum(newStatus);
-          let actualHours: number | undefined = undefined;
-          if (statusEnum === TaskItemStatus.Done) {
-            const val = await this.promptActualHours();
-            if (val === null) {
-              await this.loadWorkspaceData();
-              return;
-            }
-            actualHours = val;
-            this.employeeActualHours = actualHours;
-          }
-          await this.tasksService.updateTaskStatus(task.id, statusEnum, actualHours);
+
+          await this.tasksService.updateTaskStatus(task.id, statusEnum);
           this.toastService.show('Task status updated successfully.', 'success');
         }
-      } catch (err) {
+        // Fetch updated data from backend to get the automatically calculated actualHours
+        await this.loadWorkspaceData();
+      } catch (err: any) {
         console.error('Failed to update task status in backend:', err);
-        this.toastService.show('Failed to update task status.', 'error');
+        const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to update task status.';
+        this.toastService.show(errorMsg, 'error');
+        // Rollback status visually by reloading
+        await this.loadWorkspaceData();
       }
     }
-
-    this.todo.set([...this.todo()]);
-    this.inProgress.set([...this.inProgress()]);
-    this.review.set([...this.review()]);
-    this.done.set([...this.done()]);
   }
 
   private mapColumnToEnum(column: string): TaskItemStatus {
@@ -1154,7 +1365,6 @@ export class BoardComponent implements OnInit, OnChanges {
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
     this.modalTask.set({ ...task });
-    this.employeeActualHours = (task as any).actualHours || 0;
     this.showModal.set(true);
   }
 
@@ -1185,6 +1395,7 @@ export class BoardComponent implements OnInit, OnChanges {
             type: taskData.type,
             status: this.originalColumn
           });
+          this.toastService.show('Task updated successfully.', 'success');
         } else {
           await this.backlogService.createTask(this.activeUserStoryId, {
             titleEn: taskData.title,
@@ -1195,16 +1406,15 @@ export class BoardComponent implements OnInit, OnChanges {
             type: taskData.type,
             status: 'todo'
           });
+          this.toastService.show('Task created successfully.', 'success');
         }
-      } else {
-        // Employee saving log actual hours
-        await this.tasksService.logActualHours(taskData.id, this.employeeActualHours);
-        this.toastService.show('Actual hours logged successfully.', 'success');
       }
       this.closeModal();
       await this.loadWorkspaceData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving task:', err);
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to save task. Please try again.';
+      this.toastService.show(errorMsg, 'error');
     } finally {
       this.isLoading.set(false);
     }
@@ -1245,6 +1455,9 @@ export class BoardComponent implements OnInit, OnChanges {
     const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
     if (success) {
       form.reset();
+      this.toastService.show('Project created successfully.', 'success');
+    } else {
+      this.toastService.show('Failed to create project.', 'error');
     }
   }
 

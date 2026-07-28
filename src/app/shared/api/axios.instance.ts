@@ -43,7 +43,7 @@ function shouldShowLoader(url: string | undefined): boolean {
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (shouldShowLoader(config.url)) {
+    if (shouldShowLoader(config.url) && !config.headers?.['X-Skip-Loader']) {
       getLoadingService()?.show();
     }
     const token = getAccessToken();
@@ -51,6 +51,10 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
     }
+
+    config.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    config.headers.set('Pragma', 'no-cache');
+    config.headers.set('Expires', '0');
 
     const lang = (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang')) || 'en';
     config.headers.set('lang', lang);
@@ -72,9 +76,14 @@ async function refreshAccessToken(): Promise<string> {
     throw new Error('No refresh token available');
   }
 
+  const accessToken = getAccessToken();
+
   const { data } = await axios.post<any>(
     `${environment.apiUrl}/Auth/refresh-token`,
-    { refreshToken },
+    { 
+      token: accessToken,
+      refreshToken: refreshToken 
+    },
     {
       withCredentials: true,
     }
@@ -98,14 +107,14 @@ async function refreshAccessToken(): Promise<string> {
 
 apiClient.interceptors.response.use(
   (response) => {
-    if (shouldShowLoader(response.config?.url)) {
+    if (shouldShowLoader(response.config?.url) && !response.config?.headers?.['X-Skip-Loader']) {
       getLoadingService()?.hide();
     }
     return response;
   },
 
   async (error: AxiosError) => {
-    if (shouldShowLoader(error.config?.url)) {
+    if (shouldShowLoader(error.config?.url) && !error.config?.headers?.['X-Skip-Loader']) {
       getLoadingService()?.hide();
     }
     const originalRequest = error.config as InternalAxiosRequestConfig & {

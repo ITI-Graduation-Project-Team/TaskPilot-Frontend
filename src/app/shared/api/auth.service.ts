@@ -12,6 +12,7 @@ export interface AuthResponse {
     token: string;
     refreshToken: string;
     roles: string[];
+    requireRoleSelection?: boolean;
   };
 }
 
@@ -24,14 +25,9 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   logout(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(environment.auth.tokenKey);
-      localStorage.removeItem(environment.auth.refreshTokenKey);
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('userFullName');
-    }
     clearTokens();
-    this.router.navigate(['/login']);
+    // Force a full page reload to clear all in-memory Angular singleton states (Signals, etc.)
+    window.location.href = '/login';
   }
 
   getUserRole(): string | null {
@@ -44,5 +40,9 @@ export class AuthService {
 
   googleLogin(idToken: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { idToken });
+  }
+
+  googleCompleteSignup(idToken: string, role: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/google/complete-signup`, { idToken, role });
   }
 }

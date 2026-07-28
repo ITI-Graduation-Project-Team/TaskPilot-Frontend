@@ -2,6 +2,8 @@ import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy, Inje
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
+import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
+import { environment } from '../../../../../environments/environment';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -9,7 +11,7 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
   selector: 'app-confirm-email',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './confirm-email.component.html',
   styleUrls: ['./confirm-email.component.scss'],
 })
@@ -140,6 +142,21 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
         );
         return;
       }
+
+      // Save tokens exactly as login does
+      const tokenData = data.data as any;
+      const accessToken = tokenData?.accessToken || tokenData?.token;
+      const refreshToken = tokenData?.refreshToken;
+      const role = tokenData?.roles?.[0] || tokenData?.role || '';
+
+      if (accessToken && refreshToken) {
+        saveTokens(accessToken, refreshToken);
+        localStorage.setItem(environment.auth.tokenKey, accessToken);
+      }
+      if (role) {
+        localStorage.setItem('userRole', role);
+      }
+
       this.state.set('success');
       
       const invToken = sessionStorage.getItem('invitationToken');
@@ -168,6 +185,30 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
     } catch (err: any) {
       this.state.set('error');
       this.errorMessage.set(extractApiError(err));
+    }
+  }
+
+  async onResend() {
+    if (!this.email()) return;
+    this.resendState.set('loading');
+    this.state.set('idle');
+    this.errorMessage.set('');
+
+    try {
+      const res = await authApi.resendConfirmation({ email: this.email() });
+      if (res.data.succeeded) {
+        this.resendState.set('sent');
+        // Reset state after a few seconds so they can resend again if needed
+        setTimeout(() => this.resendState.set('idle'), 5000);
+      } else {
+        this.resendState.set('idle');
+        this.state.set('error');
+        this.errorMessage.set(res.data.message || 'Failed to resend confirmation email.');
+      }
+    } catch (err: any) {
+      this.resendState.set('idle');
+      this.state.set('error');
+      this.errorMessage.set(extractApiError(err) || 'Error resending confirmation email.');
     }
   }
 }

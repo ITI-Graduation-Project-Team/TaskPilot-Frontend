@@ -13,8 +13,10 @@ import { CurrentProjects } from '../current-projects/current-projects';
 import { ProjectHistory } from '../project-history/project-history';
 import { MyProfileComponent } from '../my-profile/my-profile.component';
 import { CalendarViewComponent } from '../../../dashboardPage/ui/calendar-view/calendar-view.component';
+import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
+import { CompanyPoliciesChatComponent } from '../company-policies-chat/company-policies-chat.component';
 
-type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar';
+type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'policies-chat';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -28,6 +30,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
     ProjectHistory,
     MyProfileComponent,
     CalendarViewComponent,
+    NotificationBellComponent,
+    CompanyPoliciesChatComponent
   ],
   template: `
     <div
@@ -156,6 +160,19 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <span class="text-start">{{ 'calendar.title' | translate }}</span>
           </button>
 
+          <!-- Policies Chat -->
+          <button
+            (click)="activeTab.set('policies-chat')"
+            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            [class.nav-item-active]="activeTab() === 'policies-chat'"
+            [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-start">{{ 'employee.nav.policies' | translate }}</span>
+          </button>
+
           <!-- My Profile -->
           <button
             (click)="activeTab.set('profile')"
@@ -187,9 +204,9 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 >
                   <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white text-[10px] font-extrabold"
                        [style.background]="getProjectColor(p.id)">
-                    {{ (p.nameEn || '?')[0].toUpperCase() }}
+                    {{ (getProjectName(p) || '?')[0].toUpperCase() }}
                   </div>
-                  <span class="text-start truncate flex-1 text-xs font-semibold">{{ p.nameEn }}</span>
+                  <span class="text-start truncate flex-1 text-xs font-semibold">{{ getProjectName(p) }}</span>
                   @if (p.id === projectState.selectedProjectId()) {
                     <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -293,8 +310,12 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                   </svg>
-                  <span class="truncate flex-1 text-start">
-                    {{ projectState.selectedProject()?.nameEn || ('employee.header.selectProject' | translate) }}
+                  <span class="truncate max-w-[140px] font-extrabold text-xs">
+                    @if (projectState.selectedProject()) {
+                      {{ getProjectName(projectState.selectedProject()) }}
+                    } @else {
+                      {{ 'employee.header.selectProject' | translate }}
+                    }
                   </span>
                   <svg class="w-3 h-3 ms-auto shrink-0 transition-transform duration-200"
                        [class.rotate-180]="isProjectDropdownOpen()"
@@ -326,10 +347,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                           <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
                                       text-white text-xs font-bold"
                                [style.background]="getProjectColor(p.id)">
-                            {{ (p.nameEn || '?')[0].toUpperCase() }}
+                            {{ (getProjectName(p) || '?')[0].toUpperCase() }}
                           </div>
                           <span class="font-medium truncate flex-1" style="color: var(--text-primary);">
-                            {{ p.nameEn }}
+                            {{ getProjectName(p) }}
                           </span>
                           @if (p.id === projectState.selectedProjectId()) {
                             <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"
@@ -345,22 +366,17 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               </div>
             }
 
-            <!-- Language Switcher -->
-            <div class="flex items-center gap-0.5 p-1 rounded-xl border"
-                 style="background: var(--background); border-color: var(--border);">
-              <button
-                (click)="setLanguage('en')"
-                class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all duration-200"
-                [style.background]="currentLang() === 'en' ? 'var(--primary)' : 'transparent'"
-                [style.color]="currentLang() === 'en' ? '#fff' : 'var(--text-secondary)'"
-              >EN</button>
-              <button
-                (click)="setLanguage('ar')"
-                class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all duration-200"
-                [style.background]="currentLang() === 'ar' ? 'var(--primary)' : 'transparent'"
-                [style.color]="currentLang() === 'ar' ? '#fff' : 'var(--text-secondary)'"
-              >AR</button>
-            </div>
+            <!-- Notification Bell -->
+            <app-notification-bell />
+
+            <!-- Language Toggle -->
+            <button (click)="toggleLanguage()"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface text-text-primary rounded-xl border border-border hover:bg-sidebar transition-colors shadow-sm">
+              <span class="text-xs font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </button>
 
             <!-- Dark / Light Toggle -->
             <button
@@ -396,6 +412,11 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
             </button>
+
+            <!-- Date -->
+            <span class="text-sm font-semibold hidden sm:inline" style="color: var(--text-secondary);">
+              {{ currentDate }}
+            </span>
           </div>
         </header>
 
@@ -414,7 +435,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               </div>
             </div>
 
-          } @else if (projectState.projects().length === 0) {
+          } @else if (projectState.projects().length === 0 && activeTab() !== 'profile') {
             <!-- No project assigned -->
             <div class="flex items-center justify-center h-full min-h-[50vh]">
               <div class="text-center max-w-md p-8 rounded-3xl border shadow-sm animate-[fadeUp_0.4s_ease_both]"
@@ -458,6 +479,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 <app-project-history></app-project-history>
               </div>
 
+            } @else if (activeTab() === 'policies-chat') {
+              <div class="animate-[fadeUp_0.3s_ease_both] h-[calc(100vh-140px)]">
+                <app-company-policies-chat></app-company-policies-chat>
+              </div>
             } @else if (activeTab() === 'profile') {
               <div class="animate-[fadeUp_0.3s_ease_both]">
                 <app-my-profile></app-my-profile>
@@ -517,6 +542,19 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <span class="text-[9px] font-bold">{{ 'employee.nav.history' | translate }}</span>
           </button>
 
+          <!-- Policies -->
+          <button
+            (click)="activeTab.set('policies-chat')"
+            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            [class.mobile-tab-active]="activeTab() === 'policies-chat'"
+            [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-[9px] font-bold">{{ 'employee.nav.policiesShort' | translate }}</span>
+          </button>
+
           <!-- My Profile -->
           <button
             (click)="activeTab.set('profile')"
@@ -553,6 +591,8 @@ export class EmployeeDashboardComponent implements OnInit {
   hasActiveSprint = signal(false);
   isProjectDropdownOpen = signal(false);
 
+  currentDate: string = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
 
   // ── Computed ────────────────────────────────
   isDark = this.theme.isDark;
@@ -579,6 +619,7 @@ export class EmployeeDashboardComponent implements OnInit {
     if (tab === 'current-projects') return this.tr.instant('employee.pages.currentProjects');
     if (tab === 'project-history') return this.tr.instant('employee.pages.projectHistory');
     if (tab === 'calendar') return this.tr.instant('calendar.title');
+    if (tab === 'policies-chat') return this.tr.instant('employee.pages.policies');
     return this.tr.instant('employee.pages.myProfile');
   });
 
@@ -605,7 +646,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore persisted tab
     const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar'].includes(savedTab)) {
+    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'policies-chat'].includes(savedTab)) {
       this.activeTab.set(savedTab);
     }
 
@@ -619,6 +660,15 @@ export class EmployeeDashboardComponent implements OnInit {
     localStorage.setItem('app_lang', lang);
     this.tr.use(lang);
     this.applyDirection(lang);
+  }
+
+  toggleLanguage() {
+    this.setLanguage(this.currentLang() === 'en' ? 'ar' : 'en');
+  }
+
+  getProjectName(p: any): string {
+    if (!p) return '';
+    return this.currentLang() === 'ar' ? (p.nameAr || p.nameEn || p.name) : (p.nameEn || p.nameAr || p.name);
   }
 
   private applyDirection(lang: 'en' | 'ar') {

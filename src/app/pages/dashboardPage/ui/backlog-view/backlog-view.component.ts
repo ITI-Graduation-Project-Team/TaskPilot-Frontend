@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BacklogService, BacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
@@ -8,6 +8,7 @@ import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-pl
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -48,7 +49,7 @@ const EMPTY_TASK: TaskFormModel = {
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent],
   template: `
     <div class="space-y-6">
       @if (projectState.loading() || isLoading()) {
@@ -117,8 +118,8 @@ const EMPTY_TASK: TaskFormModel = {
           <div class="flex flex-wrap items-center gap-3">
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               @if ((backlog()?.userStories?.length || 0) > 0) {
-                <button type="button" (click)="isSprintPlanningModalOpen.set(true)" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700">AI Sprint Planner</button>
               }
+              <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">Edit Backlog</button>
               <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">Add user story</button>
             }
           </div>
@@ -397,15 +398,24 @@ const EMPTY_TASK: TaskFormModel = {
     }
 
     @if (isSprintPlanningModalOpen()) {
-      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
+      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)" (navigateToTeam)="navigateToTeam.emit()"></app-sprint-planning-modal>
     }
 
     @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {
       <app-tech-stack-advisor-modal [projectId]="projectState.selectedProjectId()!" (close)="isTechStackAdvisorOpen.set(false)" (completed)="onAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
     }
+
+    <app-project-ai-chat 
+        *ngIf="projectState.selectedProjectId()" 
+        [projectId]="projectState.selectedProjectId()!" 
+        [isOpen]="isChatOpen()" 
+        (closeChat)="isChatOpen.set(false)"
+        (backlogUpdated)="fetchBacklog(projectState.selectedProjectId()!)">
+    </app-project-ai-chat>
   `,
 })
 export class BacklogViewComponent implements OnInit {
+  @Output() navigateToTeam = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
   private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);
@@ -420,6 +430,7 @@ export class BacklogViewComponent implements OnInit {
   isSprintPlanningModalOpen = signal(false);
   isTechStackAdvisorOpen = signal(false);
   isGeneratingWbs = signal(false);
+  isChatOpen = signal(false);
   expandedStoryIds = signal<string[]>([]);
   storyForm = signal<StoryFormModel>({ ...EMPTY_STORY });
   taskForm = signal<TaskFormModel>({ ...EMPTY_TASK });
@@ -524,7 +535,7 @@ export class BacklogViewComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   async fetchBacklog(projectId: string) {
     this.isLoading.set(true);

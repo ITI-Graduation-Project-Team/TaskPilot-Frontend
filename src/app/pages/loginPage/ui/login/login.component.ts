@@ -97,6 +97,12 @@ export class LoginComponent implements AfterViewInit, OnInit {
         next: (res) => {
           if (res.succeeded && res.data) {
             localStorage.removeItem('userRole');
+            if (res.data?.requireRoleSelection) {
+              sessionStorage.setItem('googleIdToken', response.credential);
+              this.router.navigate(['/select-role']).then(() => this.loadingService.hide());
+              return;
+            }
+
             const token = res.data.token;
             const refreshToken = res.data.refreshToken;
             if (token && refreshToken) {
