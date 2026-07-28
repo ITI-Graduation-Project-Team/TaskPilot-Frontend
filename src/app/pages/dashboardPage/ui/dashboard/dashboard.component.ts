@@ -892,12 +892,19 @@ export class DashboardComponent implements OnInit {
   }
 
   async onTechStackAdvisorCompleted(projectId: string) {
-    this.isTechStackAdvisorOpen.set(false);
-    this.advisorProjectId.set(null);
-    await this.projectState.loadProjects();
-    this.projectState.setSelectedProject(projectId);
-    this.currentTab.set('backlog');
-    this.loadAllProjectStats();
+    try {
+      this.isTechStackAdvisorOpen.set(false);
+      this.advisorProjectId.set(null);
+      await this.projectState.loadProjects();
+      this.projectState.setSelectedProject(projectId);
+      this.toastService.show('Project created successfully', 'success');
+    } catch (e) {
+      console.warn('Error during tech stack completion:', e);
+      this.toastService.show('Error finalizing project setup', 'error');
+    } finally {
+      this.currentTab.set('projects');
+      this.loadAllProjectStats();
+    }
   }
 
   onProjectSaved() {
@@ -913,12 +920,20 @@ export class DashboardComponent implements OnInit {
     const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
     const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
-    if (success) {
-      this.showManualForm.set(false);
-      this.currentTab.set('projects');
-      form.reset();
-      this.loadAllProjectStats();
+    try {
+      const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
+      if (success) {
+        this.toastService.show('Project created successfully', 'success');
+        this.showManualForm.set(false);
+        this.currentTab.set('projects');
+        form.reset();
+        this.loadAllProjectStats();
+      } else {
+        this.toastService.show('Failed to create project', 'error');
+      }
+    } catch (e) {
+      console.error('Project creation error:', e);
+      this.toastService.show('Error creating project', 'error');
     }
   }
 

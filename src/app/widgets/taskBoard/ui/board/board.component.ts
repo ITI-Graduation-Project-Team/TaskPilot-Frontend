@@ -216,7 +216,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
                       class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                👥 Assign Tasks
+                👥 {{ hasAssignments() ? 'Assigned Tasks' : 'Assign Tasks' }}
               </button>
               <button (click)="startSprint()" 
                       [disabled]="projectState.projectEmployeeCount() === 0"
@@ -1024,6 +1024,7 @@ export class BoardComponent implements OnInit, OnChanges {
     type: 'Feature'
   });
 
+  hasAssignments = signal(false);
   private originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
 
   constructor() {
@@ -1237,6 +1238,7 @@ export class BoardComponent implements OnInit, OnChanges {
     this.inProgress.set(inProgressList);
     this.review.set(reviewList);
     this.done.set(doneList);
+    this.hasAssignments.set(tasks.some((t: any) => !!(t.employeeId || t.assignedTo || t.assigneeId)));
   }
 
   private filterTasks(tasks: Task[]): Task[] {
