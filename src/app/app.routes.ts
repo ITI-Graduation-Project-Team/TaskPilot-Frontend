@@ -17,12 +17,16 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard, roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] },
+    loadComponent: () => import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(m => m.DashboardComponent),
     children: [
       { path: '', redirectTo: 'projects', pathMatch: 'full' },
-      { 
-        path: ':tab', 
-        loadComponent: () => import('./pages/dashboardPage/ui/dashboard/dashboard.component').then((m) => m.DashboardComponent)
-      }
+      { path: 'projects', loadComponent: () => import('./pages/dashboardPage/ui/project-hub/project-hub.component').then(m => m.ProjectHubComponent) },
+      { path: 'create-project', loadComponent: () => import('./pages/dashboardPage/ui/create-project/create-project.component').then(m => m.CreateProjectComponent) },
+      { path: 'sprint', loadComponent: () => import('./pages/dashboardPage/ui/sprint-view/sprint-view.component').then(m => m.SprintViewComponent) },
+      { path: 'sprint-planning', loadComponent: () => import('./pages/dashboardPage/ui/sprint-planning-view/sprint-planning-view.component').then(m => m.SprintPlanningViewComponent) },
+      { path: 'backlog', loadComponent: () => import('./pages/dashboardPage/ui/backlog-view/backlog-view.component').then(m => m.BacklogViewComponent) },
+      { path: 'team', loadComponent: () => import('./pages/dashboardPage/ui/team-view/team-view.component').then(m => m.TeamViewComponent) },
+      { path: 'profile', loadComponent: () => import('./pages/dashboardPage/ui/profile-view/profile-view.component').then(m => m.ProfileViewComponent) }
     ]
   },
     {

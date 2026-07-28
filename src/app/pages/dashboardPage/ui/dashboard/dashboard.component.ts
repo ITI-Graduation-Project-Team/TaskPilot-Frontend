@@ -1,49 +1,34 @@
-import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
-import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
-import { ProfileViewComponent } from '../profile-view/profile-view.component';
-import { TeamViewComponent } from '../team-view/team-view.component';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
-import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
-import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
-import { ProjectHubComponent } from '../project-hub/project-hub.component';
-import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
-import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router, RouterModule, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService } from '@ngx-translate/core';
+import { DashboardService } from '../../services/dashboard.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    RouterModule,
     RouterLink,
     FormsModule,
-    BoardComponent,
-    BacklogViewComponent,
-    ProfileViewComponent,
-    TeamViewComponent,
     AiChatModalComponent,
-    DraftReviewModalComponent,
-    TechStackAdvisorModalComponent,
-    ProjectHubComponent,
     ProjectHistoryModalComponent,
-    SprintPlanningViewComponent,
-    SprintListComponent,
     NotificationBellComponent
   ],
   template: `
@@ -83,15 +68,11 @@ import { TranslateService } from '@ngx-translate/core';
         <nav class="flex-1 space-y-1.5">
           <!-- All Projects Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <a (click)="currentTab.set('projects')"
-               [class.bg-primary/10]="currentTab() === 'projects'"
-               [class.text-primary]="currentTab() === 'projects'"
-               [class.font-bold]="currentTab() === 'projects'"
-               [class.shadow-sm]="currentTab() === 'projects'"
-               [class.text-text-secondary]="currentTab() !== 'projects'"
-               [class.hover:text-text-primary]="currentTab() !== 'projects'"
-               [class.hover:bg-primary/5]="currentTab() !== 'projects'"
-               [class.font-medium]="currentTab() !== 'projects'"
+            <a routerLink="/dashboard/projects" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProj="routerLinkActive"
+               [class.text-text-secondary]="!rlaProj.isActive"
+               [class.hover:text-text-primary]="!rlaProj.isActive"
+               [class.hover:bg-primary/5]="!rlaProj.isActive"
+               [class.font-medium]="!rlaProj.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
@@ -100,30 +81,22 @@ import { TranslateService } from '@ngx-translate/core';
             </a>
           }
 
-          <a (click)="currentTab.set('sprint')"
-             [class.bg-primary/10]="currentTab() === 'sprint'"
-             [class.text-primary]="currentTab() === 'sprint'"
-             [class.font-bold]="currentTab() === 'sprint'"
-             [class.shadow-sm]="currentTab() === 'sprint'"
-             [class.text-text-secondary]="currentTab() !== 'sprint'"
-             [class.hover:text-text-primary]="currentTab() !== 'sprint'"
-             [class.hover:bg-primary/5]="currentTab() !== 'sprint'"
-             [class.font-medium]="currentTab() !== 'sprint'"
+          <a routerLink="/dashboard/sprint" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprint="routerLinkActive"
+             [class.text-text-secondary]="!rlaSprint.isActive"
+             [class.hover:text-text-primary]="!rlaSprint.isActive"
+             [class.hover:bg-primary/5]="!rlaSprint.isActive"
+             [class.font-medium]="!rlaSprint.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
             Sprints
           </a>
-          <a (click)="currentTab.set('backlog')"
-             [class.bg-primary/10]="currentTab() === 'backlog'"
-             [class.text-primary]="currentTab() === 'backlog'"
-             [class.font-bold]="currentTab() === 'backlog'"
-             [class.shadow-sm]="currentTab() === 'backlog'"
-             [class.text-text-secondary]="currentTab() !== 'backlog'"
-             [class.hover:text-text-primary]="currentTab() !== 'backlog'"
-             [class.hover:bg-primary/5]="currentTab() !== 'backlog'"
-             [class.font-medium]="currentTab() !== 'backlog'"
+          <a routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
+             [class.text-text-secondary]="!rlaBacklog.isActive"
+             [class.hover:text-text-primary]="!rlaBacklog.isActive"
+             [class.hover:bg-primary/5]="!rlaBacklog.isActive"
+             [class.font-medium]="!rlaBacklog.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -132,15 +105,11 @@ import { TranslateService } from '@ngx-translate/core';
           </a>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
-            <a (click)="currentTab.set('sprint-planning')"
-               [class.bg-primary/10]="currentTab() === 'sprint-planning'"
-               [class.text-primary]="currentTab() === 'sprint-planning'"
-               [class.font-bold]="currentTab() === 'sprint-planning'"
-               [class.shadow-sm]="currentTab() === 'sprint-planning'"
-               [class.text-text-secondary]="currentTab() !== 'sprint-planning'"
-               [class.hover:text-text-primary]="currentTab() !== 'sprint-planning'"
-               [class.hover:bg-primary/5]="currentTab() !== 'sprint-planning'"
-               [class.font-medium]="currentTab() !== 'sprint-planning'"
+            <a routerLink="/dashboard/sprint-planning" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprintPlan="routerLinkActive"
+               [class.text-text-secondary]="!rlaSprintPlan.isActive"
+               [class.hover:text-text-primary]="!rlaSprintPlan.isActive"
+               [class.hover:bg-primary/5]="!rlaSprintPlan.isActive"
+               [class.font-medium]="!rlaSprintPlan.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -151,29 +120,21 @@ import { TranslateService } from '@ngx-translate/core';
           }
 
           @if (projectState.isProjectManager()) {
-            <a (click)="currentTab.set('team')"
-               [class.bg-primary/10]="currentTab() === 'team'"
-               [class.text-primary]="currentTab() === 'team'"
-               [class.font-bold]="currentTab() === 'team'"
-               [class.shadow-sm]="currentTab() === 'team'"
-               [class.text-text-secondary]="currentTab() !== 'team'"
-               [class.hover:text-text-primary]="currentTab() !== 'team'"
-               [class.hover:bg-primary/5]="currentTab() !== 'team'"
-               [class.font-medium]="currentTab() !== 'team'"
+            <a routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaTeam="routerLinkActive"
+               [class.text-text-secondary]="!rlaTeam.isActive"
+               [class.hover:text-text-primary]="!rlaTeam.isActive"
+               [class.hover:bg-primary/5]="!rlaTeam.isActive"
+               [class.font-medium]="!rlaTeam.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
               Project Team
             </a>
           }
-          <a (click)="currentTab.set('profile')"
-             [class.bg-primary/10]="currentTab() === 'profile'"
-             [class.text-primary]="currentTab() === 'profile'"
-             [class.font-bold]="currentTab() === 'profile'"
-             [class.shadow-sm]="currentTab() === 'profile'"
-             [class.text-text-secondary]="currentTab() !== 'profile'"
-             [class.hover:text-text-primary]="currentTab() !== 'profile'"
-             [class.hover:bg-primary/5]="currentTab() !== 'profile'"
-             [class.font-medium]="currentTab() !== 'profile'"
+          <a routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
+             [class.text-text-secondary]="!rlaProfile.isActive"
+             [class.hover:text-text-primary]="!rlaProfile.isActive"
+             [class.hover:bg-primary/5]="!rlaProfile.isActive"
+             [class.font-medium]="!rlaProfile.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -184,7 +145,7 @@ import { TranslateService } from '@ngx-translate/core';
 
         <!-- Footer / Profile Quick view & Dark mode -->
         <div class="border-t border-border pt-6 mt-6 space-y-4">
-          <div (click)="currentTab.set('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
+          <div routerLink="/dashboard/profile" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
             <div class="w-9 h-9 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">
               {{ userInitial() }}
             </div>
@@ -340,137 +301,13 @@ import { TranslateService } from '@ngx-translate/core';
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
-          @if (currentTab() === 'projects') {
-            <app-project-hub
-              [projects]="projectState.projects()"
-              [projectStatsMap]="projectStatsMap()"
-              (createProject)="openCreateProjectPage()"
-              (createProjectWithAi)="openAiProjectFlow()"
-              (selectSprint)="goToProject($event, 'sprint')"
-              (selectBacklog)="goToProject($event, 'backlog')"
-              (editProject)="openEditProjectModal($event)"
-              (deleteProject)="deleteProject($event)"
-              (toggleProjectStatus)="onToggleProjectStatus($event)">
-            </app-project-hub>
-          } @else if (currentTab() === 'create-project') {
-            <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
-              <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-                <div>
-                  <button type="button" (click)="currentTab.set('projects')" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                    Back to projects
-                  </button>
-                  <p class="text-[11px] font-extrabold uppercase tracking-[0.24em] text-primary">New workspace</p>
-                  <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-text-primary font-display">Create a project your team can actually run</h2>
-                  <p class="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">Start with AI when requirements are still fuzzy, or use manual setup when you already know the project name and scope. Either path lands in the same project workspace.</p>
-                </div>
-                <div class="mt-1 flex w-full rounded-2xl border border-border bg-surface p-1 shadow-sm sm:w-auto xl:justify-self-end">
-                  <button type="button" (click)="showManualForm.set(false)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
-                          [class.bg-primary]="!showManualForm()" [class.text-white]="!showManualForm()" [class.text-text-secondary]="showManualForm()">AI assisted</button>
-                </div>
-              </div>
-
-              <div class="mt-7 md:mt-8">
-              @if (!showManualForm()) {
-                @if (isAiChatOpen()) {
-                  <app-ai-chat-modal [embedded]="true" (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
-                } @else if (isTechStackAdvisorOpen() && advisorProjectId()) {
-                  <app-tech-stack-advisor-modal [embedded]="true" [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
-                } @else if (isDraftReviewOpen()) {
-                  <app-draft-review-modal [embedded]="true" [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
-                } @else {
-                <div class="grid gap-6 lg:grid-cols-[1fr_380px]">
-                  <button type="button" (click)="openAiProjectFlow()" class="group min-h-[360px] rounded-3xl border border-primary/25 bg-surface p-8 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
-                      <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </div>
-                    <h3 class="mt-6 text-2xl font-extrabold text-text-primary font-display">Build from requirements chat</h3>
-                    <p class="mt-3 max-w-xl text-sm leading-7 text-text-secondary">Use the AI flow to clarify scope, finalize the project, review tech stack recommendations, and generate the initial backlog with WBS.</p>
-                    <div class="mt-8 grid gap-3 sm:grid-cols-2">
-                      @for (step of ['Requirements interview', 'Project draft saved', 'Tech stack advisor', 'Backlog generated']; track step) {
-                        <div class="rounded-2xl border border-border bg-sidebar px-4 py-3 text-xs font-bold text-text-primary">{{ step }}</div>
-                      }
-                    </div>
-                    <span class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-white shadow-md transition-colors group-hover:bg-primary-hover">
-                      Start AI flow
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </span>
-                  </button>
-
-                  <aside class="rounded-3xl border border-border bg-sidebar p-6 shadow-sm">
-                    <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-text-secondary">Best for</p>
-                    <div class="mt-5 space-y-4">
-                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Unclear scope</p><p class="mt-1 text-xs leading-5 text-text-secondary">Let the assistant ask clarifying questions before the project exists.</p></div>
-                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Backlog generation</p><p class="mt-1 text-xs leading-5 text-text-secondary">Tech Stack Advisor runs before WBS so tasks match the chosen architecture.</p></div>
-                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Team handoff</p><p class="mt-1 text-xs leading-5 text-text-secondary">The final project opens directly into a backlog your team can refine.</p></div>
-                    </div>
-                  </aside>
-                </div>
-                }
-              } @else {
-                <form (submit)="onCreateProjectSubmit($event)" class="grid gap-6 lg:grid-cols-[1fr_340px]">
-                  <div class="rounded-3xl border border-border bg-surface p-6 shadow-sm">
-                    <div class="grid gap-5 md:grid-cols-2">
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name EN<input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name AR<input type="text" name="projNameAr" required placeholder="&#1605;&#1579;&#1575;&#1604;: &#1578;&#1591;&#1576;&#1610;&#1602; &#1575;&#1604;&#1580;&#1608;&#1575;&#1604;" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description EN<textarea name="projDescEn" required rows="7" placeholder="What will this project deliver?" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description AR<textarea name="projDescAr" required rows="7" placeholder="&#1605;&#1575; &#1575;&#1604;&#1584;&#1610; &#1587;&#1610;&#1602;&#1583;&#1605;&#1607; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1588;&#1585;&#1608;&#1593;&#1567;" dir="rtl" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
-                    </div>
-                    <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-border pt-5">
-                      <button type="button" (click)="currentTab.set('projects')" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
-                      <button type="submit" class="rounded-xl bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-primary-hover">Create project</button>
-                    </div>
-                  </div>
-
-                  <aside class="rounded-3xl border border-border bg-sidebar p-6 shadow-sm">
-                    <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Manual setup</p>
-                    <h3 class="mt-2 text-lg font-extrabold text-text-primary">Keep it lean</h3>
-                    <p class="mt-2 text-sm leading-6 text-text-secondary">Manual projects start empty. After creation, assign team members, confirm stack when needed, and build the backlog from the Backlog tab.</p>
-                    <div class="mt-5 space-y-3 text-xs font-semibold text-text-secondary">
-                      <p class="rounded-2xl bg-surface p-3">Bilingual names and descriptions are stored separately.</p>
-                      <p class="rounded-2xl bg-surface p-3">No WBS is generated until you ask for it.</p>
-                      <p class="rounded-2xl bg-surface p-3">You can switch to the AI path before submitting.</p>
-                    </div>
-                  </aside>
-                </form>
-              }
-              </div>
-            </section>
-          } @else if (currentTab() === 'sprint') {
-            @if (selectedSprintId()) {
-              <app-board 
-                [overrideSprintId]="selectedSprintId()"
-                [overrideSprintStatus]="selectedSprintStatus()"
-                (backToSprints)="onBackToSprints()"
-                (sprintStatusChanged)="onSprintStatusChanged()"
-                (navigateToTeam)="currentTab.set('team')">
-              </app-board>
-            } @else {
-              <app-sprint-list
-                [projectId]="projectState.selectedProjectId()!"
-                [sprints]="cachedSprints()"
-                [isLoading]="isSprintsLoading()"
-                (viewBoard)="onViewBoard($event)">
-              </app-sprint-list>
-            }
-          } @else if (currentTab() === 'sprint-planning') {
-            <app-sprint-planning-view 
-              (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)"
-              (navigateToTeam)="currentTab.set('team')">
-            </app-sprint-planning-view>
-          } @else if (currentTab() === 'backlog') {
-            <app-backlog-view (navigateToTeam)="currentTab.set('team')"></app-backlog-view>
-          } @else if (currentTab() === 'team') {
-            <app-team-view></app-team-view>
-          } @else if (currentTab() === 'profile') {
-            <app-profile-view></app-profile-view>
-          }
+          <router-outlet></router-outlet>
         </main>
         
 
 
         <!-- AI Chat Modal (Floating mode) -->
-        @if (isAiChatOpen()) {
+        @if (dashboardService.isAiChatOpen()) {
           <app-ai-chat-modal 
             [embedded]="false" 
             (close)="onAiChatClose()" 
@@ -484,90 +321,79 @@ import { TranslateService } from '@ngx-translate/core';
         
         <!-- Projects Hub Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('projects')" 
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'projects'"
-                  [class.scale-105]="currentTab() === 'projects'"
-                  [class.text-text-secondary]="currentTab() !== 'projects'">
+          <a routerLink="/dashboard/projects" routerLinkActive="text-primary scale-105" #rlaProjM="routerLinkActive"
+             [class.text-text-secondary]="!rlaProjM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
             </svg>
             <span class="text-[9px] font-bold">Projects</span>
-          </button>
+          </a>
         }
 
         <!-- Sprint Tab -->
-        <button (click)="currentTab.set('sprint')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'sprint'"
-                [class.scale-105]="currentTab() === 'sprint'"
-                [class.text-text-secondary]="currentTab() !== 'sprint'">
+        <a routerLink="/dashboard/sprint" routerLinkActive="text-primary scale-105" #rlaSprintM="routerLinkActive"
+           [class.text-text-secondary]="!rlaSprintM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
           <span class="text-[9px] font-bold">Sprint</span>
-        </button>
+        </a>
 
-        <!-- Sprint Planning Tab (Mobile PM) -->
+        <!-- Sprint Planning (Mobile PM only) -->
         @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('sprint-planning')"
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'sprint-planning'"
-                  [class.scale-105]="currentTab() === 'sprint-planning'"
-                  [class.text-text-secondary]="currentTab() !== 'sprint-planning'">
+          <a routerLink="/dashboard/sprint-planning" routerLinkActive="text-primary scale-105" #rlaSprintPlanM="routerLinkActive"
+             [class.text-text-secondary]="!rlaSprintPlanM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 relative">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <span class="text-[9px] font-bold">Planning</span>
-          </button>
+            <span class="text-[9px] font-bold">Plan</span>
+            <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          </a>
         }
 
         <!-- Backlog Tab -->
-        <button (click)="currentTab.set('backlog')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'backlog'"
-                [class.scale-105]="currentTab() === 'backlog'"
-                [class.text-text-secondary]="currentTab() !== 'backlog'">
+        <a routerLink="/dashboard/backlog" routerLinkActive="text-primary scale-105" #rlaBacklogM="routerLinkActive"
+           [class.text-text-secondary]="!rlaBacklogM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
           <span class="text-[9px] font-bold">Backlog</span>
-        </button>
+        </a>
 
         <!-- Mobile Team Tab -->
         @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('team')" 
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'team'"
-                  [class.scale-105]="currentTab() === 'team'"
-                  [class.text-text-secondary]="currentTab() !== 'team'">
+          <a routerLink="/dashboard/team" routerLinkActive="text-primary scale-105" #rlaTeamM="routerLinkActive"
+             [class.text-text-secondary]="!rlaTeamM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             <span class="text-[9px] font-bold">Team</span>
-          </button>
+          </a>
         }
 
         <!-- Profile Tab -->
-        <button (click)="currentTab.set('profile')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'profile'"
-                [class.scale-105]="currentTab() === 'profile'"
-                [class.text-text-secondary]="currentTab() !== 'profile'">
+        <a routerLink="/dashboard/profile" routerLinkActive="text-primary scale-105" #rlaProfileM="routerLinkActive"
+           [class.text-text-secondary]="!rlaProfileM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           <span class="text-[9px] font-bold">Profile</span>
-        </button>
+        </a>
       </div>
 
     </div>
 
     <!-- Edit Project Modal -->
-    @if (isEditProjectModalOpen()) {
+    @if (dashboardService.isEditProjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
         <div class="bg-surface border border-border rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-bold text-text-primary font-display">Edit Project Details</h3>
-            <button (click)="isEditProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-sidebar rounded-full transition-colors focus:outline-none">
+            <button (click)="dashboardService.isEditProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-sidebar rounded-full transition-colors focus:outline-none">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
@@ -580,9 +406,9 @@ import { TranslateService } from '@ngx-translate/core';
                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
               </div>
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">اسم المشروع (عربي)</label>
                 <input type="text" [(ngModel)]="editNameAr" name="editNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all text-right">
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -592,14 +418,14 @@ import { TranslateService } from '@ngx-translate/core';
                           class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
               </div>
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">الوصف (عربي)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">الوصف (عربي)</label>
                 <textarea [(ngModel)]="editDescAr" name="editDescAr" placeholder="تفاصيل باللغة العربية..." rows="3" required dir="rtl"
-                          class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+                          class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all text-right"></textarea>
               </div>
             </div>
 
             <div class="flex justify-end gap-3 pt-3">
-              <button type="button" (click)="isEditProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-sidebar font-semibold text-sm transition-colors">
+              <button type="button" (click)="dashboardService.isEditProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-sidebar font-semibold text-sm transition-colors">
                 Cancel
               </button>
               <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
@@ -611,14 +437,12 @@ import { TranslateService } from '@ngx-translate/core';
       </div>
     }
 
-    <!-- AI Requirement Chat modal -->
-
     <!-- Project History Modal -->
-    @if (isHistoryModalOpen() && selectedHistoryProject()) {
+    @if (dashboardService.isHistoryModalOpen() && dashboardService.selectedHistoryProject()) {
       <app-project-history-modal 
-        [projectId]="selectedHistoryProject()!.id"
-        [projectName]="getProjectName(selectedHistoryProject()) || 'Project'"
-        [currentStatus]="selectedHistoryProject()!.status"
+        [projectId]="dashboardService.selectedHistoryProject()!.id"
+        [projectName]="getProjectName(dashboardService.selectedHistoryProject()) || 'Project'"
+        [currentStatus]="dashboardService.selectedHistoryProject()!.status"
         (close)="closeHistoryModal()"
         (actionCompleted)="onHistoryActionCompleted()">
       </app-project-history-modal>
@@ -643,6 +467,7 @@ export class DashboardComponent implements OnInit {
 
   private doc = inject(DOCUMENT);
   private tr = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
@@ -650,37 +475,22 @@ export class DashboardComponent implements OnInit {
 
   // Component state
   activeSprintName = signal('No Active Sprint');
-  showManualForm = signal(false);
   isProjectDropdownOpen = signal(false);
 
-  selectedSprintId = signal<string | null>(null);
-  selectedSprintStatus = signal<string | null>(null);
-  cachedSprints = signal<SprintListItem[]>([]);
-  isSprintsLoading = signal(true);
-
-  // Status History Modal state
-  isHistoryModalOpen = signal(false);
-  selectedHistoryProject = signal<{ id: string, nameEn: string, nameAr?: string, status: string } | null>(null);
+  // Eager project statistics Map
+  projectStatsMap = signal<Map<string, ProjectStats>>(new Map());
 
   // Edit Project properties
-  isEditProjectModalOpen = signal(false);
-  selectedEditProjectId = signal('');
   editNameEn = '';
   editNameAr = '';
   editDescEn = '';
   editDescAr = '';
 
-  // Eager project statistics Map
-  projectStatsMap = signal<Map<string, ProjectStats>>(new Map());
 
   // AI Project creation signals
-  isAiChatOpen = signal(false);
-  isDraftReviewOpen = signal(false);
-  aiDraft = signal<any>(null);
-  chatId = signal<string>('');
-  isTechStackAdvisorOpen = signal(false);
-  advisorProjectId = signal<string | null>(null);
 
+
+  public dashboardService = inject(DashboardService);
   public projectState = inject(ProjectStateService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
@@ -694,6 +504,18 @@ export class DashboardComponent implements OnInit {
   }
 
   constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      const url = event.urlAfterRedirects || event.url;
+      // Extract the last segment of the dashboard route
+      const segments = url.split('?')[0].split('/');
+      let tab = segments.pop() || 'projects';
+      if (tab === 'dashboard') tab = 'projects';
+      
+      this.currentTab.set(tab as any);
+    });
+
     // Reactively update sprint name whenever selected project ID changes
     effect(() => {
       const projId = this.projectState.selectedProjectId();
@@ -710,7 +532,7 @@ export class DashboardComponent implements OnInit {
       const projects = this.projectState.projects();
       if (tab === 'projects' && projects.length > 0) {
         untracked(() => {
-          this.loadAllProjectStats();
+          this.dashboardService.loadAllProjectStats();
         });
       }
     });
@@ -722,31 +544,29 @@ export class DashboardComponent implements OnInit {
       const initialized = !this.projectState.loading();
       if (initialized && isPM && projCount === 0) {
         untracked(() => {
-          this.currentTab.set('create-project');
-          this.isAiChatOpen.set(false);
-          this.showManualForm.set(false);
+          this.router.navigate(['/dashboard', 'create-project']);
         });
       }
     });
 
+    // Populate edit modal fields when opened from a child routed component
     effect(() => {
-      const projectId = this.projectState.selectedProjectId();
-      untracked(() => {
-        const returnSprintId = this.route.snapshot.queryParamMap.get('sprintId');
-        const returnSprintStatus = this.route.snapshot.queryParamMap.get('sprintStatus');
-
-        if (projectId && returnSprintId) {
-          this.selectedSprintId.set(returnSprintId);
-          this.selectedSprintStatus.set(returnSprintStatus || 'Planned');
-        } else {
-          this.selectedSprintId.set(null);
-          this.selectedSprintStatus.set(null);
-        }
-        this.loadSprints();
-      });
+      const isOpen = this.dashboardService.isEditProjectModalOpen();
+      const projectId = this.dashboardService.selectedEditProjectId();
+      if (isOpen && projectId) {
+        untracked(() => {
+          const proj = this.projectState.projects().find(p => p.id === projectId);
+          if (proj) {
+            this.editNameEn = proj.nameEn || '';
+            this.editNameAr = proj.nameAr || '';
+            this.editDescEn = proj.descriptionEn || proj.description || '';
+            this.editDescAr = proj.descriptionAr || proj.description || '';
+            this.cdr.markForCheck();
+          }
+        });
+      }
     });
   }
-
   ngOnInit() {
     const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar';
     if (savedLang) {
@@ -799,62 +619,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  async loadAllProjectStats() {
-    const projects = this.projectState.projects();
-    const currentMap = new Map(this.projectStatsMap());
 
-    // Set initial loading state keys
-    let updated = false;
-    for (const p of projects) {
-      if (!currentMap.has(p.id)) {
-        currentMap.set(p.id, { activeSprint: 'Loading...', memberCount: 0, taskCount: 0, loading: true });
-        updated = true;
-      }
-    }
-    if (updated) {
-      this.projectStatsMap.set(currentMap);
-    }
-
-    // Fire API requests in parallel using Promise.allSettled
-    const promises = projects.map(async (p) => {
-      const stats: ProjectStats = { activeSprint: 'No Active Sprint', memberCount: 0, taskCount: 0, loading: false };
-
-      try {
-        const [sprintRes, employeesRes, backlogRes] = await Promise.allSettled([
-          apiClient.get<any>(`/projects/${p.id}/sprints/active`),
-          apiClient.get<any>(`/projects/${p.id}/employees`),
-          apiClient.get<any>(`/projects/${p.id}/backlog`)
-        ]);
-
-        if (sprintRes.status === 'fulfilled' && sprintRes.value.data?.data) {
-          const sprintData = sprintRes.value.data.data;
-          stats.activeSprint = `${sprintData.titleEn || sprintData.title || ''} Active`;
-        }
-        if (employeesRes.status === 'fulfilled' && employeesRes.value.data?.data) {
-          stats.memberCount = employeesRes.value.data.data.length || 0;
-        }
-        if (backlogRes.status === 'fulfilled' && backlogRes.value.data?.data) {
-          const stories = backlogRes.value.data.data.userStories || [];
-          let totalTasks = 0;
-          for (const story of stories) {
-            totalTasks += (story.tasks || []).length;
-          }
-          stats.taskCount = totalTasks;
-        }
-      } catch (err) {
-        console.warn('Failed to load stats for project:', p.id, err);
-      }
-
-      return { id: p.id, stats };
-    });
-
-    const results = await Promise.all(promises);
-    const newMap = new Map(this.projectStatsMap());
-    for (const res of results) {
-      newMap.set(res.id, res.stats);
-    }
-    this.projectStatsMap.set(newMap);
-  }
 
   onProjectSelect(event: Event) {
     const select = event.target as HTMLSelectElement;
@@ -862,39 +627,27 @@ export class DashboardComponent implements OnInit {
   }
 
   openCreateProjectPage() {
-    this.showManualForm.set(false);
-    this.currentTab.set('create-project');
-  }
-
-  openAiProjectFlow() {
-    this.showManualForm.set(false);
-    this.currentTab.set('create-project');
-    this.isAiChatOpen.set(true);
+    this.router.navigate(['/dashboard', 'create-project']);
   }
 
   onAiChatClose() {
-    this.isAiChatOpen.set(false);
+    this.dashboardService.isAiChatOpen.set(false);
   }
 
   async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
-    this.isAiChatOpen.set(false);
-    this.aiDraft.set(event.draft);
-    this.chatId.set(event.chatId);
-    this.advisorProjectId.set(event.projectId);
-    this.isTechStackAdvisorOpen.set(true);
+    this.dashboardService.isAiChatOpen.set(false);
     await this.projectState.loadProjects();
     this.projectState.setSelectedProject(event.projectId);
   }
 
   onTechStackAdvisorClose() {
-    this.isTechStackAdvisorOpen.set(false);
-    this.advisorProjectId.set(null);
+    this.dashboardService.advisorProjectId.set(null);
   }
 
   async onTechStackAdvisorCompleted(projectId: string) {
     try {
-      this.isTechStackAdvisorOpen.set(false);
-      this.advisorProjectId.set(null);
+      this.dashboardService.isTechStackAdvisorOpen.set(false);
+      this.dashboardService.advisorProjectId.set(null);
       await this.projectState.loadProjects();
       this.projectState.setSelectedProject(projectId);
       this.toastService.show('Project created successfully', 'success');
@@ -903,64 +656,32 @@ export class DashboardComponent implements OnInit {
       this.toastService.show('Error finalizing project setup', 'error');
     } finally {
       this.currentTab.set('projects');
-      this.loadAllProjectStats();
+      this.dashboardService.loadAllProjectStats();
     }
   }
 
   onProjectSaved() {
-    this.isDraftReviewOpen.set(false);
+    this.dashboardService.isDraftReviewOpen.set(false);
     this.projectState.loadProjects();
   }
 
-  async onCreateProjectSubmit(event: Event) {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
-    const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
-    const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
-    const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    try {
-      const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
-      if (success) {
-        this.toastService.show('Project created successfully', 'success');
-        this.showManualForm.set(false);
-        this.currentTab.set('projects');
-        form.reset();
-        this.loadAllProjectStats();
-      } else {
-        this.toastService.show('Failed to create project', 'error');
-      }
-    } catch (e) {
-      console.error('Project creation error:', e);
-      this.toastService.show('Error creating project', 'error');
-    }
-  }
-
-  openEditProjectModal(projectId: string) {
-    const proj = this.projectState.projects().find(p => p.id === projectId);
-    if (proj) {
-      this.selectedEditProjectId.set(projectId);
-      this.editNameEn = proj.nameEn || '';
-      this.editNameAr = proj.nameAr || '';
-      this.editDescEn = proj.descriptionEn || proj.description || '';
-      this.editDescAr = proj.descriptionAr || proj.description || '';
-      this.isEditProjectModalOpen.set(true);
-    }
-  }
 
   async onEditProjectSubmit(event: Event) {
     event.preventDefault();
+    const projectId = this.dashboardService.selectedEditProjectId();
+    if (!projectId) return;
+
     const success = await this.projectState.updateProject(
-      this.selectedEditProjectId(),
+      projectId,
       this.editNameEn,
       this.editNameAr,
       this.editDescEn,
       this.editDescAr
     );
     if (success) {
-      this.isEditProjectModalOpen.set(false);
-      this.loadAllProjectStats();
+      this.dashboardService.isEditProjectModalOpen.set(false);
+      this.dashboardService.loadAllProjectStats();
     }
   }
 
@@ -984,7 +705,7 @@ export class DashboardComponent implements OnInit {
     const success = await this.projectState.deleteProject(projectId);
     if (success) {
       this.toastService.show('Project deleted successfully', 'success');
-      this.loadAllProjectStats();
+      this.dashboardService.loadAllProjectStats();
     } else {
       this.toastService.show('Failed to delete project. Please try again.', 'error');
     }
@@ -993,25 +714,25 @@ export class DashboardComponent implements OnInit {
   async onToggleProjectStatus(projectId: string) {
     const p = this.projectState.projects().find(x => x.id === projectId);
     if (p) {
-      this.selectedHistoryProject.set({
+      this.dashboardService.selectedHistoryProject.set({
         id: p.id,
         nameEn: p.nameEn || 'Project',
         nameAr: p.nameAr,
         status: p.status || 'Active'
       });
-      this.isHistoryModalOpen.set(true);
+      this.dashboardService.isHistoryModalOpen.set(true);
     }
   }
 
   closeHistoryModal() {
-    this.isHistoryModalOpen.set(false);
-    this.selectedHistoryProject.set(null);
+    this.dashboardService.isHistoryModalOpen.set(false);
+    this.dashboardService.selectedHistoryProject.set(null);
   }
 
   onHistoryActionCompleted() {
     this.closeHistoryModal();
     this.toastService.show('Project status updated successfully', 'success');
-    this.loadAllProjectStats();
+    this.dashboardService.loadAllProjectStats();
   }
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {
@@ -1041,48 +762,7 @@ export class DashboardComponent implements OnInit {
     this.themeService.toggle();
   }
 
-  onViewBoard(event: { sprintId: string; sprintStatus: string }): void {
-    this.selectedSprintId.set(event.sprintId);
-    this.selectedSprintStatus.set(event.sprintStatus);
-  }
 
-  onBackToSprints(): void {
-    this.selectedSprintId.set(null);
-    this.selectedSprintStatus.set(null);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        sprintId: null,
-        sprintStatus: null
-      },
-      queryParamsHandling: 'merge',
-      replaceUrl: true
-    });
-    this.loadSprints();
-  }
-
-  async loadSprints(): Promise<void> {
-    const projectId = this.projectState.selectedProjectId();
-    if (!projectId) return;
-    this.isSprintsLoading.set(true);
-    const sprints = await this.sprintService.getAllSprints(projectId);
-    this.cachedSprints.set(sprints);
-    this.isSprintsLoading.set(false);
-  }
-
-  async onSprintStatusChanged(): Promise<void> {
-    await this.loadSprints();
-    // Find the updated status for the currently viewed sprint
-    const currentId = this.selectedSprintId();
-    if (currentId) {
-      const updated = this.cachedSprints().find(
-        s => s.sprintId === currentId
-      );
-      if (updated) {
-        this.selectedSprintStatus.set(updated.status);
-      }
-    }
-  }
 
   setLanguage(lang: 'en' | 'ar') {
     this.currentLang.set(lang);

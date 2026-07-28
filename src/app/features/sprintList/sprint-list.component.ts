@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintListItem } from '../../shared/api/sprint-planning.service';
 import { ProjectStateService } from '../../shared/services/project-state.service';
 
+import { TranslatePipe } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-sprint-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './sprint-list.component.html'
 })
 export class SprintListComponent implements OnInit {
