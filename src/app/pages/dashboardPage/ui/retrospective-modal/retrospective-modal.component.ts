@@ -404,6 +404,7 @@ export class RetrospectiveModalComponent implements OnInit {
       improvements: raw.improvements || [],
       partiallyCompletedStories: raw.partiallyCompletedStories || []
     };
+  });
 
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';
