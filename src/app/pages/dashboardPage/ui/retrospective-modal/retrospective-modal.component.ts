@@ -359,24 +359,24 @@ export class RetrospectiveModalComponent implements OnInit {
     const estimationAccuracy = raw.estimationAccuracy ?? (totalEstimatedHours > 0 ? Math.min(100, Math.round((totalActualHours / totalEstimatedHours) * 100)) : 100);
     const developerBreakdowns = metrics?.developerMetrics ?? raw.developerBreakdowns ?? [];
 
-    const whatWentWellEn = Array.isArray(analysis?.whatWentWellEn)
-      ? analysis.whatWentWellEn.join('\n• ')
-      : (analysis?.whatWentWellEn || (typeof raw.whatWentWellEn === 'string' ? raw.whatWentWellEn : ''));
+    const cleanStr = (val: any): string => {
+      if (!val) return '';
+      if (Array.isArray(val)) {
+        val = val.filter(Boolean).join('\n• ');
+      }
+      if (typeof val !== 'string') return '';
+      const trimmed = val.replace(/^["'\s]+|["'\s]+$/g, '').trim();
+      return (trimmed === '""' || trimmed === "''" || trimmed.toLowerCase() === 'n/a') ? '' : trimmed;
+    };
 
-    const whatWentWellAr = Array.isArray(analysis?.whatWentWellAr)
-      ? analysis.whatWentWellAr.join('\n• ')
-      : (analysis?.whatWentWellAr || (typeof raw.whatWentWellAr === 'string' ? raw.whatWentWellAr : ''));
-
-    const challengesEn = Array.isArray(analysis?.challengesEn)
-      ? analysis.challengesEn.join('\n• ')
-      : (analysis?.challengesEn || (typeof raw.challengesEn === 'string' ? raw.challengesEn : ''));
-
-    const challengesAr = Array.isArray(analysis?.challengesAr)
-      ? analysis.challengesAr.join('\n• ')
-      : (analysis?.challengesAr || (typeof raw.challengesAr === 'string' ? raw.challengesAr : ''));
-
-    const teamSentimentSummaryEn = analysis?.teamSentiment || raw.teamSentimentSummaryEn || '';
-    const teamSentimentSummaryAr = analysis?.summaryAr || raw.teamSentimentSummaryAr || '';
+    const whatWentWellEn = cleanStr(analysis?.whatWentWellEn ?? raw.whatWentWellEn);
+    const whatWentWellAr = cleanStr(analysis?.whatWentWellAr ?? raw.whatWentWellAr);
+    const challengesEn = cleanStr(analysis?.challengesEn ?? raw.challengesEn);
+    const challengesAr = cleanStr(analysis?.challengesAr ?? raw.challengesAr);
+    const teamSentimentSummaryEn = cleanStr(analysis?.teamSentiment ?? raw.teamSentimentSummaryEn);
+    const teamSentimentSummaryAr = cleanStr(analysis?.summaryAr ?? raw.teamSentimentSummaryAr);
+    const actionItemsEn = cleanStr(raw.actionItemsEn);
+    const actionItemsAr = cleanStr(raw.actionItemsAr);
 
     return {
       sprintId: raw.sprintId,
@@ -399,12 +399,11 @@ export class RetrospectiveModalComponent implements OnInit {
       challengesAr,
       teamSentimentSummaryEn,
       teamSentimentSummaryAr,
-      actionItemsEn: raw.actionItemsEn,
-      actionItemsAr: raw.actionItemsAr,
+      actionItemsEn,
+      actionItemsAr,
       improvements: raw.improvements || [],
       partiallyCompletedStories: raw.partiallyCompletedStories || []
     };
-  });
 
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';
