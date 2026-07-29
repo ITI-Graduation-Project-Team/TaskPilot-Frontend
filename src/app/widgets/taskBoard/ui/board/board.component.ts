@@ -232,7 +232,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </button>
             }
             @if (projectState.isProjectManager() && sprintStatus() === 'Completed') {
-              <button (click)="isRetroModalOpen.set(true)" 
+              <button (click)="openRetrospectivePage()" 
                       class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 📋 Sprint Retro
               </button>
@@ -934,6 +934,15 @@ export class BoardComponent implements OnInit, OnChanges {
   sprintStatus = signal<string | null>(null);
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
+
+  openRetrospectivePage() {
+    const sId = this.activeSprintId() || this.completedSprintId();
+    if (sId) {
+      this.router.navigate(['/dashboard', 'retrospective'], { queryParams: { sprintId: sId } });
+    } else {
+      this.router.navigate(['/dashboard', 'retrospective']);
+    }
+  }
 
   chatTask = signal<TaskItemDto | null>(null);
 

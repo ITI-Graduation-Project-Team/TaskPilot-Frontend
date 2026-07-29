@@ -9,6 +9,7 @@ import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-mo
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
+import { RetrospectiveViewComponent } from '../retrospective-view/retrospective-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
@@ -43,6 +44,7 @@ import { TranslateService } from '@ngx-translate/core';
     ProjectHubComponent,
     ProjectHistoryModalComponent,
     SprintPlanningViewComponent,
+    RetrospectiveViewComponent,
     SprintListComponent,
     NotificationBellComponent
   ],
@@ -71,7 +73,7 @@ import { TranslateService } from '@ngx-translate/core';
                 <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="getSprintName(sp)">
                   📁 {{ getSprintName(sp) }}
                 </span>
-                <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
+                <button (click)="navigateToTab('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
                   Switch
                 </button>
               </div>
@@ -83,7 +85,7 @@ import { TranslateService } from '@ngx-translate/core';
         <nav class="flex-1 space-y-1.5">
           <!-- All Projects Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <a (click)="currentTab.set('projects')"
+            <a (click)="navigateToTab('projects')"
                [class.bg-primary/10]="currentTab() === 'projects'"
                [class.text-primary]="currentTab() === 'projects'"
                [class.font-bold]="currentTab() === 'projects'"
@@ -100,7 +102,7 @@ import { TranslateService } from '@ngx-translate/core';
             </a>
           }
 
-          <a (click)="currentTab.set('sprint')"
+          <a (click)="navigateToTab('sprint')"
              [class.bg-primary/10]="currentTab() === 'sprint'"
              [class.text-primary]="currentTab() === 'sprint'"
              [class.font-bold]="currentTab() === 'sprint'"
@@ -115,7 +117,7 @@ import { TranslateService } from '@ngx-translate/core';
             </svg>
             Sprints
           </a>
-          <a (click)="currentTab.set('backlog')"
+          <a (click)="navigateToTab('backlog')"
              [class.bg-primary/10]="currentTab() === 'backlog'"
              [class.text-primary]="currentTab() === 'backlog'"
              [class.font-bold]="currentTab() === 'backlog'"
@@ -132,7 +134,7 @@ import { TranslateService } from '@ngx-translate/core';
           </a>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
-            <a (click)="currentTab.set('sprint-planning')"
+            <a (click)="navigateToTab('sprint-planning')"
                [class.bg-primary/10]="currentTab() === 'sprint-planning'"
                [class.text-primary]="currentTab() === 'sprint-planning'"
                [class.font-bold]="currentTab() === 'sprint-planning'"
@@ -150,8 +152,26 @@ import { TranslateService } from '@ngx-translate/core';
             </a>
           }
 
+          <!-- Retrospective Tab -->
+          <a (click)="navigateToTab('retrospective')"
+             [class.bg-primary/10]="currentTab() === 'retrospective'"
+             [class.text-primary]="currentTab() === 'retrospective'"
+             [class.font-bold]="currentTab() === 'retrospective'"
+             [class.shadow-sm]="currentTab() === 'retrospective'"
+             [class.text-text-secondary]="currentTab() !== 'retrospective'"
+             [class.hover:text-text-primary]="currentTab() !== 'retrospective'"
+             [class.hover:bg-primary/5]="currentTab() !== 'retrospective'"
+             [class.font-medium]="currentTab() !== 'retrospective'"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Retrospective
+            <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+          </a>
+
           @if (projectState.isProjectManager()) {
-            <a (click)="currentTab.set('team')"
+            <a (click)="navigateToTab('team')"
                [class.bg-primary/10]="currentTab() === 'team'"
                [class.text-primary]="currentTab() === 'team'"
                [class.font-bold]="currentTab() === 'team'"
@@ -165,7 +185,7 @@ import { TranslateService } from '@ngx-translate/core';
               Project Team
             </a>
           }
-          <a (click)="currentTab.set('profile')"
+          <a (click)="navigateToTab('profile')"
              [class.bg-primary/10]="currentTab() === 'profile'"
              [class.text-primary]="currentTab() === 'profile'"
              [class.font-bold]="currentTab() === 'profile'"
@@ -184,7 +204,7 @@ import { TranslateService } from '@ngx-translate/core';
 
         <!-- Footer / Profile Quick view & Dark mode -->
         <div class="border-t border-border pt-6 mt-6 space-y-4">
-          <div (click)="currentTab.set('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
+          <div (click)="navigateToTab('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
             <div class="w-9 h-9 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">
               {{ userInitial() }}
             </div>
@@ -211,16 +231,24 @@ import { TranslateService } from '@ngx-translate/core';
                 My Profile
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="navigateToTab('projects')">All Projects</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
                 <span class="text-text-secondary font-light">/</span>
                 Sprint Planning
+              } @else if (currentTab() === 'retrospective') {
+                @if (projectState.isProjectManager()) {
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="navigateToTab('projects')">All Projects</span>
+                  <span class="text-text-secondary font-light">/</span>
+                }
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
+                <span class="text-text-secondary font-light">/</span>
+                Retrospective
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="navigateToTab('projects')">All Projects</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
@@ -356,7 +384,7 @@ import { TranslateService } from '@ngx-translate/core';
             <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
               <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
                 <div>
-                  <button type="button" (click)="currentTab.set('projects')" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
+                  <button type="button" (click)="navigateToTab('projects')" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                     Back to projects
                   </button>
@@ -412,12 +440,12 @@ import { TranslateService } from '@ngx-translate/core';
                   <div class="rounded-3xl border border-border bg-surface p-6 shadow-sm">
                     <div class="grid gap-5 md:grid-cols-2">
                       <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name EN<input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name AR<input type="text" name="projNameAr" required placeholder="&#1605;&#1579;&#1575;&#1604;: &#1578;&#1591;&#1576;&#1610;&#1602; &#1575;&#1604;&#1580;&#1608;&#1575;&#1604;" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
+                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name AR<input type="text" name="projNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
                       <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description EN<textarea name="projDescEn" required rows="7" placeholder="What will this project deliver?" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description AR<textarea name="projDescAr" required rows="7" placeholder="&#1605;&#1575; &#1575;&#1604;&#1584;&#1610; &#1587;&#1610;&#1602;&#1583;&#1605;&#1607; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1588;&#1585;&#1608;&#1593;&#1567;" dir="rtl" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
+                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description AR<textarea name="projDescAr" required rows="7" placeholder="ما الذي سيقدمه هذا المشروع؟" dir="rtl" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
                     </div>
                     <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-border pt-5">
-                      <button type="button" (click)="currentTab.set('projects')" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
+                      <button type="button" (click)="navigateToTab('projects')" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
                       <button type="submit" class="rounded-xl bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-primary-hover">Create project</button>
                     </div>
                   </div>
@@ -443,7 +471,7 @@ import { TranslateService } from '@ngx-translate/core';
                 [overrideSprintStatus]="selectedSprintStatus()"
                 (backToSprints)="onBackToSprints()"
                 (sprintStatusChanged)="onSprintStatusChanged()"
-                (navigateToTeam)="currentTab.set('team')">
+                (navigateToTeam)="navigateToTab('team')">
               </app-board>
             } @else {
               <app-sprint-list
@@ -455,11 +483,13 @@ import { TranslateService } from '@ngx-translate/core';
             }
           } @else if (currentTab() === 'sprint-planning') {
             <app-sprint-planning-view 
-              (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)"
-              (navigateToTeam)="currentTab.set('team')">
+              (sprintConfirmed)="navigateToTab('sprint'); loadActiveSprint(projectState.selectedProjectId()!)"
+              (navigateToTeam)="navigateToTab('team')">
             </app-sprint-planning-view>
+          } @else if (currentTab() === 'retrospective') {
+            <app-retrospective-view></app-retrospective-view>
           } @else if (currentTab() === 'backlog') {
-            <app-backlog-view (navigateToTeam)="currentTab.set('team')"></app-backlog-view>
+            <app-backlog-view (navigateToTeam)="navigateToTab('team')"></app-backlog-view>
           } @else if (currentTab() === 'team') {
             <app-team-view></app-team-view>
           } @else if (currentTab() === 'profile') {
@@ -646,7 +676,12 @@ export class DashboardComponent implements OnInit {
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile'>('sprint');
+
+  navigateToTab(tab: 'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile') {
+    this.currentTab.set(tab);
+    this.router.navigate(['/dashboard', tab], { queryParamsHandling: 'preserve' });
+  }
 
   // Component state
   activeSprintName = signal('No Active Sprint');
@@ -748,6 +783,13 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab && ['projects', 'create-project', 'sprint', 'sprint-planning', 'retrospective', 'backlog', 'team', 'profile'].includes(tab)) {
+        this.currentTab.set(tab as any);
+      }
+    });
+
     const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar';
     if (savedLang) {
       this.currentLang.set(savedLang);
