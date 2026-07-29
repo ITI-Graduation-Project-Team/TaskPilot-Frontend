@@ -515,6 +515,9 @@
     "VIEW_BOARD": "عرض اللوحة"
   },
   "BOARD": {
+    "ACCEPT": "قبول",
+    "REJECT": "رفض",
+    "REOPEN": "إعادة فتح",
     "LOADING_BACKLOG": "جاري تحميل قائمة المهام...",
     "NO_ACTIVE_PROJECT": "لا يوجد مشروع نشط",
     "NO_ACTIVE_PROJECT_DESC": "الرجاء اختيار مشروع.",

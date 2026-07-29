@@ -130,7 +130,7 @@ export class TasksService {
     return data.data || data;
   }
 
-  async addAttachment(taskId: string, file: File, lang: string = 'en'): Promise<TaskAttachmentDto> {
+    async addAttachment(taskId: string, file: File, lang: string = 'en'): Promise<TaskAttachmentDto> {
     const formData = new FormData();
     formData.append('file', file);
     const { data } = await apiClient.post<any>(`/tasks/${taskId}/attachments`, formData, {
@@ -138,6 +138,22 @@ export class TasksService {
         'Content-Type': 'multipart/form-data',
         'lang': lang
       }
+    });
+    return data.data || data;
+  }
+
+  async pmRejectReview(taskId: string, reasonEn: string, reasonAr?: string): Promise<any> {
+    const { data } = await apiClient.post<any>(`/tasks/${taskId}/reject-review`, {
+      reasonEn,
+      reasonAr
+    });
+    return data.data || data;
+  }
+
+  async pmReopenTask(taskId: string, reasonEn: string, reasonAr?: string): Promise<any> {
+    const { data } = await apiClient.post<any>(`/tasks/${taskId}/reopen`, {
+      reasonEn,
+      reasonAr
     });
     return data.data || data;
   }
