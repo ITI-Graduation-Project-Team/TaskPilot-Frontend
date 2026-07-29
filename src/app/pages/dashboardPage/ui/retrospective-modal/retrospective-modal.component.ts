@@ -265,7 +265,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                       {{ currentLang === 'ar' ? 'ما تم إنجازه بنجاح' : 'What Went Well' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn }}
+                      {{ currentLang === 'ar' ? (activeRetro()?.whatWentWellAr || activeRetro()?.whatWentWellEn) : (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) }}
                     </p>
                   </div>
                 }
@@ -276,7 +276,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                       {{ currentLang === 'ar' ? 'التحديات والعقبات' : 'Challenges & Blockers' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn }}
+                      {{ currentLang === 'ar' ? (activeRetro()?.challengesAr || activeRetro()?.challengesEn) : (activeRetro()?.challengesEn || activeRetro()?.challengesAr) }}
                     </p>
                   </div>
                 }
@@ -287,7 +287,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                       {{ currentLang === 'ar' ? 'خطوات العمل القادمة' : 'Action Items' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn }}
+                      {{ currentLang === 'ar' ? (activeRetro()?.actionItemsAr || activeRetro()?.actionItemsEn) : (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) }}
                     </p>
                   </div>
                 }
@@ -298,7 +298,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                   </h4>
                   @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
                     <p class="text-xs text-text-primary leading-relaxed font-medium italic">
-                      "{{ currentLang === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn }}"
+                      "{{ currentLang === 'ar' ? (activeRetro()?.teamSentimentSummaryAr || activeRetro()?.teamSentimentSummaryEn) : (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) }}"
                     </p>
                   } @else {
                     <p class="text-xs text-text-secondary leading-relaxed font-normal opacity-75 italic">
@@ -365,8 +365,12 @@ export class RetrospectiveModalComponent implements OnInit {
         val = val.filter(Boolean).join('\n• ');
       }
       if (typeof val !== 'string') return '';
-      const trimmed = val.replace(/^["'\s]+|["'\s]+$/g, '').trim();
-      return (trimmed === '""' || trimmed === "''" || trimmed.toLowerCase() === 'n/a') ? '' : trimmed;
+      let trimmed = val.replace(/^["'\s]+|["'\s]+$/g, '').trim();
+      const lowerTrimmed = trimmed.toLowerCase();
+      if (trimmed === '""' || trimmed === "''" || lowerTrimmed === 'n/a' || trimmed === '-' || trimmed === '[]' || trimmed === '{}' || lowerTrimmed === 'null' || lowerTrimmed === 'undefined') {
+        return '';
+      }
+      return trimmed;
     };
 
     const whatWentWellEn = cleanStr(analysis?.whatWentWellEn ?? raw.whatWentWellEn);
