@@ -67,41 +67,13 @@
       <!-- SUMMARY STATE -->
       @if (summary() && !isLoading()) {
         <div class="space-y-5">
-          <!-- Codebase Notes -->
+          <!-- Summary Content -->
           <div class="p-4 bg-sidebar border border-border rounded-2xl">
-            <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">Codebase Notes</h4>
-            <p class="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{{ summary()?.codebaseNotes }}</p>
+            <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">Task Summary</h4>
+            <p class="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{{ summary()?.content }}</p>
           </div>
 
-          <!-- Related Past Tasks -->
-          <div class="p-4 bg-sidebar border border-border rounded-2xl">
-            <h4 class="text-xs font-bold text-success uppercase tracking-wider mb-1.5">Related Past Tasks</h4>
-            <p class="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{{ summary()?.relatedPastTasks }}</p>
-          </div>
 
-          <!-- Tech Stack Context -->
-          <div class="p-4 bg-sidebar border border-border rounded-2xl">
-            <h4 class="text-xs font-bold text-info uppercase tracking-wider mb-1.5">Tech Stack Context</h4>
-            <p class="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{{ summary()?.techStackContext }}</p>
-          </div>
-
-          <!-- Suggested Implementation Guidance -->
-          <div class="p-4 bg-sidebar border border-border rounded-2xl">
-            <h4 class="text-xs font-bold text-warning uppercase tracking-wider mb-1.5">Suggested Implementation Guidance</h4>
-            <p class="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{{ summary()?.suggestedImplementationGuidance }}</p>
-          </div>
-
-          <!-- CITATION CHIPS ROW -->
-          @if (summary()?.citations?.length) {
-            <div class="pt-2 border-t border-border">
-              <h4 class="text-xs font-bold text-text-secondary mb-2">Sources</h4>
-              <div class="flex flex-col gap-2">
-                @for (citation of summary()!.citations; track citation.sourceDocument) {
-                  <app-citation-chip [citation]="citation" />
-                }
-              </div>
-            </div>
-          }
 
           <!-- FOOTER ROW -->
           <div class="pt-4 flex justify-end">

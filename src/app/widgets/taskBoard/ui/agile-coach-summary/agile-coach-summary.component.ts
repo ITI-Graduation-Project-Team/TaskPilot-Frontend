@@ -2,13 +2,11 @@ import { Component, ChangeDetectionStrategy, signal, inject, input, output, OnIn
 import { AgileCoachService } from '../../../../shared/api/agile-coach.service';
 import { AgileCoachSummaryResponse } from '../../../../shared/models/agile-coach.models';
 import { ToastService } from '../../../../shared/services/toast.service';
-import { CitationChipComponent } from '../../../../shared/ui/citation-chip/citation-chip.component';
-
 @Component({
   selector: 'app-agile-coach-summary',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CitationChipComponent],
+  imports: [],
   templateUrl: './agile-coach-summary.component.html',
   styleUrls: ['./agile-coach-summary.component.scss']
 })

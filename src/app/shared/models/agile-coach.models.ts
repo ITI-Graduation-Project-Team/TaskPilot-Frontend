@@ -1,24 +1,18 @@
-export interface CitationDto {
-  sourceDocument: string;
-  sourceDocumentDisplayName: string;
-  chunkExcerpt: string;
-}
 
 export interface AgileCoachSummaryResponse {
   id: string;
   taskItemId: string;
-  codebaseNotes: string;
-  relatedPastTasks: string;
-  techStackContext: string;
-  suggestedImplementationGuidance: string;
-  citations: CitationDto[];
+  content: string;
   generatedAt: string;
   isNewlyGenerated: boolean;
 }
 
 export interface ChatMessage {
+  id?: string;
   role: 'user' | 'assistant';
   content: string;
+  lang?: string;
+  createdAt?: string;
 }
 
 export interface AgileCoachChatRequest {

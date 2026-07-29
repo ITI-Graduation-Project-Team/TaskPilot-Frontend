@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, input, output, OnDe
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgileCoachService } from '../../../../shared/api/agile-coach.service';
-import { ChatMessage, CitationDto, AgileCoachChatRequest } from '../../../../shared/models/agile-coach.models';
+import { ChatMessage, AgileCoachChatRequest } from '../../../../shared/models/agile-coach.models';
 
 @Component({
   selector: 'app-agile-coach-chat',
@@ -29,7 +29,7 @@ export class AgileCoachChatComponent implements OnDestroy {
   isLoadingSummary = signal(false);
   summaryFailed = signal(false);
   summaryAttempted = signal(false); // ← tracks if we already tried (prevents infinite loop)
-  citations = signal<CitationDto[]>([]);
+  summary = signal<{ content: string } | null>(null);
   inputText = signal<string>('');
 
   private abortStream?: () => void;
@@ -43,8 +43,8 @@ export class AgileCoachChatComponent implements OnDestroy {
     effect(async () => {
       if (this.isOpen()) {
         // Only attempt once — summaryAttempted prevents infinite re-runs on failure
-        if (this.loadInitialSummary() && !this.summaryAttempted() && !this.isLoadingSummary()) {
-          await this.loadSummary();
+        if (!this.summaryAttempted() && !this.isLoadingSummary()) {
+          await this.loadHistory();
         }
       } else {
         this.abortStream?.();
@@ -60,26 +60,42 @@ export class AgileCoachChatComponent implements OnDestroy {
   async retryLoadSummary(): Promise<void> {
     this.summaryAttempted.set(false); // allow retry
     this.summaryFailed.set(false);
-    await this.loadSummary();
+    await this.loadHistory();
+  }
+
+  private async loadHistory(): Promise<void> {
+    try {
+      this.isLoadingSummary.set(true);
+      this.summaryAttempted.set(true);
+      this.summaryFailed.set(false);
+
+      const history = await this.agileCoachService.getChatHistory(this.taskItemId());
+      
+      if (this.loadInitialSummary()) {
+        await this.loadSummary();
+      }
+
+      if (history && history.length > 0) {
+        this.messages.set(history);
+        this.scrollToBottom();
+      }
+    } catch {
+      this.summaryFailed.set(true);
+    } finally {
+      this.isLoadingSummary.set(false);
+    }
   }
 
   private async loadSummary(): Promise<void> {
     try {
       this.isLoadingSummary.set(true);
-      this.summaryAttempted.set(true); // mark attempted immediately
       this.summaryFailed.set(false);
 
       const summaryRes = await this.agileCoachService.getSummary(this.taskItemId());
 
-      const parts: string[] = [];
-      if (summaryRes.codebaseNotes) parts.push(`**Codebase Notes:**\n${summaryRes.codebaseNotes}`);
-      if (summaryRes.relatedPastTasks) parts.push(`**Related Past Tasks:**\n${summaryRes.relatedPastTasks}`);
-      if (summaryRes.techStackContext) parts.push(`**Tech Stack Context:**\n${summaryRes.techStackContext}`);
-      if (summaryRes.suggestedImplementationGuidance) parts.push(`**Suggested Guidance:**\n${summaryRes.suggestedImplementationGuidance}`);
-
-      this.messages.set([
-        { role: 'assistant', content: parts.join('\n\n') || 'Summary is ready. Ask me anything about this task!' }
-      ]);
+      this.summary.set({
+        content: summaryRes.content || 'Summary is ready. Ask me anything about this task!'
+      });
       this.scrollToBottom();
     } catch {
       this.summaryFailed.set(true);
@@ -91,12 +107,12 @@ export class AgileCoachChatComponent implements OnDestroy {
   private resetChat(): void {
     this.abortStream?.();
     this.messages.set([]);
+    this.summary.set(null);
     this.streamingContent.set('');
     this.isStreaming.set(false);
     this.isLoadingSummary.set(false);
     this.summaryFailed.set(false);
     this.summaryAttempted.set(false);
-    this.citations.set([]);
     this.inputText.set('');
   }
 
