@@ -32,7 +32,11 @@ interface Task {
   id: string;
   userStoryId: string;
   title: string;
+  titleEn?: string;
+  titleAr?: string;
   description: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
   priority: 'Low' | 'Medium' | 'High';
   hours: number;
   actualHours?: number;
@@ -344,8 +348,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
-                  <h4 class="font-bold text-text-primary text-[15px] mb-1">{{ task.title }}</h4>
-                  <p class="text-text-secondary text-xs line-clamp-2 mb-3">{{ task.description }}</p>
+                  <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
+                  <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
                     <span class="text-xs text-text-secondary flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -415,8 +419,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
-                  <h4 class="font-bold text-text-primary text-[15px] mb-1">{{ task.title }}</h4>
-                  <p class="text-text-secondary text-xs line-clamp-2 mb-3">{{ task.description }}</p>
+                  <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
+                  <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
                     <span class="text-xs text-text-secondary flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -486,8 +490,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
-                  <h4 class="font-bold text-text-primary text-[15px] mb-1">{{ task.title }}</h4>
-                  <p class="text-text-secondary text-xs line-clamp-2 mb-3">{{ task.description }}</p>
+                  <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
+                  <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
                     <span class="text-xs text-text-secondary flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -557,8 +561,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
-                  <h4 class="font-bold text-text-primary text-[15px] mb-1 line-through opacity-75">{{ task.title }}</h4>
-                  <p class="text-text-secondary text-xs line-clamp-2 mb-3">{{ task.description }}</p>
+                  <h4 class="font-bold text-text-primary text-[15px] mb-1 line-through opacity-75" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
+                  <p class="text-text-secondary text-xs line-clamp-2 mb-3 opacity-75" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
                     <span class="text-xs text-text-secondary flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -948,7 +952,15 @@ export class BoardComponent implements OnInit, OnChanges {
   }
 
   get currentLang(): string {
-    return localStorage?.getItem('app_lang') || 'en';
+    return this.tr.currentLang() || 'en';
+  }
+
+  getTaskTitle(task: Task): string {
+    return this.currentLang === 'ar' ? (task.titleAr || task.titleEn || task.title) : (task.titleEn || task.titleAr || task.title);
+  }
+
+  getTaskDescription(task: Task): string {
+    return this.currentLang === 'ar' ? (task.descriptionAr || task.descriptionEn || task.description) : (task.descriptionEn || task.descriptionAr || task.description);
   }
 
   // Task columns
@@ -1223,8 +1235,12 @@ export class BoardComponent implements OnInit, OnChanges {
       const task: Task = {
         id: t.id || t.taskId,
         userStoryId: t.userStoryId || '',
-        title: t.titleEn,
-        description: t.descriptionEn || '',
+        title: this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn,
+        titleEn: t.titleEn,
+        titleAr: t.titleAr,
+        description: this.currentLang === 'ar' ? (t.descriptionAr || t.descriptionEn || '') : (t.descriptionEn || ''),
+        descriptionEn: t.descriptionEn,
+        descriptionAr: t.descriptionAr,
         priority: mapPriorityToFrontend(t.priority),
         hours: t.estimatedHours || 0,
         type: mapTypeToFrontend(t.type)
@@ -1251,7 +1267,7 @@ export class BoardComponent implements OnInit, OnChanges {
     const type = this.typeFilter();
 
     return tasks.filter(task => {
-      const matchesSearch = !query || `${task.title} ${task.description}`.toLowerCase().includes(query);
+      const matchesSearch = !query || `${this.getTaskTitle(task)} ${this.getTaskDescription(task)}`.toLowerCase().includes(query);
       const matchesPriority = priority === 'All' || task.priority === priority;
       const matchesType = type === 'All' || task.type === type;
       return matchesSearch && matchesPriority && matchesType;
@@ -1328,8 +1344,10 @@ export class BoardComponent implements OnInit, OnChanges {
       try {
         if (this.projectState.isProjectManager()) {
           await this.backlogService.updateTask(task.id, {
-            titleEn: task.title,
-            descriptionEn: task.description,
+            titleEn: task.titleEn || '',
+            titleAr: task.titleAr,
+            descriptionEn: task.descriptionEn,
+            descriptionAr: task.descriptionAr,
             estimatedHours: task.hours,
             effortSize: 'Medium',
             priority: task.priority,
@@ -1393,8 +1411,10 @@ export class BoardComponent implements OnInit, OnChanges {
 
         if (this.isEditing()) {
           await this.backlogService.updateTask(taskData.id, {
-            titleEn: taskData.title,
-            descriptionEn: taskData.description,
+            titleEn: taskData.titleEn || '',
+            titleAr: taskData.titleAr,
+            descriptionEn: taskData.descriptionEn,
+            descriptionAr: taskData.descriptionAr,
             estimatedHours: taskData.hours,
             effortSize: 'Medium',
             priority: taskData.priority,
@@ -1404,8 +1424,10 @@ export class BoardComponent implements OnInit, OnChanges {
           this.toastService.show('Task updated successfully.', 'success');
         } else {
           await this.backlogService.createTask(this.activeUserStoryId, {
-            titleEn: taskData.title,
-            descriptionEn: taskData.description,
+            titleEn: taskData.titleEn || '',
+            titleAr: taskData.titleAr,
+            descriptionEn: taskData.descriptionEn,
+            descriptionAr: taskData.descriptionAr,
             estimatedHours: taskData.hours,
             effortSize: 'Medium',
             priority: taskData.priority,

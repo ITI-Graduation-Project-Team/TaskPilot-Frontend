@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintListItem } from '../../shared/api/sprint-planning.service';
 import { ProjectStateService } from '../../shared/services/project-state.service';
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sprint-list',
@@ -24,9 +24,26 @@ export class SprintListComponent implements OnInit {
 
   sprintService = inject(SprintPlanningService);
   projectState = inject(ProjectStateService);
+  translate = inject(TranslateService);
 
   private _sprints = signal<SprintListItem[]>([]);
   _isLoading = signal<boolean>(true);
+  
+  get currentLang() {
+    return this.translate.currentLang() || 'en';
+  }
+
+  getSprintTitle(sprint: SprintListItem): string {
+    if (this.currentLang === 'ar') {
+      const title = sprint.titleAr || sprint.titleEn || '';
+      return title.replace(/Sprint/g, 'السبرينت');
+    }
+    return sprint.titleEn || '';
+  }
+
+  getSprintGoal(sprint: SprintListItem): string | undefined {
+    return this.currentLang === 'ar' ? (sprint.sprintGoalAr || sprint.sprintGoalEn) : sprint.sprintGoalEn;
+  }
   
   filterStatus = signal<string>('All');
   filterDateFrom = signal<string>('');

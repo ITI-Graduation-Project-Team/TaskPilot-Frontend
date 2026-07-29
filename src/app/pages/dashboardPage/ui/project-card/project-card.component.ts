@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProjectInfo } from '../../../../shared/services/project-state.service';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { DashboardService } from '../../services/dashboard.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
@@ -34,10 +34,10 @@ export interface ProjectStats {
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-8 h-8 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shrink-0"
                [style.background]="accentColor()">
-            {{ (project().nameEn || '?')[0].toUpperCase() }}
+            {{ (getProjectName() || '?')[0].toUpperCase() }}
           </div>
           <h3 class="text-base font-extrabold text-text-primary truncate font-display">
-            {{ project().nameEn }}
+            {{ getProjectName() }}
           </h3>
         </div>
 
@@ -75,7 +75,7 @@ export interface ProjectStats {
 
       <!-- Description -->
       <p class="text-xs text-text-secondary line-clamp-2 leading-relaxed mb-6 flex-grow">
-        {{ project().description || ('PROJECT_CARD.NO_DESCRIPTION' | translate) }}
+        {{ getProjectDescription() || ('PROJECT_CARD.NO_DESCRIPTION' | translate) }}
       </p>
 
       <!-- Stats / Skeletons -->
@@ -158,6 +158,7 @@ export class ProjectCardComponent {
   private router = inject(Router);
   private dashboardService = inject(DashboardService);
   private projectState = inject(ProjectStateService);
+  private translate = inject(TranslateService);
 
   project = input.required<ProjectInfo>();
   stats = input<ProjectStats | null>(null);
@@ -166,6 +167,20 @@ export class ProjectCardComponent {
   isMenuOpen = signal(false);
 
   deleteProject = output<string>();
+
+  get currentLang() {
+    return this.translate.currentLang() || 'en';
+  }
+
+  getProjectName() {
+    const p = this.project();
+    return this.currentLang === 'ar' ? (p.nameAr || p.nameEn || p.name) : (p.nameEn || p.nameAr || p.name);
+  }
+
+  getProjectDescription() {
+    const p = this.project();
+    return this.currentLang === 'ar' ? (p.descriptionAr || p.descriptionEn || p.description) : (p.descriptionEn || p.descriptionAr || p.description);
+  }
 
   accentColor = computed(() => {
     const colors = [

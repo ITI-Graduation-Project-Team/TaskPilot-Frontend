@@ -14,6 +14,7 @@ import {
 import { detectTextDir } from '../../../../shared/utils/text-direction.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -28,7 +29,7 @@ interface ChatMessage {
   selector: 'app-ai-chat-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div
       class="flex items-center justify-center animate-[fadeIn_0.2s_ease_both]"
@@ -70,9 +71,9 @@ interface ChatMessage {
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-text-primary">AI Project Assistant</h3>
+              <h3 class="text-base font-bold text-text-primary">{{ 'AI_CHAT.TITLE' | translate }}</h3>
               <p class="text-xs text-text-secondary">
-                Describe your project requirements to generate WBS & user stories
+                {{ 'AI_CHAT.SUBTITLE' | translate }}
               </p>
             </div>
           </div>
@@ -133,13 +134,11 @@ interface ChatMessage {
             <div
               class="p-4 bg-sidebar border border-border rounded-2xl text-sm text-text-primary rounded-tl-none leading-relaxed"
             >
-              Hello! I am your AI assistant.
+              {{ 'AI_CHAT.GREETING' | translate }}<br />
               @if (projectState.isProjectManager()) {
-                Tell me about the project you want to build. You can describe it in text, upload
-                technical documentation, or specify platforms and stack you prefer.
+                {{ 'AI_CHAT.GREETING_PM' | translate }}
               } @else {
-                I can help you understand project requirements, explain tasks, or assist with any
-                technical questions you have. How can I help you today?
+                {{ 'AI_CHAT.GREETING_DEV' | translate }}
               }
             </div>
           </div>
@@ -147,9 +146,9 @@ interface ChatMessage {
           @for (msg of chatHistory(); track msg.timestamp) {
             <div
               class="flex gap-3 max-w-[85%] animate-[fadeUp_0.2s_ease_both]"
-              [ngClass]="msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''"
+              [ngClass]="msg.sender === 'user' ? 'ms-auto flex-row-reverse' : ''"
               [dir]="detectTextDir(msg.text)"
-              [class.text-right]="detectTextDir(msg.text) === 'rtl'"
+              [class.text-end]="detectTextDir(msg.text) === 'rtl'"
             >
               <div
                 class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
@@ -165,8 +164,8 @@ interface ChatMessage {
                 class="p-4 rounded-2xl text-sm leading-relaxed border"
                 [ngClass]="
                   msg.sender === 'user'
-                    ? 'bg-primary/10 border-primary/20 text-text-primary rounded-tr-none'
-                    : 'bg-sidebar border-border text-text-primary rounded-tl-none'
+                    ? 'bg-primary/10 border-primary/20 text-text-primary rounded-te-none'
+                    : 'bg-sidebar border-border text-text-primary rounded-ts-none'
                 "
               >
                 {{ msg.text }}
@@ -191,7 +190,7 @@ interface ChatMessage {
                 </svg>
                 Clarifying Questions (Answer these to hit 100%):
               </h4>
-              <ul class="space-y-1.5 text-xs text-text-secondary list-disc pl-5">
+              <ul class="space-y-1.5 text-xs text-text-secondary list-disc ps-5">
                 @for (q of clarifyingQuestions(); track q) {
                   <li>{{ q }}</li>
                 }

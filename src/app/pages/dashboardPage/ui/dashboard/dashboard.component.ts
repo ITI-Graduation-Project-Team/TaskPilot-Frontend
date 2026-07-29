@@ -16,7 +16,7 @@ import { SprintPlanningService } from '../../../../shared/api/sprint-planning.se
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DashboardService } from '../../services/dashboard.service';
 @Component({
   selector: 'app-dashboard',
@@ -29,7 +29,8 @@ import { DashboardService } from '../../services/dashboard.service';
     FormsModule,
     AiChatModalComponent,
     ProjectHistoryModalComponent,
-    NotificationBellComponent
+    NotificationBellComponent,
+    TranslatePipe
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -57,7 +58,7 @@ import { DashboardService } from '../../services/dashboard.service';
                   📁 {{ getSprintName(sp) }}
                 </span>
                 <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
-                  Switch
+                  {{ 'SIDEBAR.SWITCH' | translate }}
                 </button>
               </div>
             }
@@ -77,7 +78,7 @@ import { DashboardService } from '../../services/dashboard.service';
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
               </svg>
-              All Projects
+              {{ 'SIDEBAR.ALL_PROJECTS' | translate }}
             </a>
           }
 
@@ -90,7 +91,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
-            Sprints
+            {{ 'SIDEBAR.SPRINTS' | translate }}
           </a>
           <a routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
              [class.text-text-secondary]="!rlaBacklog.isActive"
@@ -101,7 +102,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            Backlog
+            {{ 'SIDEBAR.BACKLOG' | translate }}
           </a>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
@@ -114,7 +115,7 @@ import { DashboardService } from '../../services/dashboard.service';
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              Sprint Planning
+              {{ 'SIDEBAR.SPRINT_PLANNING' | translate }}
               <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
             </a>
           }
@@ -127,7 +128,7 @@ import { DashboardService } from '../../services/dashboard.service';
                [class.font-medium]="!rlaTeam.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              Project Team
+              {{ 'SIDEBAR.PROJECT_TEAM' | translate }}
             </a>
           }
           <a routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
@@ -139,7 +140,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            My Profile
+            {{ 'SIDEBAR.MY_PROFILE' | translate }}
           </a>
         </nav>
 
@@ -165,36 +166,36 @@ import { DashboardService } from '../../services/dashboard.service';
           <div class="flex items-center gap-3">
             <h1 class="text-lg font-extrabold text-text-primary font-display flex items-center gap-1.5">
               @if (currentTab() === 'projects') {
-                Projects Hub
+                {{ 'HEADER.PROJECTS_HUB' | translate }}
               } @else if (currentTab() === 'create-project') {
-                Create Project
+                {{ 'HEADER.CREATE_PROJECT' | translate }}
               } @else if (currentTab() === 'profile') {
-                My Profile
+                {{ 'HEADER.MY_PROFILE' | translate }}
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
-                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
-                Sprint Planning
+                {{ 'HEADER.SPRINT_PLANNING' | translate }}
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
-                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || 'Workspace' }}</span>
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
               }
             </h1>
             
             @if (projectState.selectedProject()?.status === 'Completed') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-600 rounded-full font-mono uppercase tracking-wider">
-                Completed
+                {{ 'HEADER.COMPLETED' | translate }}
               </span>
             } @else if (projectState.selectedProject()?.status === 'Archived') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
-                Archived
+                {{ 'HEADER.ARCHIVED' | translate }}
               </span>
             } @else if (currentTab() === 'sprint') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
@@ -215,7 +216,7 @@ import { DashboardService } from '../../services/dashboard.service';
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                     </svg>
                     <span class="truncate max-w-[100px]">
-                      {{ getProjectName(projectState.selectedProject()) || 'Select Project' }}
+                      {{ getProjectName(projectState.selectedProject()) || ('HEADER.SELECT_PROJECT' | translate) }}
                     </span>
                     <svg class="w-3 h-3 ml-auto text-text-secondary transition-transform duration-200 shrink-0"
                          [class.rotate-180]="isProjectDropdownOpen()"
@@ -230,7 +231,7 @@ import { DashboardService } from '../../services/dashboard.service';
                     <!-- Dropdown Panel -->
                     <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both]">
                       <div class="px-3 py-2 border-b border-border">
-                        <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Your Projects</p>
+                        <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">{{ 'HEADER.YOUR_PROJECTS' | translate }}</p>
                       </div>
                       <div class="py-1 max-h-60 overflow-y-auto">
                         @for (p of projectState.projects(); track p.id) {
@@ -261,7 +262,7 @@ import { DashboardService } from '../../services/dashboard.service';
               <button (click)="openCreateProjectPage()"
                       class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                Create Project
+                {{ 'HEADER.CREATE_PROJECT_BTN' | translate }}
               </button>
             }
 
@@ -272,14 +273,14 @@ import { DashboardService } from '../../services/dashboard.service';
             <a routerLink="/subscription"
                class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-              Subscription
+              {{ 'HEADER.SUBSCRIPTION' | translate }}
             </a>
 
             <!-- Logout button -->
             <button (click)="logout()"
                     class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-              Logout
+              {{ 'HEADER.LOGOUT' | translate }}
             </button>
 
             <!-- Dark mode toggle -->
@@ -327,7 +328,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
             </svg>
-            <span class="text-[9px] font-bold">Projects</span>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROJECTS' | translate }}</span>
           </a>
         }
 
@@ -338,7 +339,7 @@ import { DashboardService } from '../../services/dashboard.service';
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
-          <span class="text-[9px] font-bold">Sprint</span>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.SPRINT' | translate }}</span>
         </a>
 
         <!-- Sprint Planning (Mobile PM only) -->
@@ -349,7 +350,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <span class="text-[9px] font-bold">Plan</span>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.PLANNING' | translate }}</span>
             <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse"></span>
           </a>
         }
@@ -361,7 +362,7 @@ import { DashboardService } from '../../services/dashboard.service';
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          <span class="text-[9px] font-bold">Backlog</span>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.BACKLOG_SHORT' | translate }}</span>
         </a>
 
         <!-- Mobile Team Tab -->
@@ -370,7 +371,7 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.text-text-secondary]="!rlaTeamM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            <span class="text-[9px] font-bold">Team</span>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.TEAM' | translate }}</span>
           </a>
         }
 
@@ -381,7 +382,7 @@ import { DashboardService } from '../../services/dashboard.service';
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span class="text-[9px] font-bold">Profile</span>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROFILE' | translate }}</span>
         </a>
       </div>
 
@@ -392,7 +393,7 @@ import { DashboardService } from '../../services/dashboard.service';
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
         <div class="bg-surface border border-border rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-text-primary font-display">Edit Project Details</h3>
+            <h3 class="text-lg font-bold text-text-primary font-display">{{ 'MODALS.EDIT_PROJECT_TITLE' | translate }}</h3>
             <button (click)="dashboardService.isEditProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-sidebar rounded-full transition-colors focus:outline-none">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
@@ -401,24 +402,24 @@ import { DashboardService } from '../../services/dashboard.service';
           <form (submit)="onEditProjectSubmit($event)" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'MODALS.PROJ_NAME_EN' | translate }}</label>
                 <input type="text" [(ngModel)]="editNameEn" name="editNameEn" required placeholder="e.g. Mobile Application" 
                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
               </div>
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">اسم المشروع (عربي)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">{{ 'MODALS.PROJ_NAME_AR' | translate }}</label>
                 <input type="text" [(ngModel)]="editNameAr" name="editNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all text-right">
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description (English)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'MODALS.PROJ_DESC_EN' | translate }}</label>
                 <textarea [(ngModel)]="editDescEn" name="editDescEn" placeholder="English details..." rows="3" required
                           class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
               </div>
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">الوصف (عربي)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">{{ 'MODALS.PROJ_DESC_AR' | translate }}</label>
                 <textarea [(ngModel)]="editDescAr" name="editDescAr" placeholder="تفاصيل باللغة العربية..." rows="3" required dir="rtl"
                           class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all text-right"></textarea>
               </div>
@@ -426,10 +427,10 @@ import { DashboardService } from '../../services/dashboard.service';
 
             <div class="flex justify-end gap-3 pt-3">
               <button type="button" (click)="dashboardService.isEditProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-sidebar font-semibold text-sm transition-colors">
-                Cancel
+                {{ 'MODALS.CANCEL' | translate }}
               </button>
               <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
-                Save Changes
+                {{ 'MODALS.SAVE_CHANGES' | translate }}
               </button>
             </div>
           </form>
@@ -512,7 +513,7 @@ export class DashboardComponent implements OnInit {
       const segments = url.split('?')[0].split('/');
       let tab = segments.pop() || 'projects';
       if (tab === 'dashboard') tab = 'projects';
-      
+
       this.currentTab.set(tab as any);
     });
 

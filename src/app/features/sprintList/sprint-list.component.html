@@ -58,8 +58,8 @@
             
             <!-- Left Info -->
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-3 mb-1.5">
-                <h3 class="text-lg font-bold text-text-primary truncate">{{ sprint.titleEn }}</h3>
+              <div class="flex items-center gap-3 mb-1.5" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+                <h3 class="text-lg font-bold text-text-primary truncate">{{ getSprintTitle(sprint) }}</h3>
                 @if (sprint.status === 'Planned') {
                   <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-600 rounded-lg">{{ 'SPRINT_LIST.PLANNED' | translate }}</span>
                 } @else if (sprint.status === 'Active') {
@@ -92,15 +92,15 @@
                 </div>
               </div>
 
-              @if (sprint.sprintGoalEn) {
-                <p class="text-sm text-text-secondary mt-2 line-clamp-2">{{ sprint.sprintGoalEn }}</p>
+              @if (getSprintGoal(sprint)) {
+                <p class="text-sm text-text-secondary mt-2 line-clamp-2" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getSprintGoal(sprint) }}</p>
               }
             </div>
 
             <!-- Action Button -->
             <div class="flex items-center gap-2 shrink-0">
               <button (click)="onViewBoard($event, sprint)" 
-                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-sm flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0">
+                      class="w-full sm:w-auto px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all duration-200 hover:-translate-y-px whitespace-nowrap">
                 {{ 'SPRINT_LIST.VIEW_BOARD' | translate }}
               </button>
             </div>
