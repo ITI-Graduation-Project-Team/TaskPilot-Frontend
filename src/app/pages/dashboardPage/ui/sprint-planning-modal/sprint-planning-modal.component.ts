@@ -420,7 +420,44 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
     this.startHintCycle();
     try {
       const res = await this.sprintService.getSprintSuggestions(projId);
-      this.suggestions.set(res.data || res || []);
+      const raw = res.data || res || [];
+      let mapped: SprintSuggestionDto[] = [];
+      if (Array.isArray(raw)) {
+        mapped = raw.map((s: any) => ({
+          sprintNumber: s.sprintNumber,
+          sprintTitleEn: s.sprintTitleEn || s.titleEn,
+          sprintTitleAr: s.sprintTitleAr || s.titleAr,
+          titleEn: s.sprintTitleEn || s.titleEn || (s.sprintNumber ? `Sprint ${s.sprintNumber}` : 'Sprint 1'),
+          titleAr: s.sprintTitleAr || s.titleAr || (s.sprintNumber ? `السبرينت ${s.sprintNumber}` : 'السبرينت 1'),
+          goalEn: s.sprintGoalEn || s.goalEn || '',
+          goalAr: s.sprintGoalAr || s.goalAr || '',
+          sprintGoalEn: s.sprintGoalEn || s.goalEn || '',
+          sprintGoalAr: s.sprintGoalAr || s.goalAr || '',
+          userStoryIds: (s.stories || s.userStoryIds || []).map((st: any) => (typeof st === 'string' ? st : st.storyId || st.id)),
+        }));
+      } else if (raw && typeof raw === 'object') {
+        const titleEn = raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
+        const titleAr = raw.sprintTitleAr || raw.titleAr || (raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1');
+        const goalEn = raw.sprintGoalEn || raw.goalEn || '';
+        const goalAr = raw.sprintGoalAr || raw.goalAr || '';
+        const storiesList: any[] = raw.stories || raw.userStoryIds || [];
+        const userStoryIds = storiesList.map((st: any) => (typeof st === 'string' ? st : st.storyId || st.id));
+        mapped = [
+          {
+            sprintNumber: raw.sprintNumber,
+            sprintTitleEn: titleEn,
+            sprintTitleAr: titleAr,
+            titleEn: titleEn,
+            titleAr: titleAr,
+            goalEn: goalEn,
+            goalAr: goalAr,
+            sprintGoalEn: goalEn,
+            sprintGoalAr: goalAr,
+            userStoryIds: userStoryIds,
+          }
+        ];
+      }
+      this.suggestions.set(mapped);
     } catch (e: any) {
       const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
       if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
@@ -466,7 +503,24 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
 
     this.isSaving.set(true);
     try {
-      await this.sprintService.confirmSprints(projId, this.suggestions());
+      const first = this.suggestions()[0];
+      const payload = this.suggestions().length > 1
+        ? this.suggestions().map(s => ({
+            titleEn: s.titleEn || s.sprintTitleEn || '',
+            titleAr: s.titleAr || s.sprintTitleAr || '',
+            sprintGoalEn: s.goalEn || s.sprintGoalEn || '',
+            sprintGoalAr: s.goalAr || s.sprintGoalAr || '',
+            userStoryIds: s.userStoryIds || [],
+          }))
+        : {
+            titleEn: first.titleEn || first.sprintTitleEn || '',
+            titleAr: first.titleAr || first.sprintTitleAr || '',
+            sprintGoalEn: first.goalEn || first.sprintGoalEn || '',
+            sprintGoalAr: first.goalAr || first.sprintGoalAr || '',
+            userStoryIds: first.userStoryIds || [],
+          };
+
+      await this.sprintService.confirmSprints(projId, payload);
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();

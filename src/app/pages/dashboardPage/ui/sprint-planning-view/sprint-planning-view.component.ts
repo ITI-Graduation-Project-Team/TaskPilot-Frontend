@@ -723,13 +723,26 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       let apiTotalHours = 0;
 
       if (Array.isArray(raw)) {
-        mappedSuggestions = raw;
+        mappedSuggestions = raw.map((item: any) => ({
+          sprintNumber: item.sprintNumber,
+          sprintTitleEn: item.sprintTitleEn || item.titleEn,
+          sprintTitleAr: item.sprintTitleAr || item.titleAr,
+          titleEn: item.sprintTitleEn || item.titleEn || (item.sprintNumber ? `Sprint ${item.sprintNumber}` : 'Sprint 1'),
+          titleAr: item.sprintTitleAr || item.titleAr || (item.sprintNumber ? `السبرينت ${item.sprintNumber}` : 'السبرينت 1'),
+          goalEn: item.sprintGoalEn || item.goalEn || '',
+          goalAr: item.sprintGoalAr || item.goalAr || '',
+          sprintGoalEn: item.sprintGoalEn || item.goalEn || '',
+          sprintGoalAr: item.sprintGoalAr || item.goalAr || '',
+          userStoryIds: (item.stories || item.userStoryIds || []).map((s: any) => s.storyId || s.id || s),
+        }));
       } else if (raw && typeof raw === 'object') {
+        const titleEn = raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
+        const titleAr = raw.sprintTitleAr || raw.titleAr || (raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1');
         const goalEn = raw.sprintGoalEn || raw.goalEn || '';
         const goalAr = raw.sprintGoalAr || raw.goalAr || '';
-        const storiesList: any[] = raw.stories || [];
+        const storiesList: any[] = raw.stories || raw.userStoryIds || [];
         apiTotalHours = raw.totalEstimatedHours || 0;
-        const userStoryIds = storiesList.map((s: any) => s.storyId || s.id || s);
+        const userStoryIds = storiesList.map((s: any) => (typeof s === 'string' ? s : s.storyId || s.id));
 
         // Extract AI risks
         this.risks.set(raw.risks || []);
@@ -737,24 +750,31 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
         // Build per-story AI metadata map
         const metaMap = new Map<string, SuggestedStoryMeta>();
         storiesList.forEach((s: any) => {
-          const id = s.storyId || s.id;
-          if (id) {
-            metaMap.set(id, {
-              reasonEn: s.reasonEn || '',
-              reasonAr: s.reasonAr || '',
-              priorityScore: s.priorityScore ?? 0,
-              estimatedHours: s.estimatedHours || 0,
-            });
+          if (s && typeof s === 'object') {
+            const id = s.storyId || s.id;
+            if (id) {
+              metaMap.set(id, {
+                reasonEn: s.reasonEn || '',
+                reasonAr: s.reasonAr || '',
+                priorityScore: s.priorityScore ?? 0,
+                estimatedHours: s.estimatedHours || 0,
+              });
+            }
           }
         });
         this.suggestedStoriesMeta.set(metaMap);
 
         mappedSuggestions = [
           {
-            titleEn: 'Sprint 1',
-            titleAr: 'السبرينت 1',
+            sprintNumber: raw.sprintNumber,
+            sprintTitleEn: titleEn,
+            sprintTitleAr: titleAr,
+            titleEn: titleEn,
+            titleAr: titleAr,
             goalEn: goalEn,
             goalAr: goalAr,
+            sprintGoalEn: goalEn,
+            sprintGoalAr: goalAr,
             userStoryIds: userStoryIds,
           }
         ];

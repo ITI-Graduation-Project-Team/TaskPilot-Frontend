@@ -38,6 +38,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
     TechStackAdvisorModalComponent,
     ProjectHubComponent,
     SprintPlanningViewComponent,
+    RetrospectiveViewComponent,
     SprintListComponent,
     NotificationBellComponent,
     OrganizationViewComponent,
@@ -133,6 +134,22 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
             </a>
           }
 
+          <!-- Retrospective Tab -->
+          <a routerLink="/dashboard/retrospective" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaRetro="routerLinkActive"
+             [class.text-text-secondary]="!rlaRetro.isActive"
+             [class.hover:text-text-primary]="!rlaRetro.isActive"
+             [class.hover:bg-primary/5]="!rlaRetro.isActive"
+             [class.font-medium]="!rlaRetro.isActive"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Retrospective
+            <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+          </a>
+
+
+
           @if (projectState.isProjectManager()) {
             <a routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaTeam="routerLinkActive"
                [class.text-text-secondary]="!rlaTeam.isActive"
@@ -209,6 +226,14 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
                 {{ 'HEADER.SPRINT_PLANNING' | translate }}
+              } @else if (currentTab() === 'retrospective') {
+                @if (projectState.isProjectManager()) {
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary font-light">/</span>
+                }
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
+                <span class="text-text-secondary font-light">/</span>
+                Retrospective
               } @else if (currentTab() === 'organization') {
                 @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
               } @else {
@@ -605,6 +630,13 @@ export class DashboardComponent implements OnInit {
     });
   }
   ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab && ['projects', 'create-project', 'sprint', 'sprint-planning', 'retrospective', 'backlog', 'team', 'profile'].includes(tab)) {
+        this.currentTab.set(tab as any);
+      }
+    });
+
     const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar';
     if (savedLang) {
       this.currentLang.set(savedLang);
