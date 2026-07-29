@@ -34,14 +34,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
     RouterLink,
     FormsModule,
     AiChatModalComponent,
-    DraftReviewModalComponent,
-    TechStackAdvisorModalComponent,
-    ProjectHubComponent,
-    SprintPlanningViewComponent,
-    RetrospectiveViewComponent,
-    SprintListComponent,
     NotificationBellComponent,
-    OrganizationViewComponent,
     ProjectHistoryModalComponent,
     TranslatePipe
 
@@ -533,7 +526,7 @@ export class DashboardComponent implements OnInit {
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
 
   // Component state
   activeSprintName = signal('');
