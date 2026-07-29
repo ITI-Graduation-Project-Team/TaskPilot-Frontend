@@ -843,7 +843,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
 
     @if (isRetroModalOpen() && (activeSprintId() || completedSprintId())) {
-      <app-retrospective-modal [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
+      <app-retrospective-modal [projectId]="projectState.selectedProjectId()" [sprintId]="(activeSprintId() || completedSprintId())!" (close)="isRetroModalOpen.set(false)"></app-retrospective-modal>
     }
 
     <!-- Summarize Chat Modal -->

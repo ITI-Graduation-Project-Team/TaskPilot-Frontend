@@ -1,11 +1,114 @@
 import { Injectable } from '@angular/core';
 import { apiClient } from './axios.instance';
 
-export interface SprintSuggestionDto {
+export interface PartiallyCompletedStory {
+  userStoryId: string;
   titleEn: string;
   titleAr: string;
-  goalEn: string;
-  goalAr: string;
+  totalTasks: number;
+  completedTasks: number;
+  remainingTasks: number;
+  completionPercentage: number;
+}
+
+export interface DeveloperMetric {
+  employeeId: string;
+  fullName: string;
+  assignedTasks: number;
+  completedTasks: number;
+  estimatedHours: number;
+  actualHours: number;
+  velocityRatio: number;
+  completionRate: number;
+  completedTaskTypes?: string[];
+}
+
+export interface SprintImprovement {
+  category: string;
+  recommendationEn: string;
+  recommendationAr: string;
+  priority: 'High' | 'Medium' | 'Low';
+  actionType: 'ReduceCapacity' | 'ReassignDeveloper' | 'AddBuffer' | 'ReduceTaskCount' | 'SplitLargeTasks' | 'None';
+  targetEmployeeId: string | null;
+  suggestedAdjustment: number;
+}
+
+export interface SprintUnfinishedTask {
+  taskId: string;
+  userStoryId?: string;
+  titleEn: string;
+  estimatedHours: number;
+  reason: string;
+  assigneeName: string;
+}
+
+export interface SprintRetrospectiveData {
+  sprintId: string;
+  sprintTitleEn?: string;
+  sprintTitleAr?: string;
+  startDate?: string;
+  endDate?: string;
+  actualDurationDays?: number;
+  plannedDurationDays?: number;
+  totalTasks: number;
+  completedTasks: number;
+  inProgressTasks?: number;
+  notStartedTasks?: number;
+  completionRate: number;
+  estimationAccuracy?: number;
+  totalEstimatedHours?: number;
+  totalActualHours?: number;
+  velocityRatio?: number;
+  whatWentWellEn?: string;
+  whatWentWellAr?: string;
+  challengesEn?: string;
+  challengesAr?: string;
+  actionItemsEn?: string;
+  actionItemsAr?: string;
+  teamSentimentSummaryEn?: string;
+  teamSentimentSummaryAr?: string;
+  developerBreakdowns?: DeveloperMetric[];
+  unfinishedTasks?: SprintUnfinishedTask[];
+  partiallyCompletedStories?: PartiallyCompletedStory[];
+  improvements?: SprintImprovement[];
+}
+
+// Alias for backwards compatibility
+export type SprintRetroDto = SprintRetrospectiveData;
+
+export interface SuggestedStory {
+  storyId: string;
+  titleEn: string;
+  titleAr: string;
+  estimatedHours: number;
+  priorityScore: number;
+  reasonEn: string;
+  reasonAr: string;
+}
+
+export interface SprintSuggestionDto {
+  sprintNumber?: number;
+  sprintTitleEn?: string;
+  sprintTitleAr?: string;
+  titleEn: string;
+  titleAr: string;
+  sprintGoalEn?: string;
+  sprintGoalAr?: string;
+  goalEn?: string;
+  goalAr?: string;
+  totalEstimatedHours?: number;
+  risks?: string[];
+  stories?: SuggestedStory[];
+  userStoryIds: string[];
+}
+
+export interface ConfirmSprintRequest {
+  titleEn: string;
+  titleAr: string;
+  sprintGoalEn: string;
+  sprintGoalAr: string;
+  startDate?: string;
+  endDate?: string;
   userStoryIds: string[];
 }
 
@@ -20,21 +123,6 @@ export interface SprintListItem {
   status: 'Planned' | 'Active' | 'Completed' | 'Cancelled';
   userStoriesCount: number;
   tasksCount: number;
-}
-
-export interface SprintRetroDto {
-  id: string;
-  sprintId: string;
-  whatWentWellEn: string;
-  whatWentWellAr: string;
-  challengesEn: string;
-  challengesAr: string;
-  actionItemsEn: string;
-  actionItemsAr: string;
-  completionRate: number;
-  estimationAccuracy: number;
-  teamSentimentSummaryEn: string;
-  teamSentimentSummaryAr: string;
 }
 
 @Injectable({
@@ -70,12 +158,28 @@ export class SprintPlanningService {
     return data;
   }
 
-  async generateRetrospective(sprintId: string): Promise<any> {
+  async generateRetrospective(sprintId: string, projectId?: string): Promise<any> {
+    if (projectId) {
+      try {
+        const { data } = await apiClient.post(`/projects/${projectId}/sprint-retrospectives/sprints/${sprintId}/generate`);
+        return data;
+      } catch {
+        // Fallback to legacy endpoint if project route not present
+      }
+    }
     const { data } = await apiClient.post(`/sprints/${sprintId}/retrospective/generate`);
     return data;
   }
 
-  async getRetrospective(sprintId: string): Promise<any> {
+  async getRetrospective(sprintId: string, projectId?: string): Promise<any> {
+    if (projectId) {
+      try {
+        const { data } = await apiClient.get(`/projects/${projectId}/sprint-retrospectives/sprints/${sprintId}`);
+        return data;
+      } catch {
+        // Fallback to legacy endpoint if project route not present
+      }
+    }
     const { data } = await apiClient.get(`/sprints/${sprintId}/retrospective`);
     return data;
   }
@@ -104,6 +208,7 @@ export class SprintPlanningService {
       {}
     );
   }
+
   async getLatestCompletedSprint(projectId: string): Promise<{ sprintId: string } | null> {
     try {
       const { data } = await apiClient.get(
