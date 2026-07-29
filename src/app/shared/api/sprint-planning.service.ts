@@ -159,14 +159,6 @@ export class SprintPlanningService {
   }
 
   async generateRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    if (projectId) {
-      try {
-        const { data } = await apiClient.post(`/projects/${projectId}/sprint-retrospectives/sprints/${sprintId}/generate`);
-        return data;
-      } catch {
-        // Fallback to legacy endpoint if project route not present
-      }
-    }
     const { data } = await apiClient.post(`/sprints/${sprintId}/retrospective/generate`);
     return data;
   }
