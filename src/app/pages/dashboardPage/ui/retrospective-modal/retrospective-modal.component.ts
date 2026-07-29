@@ -292,7 +292,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                   </div>
                 }
 
-                @if (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) {
+                @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'ملخص انطباع الفريق' : 'Team Sentiment Summary' }}

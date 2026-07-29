@@ -217,7 +217,6 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                 </p>
                 <div class="flex items-center justify-between text-xs font-semibold text-text-secondary pt-1 border-t border-border/60">
                   <span class="text-emerald-500">Done: {{ activeRetro()?.completedTasks ?? 0 }}</span>
-                  <span class="text-amber-500">In Progress: {{ activeRetro()?.inProgressTasks ?? 0 }}</span>
                   <span class="text-text-secondary">Unfinished: {{ activeRetro()?.unfinishedTasks ?? 0 }}</span>
                 </div>
               </div>
@@ -492,7 +491,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
             }
 
             <!-- Team Sentiment Summary -->
-            @if (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) {
+            @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
               <div class="p-5 rounded-3xl bg-primary/[0.03] border border-primary/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-primary uppercase tracking-wider flex items-center gap-2">
                   <span>💬 {{ currentLang() === 'ar' ? 'ملخص انطباع الفريق (Team Sentiment)' : 'Team Sentiment Summary' }}</span>
