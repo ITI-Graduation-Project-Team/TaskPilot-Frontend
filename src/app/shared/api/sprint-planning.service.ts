@@ -159,33 +159,18 @@ export class SprintPlanningService {
   }
 
   async generateRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    if (projectId) {
-      try {
-        const { data } = await apiClient.post(`/projects/${projectId}/sprints/${sprintId}/retrospective`);
-        return data;
-      } catch {
-        // Fallback to legacy endpoint if project route fails
-      }
-    }
-    const { data } = await apiClient.post(`/sprints/${sprintId}/retrospective/generate`);
+    const url = projectId 
+      ? `/projects/${projectId}/sprints/${sprintId}/retrospective`
+      : `/sprints/${sprintId}/retrospective`;
+    const { data } = await apiClient.post(url);
     return data;
   }
 
   async getRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    if (projectId) {
-      try {
-        const { data } = await apiClient.get(`/projects/${projectId}/sprints/${sprintId}/retrospective`);
-        return data;
-      } catch {
-        try {
-          const { data } = await apiClient.get(`/projects/${projectId}/sprint-retrospectives/sprints/${sprintId}`);
-          return data;
-        } catch {
-          // Fallback
-        }
-      }
-    }
-    const { data } = await apiClient.get(`/sprints/${sprintId}/retrospective`);
+    const url = projectId 
+      ? `/projects/${projectId}/sprints/${sprintId}/retrospective`
+      : `/sprints/${sprintId}/retrospective`;
+    const { data } = await apiClient.get(url);
     return data;
   }
 
