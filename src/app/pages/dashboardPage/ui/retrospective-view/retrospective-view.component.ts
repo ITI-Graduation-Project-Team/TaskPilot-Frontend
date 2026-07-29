@@ -39,17 +39,17 @@ import { extractApiError } from '../../../../shared/api/auth.api';
         <div class="absolute -top-24 -right-24 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-xl">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-3 py-1 text-xs font-extrabold bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center gap-1.5">
+              <span class="px-3 py-1 text-xs font-extrabold bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center gap-1.5 shrink-0">
                 <svg class="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
                 {{ currentLang() === 'ar' ? 'ذكاء اصطناعي تحليلي' : 'AI Performance Intelligence' }}
               </span>
               @if (retro()?.sprintTitleEn) {
-                <span class="px-3 py-1 text-xs font-bold bg-sidebar border border-border text-text-primary rounded-full">
+                <span class="px-3 py-1 text-xs font-bold bg-sidebar border border-border text-text-primary rounded-full shrink-0">
                   {{ currentLang() === 'ar' ? (retro()?.sprintTitleAr || retro()?.sprintTitleEn) : retro()?.sprintTitleEn }}
                 </span>
               }
@@ -58,7 +58,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
             <h2 class="text-2xl sm:text-3xl font-black text-text-primary font-display tracking-tight">
               {{ currentLang() === 'ar' ? 'مراجعة أداء السبرينت والتحليل الختامي' : 'Sprint Retrospective & Analytics' }}
             </h2>
-            <p class="text-sm text-text-secondary max-w-2xl leading-relaxed">
+            <p class="text-sm text-text-secondary leading-relaxed">
               {{ currentLang() === 'ar'
                 ? 'مراجعة شاملة مدعومة بالذكاء الاصطناعي لتحليل معدلات الإنجاز، أداء المطورين، التوصيات الهيكلية، والقصص الشبه منتهية.'
                 : 'Comprehensive AI-driven report analyzing sprint completion rates, developer metrics, capacity recommendations, and carry-over stories.' }}
@@ -66,13 +66,13 @@ import { extractApiError } from '../../../../shared/api/auth.api';
           </div>
 
           <!-- Sprint Selector Dropdown & Actions -->
-          <div class="flex items-center gap-3 shrink-0 flex-wrap">
+          <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap shrink-0">
             @if (sprints().length > 0) {
-              <div class="relative">
+              <div class="relative min-w-[160px] max-w-[220px]">
                 <select
                   [ngModel]="selectedSprintId()"
                   (ngModelChange)="onSprintSelected($event)"
-                  class="bg-sidebar border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl px-4 py-2.5 outline-none transition-all cursor-pointer shadow-xs focus:ring-2 focus:ring-primary/20">
+                  class="w-full bg-sidebar border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl px-3.5 py-2.5 outline-none transition-all cursor-pointer shadow-xs focus:ring-2 focus:ring-primary/20 truncate">
                   <option value="" disabled>{{ currentLang() === 'ar' ? 'اختر السبرينت' : 'Select Sprint' }}</option>
                   @for (sp of sprints(); track sp.sprintId) {
                     <option [value]="sp.sprintId">
@@ -87,7 +87,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               <button
                 (click)="generateReport()"
                 [disabled]="isLoading() || !selectedSprintId()"
-                class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0">
+                class="whitespace-nowrap shrink-0 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0">
                 @if (isLoading()) {
                   <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
                   {{ currentLang() === 'ar' ? 'جاري التحليل…' : 'Analyzing…' }}
