@@ -5,6 +5,7 @@ import { getAccessToken } from '../lib/auth/cookie.helper';
 import {
   AgileCoachSummaryResponse,
   AgileCoachChatRequest,
+  ChatMessage
 } from '../models/agile-coach.models';
 
 @Injectable({
@@ -24,6 +25,11 @@ export class AgileCoachService {
     const response = await apiClient.post<any>(
       `/agile-coach/summary/${taskItemId}/regenerate`
     );
+    return response.data.data;
+  }
+
+  async getChatHistory(taskId: string): Promise<ChatMessage[]> {
+    const response = await apiClient.get<any>(`/agile-coach/chat/${taskId}/history`);
     return response.data.data;
   }
 
@@ -76,7 +82,7 @@ export class AgileCoachService {
               return;
             }
             if (line.startsWith('data: ')) {
-              const data = line.slice('data: '.length).trim();
+              const data = line.slice('data: '.length);
               if (data === '[DONE]') {
                 onDone();
                 return;
