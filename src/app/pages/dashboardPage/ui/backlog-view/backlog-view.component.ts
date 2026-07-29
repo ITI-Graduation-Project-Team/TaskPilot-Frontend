@@ -9,6 +9,7 @@ import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -49,14 +50,14 @@ const EMPTY_TASK: TaskFormModel = {
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       @if (projectState.loading() || isLoading()) {
         <div class="flex items-center justify-center rounded-2xl border border-border bg-surface p-12 shadow-sm">
           <div class="flex flex-col items-center gap-3">
             <div class="h-8 w-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-            <span class="text-sm font-semibold text-text-secondary">Loading backlog...</span>
+            <span class="text-sm font-semibold text-text-secondary">{{ 'PROFILE.LOADING' | translate }}</span>
           </div>
         </div>
       } @else if (projectState.isProjectManager() && projectState.projects().length === 0) {
@@ -110,7 +111,7 @@ const EMPTY_TASK: TaskFormModel = {
       } @else {
         <header class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Product backlog</p>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">{{ 'BACKLOG.PRODUCT_BACKLOG' | translate }}</p>
             <h2 class="mt-1 text-2xl font-extrabold text-text-primary font-display">{{ localizedProjectName() }}</h2>
             <p class="mt-1 text-sm text-text-secondary">{{ label('backlogSubtitle') }}</p>
           </div>
@@ -119,8 +120,8 @@ const EMPTY_TASK: TaskFormModel = {
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               @if ((backlog()?.userStories?.length || 0) > 0) {
               }
-              <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">Edit Backlog</button>
-              <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">Add user story</button>
+              <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">{{ 'BACKLOG.EDIT_BACKLOG' | translate }}</button>
+              <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">{{ 'BACKLOG.ADD_USER_STORY' | translate }}</button>
             }
           </div>
         </header>
@@ -149,9 +150,9 @@ const EMPTY_TASK: TaskFormModel = {
                     <span class="hidden text-xs font-bold text-text-secondary md:block">{{ story.tasks.length }}</span>
                     @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
                       <div class="flex justify-end gap-2">
-                        <button type="button" (click)="openTaskModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Task</button>
-                        <button type="button" (click)="openStoryModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">Edit</button>
-                        <button type="button" (click)="deleteStory(story)" class="rounded-lg border border-error/30 px-2.5 py-1.5 text-[11px] font-bold text-error hover:bg-error/10">Delete</button>
+                        <button type="button" (click)="openTaskModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">{{ 'BACKLOG.TASK' | translate }}</button>
+                        <button type="button" (click)="openStoryModal(story)" class="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-bold hover:bg-sidebar">{{ 'BACKLOG.EDIT' | translate }}</button>
+                        <button type="button" (click)="deleteStory(story)" class="rounded-lg border border-error/30 px-2.5 py-1.5 text-[11px] font-bold text-error hover:bg-error/10">{{ 'BACKLOG.DELETE' | translate }}</button>
                       </div>
                     } @else {
                       <span></span>
@@ -190,11 +191,13 @@ const EMPTY_TASK: TaskFormModel = {
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.priority }}</td>
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.effortSize }}</td>
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.estimatedHours }}</td>
-                                <td class="px-3 py-3 text-right">
-                                  @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
-                                    <button type="button" (click)="openTaskModal(story, task)" class="mr-2 font-bold text-primary hover:underline">Edit</button>
-                                    <button type="button" (click)="deleteTask(task)" class="font-bold text-error hover:underline">Delete</button>
-                                  }
+                                <td class="px-3 py-3">
+                                  <div class="flex items-center justify-end gap-2">
+                                    @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
+                                      <button type="button" (click)="openTaskModal(story, task)" class="font-bold text-primary hover:underline">{{ 'BACKLOG.EDIT' | translate }}</button>
+                                      <button type="button" (click)="deleteTask(task)" class="font-bold text-error hover:underline">{{ 'BACKLOG.DELETE' | translate }}</button>
+                                    }
+                                  </div>
                                 </td>
                               </tr>
                             } @empty {
@@ -238,9 +241,9 @@ const EMPTY_TASK: TaskFormModel = {
                   </svg>
                 </div>
                 <div>
-                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ storyForm().id ? 'Update story' : 'New story' }}</p>
-                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ storyForm().id ? 'Edit user story' : 'Add user story' }}</h3>
-                  <p class="mt-1 text-sm text-text-secondary">Maintain English and Arabic backlog columns in one pass.</p>
+                  <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ storyForm().id ? ('BACKLOG.UPDATE_STORY' | translate) : ('BACKLOG.NEW_STORY' | translate) }}</p>
+                  <h3 class="mt-1 text-xl font-extrabold text-text-primary">{{ storyForm().id ? ('BACKLOG.EDIT_USER_STORY' | translate) : ('BACKLOG.ADD_USER_STORY' | translate) }}</h3>
+                  <p class="mt-1 text-sm text-text-secondary">{{ 'BACKLOG.STORY_DESC' | translate }}</p>
                 </div>
               </div>
               <button type="button" (click)="isStoryModalOpen.set(false)" aria-label="Close story form" class="rounded-xl border border-border p-2 text-text-secondary hover:bg-background hover:text-text-primary">
@@ -435,8 +438,10 @@ export class BacklogViewComponent implements OnInit {
   storyForm = signal<StoryFormModel>({ ...EMPTY_STORY });
   taskForm = signal<TaskFormModel>({ ...EMPTY_TASK });
 
+  private translate = inject(TranslateService);
+
   currentLang(): 'en' | 'ar' {
-    return (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang') === 'ar') ? 'ar' : 'en';
+    return (this.translate.currentLang() || 'en') as 'en' | 'ar';
   }
 
   isArabic(): boolean {

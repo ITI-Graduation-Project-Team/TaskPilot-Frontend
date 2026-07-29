@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 import { AssignmentSuggestion } from '../../../../../entities/assignment.entity';
 
 @Component({
@@ -17,6 +18,12 @@ export class TaskListComponent {
   @Input() localAssignments: { [taskId: string]: string } = {};
 
   @Output() taskSelected = new EventEmitter<string>();
+
+  get currentLang(): string {
+    return (this as any).translateService?.currentLang() || (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang')) || 'en';
+  }
+
+  constructor(private translateService: TranslateService) {}
 
   searchQuery = signal('');
   filterTab = signal<'all' | 'unassigned' | 'assigned'>('all');

@@ -7,10 +7,11 @@ import {
   OnInit,
   OnDestroy,
   Output,
-  EventEmitter,
+  EventEmitter
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   SprintPlanningService,
   SprintSuggestionDto,
@@ -625,7 +626,6 @@ const LOADING_HINTS = [
 })
 export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   /** Emitted when sprint confirmed — parent should navigate to 'sprint' tab */
-  @Output() sprintConfirmed = new EventEmitter<void>();
   /** Emitted when PM needs to assign team members */
   @Output() navigateToTeam = new EventEmitter<void>();
 
@@ -633,6 +633,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   private backlogService = inject(BacklogService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
+  private router = inject(Router);
 
   // ── State signals ──────────────────────────────────────────────
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
@@ -715,7 +716,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
     try {
       const res = await this.sprintService.getSprintSuggestions(projId);
-      
+
       // The API returns { data: { sprintGoalEn, sprintGoalAr, totalEstimatedHours, stories: [...] }, succeeded: true }
       const raw = res.data || res || [];
       let mappedSuggestions: SprintSuggestionDto[] = [];
@@ -833,7 +834,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       // The backend expects a single ConfirmSprintRequest object
       await this.sprintService.confirmSprints(projId, payload as any);
       this.toastService.show('Sprint confirmed successfully.', 'success');
-      this.sprintConfirmed.emit();
+      this.router.navigate(['/dashboard', 'sprint']);
     } catch (err: any) {
       this.handleApiError(err, 'confirm');
       this.pageState.set('suggestion');

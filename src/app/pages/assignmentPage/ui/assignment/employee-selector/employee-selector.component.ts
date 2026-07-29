@@ -53,4 +53,9 @@ export class EmployeeSelectorComponent {
     if (score >= 60) return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
     return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
   }
+
+  cleanReasonAr(reason: string | undefined): string {
+    if (!reason) return '';
+    return reason.replace(/\uFFFD/g, '');
+  }
 }

@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, input, OnInit, ViewChild, ElementRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 import { TasksService, TaskCommentDto, TaskAttachmentDto } from '../../../../shared/api/tasks.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
@@ -20,6 +21,9 @@ export class TaskDiscussionComponent implements OnInit {
   private tasksService = inject(TasksService);
   private toastService = inject(ToastService);
   public projectState = inject(ProjectStateService);
+  translate = inject(TranslateService);
+  
+  isAr = computed(() => this.translate.currentLang() === 'ar');
   
   comments = signal<TaskCommentDto[]>([]);
   attachments = signal<TaskAttachmentDto[]>([]);

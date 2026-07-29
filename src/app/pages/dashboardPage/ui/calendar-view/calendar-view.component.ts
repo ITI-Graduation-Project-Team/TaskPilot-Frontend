@@ -243,44 +243,44 @@ interface CalendarDay {
           <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeCreateModal()"></div>
           
           <div class="relative bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 animate-[scaleUp_0.2s_ease_both]">
-            <h3 class="text-xl font-bold mb-4 font-display">Add Personal Task</h3>
+            <h3 class="text-xl font-bold mb-4 font-display">{{ isAr() ? 'إضافة مهمة شخصية' : 'Add Personal Task' }}</h3>
             
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Title *</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'العنوان *' : 'Title *' }}</label>
                 <input type="text" [(ngModel)]="newTask().title" 
                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors"
-                       placeholder="e.g. Prepare for meeting">
+                       [placeholder]="isAr() ? 'مثال: التحضير للاجتماع' : 'e.g. Prepare for meeting'">
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Description</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'الوصف' : 'Description' }}</label>
                 <textarea [(ngModel)]="newTask().description" rows="2"
                        class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar"
-                       placeholder="Task details..."></textarea>
+                       [placeholder]="isAr() ? 'تفاصيل المهمة...' : 'Task details...'"></textarea>
               </div>
               
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Start</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'البداية' : 'Start' }}</label>
                   <input type="datetime-local" [(ngModel)]="newTask().startDateTime" 
                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">End</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'النهاية' : 'End' }}</label>
                   <input type="datetime-local" [(ngModel)]="newTask().endDateTime" 
                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
                 </div>
               </div>
 
               <div class="mt-4">
-                <label class="block text-sm font-bold text-text-secondary mb-1">Priority</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'الأولوية' : 'Priority' }}</label>
                 <select [(ngModel)]="newTask().priority" 
                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
+                  <option value="Low">{{ isAr() ? 'منخفضة' : 'Low' }}</option>
+                  <option value="Medium">{{ isAr() ? 'متوسطة' : 'Medium' }}</option>
+                  <option value="High">{{ isAr() ? 'عالية' : 'High' }}</option>
                 </select>
               </div>
             </div>
@@ -288,12 +288,12 @@ interface CalendarDay {
             <div class="flex items-center justify-end gap-3 mt-8">
               <button (click)="closeCreateModal()" 
                       class="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
-                Cancel
+                {{ isAr() ? 'إلغاء' : 'Cancel' }}
               </button>
               <button (click)="saveNewTask()" 
                       [disabled]="!newTask().title"
                       class="px-6 py-2 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                Save Task
+                {{ isAr() ? 'حفظ المهمة' : 'Save Task' }}
               </button>
             </div>
           </div>
@@ -306,75 +306,89 @@ interface CalendarDay {
           <div class="absolute inset-0 bg-brandNavy/60 backdrop-blur-sm" (click)="closeEditModal()"></div>
           
           <div class="relative bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl p-6 animate-[scaleUp_0.2s_ease_both]">
-            <h3 class="text-xl font-bold mb-4 font-display">Edit Task</h3>
+            @if (isSaving()) {
+              <div class="absolute inset-0 bg-surface/50 backdrop-blur-[2px] z-50 flex items-center justify-center rounded-2xl">
+                <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            }
+            <h3 class="text-xl font-bold mb-4 font-display">{{ isAr() ? 'تعديل المهمة' : 'Edit Task' }}</h3>
             
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Title *</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'العنوان *' : 'Title *' }}</label>
                 <input type="text" [(ngModel)]="editingTask()!.title" 
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors"
-                       placeholder="e.g. Prepare for meeting">
+                       [disabled]="editingTask()!.eventType !== 'PersonalTask'"
+                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors disabled:opacity-60 disabled:bg-surface-alt"
+                       [placeholder]="isAr() ? 'مثال: التحضير للاجتماع' : 'e.g. Prepare for meeting'">
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-text-secondary mb-1">Description</label>
+                <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'الوصف' : 'Description' }}</label>
                 <textarea [(ngModel)]="editingTask()!.description" rows="2"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar"
-                       placeholder="Task details..."></textarea>
+                       [disabled]="editingTask()!.eventType !== 'PersonalTask'"
+                       class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors resize-none custom-scrollbar disabled:opacity-60 disabled:bg-surface-alt"
+                       [placeholder]="isAr() ? 'تفاصيل المهمة...' : 'Task details...'"></textarea>
               </div>
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Start</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'البداية' : 'Start' }}</label>
                   <input type="datetime-local" [(ngModel)]="editingTask()!.startDateTime" 
-                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                         [disabled]="editingTask()!.eventType !== 'PersonalTask'"
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors disabled:opacity-60 disabled:bg-surface-alt">
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">End</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'النهاية' : 'End' }}</label>
                   <input type="datetime-local" [(ngModel)]="editingTask()!.endDateTime" 
-                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
+                         [disabled]="editingTask()!.eventType !== 'PersonalTask'"
+                         class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors disabled:opacity-60 disabled:bg-surface-alt">
                 </div>
               </div>
 
               <div class="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Priority</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'الأولوية' : 'Priority' }}</label>
                   <select [(ngModel)]="editingTask()!.priority" 
-                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
+                          [disabled]="editingTask()!.eventType !== 'PersonalTask'"
+                          class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors disabled:opacity-60 disabled:bg-surface-alt">
+                    <option value="Low">{{ isAr() ? 'منخفضة' : 'Low' }}</option>
+                    <option value="Medium">{{ isAr() ? 'متوسطة' : 'Medium' }}</option>
+                    <option value="High">{{ isAr() ? 'عالية' : 'High' }}</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label class="block text-sm font-bold text-text-secondary mb-1">Status</label>
+                  <label class="block text-sm font-bold text-text-secondary mb-1">{{ isAr() ? 'الحالة' : 'Status' }}</label>
                   <select [(ngModel)]="editingTask()!.status" 
                           class="w-full bg-background border border-border rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-colors">
-                    <option value="ToDo">To Do</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="Review">Review</option>
-                    <option value="Done">Done</option>
+                    <option value="ToDo">{{ isAr() ? 'قيد الانتظار' : 'To Do' }}</option>
+                    <option value="InProgress">{{ isAr() ? 'قيد التنفيذ' : 'In Progress' }}</option>
+                    <option value="Review">{{ isAr() ? 'مراجعة' : 'Review' }}</option>
+                    <option value="Done">{{ isAr() ? 'مكتملة' : 'Done' }}</option>
                   </select>
                 </div>
               </div>
             </div>
             
             <div class="flex items-center justify-between mt-8 pt-4 border-t border-border/50">
-              <button (click)="deleteEditedTask()" 
-                      class="px-4 py-2 text-sm font-bold text-error hover:bg-error/10 transition-colors rounded-xl">
-                Delete
-              </button>
+              @if (editingTask()!.eventType === 'PersonalTask') {
+                <button (click)="deleteEditedTask()" 
+                        class="px-4 py-2 text-sm font-bold text-error hover:bg-error/10 transition-colors rounded-xl">
+                  {{ isAr() ? 'حذف' : 'Delete' }}
+                </button>
+              } @else {
+                <div></div>
+              }
               <div class="flex items-center gap-2">
                 <button (click)="closeEditModal()" 
                         class="px-4 py-2 text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
-                  Cancel
+                  {{ isAr() ? 'إلغاء' : 'Cancel' }}
                 </button>
                 <button (click)="saveEditedTask()" 
                         [disabled]="!editingTask()!.title"
                         class="px-6 py-2 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                  Save
+                  {{ isAr() ? 'حفظ' : 'Save' }}
                 </button>
               </div>
             </div>
@@ -501,6 +515,7 @@ export class CalendarViewComponent implements OnInit {
     status: string;
     eventType: string;
   } | null>(null);
+  isSaving = signal(false);
 
   showDayEventsModal = signal(false);
   selectedDayEvents = signal<CalendarDay | null>(null);
@@ -818,25 +833,26 @@ export class CalendarViewComponent implements OnInit {
     const task = this.editingTask();
     if (!task) return;
 
-    const start = new Date(task.startDateTime);
-    const end = new Date(task.endDateTime);
-    let durationInMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
-    if (durationInMinutes < 0) {
-      durationInMinutes += 24 * 60;
-    }
-
-    const updatePayload = {
-      title: task.title,
-      description: task.description,
-      startDate: start.toISOString(),
-      durationInMinutes: durationInMinutes,
-      eventType: task.eventType,
-      priority: task.priority,
-      status: task.status,
-      _endDate: end.toISOString()
-    };
-
+    this.isSaving.set(true);
     try {
+      const start = new Date(task.startDateTime);
+      const end = new Date(task.endDateTime);
+      let durationInMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
+      if (durationInMinutes < 0) {
+        durationInMinutes += 24 * 60;
+      }
+
+      const updatePayload = {
+        title: task.title,
+        description: task.description,
+        startDate: start.toISOString(),
+        durationInMinutes: durationInMinutes,
+        eventType: task.eventType,
+        priority: task.priority,
+        status: task.status,
+        _endDate: end.toISOString()
+      };
+
       if (task.eventType === 'AssignedTask') {
         const statusEnum = this.mapStatusToEnum(task.status);
         const rawTask = task as any;
@@ -890,6 +906,8 @@ export class CalendarViewComponent implements OnInit {
       await this.calendarService.loadTasks(startStr, endStr);
     } catch (err) {
       console.error('Error saving task:', err);
+    } finally {
+      this.isSaving.set(false);
     }
   }
 
