@@ -716,7 +716,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
     try {
       const res = await this.sprintService.getSprintSuggestions(projId);
-      
+
       // The API returns { data: { sprintGoalEn, sprintGoalAr, totalEstimatedHours, stories: [...] }, succeeded: true }
       const raw = res.data || res || [];
       let mappedSuggestions: SprintSuggestionDto[] = [];

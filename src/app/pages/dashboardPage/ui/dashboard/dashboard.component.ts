@@ -199,7 +199,11 @@ import { DashboardService } from '../../services/dashboard.service';
               </span>
             } @else if (currentTab() === 'sprint') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
-                {{ activeSprintName() }}
+                @if (activeSprintName()) {
+                  {{ activeSprintName() }} {{ currentLang() === 'ar' ? 'نشط' : 'Active' }}
+                } @else {
+                  {{ currentLang() === 'ar' ? 'لا يوجد سباق نشط' : 'No Active Sprint' }}
+                }
               </span>
             }
           </div>
@@ -475,7 +479,7 @@ export class DashboardComponent implements OnInit {
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
 
   // Component state
-  activeSprintName = signal('No Active Sprint');
+  activeSprintName = signal('');
   isProjectDropdownOpen = signal(false);
 
   // Eager project statistics Map
@@ -610,13 +614,13 @@ export class DashboardComponent implements OnInit {
       const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
       const sprintData = data.data;
       if (sprintData) {
-        this.activeSprintName.set(`${sprintData.titleEn || sprintData.title || ''} Active`);
+        this.activeSprintName.set(sprintData.titleEn || sprintData.title || '');
       } else {
-        this.activeSprintName.set('No Active Sprint');
+        this.activeSprintName.set('');
       }
     } catch (e) {
       console.warn('Failed to load active sprint info:', e);
-      this.activeSprintName.set('No Active Sprint');
+      this.activeSprintName.set('');
     }
   }
 

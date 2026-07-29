@@ -355,14 +355,6 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Notification Bell -->
             <app-notification-bell />
 
-            <!-- Language Toggle -->
-            <button (click)="toggleLanguage()"
-                    class="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface text-text-primary rounded-xl border border-border hover:bg-sidebar transition-colors shadow-sm">
-              <span class="text-xs font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-            </button>
 
             <!-- Dark / Light Toggle -->
             <button
@@ -701,7 +693,10 @@ export class EmployeeDashboardComponent implements OnInit {
       const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
       const s = data.data;
       if (s) {
-        this.activeSprintLabel.set(s.titleEn ?? s.title ?? '');
+        const sprintName = this.currentLang() === 'ar' 
+          ? (s.titleAr || s.titleEn || s.title || '')
+          : (s.titleEn || s.titleAr || s.title || '');
+        this.activeSprintLabel.set(sprintName);
         this.hasActiveSprint.set(true);
       } else {
         this.activeSprintLabel.set('');

@@ -622,10 +622,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               </div>
               <div>
                 <h3 class="text-xl font-black text-text-primary tracking-tight">
-                  {{ isEditing() ? 'Task Details' : 'Create New Task' }}
+                  {{ isEditing() ? (currentLang === 'ar' ? 'تفاصيل المهمة' : 'Task Details') : (currentLang === 'ar' ? 'إنشاء مهمة جديدة' : 'Create New Task') }}
                 </h3>
                 <p class="text-[11px] font-bold text-text-secondary uppercase tracking-wider mt-0.5">
-                  {{ isEditing() ? 'Manage task info and chat' : 'Add to your backlog' }}
+                  {{ isEditing() ? (currentLang === 'ar' ? 'إدارة معلومات المهمة والنقاش' : 'Manage task info and chat') : (currentLang === 'ar' ? 'أضف إلى المهام المتراكمة' : 'Add to your backlog') }}
                 </p>
               </div>
             </div>
@@ -644,28 +644,28 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               <div class="space-y-6 flex flex-col">
                 @if (projectState.isProjectManager()) {
                   <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Task Title</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'عنوان المهمة' : 'Task Title' }}</label>
                     <input type="text" [(ngModel)]="modalTask().title" 
-                           placeholder="What needs to be done?"
+                           [placeholder]="currentLang === 'ar' ? 'ما الذي يجب القيام به؟' : 'What needs to be done?'"
                            class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-extrabold text-[15px] shadow-sm placeholder:text-text-secondary/50" />
                   </div>
 
                   <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Description</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الوصف' : 'Description' }}</label>
                     <textarea [(ngModel)]="modalTask().description" rows="5"
-                              placeholder="Provide more context..."
+                              [placeholder]="currentLang === 'ar' ? 'قدم المزيد من السياق...' : 'Provide more context...'"
                               class="w-full px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl outline-none focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all duration-200 resize-none font-medium text-[13px] shadow-sm leading-relaxed placeholder:text-text-secondary/50"></textarea>
                   </div>
 
                   <div class="grid grid-cols-2 gap-5 relative">
                     <div class="relative">
-                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</label>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الأولوية' : 'Priority' }}</label>
                       <button type="button" (click)="togglePrioritySelect()"
                               class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
                         <div class="flex items-center gap-2">
                           <span class="w-2.5 h-2.5 rounded-full" 
                                 [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
-                          {{ modalTask().priority }}
+                          {{ currentLang === 'ar' ? (modalTask().priority === 'High' ? 'عالية' : modalTask().priority === 'Medium' ? 'متوسطة' : 'منخفضة') : modalTask().priority }}
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary transition-transform" [ngClass]="{'rotate-180': isPrioritySelectOpen()}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -679,7 +679,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                               <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full" 
                                       [ngClass]="{'bg-error': p === 'High', 'bg-amber-500': p === 'Medium', 'bg-emerald-500': p === 'Low'}"></span>
-                                {{ p }}
+                                {{ currentLang === 'ar' ? (p === 'High' ? 'عالية' : p === 'Medium' ? 'متوسطة' : 'منخفضة') : p }}
                               </div>
                               @if (modalTask().priority === p) {
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -693,7 +693,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                     </div>
 
                     <div class="relative">
-                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</label>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'النوع' : 'Type' }}</label>
                       <button type="button" (click)="toggleTypeSelect()"
                               class="w-full flex items-center justify-between px-4 py-3 border border-border bg-background hover:bg-surface text-text-primary rounded-xl transition-all duration-200 font-bold text-[13px] shadow-sm">
                         <div class="flex items-center gap-2">
@@ -702,7 +702,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                             <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
                             <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
                           </span>
-                          {{ modalTask().type }}
+                          {{ currentLang === 'ar' ? (modalTask().type === 'Feature' ? 'ميزة' : modalTask().type === 'Bug' ? 'مشكلة' : 'تحسين') : modalTask().type }}
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary transition-transform" [ngClass]="{'rotate-180': isTypeSelectOpen()}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -719,7 +719,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                                   <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
                                   <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
                                 </span>
-                                {{ t }}
+                                {{ currentLang === 'ar' ? (t === 'Feature' ? 'ميزة' : t === 'Bug' ? 'مشكلة' : 'تحسين') : t }}
                               </div>
                               @if (modalTask().type === t) {
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -734,60 +734,62 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   </div>
 
                   <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimation</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'التقدير' : 'Estimation' }}</label>
                     <div class="relative">
-                      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
+                      <div class="absolute top-1/2 -translate-y-1/2 text-text-secondary" [ngClass]="currentLang === 'ar' ? 'right-4' : 'left-4'">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <input type="number" [(ngModel)]="modalTask().hours" 
-                             class="w-full pl-10 pr-16 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-bold text-[13px] shadow-sm" />
-                      <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary uppercase">hrs</span>
+                             class="w-full py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 font-bold text-[13px] shadow-sm"
+                             [ngClass]="currentLang === 'ar' ? 'pr-10 pl-16' : 'pl-10 pr-16'" />
+                      <span class="absolute top-1/2 -translate-y-1/2 text-xs font-bold text-text-secondary uppercase"
+                            [ngClass]="currentLang === 'ar' ? 'left-4' : 'right-4'">{{ currentLang === 'ar' ? 'ساعات' : 'hrs' }}</span>
                     </div>
                   </div>
                 } @else {
                   <div class="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
                     <div class="p-6 space-y-4">
                       <h4 class="text-2xl font-black text-text-primary leading-tight tracking-tight">{{ modalTask().title }}</h4>
-                      <p class="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium bg-background border border-border/50 rounded-xl p-4">{{ modalTask().description || 'No description provided.' }}</p>
+                      <p class="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap font-medium bg-background border border-border/50 rounded-xl p-4">{{ modalTask().description || (currentLang === 'ar' ? 'لم يتم تقديم وصف.' : 'No description provided.') }}</p>
                     </div>
                     <div class="grid grid-cols-4 divide-x divide-border border-t border-border bg-background text-center">
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Type</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'النوع' : 'Type' }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
                           <span class="text-lg leading-none" [ngSwitch]="modalTask().type">
                             <ng-container *ngSwitchCase="'Feature'">✨</ng-container>
                             <ng-container *ngSwitchCase="'Bug'">🐛</ng-container>
                             <ng-container *ngSwitchCase="'Refactor'">♻️</ng-container>
                           </span>
-                          {{ modalTask().type }}
+                          {{ currentLang === 'ar' ? (modalTask().type === 'Feature' ? 'ميزة' : modalTask().type === 'Bug' ? 'مشكلة' : 'تحسين') : modalTask().type }}
                         </span>
                       </div>
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Priority</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الأولوية' : 'Priority' }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1.5">
                           <span class="w-2.5 h-2.5 rounded-full" 
                                 [ngClass]="{'bg-error': modalTask().priority === 'High', 'bg-amber-500': modalTask().priority === 'Medium', 'bg-emerald-500': modalTask().priority === 'Low'}"></span>
-                          {{ modalTask().priority }}
+                          {{ currentLang === 'ar' ? (modalTask().priority === 'High' ? 'عالية' : modalTask().priority === 'Medium' ? 'متوسطة' : 'منخفضة') : modalTask().priority }}
                         </span>
                       </div>
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Estimated</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'المقدرة' : 'Estimated' }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
                           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          {{ modalTask().hours }}h
+                          {{ modalTask().hours }}{{ currentLang === 'ar' ? 'س' : 'h' }}
                         </span>
                       </div>
                       <div class="p-4 hover:bg-surface transition-colors cursor-default">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">Actual</span>
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الفعلية' : 'Actual' }}</span>
                         <span class="text-text-primary font-extrabold text-sm flex items-center justify-center gap-1">
                           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          {{ modalTask().actualHours || 0 }}h
+                          {{ modalTask().actualHours || 0 }}{{ currentLang === 'ar' ? 'س' : 'h' }}
                         </span>
                       </div>
                     </div>
@@ -802,16 +804,16 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   <div class="flex items-center space-x-3 pt-6 border-t border-border mt-6">
                     @if (projectState.isProjectManager() && !isBoardReadonly()) {
                       <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
-                        Delete Task
+                        {{ currentLang === 'ar' ? 'حذف المهمة' : 'Delete Task' }}
                       </button>
                     }
                     <div class="flex-1"></div>
                     <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
-                      Cancel
+                      {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
                     </button>
                     @if (projectState.isProjectManager() && !isBoardReadonly()) {
                       <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                        Save Changes
+                        {{ currentLang === 'ar' ? 'حفظ التغييرات' : 'Save Changes' }}
                       </button>
                     }
                   </div>
@@ -834,10 +836,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           @if (!isEditing()) {
             <div class="p-6 border-t border-border flex items-center justify-end space-x-3 bg-surface rounded-b-2xl shrink-0">
               <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-background font-bold rounded-xl transition-colors">
-                Cancel
+                {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
               </button>
               <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                Create Task
+                {{ currentLang === 'ar' ? 'إنشاء المهمة' : 'Create Task' }}
               </button>
             </div>
           }
