@@ -292,16 +292,20 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                   </div>
                 }
 
-                @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
-                  <div class="p-4 bg-sidebar border border-border rounded-2xl">
-                    <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">
-                      {{ currentLang === 'ar' ? 'ملخص انطباع الفريق' : 'Team Sentiment Summary' }}
-                    </h4>
+                <div class="p-4 bg-sidebar border border-border rounded-2xl">
+                  <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">
+                    {{ currentLang === 'ar' ? 'ملخص انطباع الفريق' : 'Team Sentiment Summary' }}
+                  </h4>
+                  @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
                     <p class="text-xs text-text-primary leading-relaxed font-medium italic">
                       "{{ currentLang === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn }}"
                     </p>
-                  </div>
-                }
+                  } @else {
+                    <p class="text-xs text-text-secondary leading-relaxed font-normal opacity-75 italic">
+                      {{ currentLang === 'ar' ? 'لم يتم تسجيل ملخص انطباعات محدد للفريق في هذا السبرينت.' : 'No specific team sentiment feedback recorded for this sprint.' }}
+                    </p>
+                  }
+                </div>
               </div>
 
             </div>
