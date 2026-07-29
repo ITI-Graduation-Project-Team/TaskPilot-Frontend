@@ -159,33 +159,11 @@ export class SprintPlanningService {
   }
 
   async generateRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    if (projectId) {
-      try {
-        const { data } = await apiClient.post(`/projects/${projectId}/sprints/${sprintId}/retrospective`);
-        return data;
-      } catch (e: any) {
-        if (e?.response?.status !== 404) throw e;
-      }
-    }
     const { data } = await apiClient.post(`/sprints/${sprintId}/retrospective/generate`);
     return data;
   }
 
   async getRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    if (projectId) {
-      try {
-        const { data } = await apiClient.get(`/projects/${projectId}/sprints/${sprintId}/retrospective`);
-        return data;
-      } catch (e: any) {
-        if (e?.response?.status !== 404) throw e;
-        try {
-          const { data } = await apiClient.get(`/projects/${projectId}/sprint-retrospectives/sprints/${sprintId}`);
-          return data;
-        } catch (err: any) {
-          if (err?.response?.status !== 404) throw err;
-        }
-      }
-    }
     const { data } = await apiClient.get(`/sprints/${sprintId}/retrospective`);
     return data;
   }
