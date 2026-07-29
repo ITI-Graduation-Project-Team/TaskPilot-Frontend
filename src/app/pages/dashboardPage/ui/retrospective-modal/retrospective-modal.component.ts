@@ -325,7 +325,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
 })
 export class RetrospectiveModalComponent implements OnInit {
   @Input() sprintId!: string;
-  @Input() projectId?: string;
+  @Input() projectId?: string | null;
   @Output() close = new EventEmitter<void>();
 
   private sprintService = inject(SprintPlanningService);
