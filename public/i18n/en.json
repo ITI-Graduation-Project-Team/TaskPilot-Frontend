@@ -296,6 +296,8 @@
   "employee": {
     "loading": "Loading your workspace…",
     "nav": {
+      "policies": "Company Policies",
+      "policiesShort": "Policies",
       "sprintBoard": "Active Sprint",
       "myBacklog": "My Backlog",
       "myProfile": "My Profile",
@@ -309,6 +311,7 @@
       "history": "History"
     },
     "pages": {
+      "policies": "Company Policies",
       "sprintBoard": "Active Sprint",
       "myBacklog": "My Backlog",
       "myProfile": "My Profile",
@@ -324,6 +327,15 @@
     },
     "sidebar": {
       "employee": "Employee"
+    },
+    "chat": {
+      "title": "Company Policies AI",
+      "subtitle": "Ask questions about your company's guidelines",
+      "welcomeTitle": "How can I help you today?",
+      "welcomeDesc": "Feel free to ask me anything about our company policies, leave rules, or general guidelines. I'm here to assist you based on the official documents.",
+      "placeholder": "Type your question here...",
+      "defaultAnswer": "This is a placeholder answer.",
+      "errorAnswer": "Sorry, I couldn't fetch the answer right now. Please try again later."
     },
     "noProject": {
       "title": "No Project Assigned",

@@ -15,7 +15,9 @@ import { ProjectHistory } from '../project-history/project-history';
 import { MyProfileComponent } from '../my-profile/my-profile.component';
 import { CalendarViewComponent } from '../../../dashboardPage/ui/calendar-view/calendar-view.component';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
-type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar';
+import { CompanyPoliciesChatComponent } from '../company-policies-chat/company-policies-chat.component';
+
+type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'policies-chat';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -30,7 +32,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
     ProjectHistory,
     MyProfileComponent,
     CalendarViewComponent,
-    NotificationBellComponent
+    NotificationBellComponent,
+    CompanyPoliciesChatComponent
   ],
   template: `
     <div
@@ -157,6 +160,19 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
             <span class="text-start">{{ 'calendar.title' | translate }}</span>
+          </button>
+
+          <!-- Policies Chat -->
+          <button
+            (click)="activeTab.set('policies-chat')"
+            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            [class.nav-item-active]="activeTab() === 'policies-chat'"
+            [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-start">{{ 'employee.nav.policies' | translate }}</span>
           </button>
 
           <!-- My Profile -->
@@ -457,6 +473,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 <app-project-history></app-project-history>
               </div>
 
+            } @else if (activeTab() === 'policies-chat') {
+              <div class="animate-[fadeUp_0.3s_ease_both] h-[calc(100vh-140px)]">
+                <app-company-policies-chat></app-company-policies-chat>
+              </div>
             } @else if (activeTab() === 'profile') {
               <div class="animate-[fadeUp_0.3s_ease_both]">
                 <app-my-profile></app-my-profile>
@@ -514,6 +534,19 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span class="text-[9px] font-bold">{{ 'employee.nav.history' | translate }}</span>
+          </button>
+
+          <!-- Policies -->
+          <button
+            (click)="activeTab.set('policies-chat')"
+            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            [class.mobile-tab-active]="activeTab() === 'policies-chat'"
+            [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-[9px] font-bold">{{ 'employee.nav.policiesShort' | translate }}</span>
           </button>
 
           <!-- My Profile -->
@@ -582,6 +615,7 @@ export class EmployeeDashboardComponent implements OnInit {
     if (tab === 'current-projects') return this.tr.instant('employee.pages.currentProjects');
     if (tab === 'project-history') return this.tr.instant('employee.pages.projectHistory');
     if (tab === 'calendar') return this.tr.instant('calendar.title');
+    if (tab === 'policies-chat') return this.tr.instant('employee.pages.policies');
     return this.tr.instant('employee.pages.myProfile');
   });
 
@@ -614,7 +648,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore persisted tab
     const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar'].includes(savedTab)) {
+    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar',, 'policies-chat'].includes(savedTab)) {
       this.router.navigate(['/employee-dashboard', savedTab]);
     }
 

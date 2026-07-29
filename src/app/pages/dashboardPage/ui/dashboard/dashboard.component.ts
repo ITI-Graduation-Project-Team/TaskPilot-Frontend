@@ -1,6 +1,11 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
+import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
+import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
+import { ProjectHubComponent } from '../project-hub/project-hub.component';
+import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
+import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
@@ -28,9 +33,16 @@ import { DashboardService } from '../../services/dashboard.service';
     RouterLink,
     FormsModule,
     AiChatModalComponent,
-    ProjectHistoryModalComponent,
+    DraftReviewModalComponent,
+    TechStackAdvisorModalComponent,
+    ProjectHubComponent,
+    SprintPlanningViewComponent,
+    SprintListComponent,
     NotificationBellComponent,
+    OrganizationViewComponent,
+    ProjectHistoryModalComponent
     TranslatePipe
+
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -130,12 +142,33 @@ import { DashboardService } from '../../services/dashboard.service';
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
               {{ 'SIDEBAR.PROJECT_TEAM' | translate }}
             </a>
-          }
+          } 
+          <!-- Organization Hub / Company Policies Tab -->
+          <a (click)="currentTab.set('organization')"
+             [class.bg-primary/10]="currentTab() === 'organization'"
+             [class.text-primary]="currentTab() === 'organization'"
+             [class.font-bold]="currentTab() === 'organization'"
+             [class.shadow-sm]="currentTab() === 'organization'"
+             [class.text-text-secondary]="currentTab() !== 'organization'"
+             [class.hover:text-text-primary]="currentTab() !== 'organization'"
+             [class.hover:bg-primary/5]="currentTab() !== 'organization'"
+             [class.font-medium]="currentTab() !== 'organization'"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            @if (projectState.isProjectManager()) {
+              Organization Hub
+            } @else {
+              Company Policies
+            }
+          </a>
+
+
           <a routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
              [class.text-text-secondary]="!rlaProfile.isActive"
              [class.hover:text-text-primary]="!rlaProfile.isActive"
              [class.hover:bg-primary/5]="!rlaProfile.isActive"
              [class.font-medium]="!rlaProfile.isActive"
+
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -179,6 +212,8 @@ import { DashboardService } from '../../services/dashboard.service';
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
                 {{ 'HEADER.SPRINT_PLANNING' | translate }}
+              } @else if (currentTab() === 'organization') {
+                @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
@@ -210,7 +245,7 @@ import { DashboardService } from '../../services/dashboard.service';
 
           <div class="flex items-center gap-4">
             <!-- Project selector context dropdown (only shown inside project tabs) -->
-            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && projectState.projects().length > 0) {
+            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'organization' && projectState.projects().length > 0) {
               <div class="flex items-center gap-2">
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
@@ -476,7 +511,7 @@ export class DashboardComponent implements OnInit {
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
 
   // Component state
   activeSprintName = signal('');
