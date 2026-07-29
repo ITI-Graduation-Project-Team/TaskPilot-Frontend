@@ -104,43 +104,153 @@
     }
   },
   "PROFILE": {
-    "UPLOAD_TITLE": "Complete Your Profile",
-    "UPLOAD_SUBTITLE": "Let our AI extract your skills from your CV to get you started faster.",
-    "DRAG_DROP": "Click or drag & drop",
-    "SUPPORTED_FILES": "PDF or DOCX files up to 10MB",
-    "AI_PROCESSING": "AI is extracting skills from your CV...",
-    "ANALYZING": "Analyzing Document",
-    "REVIEW_SKILLS": "Extracted Skills",
-    "SKILLS_FOUND": "skills found",
-    "NO_SKILLS_EXTRACTED": "No skills found. Try adding them manually below.",
-    "ADD_SKILL_PLACEHOLDER": "Add another skill...",
-    "ADD_BTN": "Add",
-    "CONFIRM_SAVE_BTN": "Confirm & Save Profile",
-    "PAYLOAD_PREVIEW": "Payload Preview (Debug):",
-    "READY_TO_SEND": "Ready to send",
-    "NO_SKILLS_ERROR": "Please add at least one skill before confirming.",
+    "LOADING": "Loading Profile Details...",
+    "TEAM_MEMBER": "Team Member",
+    "EDIT_PROFILE": "Edit Profile",
+    "JOB_EXPERIENCE": "Job Experience",
     "JOB_TITLE": "Job Title",
-    "SENIORITY_LEVEL": "Seniority Level",
-    "TOTAL_YEARS": "Total Years of Experience",
-    "LEVEL": "Level",
-    "YEARS": "Years"
+    "NA": "N/A",
+    "SENIORITY": "Seniority Level",
+    "EXPERIENCE_YEARS": "Experience (Years)",
+    "YEARS": "Years",
+    "SKILLS": "Skills & Technologies",
+    "NO_SKILLS": "No skills listed in profile.",
+    "UPDATE_SETTINGS": "Update Profile Settings",
+    "LEVELS": {
+      "JUNIOR": "Junior",
+      "MID": "Mid Level",
+      "SENIOR": "Senior",
+      "LEAD": "Lead"
+    },
+    "YEARS_EXP": "Years of Exp",
+    "SKILLS_COMMA": "Skills (Comma Separated)",
+    "SKILLS_PLACEHOLDER": "e.g. Angular, C#, ASP.NET, SQL Server"
   },
   "landing": {
     "title1": "Navigate Your Projects",
     "title2": "with",
     "title3": "Ultimate Clarity",
     "subtitle": "TaskPilot is the clean, fast, and intelligent way to manage your daily tasks, team projects, and focus time. All in one beautiful workspace.",
+    "quote1": "Empower your team with AI-driven insights to achieve more in less time.",
+    "quote2": "Streamline your workflow seamlessly and focus on what truly matters.",
+    "quote3": "Experience unprecedented productivity with our beautifully crafted workspace.",
     "getStarted": "Get Started for Free",
     "exploreFeatures": "Explore Features",
     "goToDashboard": "Go to Dashboard",
-    "featuresTitle": "Everything you need to work faster",
-    "featuresSubtitle": "Designed with a minimalist flat UI to eliminate distractions and boost your productivity.",
-    "aiTitle": "AI-Powered Assistant",
-    "aiDesc": "Chat directly with our intelligent assistant to summarize tasks, generate project ideas, and organize your day instantly.",
-    "timeTitle": "Smart Time Tracking",
-    "timeDesc": "Monitor your focus time effortlessly. Keep track of how much time goes into each task and optimize your workflow.",
-    "workspaceTitle": "Clean Workspace",
-    "workspaceDesc": "A distraction-free, beautifully crafted flat UI with seamless light and dark modes to keep your eyes rested.",
+    "smarterSolutions": "Smarter solutions. Greater velocity of work.",
+    "tabs": {
+      "ai": "AI",
+      "projects": "Projects and portfolios",
+      "digital": "Digital and IT",
+      "operations": "Operations",
+      "client": "Client delivery"
+    },
+    "tabContent": {
+      "ai": {
+        "title": "AI-powered intelligence",
+        "features": [
+          "Make work management your team's superpower with TaskPilot AI.",
+          "Get personalized insights and deeper analysis.",
+          "Tailored solutions to tackle any challenge.",
+          "No expert skills required."
+        ],
+        "linkText": "AI vision >"
+      },
+      "projects": {
+        "title": "Project and portfolio management",
+        "features": [
+          "Real-time project/portfolio visibility",
+          "Connected workflows across tools",
+          "Cross-team resource planning",
+          "Portfolio-level dashboards"
+        ],
+        "linkText": "Project management >"
+      },
+      "digital": {
+        "title": "Digital and IT portfolio leadership",
+        "features": [
+          "Milestone and dependency tracking",
+          "Workload balancing and capacity planning",
+          "Centralized intake and approval workflows",
+          "Role-based visibility (Gantt, Kanban, Dashboards)"
+        ],
+        "linkText": "IT portfolio management >"
+      },
+      "operations": {
+        "title": "Operational excellence",
+        "features": [
+          "Scale with ease",
+          "Deliver excellence",
+          "Unlock insights",
+          "Confidently mitigate risk"
+        ],
+        "linkText": "Operations management >"
+      },
+      "client": {
+        "title": "Client delivery success",
+        "features": [
+          "On-time delivery and execution",
+          "Transparent client communication",
+          "Resource allocation optimization",
+          "Automated reporting and billing"
+        ],
+        "linkText": "Client delivery overview >"
+      }
+    },
+    "journeyTitle": "How TaskPilot Works",
+    "journeySubtitle": "A seamless collaborative journey from setup to success.",
+    "journey": {
+      "step1": {
+        "title": "Setup & Invite",
+        "desc": "Project Manager registers the company and invites the team.",
+        "role": "Project Manager"
+      },
+      "step2": {
+        "title": "Onboarding",
+        "desc": "Employee accepts the invitation, sets up their account, and uploads their CV.",
+        "role": "Employee"
+      },
+      "step3": {
+        "title": "AI Project Creation",
+        "desc": "Project Manager creates a new project effortlessly with the help of AI.",
+        "role": "Project Manager"
+      },
+      "step4": {
+        "title": "Task Assignment",
+        "desc": "Project Manager assigns specific tasks and deadlines to the team.",
+        "role": "Project Manager"
+      },
+      "step5": {
+        "title": "Execution & Completion",
+        "desc": "Employee executes tasks, syncs them to the calendar, and marks them as completed or finished.",
+        "role": "Employee"
+      },
+      "step6": {
+        "title": "Review & Insights",
+        "desc": "Project Manager studies the sprint retrospective, gathers final articles, and reviews information diagrams.",
+        "role": "Project Manager"
+      }
+    },
+    "integrationsTitle": "Seamlessly Integrated",
+    "integrationsSubtitle": "TaskPilot works with the tools you already use every day.",
+    "integrations": {
+      "googleAuth": {
+        "title": "Google Authentication",
+        "desc": "Secure and fast one-click login."
+      },
+      "googleCalendar": {
+        "title": "Google Calendar",
+        "desc": "Two-way sync for all your tasks and meetings."
+      },
+      "gmail": {
+        "title": "Gmail",
+        "desc": "Instant email notifications and updates."
+      },
+      "github": {
+        "title": "GitHub",
+        "desc": "Link your commits and branches directly to tasks."
+      }
+    },
     "aboutUs": "About Us",
     "ourStory": "Our Story",
     "team": "Team",
@@ -160,17 +270,34 @@
     "rescheduleError": "Failed to reschedule task",
     "loadError": "Failed to load calendar data",
     "months": {
-      "jan": "January", "feb": "February", "mar": "March", "apr": "April",
-      "may": "May", "jun": "June", "jul": "July", "aug": "August",
-      "sep": "September", "oct": "October", "nov": "November", "dec": "December"
+      "jan": "January",
+      "feb": "February",
+      "mar": "March",
+      "apr": "April",
+      "may": "May",
+      "jun": "June",
+      "jul": "July",
+      "aug": "August",
+      "sep": "September",
+      "oct": "October",
+      "nov": "November",
+      "dec": "December"
     },
     "days": {
-      "sun": "Sun", "mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat"
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
     }
   },
   "employee": {
     "loading": "Loading your workspace…",
     "nav": {
+      "policies": "Company Policies",
+      "policiesShort": "Policies",
       "sprintBoard": "Active Sprint",
       "myBacklog": "My Backlog",
       "myProfile": "My Profile",
@@ -184,6 +311,7 @@
       "history": "History"
     },
     "pages": {
+      "policies": "Company Policies",
       "sprintBoard": "Active Sprint",
       "myBacklog": "My Backlog",
       "myProfile": "My Profile",
@@ -193,10 +321,21 @@
     "header": {
       "selectProject": "Select Project",
       "yourProjects": "Your Projects",
-      "logout": "Logout"
+      "logout": "Logout",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode"
     },
     "sidebar": {
       "employee": "Employee"
+    },
+    "chat": {
+      "title": "Company Policies AI",
+      "subtitle": "Ask questions about your company's guidelines",
+      "welcomeTitle": "How can I help you today?",
+      "welcomeDesc": "Feel free to ask me anything about our company policies, leave rules, or general guidelines. I'm here to assist you based on the official documents.",
+      "placeholder": "Type your question here...",
+      "defaultAnswer": "This is a placeholder answer.",
+      "errorAnswer": "Sorry, I couldn't fetch the answer right now. Please try again later."
     },
     "noProject": {
       "title": "No Project Assigned",
@@ -251,5 +390,289 @@
       "completed": "Completed",
       "noDescription": "No description provided."
     }
+  },
+  "DASHBOARD": {
+    "ACTIVE_PROJECTS": "Sprint Progress",
+    "SPRINT_VELOCITY": "Sprint Velocity",
+    "SPRINT_HEALTH": "Sprint Health",
+    "TEAM_BURNOUT_RISK": "Team Burnout Risk",
+    "TEAM_PULSE": "Team Pulse",
+    "MEMBERS": "members",
+    "HOVER_FOR_DETAILS": "Hover for details",
+    "LIVE_ACTIVITY": "Live Activity",
+    "LIVE": "Live",
+    "NO_ACTIVITY": "No recent activity.",
+    "WORKLOAD": "Workload",
+    "PACE": "Pace",
+    "ENGAGEMENT": "Engagement",
+    "BURNDOWN_CHART": "Sprint Burndown",
+    "WORKLOAD_DIST": "Workload Distribution",
+    "TOP_CONTRIBUTORS": "Top Contributors",
+    "TASKS_DONE": "tasks done",
+    "NO_CONTRIBUTORS_YET": "No completed tasks yet.",
+    "7_DAY_TREND": "7-Day Trend",
+    "BURNOUT_RISK_SCORE": "Burnout Risk Score",
+    "RISK_FACTORS": "Risk Factors",
+    "DEPT": "Dept",
+    "ANALYZED_BY": "Analyzed by AI",
+    "TREND_IMPROVING": "↘ improving",
+    "TREND_RISING": "↗ rising",
+    "TREND_STABLE": "→ stable"
+  },
+  "SPRINT_HEALTH": {
+    "ERROR_LOADING": "Failed to load sprint health data"
+  },
+  "SPRINT_VALIDATION": {
+    "NO_EMPLOYEES_BANNER_TITLE": "No Team Members Assigned",
+    "NO_EMPLOYEES_BANNER_DESC": "You cannot create or plan sprints until at least one employee is assigned to this project.",
+    "CTA_ASSIGN_EMPLOYEES": "Assign Employees",
+    "CTA_INVITE_TEAM": "Invite Team",
+    "NO_EMPLOYEES_MODAL_TITLE": "Employees Required for Sprint Planning",
+    "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
+    "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
+    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
+  },
+  "REQUIREMENTS": {
+    "ALMOST_COMPLETE": "Almost Complete"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notifications",
+    "MARK_ALL_READ": "Mark all as read",
+    "EMPTY": "No notifications yet"
+  },
+  "SIDEBAR": {
+
+    "SWITCH": "Switch",
+    "ALL_PROJECTS": "All Projects",
+    "SPRINTS": "Sprints",
+    "BACKLOG": "Backlog",
+    "SPRINT_PLANNING": "Sprint Planning",
+    "PROJECT_TEAM": "Project Team",
+    "ORGANIZATION_HUB": "Organization Hub",
+    "COMPANY_POLICIES": "Company Policies",
+    "MY_PROFILE": "My Profile",
+    "PROJECTS": "Projects",
+    "SPRINT": "Sprint",
+    "PLANNING": "Planning",
+    "BACKLOG_SHORT": "Backlog",
+    "TEAM": "Team",
+    "PROFILE": "Profile"
+  },
+  "HEADER": {
+    "PROJECTS_HUB": "Projects Hub",
+    "CREATE_PROJECT": "Create Project",
+    "MY_PROFILE": "My Profile",
+    "ALL_PROJECTS": "All Projects",
+    "SPRINT_PLANNING": "Sprint Planning",
+    "COMPLETED": "Completed",
+    "ARCHIVED": "Archived",
+    "SELECT_PROJECT": "Select Project",
+    "YOUR_PROJECTS": "Your Projects",
+    "CREATE_PROJECT_BTN": "Create Project",
+    "SUBSCRIPTION": "Subscription",
+    "LOGOUT": "Logout"
+  },
+  "PROJECT_HUB": {
+    "ACTIVE_DRAFT": "Active & Draft",
+    "COMPLETED": "Completed",
+    "ARCHIVED": "Archived",
+    "SEARCH_PLACEHOLDER": "Search projects...",
+    "NEW_PROJECT": "New Project",
+    "NO_MATCHING": "No matching projects",
+    "NO_MATCHING_DESC": "We couldn't find any projects matching \"{{ query }}\". Try adjusting your search query.",
+    "CLEAR_SEARCH": "Clear Search",
+    "NO_PROJECTS": "No projects yet",
+    "NO_PROJECTS_DESC": "Start by building your first workspace. You can set it up manually or chat with our AI agent to structure your requirements automatically.",
+    "GENERATE_WITH_AI": "Generate with AI"
+  },
+  "PROJECT_CARD": {
+    "EDIT_PROJECT": "Edit Project",
+    "VIEW_STATUS": "View Status & History",
+    "DELETE": "Delete",
+    "NO_DESCRIPTION": "No description provided.",
+    "COMPLETED": "Completed",
+    "ARCHIVED": "Archived",
+    "NO_ACTIVE_SPRINT": "No Active Sprint",
+    "MEMBERS": "Members",
+    "TASKS": "Tasks",
+    "SPRINT_BOARD": "Sprint Board",
+    "BACKLOG": "Backlog"
+  },
+  "SPRINT_LIST": {
+    "TITLE": "Sprint Planning",
+    "SUBTITLE": "Plan and manage your project sprints here.",
+    "STATUS": "Status",
+    "ALL_STATUSES": "All Statuses",
+    "PLANNED": "Planned",
+    "ACTIVE": "Active",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled",
+    "FROM": "From",
+    "TO": "To",
+    "NO_SPRINTS": "No Sprints Found",
+    "NO_SPRINTS_DESC": "Create a new sprint to get started.",
+    "STORIES": "Stories",
+    "TASKS": "Tasks",
+    "VIEW_BOARD": "View Board"
+  },
+  "BOARD": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "High",
+    "KANBAN_BOARD": "Kanban Board",
+    "HEALTH_PULSE": "Health Pulse",
+    "TOTAL_TASKS": "Total Tasks",
+    "IN_PROGRESS": "In Progress",
+    "UNDER_REVIEW": "Under Review",
+    "COMPLETED": "Completed",
+    "BACK_TO_SPRINTS": "Back to Sprints",
+    "WORKSPACE": "Workspace",
+    "MANAGE_MONITOR": "Manage and monitor",
+    "ASSIGN_TASKS": "Assign Tasks",
+    "ASSIGNED_TASKS": "Assigned Tasks",
+    "START_SPRINT": "Start Sprint",
+    "COMPLETE_SPRINT": "Complete Sprint",
+    "SPRINT_RETRO": "Sprint Retro",
+    "SEARCH_TASKS": "Search tasks",
+    "SEARCH_PLACEHOLDER": "Search by title or description...",
+    "PRIORITY": "Priority",
+    "ALL_PRIORITIES": "All Priorities",
+    "TYPE": "Type",
+    "ALL_TYPES": "All Types",
+    "FEATURE": "Feature",
+    "BUG": "Bug",
+    "REFACTOR": "Refactor",
+    "CLEAR_FILTERS": "Clear Filters",
+    "SHOWING_TASKS": "Showing {{ visible }} of {{ total }} tasks",
+    "DRAG_DISABLED": "Drag disabled (Project {{ status }})",
+    "DRAG_PAUSED": "Drag paused",
+    "TO_DO": "To Do",
+    "REVIEW": "Review",
+    "DONE": "Done",
+    "SUMMARIZE": "Summarize",
+    "EDIT": "Edit",
+    "VIEW": "View",
+    "SHOW_MORE": "Show {{ count }} more",
+    "SHOW_LESS": "Show less",
+    "LOADING_BACKLOG": "Loading backlog...",
+    "CREATE_PROJECT_TITLE": "Create Project",
+    "CREATE_PROJECT_DESC": "Initialize a new project",
+    "PROJ_NAME_EN": "Project Name (EN)",
+    "PROJ_NAME_EN_PH": "E.g., TaskPilot",
+    "PROJ_NAME_AR": "Project Name (AR)",
+    "PROJ_NAME_AR_PH": "E.g., تاسك بايلوت",
+    "PROJ_DESC_EN": "Description (EN)",
+    "PROJ_DESC_EN_PH": "Describe the project...",
+    "PROJ_DESC_AR": "Description (AR)",
+    "PROJ_DESC_AR_PH": "وصف المشروع...",
+    "CREATE_PROJECT_BTN": "Create Project",
+    "NO_ACTIVE_PROJECT": "No Active Project",
+    "NO_ACTIVE_PROJECT_DESC": "Please select a project.",
+    "NO_MATCHING_TASKS": "No matching tasks.",
+    "NO_TASKS_TODO": "No tasks to do.",
+    "DROP_TASKS_HERE": "Drop tasks here.",
+    "DROP_TASKS_VALIDATION": "Drop tasks for validation.",
+    "NO_COMPLETED_TASKS": "No completed tasks."
+  },
+  "MODALS": {
+    "EDIT_PROJECT_TITLE": "Edit Project Details",
+    "PROJ_NAME_EN": "Project Name (English)",
+    "PROJ_NAME_AR": "اسم المشروع (عربي)",
+    "PROJ_DESC_EN": "Description (English)",
+    "PROJ_DESC_AR": "الوصف (عربي)",
+    "CANCEL": "Cancel",
+    "SAVE_CHANGES": "Save Changes",
+    "PROJECT_STATUS": "Project Status",
+    "STATUS_TIMELINE": "Status Timeline",
+    "STATUS_CHANGE": "Status Change",
+    "CURRENT_STATUS": "Current Status",
+    "NO_STATUS_TRANSITIONS": "No status transitions recorded yet.",
+    "PROCESSING": "Processing...",
+    "ARCHIVE_PROJECT": "Archive Project",
+    "RESTORE_TO_ACTIVE": "Restore to Active",
+    "ACTIVATE_PROJECT": "Activate Project",
+    "COMPLETE_PROJECT": "Complete Project",
+    "CREATED": "Created",
+    "REVERT_TO_DRAFT": "Revert to Draft",
+    "REVERT_TO_ACTIVE": "Revert to Active"
+  },
+  "TEAM": {
+    "MANAGEMENT": "Team Management",
+    "MANAGEMENT_DESC": "Invite members to your company and assign them to your projects.",
+    "INVITE_MEMBERS": "Invite New Members",
+    "INVITE_MEMBERS_DESC": "Send emails to invite professionals to join your company team.",
+    "EMAILS": "Emails",
+    "EMAIL_PLACEHOLDER": "e.g. employee@company.com",
+    "EMAIL_HINT": "Press <kbd class=\"px-1 bg-border rounded text-text-primary text-[9px] font-mono\">Enter</kbd>, <kbd class=\"px-1 bg-border rounded text-text-primary text-[9px] font-mono\">Space</kbd> or <kbd class=\"px-1 bg-border rounded text-text-primary text-[9px] font-mono\">Comma</kbd> to add the email.",
+    "SENDING_INVITES": "Sending Invites...",
+    "SEND_INVITATIONS": "Send Invitations",
+    "ACTIVE_ASSIGNMENT": "Active Project Assignment",
+    "SELECT_PROJECT_FIRST": "Select a project first",
+    "SELECT_PROJECT_DESC": "Please select a project from the top dropdown to manage team assignments.",
+    "ASSIGNMENT_FAILED": "Assignment Failed",
+    "SELECT_MEMBER": "Select Member",
+    "CHOOSE_MEMBER": "-- Choose Member --",
+    "ALREADY_ASSIGNED": "Already in another project",
+    "ALL_ASSIGNED": "All company members are already assigned to this project.",
+    "ROLE": "Role",
+    "ROLES": {
+      "DEVELOPER": "Developer",
+      "QA": "QA / Tester",
+      "SCRUM_MASTER": "Scrum Master",
+      "PRODUCT_OWNER": "Product Owner",
+      "DESIGNER": "UI/UX Designer"
+    },
+    "ASSIGN_TO_PROJECT": "Assign to Project",
+    "ASSIGNED_TEAM": "Assigned Project Team",
+    "LOADING_TEAM": "Loading project team assignments...",
+    "NO_EMPLOYEES": "No employees are currently assigned to this project. Use the form above to add members."
+  },
+  "BACKLOG": {
+    "ADD_USER_STORY": "Add user story",
+    "EDIT_BACKLOG": "Edit Backlog",
+    "EDIT_USER_STORY": "Edit user story",
+    "UPDATE_STORY": "Update story",
+    "NEW_STORY": "New story",
+    "STORY_DESC": "Maintain English and Arabic backlog columns in one pass.",
+    "PRODUCT_BACKLOG": "Product backlog",
+    "TASK": "Task",
+    "EDIT": "Edit",
+    "DELETE": "Delete"
+  },
+  "CREATE_PROJECT": {
+    "BACK_TO_PROJECTS": "Back to projects",
+    "NEW_WORKSPACE": "New workspace",
+    "TITLE": "Create a project your team can actually run",
+    "SUBTITLE": "Start with AI when requirements are still fuzzy to create a new project workspace.",
+    "BUILD_CHAT": "Build from requirements chat",
+    "BUILD_DESC": "Use the AI flow to clarify scope, finalize the project, review tech stack recommendations, and generate the initial backlog with WBS.",
+    "REQ_INTERVIEW": "Requirements interview",
+    "PROJ_SAVED": "Project draft saved",
+    "TECH_ADVISOR": "Tech stack advisor",
+    "BACKLOG_GEN": "Backlog generated",
+    "START_AI_FLOW": "Start AI flow",
+    "BEST_FOR": "Best for",
+    "UNCLEAR_SCOPE": "Unclear scope",
+    "UNCLEAR_DESC": "Let the assistant ask clarifying questions before the project exists.",
+    "BACKLOG_GEN_TITLE": "Backlog generation",
+    "BACKLOG_GEN_DESC": "Tech Stack Advisor runs before WBS so tasks match the chosen architecture.",
+    "TEAM_HANDOFF": "Team handoff",
+    "TEAM_HANDOFF_DESC": "The final project opens directly into a backlog your team can refine."
+  },
+  "AI_CHAT": {
+    "GREETING": "Hello! I am your AI assistant.",
+    "GREETING_PM": "Tell me about the project you want to build. You can describe it in text, upload technical documentation, or specify platforms and stack you prefer.",
+    "GREETING_DEV": "I can help you understand project requirements, explain tasks, or assist with any technical questions you have. How can I help you today?",
+    "TITLE": "AI Project Assistant",
+    "SUBTITLE": "Describe your project requirements to generate WBS & user stories"
+  },
+  "ORGANIZATION": {
+    "TITLE_PM": "Organization Hub",
+    "TITLE_EMP": "Company Policies",
+    "DESC_PM": "Manage your company's general settings, upload policy documents, and test the AI HR Assistant.",
+    "DESC_EMP": "Ask the AI Assistant questions about company policies, leave days, and general guidelines.",
+    "TAB_SETTINGS": "General Settings",
+    "TAB_KNOWLEDGE": "Knowledge Base",
+    "TAB_CHAT": "Policy Chat (Test)"
   }
 }

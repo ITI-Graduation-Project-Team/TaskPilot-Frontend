@@ -23,6 +23,21 @@ export function saveTokens(accessToken: string, refreshToken: string): void {
 export function clearTokens(): void {
   Cookies.remove(environment.auth.tokenKey);
   Cookies.remove(environment.auth.refreshTokenKey);
+  if (typeof localStorage !== 'undefined') {
+    // Keep app_lang and theme if they exist, clear user session state to prevent leakage
+    const lang = localStorage.getItem('app_lang');
+    const theme = localStorage.getItem('theme');
+    localStorage.clear();
+    if (lang) {
+      localStorage.setItem('app_lang', lang);
+    }
+    if (theme) {
+      localStorage.setItem('theme', theme);
+    }
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.clear();
+  }
 }
 export function getRoleFromToken(): string | null {
   const token = getAccessToken(); // your existing cookie reader

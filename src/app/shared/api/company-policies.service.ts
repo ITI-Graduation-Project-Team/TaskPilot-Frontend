@@ -42,8 +42,31 @@ export class CompanyPoliciesService {
     return data;
   }
 
-  async askPolicyQuestion(request: PolicyAskRequest): Promise<string> {
-    const { data } = await apiClient.post('/company-policies/ask', request);
-    return data?.data?.answer || data?.answer || data?.data || data;
+   async askPolicyQuestion(request: PolicyAskRequest): Promise<string> {
+    try {
+      const response = await apiClient.post('/company-policies/ask', request);
+      const resData = response.data;
+
+      let answerText = '';
+
+      if (resData?.data?.answer) {
+        answerText = resData.data.answer;
+      } else if (resData?.answer) {
+        answerText = resData.answer;
+      } else if (resData?.Data?.Answer) {
+        answerText = resData.Data.Answer;
+      }
+
+      if (typeof answerText === 'string' && answerText.trim() !== '') {
+        return answerText;
+      }
+
+      return JSON.stringify(resData, null, 2);
+
+    } catch (error) {
+      console.error('Error fetching policy answer:', error);
+      throw error; 
+    }
   }
+
 }

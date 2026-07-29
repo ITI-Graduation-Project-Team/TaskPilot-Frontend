@@ -104,7 +104,7 @@ export class SettingsPageComponent implements OnInit {
 
   connectGoogleCalendar() {
     this.isConnectingCalendar.set(true);
-    
+
     this.googleCalendarService.getConnectUrl()
       .pipe(
         finalize(() => this.isConnectingCalendar.set(false))
