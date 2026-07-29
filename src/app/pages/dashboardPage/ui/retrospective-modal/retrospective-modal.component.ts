@@ -259,35 +259,35 @@ import { extractApiError } from '../../../../shared/api/auth.api';
 
               <!-- Content Cards -->
               <div class="space-y-3">
-                @if (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) {
+                @if (currentLang === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'ما تم إنجازه بنجاح' : 'What Went Well' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? (activeRetro()?.whatWentWellAr || activeRetro()?.whatWentWellEn) : (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) }}
+                      {{ currentLang === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn }}
                     </p>
                   </div>
                 }
 
-                @if (activeRetro()?.challengesEn || activeRetro()?.challengesAr) {
+                @if (currentLang === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-error uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'التحديات والعقبات' : 'Challenges & Blockers' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? (activeRetro()?.challengesAr || activeRetro()?.challengesEn) : (activeRetro()?.challengesEn || activeRetro()?.challengesAr) }}
+                      {{ currentLang === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn }}
                     </p>
                   </div>
                 }
 
-                @if (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) {
+                @if (currentLang === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'خطوات العمل القادمة' : 'Action Items' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? (activeRetro()?.actionItemsAr || activeRetro()?.actionItemsEn) : (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) }}
+                      {{ currentLang === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn }}
                     </p>
                   </div>
                 }
@@ -296,9 +296,9 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                   <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">
                     {{ currentLang === 'ar' ? 'ملخص انطباع الفريق' : 'Team Sentiment Summary' }}
                   </h4>
-                  @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
+                  @if (currentLang === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn) {
                     <p class="text-xs text-text-primary leading-relaxed font-medium italic">
-                      "{{ currentLang === 'ar' ? (activeRetro()?.teamSentimentSummaryAr || activeRetro()?.teamSentimentSummaryEn) : (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) }}"
+                      "{{ currentLang === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn }}"
                     </p>
                   } @else {
                     <p class="text-xs text-text-secondary leading-relaxed font-normal opacity-75 italic">
@@ -377,7 +377,7 @@ export class RetrospectiveModalComponent implements OnInit {
     const whatWentWellAr = cleanStr(analysis?.whatWentWellAr ?? raw.whatWentWellAr);
     const challengesEn = cleanStr(analysis?.challengesEn ?? raw.challengesEn);
     const challengesAr = cleanStr(analysis?.challengesAr ?? raw.challengesAr);
-    const teamSentimentSummaryEn = cleanStr(analysis?.teamSentiment ?? raw.teamSentimentSummaryEn);
+    const teamSentimentSummaryEn = cleanStr(analysis?.summaryEn ?? raw.teamSentimentSummaryEn ?? analysis?.teamSentiment);
     const teamSentimentSummaryAr = cleanStr(analysis?.summaryAr ?? raw.teamSentimentSummaryAr);
     const actionItemsEn = cleanStr(raw.actionItemsEn);
     const actionItemsAr = cleanStr(raw.actionItemsAr);

@@ -455,37 +455,37 @@ import { extractApiError } from '../../../../shared/api/auth.api';
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <!-- What Went Well -->
-            @if (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) {
+            @if (currentLang() === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn) {
               <div class="p-5 rounded-3xl bg-emerald-500/[0.03] border border-emerald-500/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-emerald-500 uppercase tracking-wider flex items-center gap-2">
                   <span>🎉 {{ currentLang() === 'ar' ? 'ما تم إنجازه بنجاح (What Went Well)' : 'What Went Well' }}</span>
                 </h4>
                 <p class="text-xs text-text-primary leading-relaxed font-medium whitespace-pre-line">
-                  {{ currentLang() === 'ar' ? (activeRetro()?.whatWentWellAr || activeRetro()?.whatWentWellEn) : (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) }}
+                  {{ currentLang() === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn }}
                 </p>
               </div>
             }
 
             <!-- Challenges & Blockers -->
-            @if (activeRetro()?.challengesEn || activeRetro()?.challengesAr) {
+            @if (currentLang() === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn) {
               <div class="p-5 rounded-3xl bg-error/[0.03] border border-error/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-error uppercase tracking-wider flex items-center gap-2">
                   <span>🚨 {{ currentLang() === 'ar' ? 'التحديات والعقبات (Challenges & Blockers)' : 'Challenges & Blockers' }}</span>
                 </h4>
                 <p class="text-xs text-text-primary leading-relaxed font-medium whitespace-pre-line">
-                  {{ currentLang() === 'ar' ? (activeRetro()?.challengesAr || activeRetro()?.challengesEn) : (activeRetro()?.challengesEn || activeRetro()?.challengesAr) }}
+                  {{ currentLang() === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn }}
                 </p>
               </div>
             }
 
             <!-- Action Items -->
-            @if (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) {
+            @if (currentLang() === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn) {
               <div class="p-5 rounded-3xl bg-amber-500/[0.03] border border-amber-500/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-amber-500 uppercase tracking-wider flex items-center gap-2">
                   <span>📋 {{ currentLang() === 'ar' ? 'خطوات العمل القادمة (Action Items)' : 'Action Items' }}</span>
                 </h4>
                 <p class="text-xs text-text-primary leading-relaxed font-medium whitespace-pre-line">
-                  {{ currentLang() === 'ar' ? (activeRetro()?.actionItemsAr || activeRetro()?.actionItemsEn) : (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) }}
+                  {{ currentLang() === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn }}
                 </p>
               </div>
             }
@@ -495,9 +495,9 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               <h4 class="text-xs font-extrabold text-primary uppercase tracking-wider flex items-center gap-2">
                 <span>💬 {{ currentLang() === 'ar' ? 'ملخص انطباع الفريق (Team Sentiment)' : 'Team Sentiment Summary' }}</span>
               </h4>
-              @if (activeRetro()?.teamSentimentSummaryEn?.trim() || activeRetro()?.teamSentimentSummaryAr?.trim()) {
+              @if (currentLang() === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn) {
                 <p class="text-xs text-text-primary leading-relaxed font-medium italic">
-                  "{{ currentLang() === 'ar' ? (activeRetro()?.teamSentimentSummaryAr || activeRetro()?.teamSentimentSummaryEn) : (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) }}"
+                  "{{ currentLang() === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn }}"
                 </p>
               } @else {
                 <p class="text-xs text-text-secondary leading-relaxed font-normal opacity-75 italic">
@@ -571,7 +571,7 @@ export class RetrospectiveViewComponent implements OnInit {
     const whatWentWellAr = cleanStr(analysis?.whatWentWellAr ?? raw.whatWentWellAr);
     const challengesEn = cleanStr(analysis?.challengesEn ?? raw.challengesEn);
     const challengesAr = cleanStr(analysis?.challengesAr ?? raw.challengesAr);
-    const teamSentimentSummaryEn = cleanStr(analysis?.teamSentiment ?? raw.teamSentimentSummaryEn);
+    const teamSentimentSummaryEn = cleanStr(analysis?.summaryEn ?? raw.teamSentimentSummaryEn ?? analysis?.teamSentiment);
     const teamSentimentSummaryAr = cleanStr(analysis?.summaryAr ?? raw.teamSentimentSummaryAr);
     const actionItemsEn = cleanStr(raw.actionItemsEn);
     const actionItemsAr = cleanStr(raw.actionItemsAr);
