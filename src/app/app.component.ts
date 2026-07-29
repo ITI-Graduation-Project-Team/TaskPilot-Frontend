@@ -12,6 +12,7 @@ import { setAxiosInjector } from './shared/api/axios.instance';
 import { ThemeService } from './shared/services/theme.service';
 import { NotificationHubService } from './shared/services/notification-hub.service';
 import { AuthService } from './shared/api/auth.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -40,14 +41,22 @@ export class AppComponent implements OnInit {
   private themeService = inject(ThemeService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  
+
   public authService = inject(AuthService);
   private notificationHubService = inject(NotificationHubService);
+  private translate = inject(TranslateService);
 
   loading$ = this.loadingService.loading$;
 
   constructor() {
     setAxiosInjector(this.injector);
+
+    // Initialize language globally
+    const savedLang = localStorage.getItem('app_lang') || 'en';
+    this.translate.setFallbackLang('en');
+    this.translate.use(savedLang);
+    document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = savedLang;
   }
 
   ngOnInit() {

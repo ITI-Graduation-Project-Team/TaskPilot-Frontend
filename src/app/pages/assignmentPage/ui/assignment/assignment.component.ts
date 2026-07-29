@@ -5,6 +5,7 @@ import { TaskListComponent } from './task-list/task-list.component';
 import { EmployeeSelectorComponent } from './employee-selector/employee-selector.component';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { TranslateService } from '@ngx-translate/core';
 import { AssignmentSuggestion } from '../../../../entities/assignment.entity';
 
 @Component({
@@ -23,6 +24,11 @@ export class AssignmentComponent implements OnInit {
   private router = inject(Router);
   private assignmentService = inject(AssignmentService);
   private toastService = inject(ToastService);
+  private translateService = inject(TranslateService);
+
+  get currentLang(): string {
+    return this.translateService.currentLang() || 'en';
+  }
 
   // State Signals
   readonly suggestions = signal<AssignmentSuggestion[]>([]);

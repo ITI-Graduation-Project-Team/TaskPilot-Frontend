@@ -3,6 +3,7 @@ import {
   computed, inject, effect, DOCUMENT
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../shared/services/theme.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
@@ -23,6 +24,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    RouterLink,
     CommonModule,
     TranslatePipe,
     BoardComponent,
@@ -98,7 +100,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           @if (projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
             <!-- Active Sprint -->
             <button
-              (click)="activeTab.set('sprint')"
+              [routerLink]="['/employee-dashboard', 'sprint']"
               class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
               [class.nav-item-active]="activeTab() === 'sprint'"
               [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
@@ -119,7 +121,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Current Projects -->
           <button
-            (click)="activeTab.set('current-projects')"
+            [routerLink]="['/employee-dashboard', 'current-projects']"
             class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
             [class.nav-item-active]="activeTab() === 'current-projects'"
             [style.color]="activeTab() !== 'current-projects' ? 'var(--text-secondary)' : ''"
@@ -134,7 +136,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Project History -->
           <button
-            (click)="activeTab.set('project-history')"
+            [routerLink]="['/employee-dashboard', 'project-history']"
             class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
             [class.nav-item-active]="activeTab() === 'project-history'"
             [style.color]="activeTab() !== 'project-history' ? 'var(--text-secondary)' : ''"
@@ -148,7 +150,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Calendar -->
           <button
-            (click)="activeTab.set('calendar')"
+            [routerLink]="['/employee-dashboard', 'calendar']"
             class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
             [class.nav-item-active]="activeTab() === 'calendar'"
             [style.color]="activeTab() !== 'calendar' ? 'var(--text-secondary)' : ''"
@@ -175,7 +177,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- My Profile -->
           <button
-            (click)="activeTab.set('profile')"
+            [routerLink]="['/employee-dashboard', 'profile']"
             class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
             [class.nav-item-active]="activeTab() === 'profile'"
             [style.color]="activeTab() !== 'profile' ? 'var(--text-secondary)' : ''"
@@ -221,7 +223,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
         <!-- Sidebar Footer — User Card & Actions -->
         <div class="px-3 pt-3 border-t mt-3 space-y-2" style="border-color: var(--border);">
           <button
-            (click)="activeTab.set('profile')"
+            [routerLink]="['/employee-dashboard', 'profile']"
             class="w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 group"
             style="background: var(--surface); border-color: var(--border);"
           >
@@ -369,14 +371,6 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Notification Bell -->
             <app-notification-bell />
 
-            <!-- Language Toggle -->
-            <button (click)="toggleLanguage()"
-                    class="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface text-text-primary rounded-xl border border-border hover:bg-sidebar transition-colors shadow-sm">
-              <span class="text-xs font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-            </button>
 
             <!-- Dark / Light Toggle -->
             <button
@@ -503,7 +497,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Sprint Board -->
           <button
-            (click)="activeTab.set('sprint')"
+            [routerLink]="['/employee-dashboard', 'sprint']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'sprint'"
             [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
@@ -517,7 +511,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Current Projects -->
           <button
-            (click)="activeTab.set('current-projects')"
+            [routerLink]="['/employee-dashboard', 'current-projects']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'current-projects'"
             [style.color]="activeTab() !== 'current-projects' ? 'var(--text-secondary)' : ''"
@@ -531,7 +525,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Project History -->
           <button
-            (click)="activeTab.set('project-history')"
+            [routerLink]="['/employee-dashboard', 'project-history']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'project-history'"
             [style.color]="activeTab() !== 'project-history' ? 'var(--text-secondary)' : ''"
@@ -557,7 +551,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- My Profile -->
           <button
-            (click)="activeTab.set('profile')"
+            [routerLink]="['/employee-dashboard', 'profile']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'profile'"
             [style.color]="activeTab() !== 'profile' ? 'var(--text-secondary)' : ''"
@@ -576,6 +570,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
   styles: `:host { display: block; }`
 })
 export class EmployeeDashboardComponent implements OnInit {
+  private router = inject(Router);
+  public route = inject(ActivatedRoute);
   private doc = inject(DOCUMENT);
   private theme = inject(ThemeService);
   private auth = inject(AuthService);
@@ -625,6 +621,12 @@ export class EmployeeDashboardComponent implements OnInit {
 
   // ── Lifecycle ───────────────────────────────
   constructor() {
+    this.route.paramMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab) {
+        this.activeTab.set(tab as any);
+      }
+    });
     // Reload sprint info when selected project changes
     effect(() => {
       const id = this.projectState.selectedProjectId();
@@ -646,8 +648,8 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore persisted tab
     const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'policies-chat'].includes(savedTab)) {
-      this.activeTab.set(savedTab);
+    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar',, 'policies-chat'].includes(savedTab)) {
+      this.router.navigate(['/employee-dashboard', savedTab]);
     }
 
     this.loadUserProfile();
@@ -725,7 +727,10 @@ export class EmployeeDashboardComponent implements OnInit {
       const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
       const s = data.data;
       if (s) {
-        this.activeSprintLabel.set(s.titleEn ?? s.title ?? '');
+        const sprintName = this.currentLang() === 'ar' 
+          ? (s.titleAr || s.titleEn || s.title || '')
+          : (s.titleEn || s.titleAr || s.title || '');
+        this.activeSprintLabel.set(sprintName);
         this.hasActiveSprint.set(true);
       } else {
         this.activeSprintLabel.set('');

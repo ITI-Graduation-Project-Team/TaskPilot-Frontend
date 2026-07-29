@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
@@ -7,7 +8,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
   selector: 'app-project-history-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
       <div class="bg-surface border border-border rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] animate-[scaleUp_0.25s_ease_both] overflow-hidden relative">
@@ -20,7 +21,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
           <div>
             <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase tracking-wider mb-2">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              Project Status
+              {{ 'MODALS.PROJECT_STATUS' | translate }}
             </div>
             <h3 class="text-2xl font-extrabold text-text-primary font-display tracking-tight">{{ projectName() }}</h3>
           </div>
@@ -32,7 +33,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <!-- Content -->
         <div class="p-6 overflow-y-auto custom-scrollbar relative z-10 flex-1">
           <h4 class="text-sm font-bold text-text-primary mb-4 flex items-center gap-2">
-            Status Timeline
+            {{ 'MODALS.STATUS_TIMELINE' | translate }}
           </h4>
           
           @if (isLoading()) {
@@ -55,10 +56,10 @@ import { ToastService } from '../../../../shared/services/toast.service';
                   
                   <div class="flex flex-col">
                     <span class="text-xs font-bold text-text-secondary uppercase tracking-wider mb-1">
-                      Status Change
+                      {{ 'MODALS.STATUS_CHANGE' | translate }}
                     </span>
                     <div class="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                      <span class="px-2 py-0.5 rounded-md bg-sidebar border border-border text-text-secondary">{{ entry.fromStatus || 'Created' }}</span>
+                      <span class="px-2 py-0.5 rounded-md bg-sidebar border border-border text-text-secondary">{{ entry.fromStatus || ('MODALS.CREATED' | translate) }}</span>
                       <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                       <span class="px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">{{ entry.toStatus }}</span>
                     </div>
@@ -71,7 +72,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
                 <div class="absolute -left-[31px] top-0.5 w-3.5 h-3.5 bg-primary border-2 border-primary rounded-full shadow-[0_0_10px_rgba(var(--color-primary),0.5)] animate-pulse"></div>
                 <div class="flex flex-col">
                   <span class="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                    Current Status
+                    {{ 'MODALS.CURRENT_STATUS' | translate }}
                   </span>
                   <div class="inline-flex items-center text-sm font-semibold text-text-primary w-fit">
                     <span class="px-3 py-1 rounded-md bg-surface border border-primary text-primary shadow-sm">{{ currentStatus() }}</span>
@@ -81,10 +82,10 @@ import { ToastService } from '../../../../shared/services/toast.service';
             </div>
           } @else {
             <div class="text-center py-6">
-              <p class="text-sm text-text-secondary">No status transitions recorded yet.</p>
+              <p class="text-sm text-text-secondary">{{ 'MODALS.NO_STATUS_TRANSITIONS' | translate }}</p>
               <div class="mt-4 ml-6 relative text-left">
                  <div class="absolute -left-[31px] top-0.5 w-3.5 h-3.5 bg-primary border-2 border-primary rounded-full shadow-[0_0_10px_rgba(var(--color-primary),0.5)]"></div>
-                 <span class="text-xs font-bold text-primary uppercase tracking-wider mb-1 block">Current Status</span>
+                 <span class="text-xs font-bold text-primary uppercase tracking-wider mb-1 block">{{ 'MODALS.CURRENT_STATUS' | translate }}</span>
                  <span class="px-3 py-1 rounded-md bg-surface border border-primary text-primary shadow-sm text-sm font-semibold">{{ currentStatus() }}</span>
               </div>
             </div>
@@ -94,7 +95,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <!-- Footer Actions -->
         <div class="p-6 pt-4 border-t border-border/50 bg-sidebar/30 flex justify-between items-center z-10 rounded-b-3xl">
           <button (click)="close.emit()" class="px-4 py-2 border border-border hover:bg-background text-text-secondary font-bold text-sm rounded-xl transition-colors">
-            Cancel
+            {{ 'MODALS.CANCEL' | translate }}
           </button>
           
           <div class="flex items-center gap-3">
@@ -105,7 +106,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
                 <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                {{ revertText() }}
+                {{ revertText() | translate }}
               </button>
             }
 
@@ -114,31 +115,31 @@ import { ToastService } from '../../../../shared/services/toast.service';
                   class="px-5 py-2.5 font-bold text-sm rounded-xl transition-all shadow-md flex items-center gap-2 group disabled:opacity-50"
                   [ngClass]="currentStatus() === 'Completed' ? 'bg-slate-600 hover:bg-slate-700 text-white' : (currentStatus() === 'Archived' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white')">
             @if (isActionLoading()) {
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin ltr:-ml-1 rtl:-mr-1 ltr:mr-2 rtl:ml-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Processing...
+              {{ 'MODALS.PROCESSING' | translate }}
             } @else {
               @if (currentStatus() === 'Completed') {
                 <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
-                Archive Project
+                {{ 'MODALS.ARCHIVE_PROJECT' | translate }}
               } @else if (currentStatus() === 'Archived') {
                 <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Restore to Active
+                {{ 'MODALS.RESTORE_TO_ACTIVE' | translate }}
               } @else if (currentStatus() === 'Draft') {
                 <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Activate Project
+                {{ 'MODALS.ACTIVATE_PROJECT' | translate }}
               } @else {
                 <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                Complete Project
+                {{ 'MODALS.COMPLETE_PROJECT' | translate }}
               }
               }
             </button>
@@ -165,9 +166,9 @@ export class ProjectHistoryModalComponent implements OnInit {
 
   revertText = computed(() => {
     switch (this.currentStatus()) {
-      case 'Active': return 'Revert to Draft';
-      case 'Completed': return 'Revert to Active';
-      default: return 'Revert';
+      case 'Active': return 'MODALS.REVERT_TO_DRAFT';
+      case 'Completed': return 'MODALS.REVERT_TO_ACTIVE';
+      default: return 'MODALS.REVERT';
     }
   });
 

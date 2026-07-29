@@ -9,8 +9,8 @@
         </svg>
       </div>
       <div>
-        <h3 class="text-sm font-bold text-text-primary tracking-wide">Task Discussion</h3>
-        <p class="text-[10px] text-text-secondary">Comments and attachments</p>
+        <h3 class="text-sm font-bold text-text-primary tracking-wide">{{ isAr() ? 'نقاش المهمة' : 'Task Discussion' }}</h3>
+        <p class="text-[10px] text-text-secondary">{{ isAr() ? 'التعليقات والمرفقات' : 'Comments and attachments' }}</p>
       </div>
     </div>
   </div>
@@ -33,8 +33,8 @@
           </svg>
         </div>
         <div>
-          <p class="text-sm font-bold text-text-primary">No activity yet</p>
-          <p class="text-xs opacity-80 mt-0.5">Start the discussion or attach files.</p>
+          <p class="text-sm font-bold text-text-primary">{{ isAr() ? 'لا يوجد نشاط بعد' : 'No activity yet' }}</p>
+          <p class="text-xs opacity-80 mt-0.5">{{ isAr() ? 'ابدأ النقاش أو أرفق ملفات.' : 'Start the discussion or attach files.' }}</p>
         </div>
       </div>
       } @else {
@@ -122,7 +122,7 @@
       }
 
       <div class="flex items-end gap-2 w-full">
-        <button type="button" (click)="triggerFileInput()" [disabled]="isUploading()" title="Attach File"
+        <button type="button" (click)="triggerFileInput()" [disabled]="isUploading()" [title]="isAr() ? 'إرفاق ملف' : 'Attach File'"
           class="p-2.5 text-text-secondary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50">
           @if (isUploading()) {
           <div class="w-5 h-5 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
@@ -138,7 +138,7 @@
 
         <textarea [ngModel]="newCommentText()" (ngModelChange)="newCommentText.set($event)"
           (keydown.enter)="$event.preventDefault(); postComment()" rows="1"
-          placeholder="Write a comment... (Press Enter to send)"
+          [placeholder]="isAr() ? 'اكتب تعليقاً... (اضغط Enter للإرسال)' : 'Write a comment... (Press Enter to send)'"
           class="flex-1 max-h-32 min-h-[44px] py-3 px-2 bg-transparent text-[13px] font-medium text-text-primary resize-none outline-none placeholder:text-text-secondary/50 scrollbar-thin"></textarea>
 
         <button type="button" (click)="postComment()"

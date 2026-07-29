@@ -3,7 +3,7 @@
   <!-- Loading Screen -->
   <div *ngIf="isLoadingPage()" class="flex-1 flex flex-col items-center justify-center p-12">
     <div class="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4"></div>
-    <p class="text-sm font-semibold text-text-secondary animate-pulse">Analyzing developer skills and matching sprint workload...</p>
+    <p class="text-sm font-semibold text-text-secondary animate-pulse">{{ currentLang === 'ar' ? 'جاري تحليل مهارات المطورين ومطابقة عبء عمل السبرينت...' : 'Analyzing developer skills and matching sprint workload...' }}</p>
   </div>
 
   <ng-container *ngIf="!isLoadingPage()">
@@ -19,12 +19,12 @@
         </button>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-xl font-black text-text-primary font-display tracking-tight">Sprint Task Assignment</h1>
+            <h1 class="text-xl font-black text-text-primary font-display tracking-tight">{{ currentLang === 'ar' ? 'تعيين مهام السبرينت' : 'Sprint Task Assignment' }}</h1>
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/20 tracking-wider uppercase flex items-center gap-1">
-              ✨ AI Auto-Match
+              ✨ {{ currentLang === 'ar' ? 'المطابقة التلقائية' : 'AI Auto-Match' }}
             </span>
           </div>
-          <p class="text-xs text-text-secondary mt-0.5">Review AI developer recommendations, balance workload, and assign tasks.</p>
+          <p class="text-xs text-text-secondary mt-0.5">{{ currentLang === 'ar' ? 'راجع توصيات الذكاء الاصطناعي للمطورين، وقم بموازنة عبء العمل، وتعيين المهام.' : 'Review AI developer recommendations, balance workload, and assign tasks.' }}</p>
         </div>
       </div>
 
@@ -34,8 +34,8 @@
         <div class="bg-surface border border-border px-4 py-2 rounded-xl flex items-center gap-3 min-w-[200px]">
           <div class="flex-1">
             <div class="flex items-center justify-between text-[11px] font-bold mb-1">
-              <span class="text-text-secondary uppercase">Progress</span>
-              <span class="text-primary font-black">{{ assignedCount() }}/{{ totalTasksCount() }} Tasks</span>
+              <span class="text-text-secondary uppercase">{{ currentLang === 'ar' ? 'التقدم' : 'Progress' }}</span>
+              <span class="text-primary font-black">{{ assignedCount() }}/{{ totalTasksCount() }} {{ currentLang === 'ar' ? 'مهام' : 'Tasks' }}</span>
             </div>
             <div class="w-full h-2 bg-border/60 rounded-full overflow-hidden">
               <div class="h-full bg-primary transition-all duration-500 rounded-full" [style.width.%]="completionPercentage()"></div>
@@ -46,10 +46,10 @@
 
         <!-- Quick Auto Assign Button -->
         <button (click)="autoAssignTopMatches()" 
-                title="Automatically assign rank #1 AI matched candidate for unassigned tasks"
+                [title]="currentLang === 'ar' ? 'التعيين التلقائي لأفضل المطابقات' : 'Automatically assign rank #1 AI matched candidate for unassigned tasks'"
                 class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
           <svg class="w-4 h-4 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          Auto-Assign Top Matches
+          {{ currentLang === 'ar' ? 'التعيين التلقائي لأفضل المطابقات' : 'Auto-Assign Top Matches' }}
         </button>
       </div>
     </header>
@@ -84,21 +84,21 @@
     <footer class="px-6 py-3.5 border-t border-border bg-surface shrink-0 flex items-center justify-between shadow-lg relative z-20">
       <div class="flex items-center gap-2 text-xs font-bold text-text-secondary">
         <span class="w-2 h-2 rounded-full" [ngClass]="assignedCount() > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
-        <span>{{ assignedCount() }} of {{ totalTasksCount() }} tasks assigned</span>
-        <span *ngIf="unassignedCount() > 0" class="text-text-secondary/60">({{ unassignedCount() }} remaining)</span>
+        <span>{{ assignedCount() }} {{ currentLang === 'ar' ? 'من' : 'of' }} {{ totalTasksCount() }} {{ currentLang === 'ar' ? 'مهام معينة' : 'tasks assigned' }}</span>
+        <span *ngIf="unassignedCount() > 0" class="text-text-secondary/60">({{ unassignedCount() }} {{ currentLang === 'ar' ? 'متبقية' : 'remaining' }})</span>
       </div>
 
       <div class="flex items-center gap-3">
         <button (click)="goBackToDashboard()" 
                 class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all">
-          Cancel
+          {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
         </button>
         <button [disabled]="!canConfirm()"
                 (click)="confirmAssignments()"
                 class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px active:translate-y-0 min-w-[180px] justify-center">
           <div *ngIf="isConfirming()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <svg *ngIf="!isConfirming()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-          <span>{{ isConfirming() ? 'Saving Assignments...' : 'Confirm Assignments' }}</span>
+          <span>{{ isConfirming() ? (currentLang === 'ar' ? 'جاري حفظ التعيينات...' : 'Saving Assignments...') : (currentLang === 'ar' ? 'تأكيد التعيينات' : 'Confirm Assignments') }}</span>
         </button>
       </div>
     </footer>

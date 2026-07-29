@@ -1,14 +1,19 @@
-import { Component, ChangeDetectionStrategy, signal, input, output, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, input, computed, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProjectInfo } from '../../../../shared/services/project-state.service';
+import { ProjectInfo, ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ProjectCardComponent, ProjectStats } from '../project-card/project-card.component';
+import { TranslatePipe } from '@ngx-translate/core';
+import { Router } from '@angular/router';
+import { DashboardService } from '../../services/dashboard.service';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-project-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ProjectCardComponent],
+  imports: [CommonModule, FormsModule, ProjectCardComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       <!-- Search & Filters -->
@@ -19,13 +24,13 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
           <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto custom-scrollbar shrink-0">
             <button (click)="activeTab.set('active')" 
                     [class.bg-surface]="activeTab() === 'active'" [class.shadow-sm]="activeTab() === 'active'" [class.text-text-primary]="activeTab() === 'active'" [class.text-text-secondary]="activeTab() !== 'active'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">Active & Draft</button>
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ACTIVE_DRAFT' | translate }}</button>
             <button (click)="activeTab.set('completed')" 
                     [class.bg-surface]="activeTab() === 'completed'" [class.shadow-sm]="activeTab() === 'completed'" [class.text-text-primary]="activeTab() === 'completed'" [class.text-text-secondary]="activeTab() !== 'completed'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">Completed</button>
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.COMPLETED' | translate }}</button>
             <button (click)="activeTab.set('archived')" 
                     [class.bg-surface]="activeTab() === 'archived'" [class.shadow-sm]="activeTab() === 'archived'" [class.text-text-primary]="activeTab() === 'archived'" [class.text-text-secondary]="activeTab() !== 'archived'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">Archived</button>
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ARCHIVED' | translate }}</button>
           </div>
 
           <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1 justify-end">
@@ -38,16 +43,16 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               <input type="text" 
                      [ngModel]="searchQuery()" 
                      (ngModelChange)="searchQuery.set($event)"
-                     placeholder="Search projects..." 
+                     [placeholder]="'PROJECT_HUB.SEARCH_PLACEHOLDER' | translate" 
                      class="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-text-secondary/70" />
             </div>
             
-            <button (click)="createProject.emit()" 
+            <button (click)="router.navigate(['/dashboard', 'create-project'])" 
                     class="bg-primary hover:bg-primary-hover text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 shrink-0">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
               </svg>
-              <span>New Project</span>
+              <span>{{ 'PROJECT_HUB.NEW_PROJECT' | translate }}</span>
             </button>
           </div>
         </div>
@@ -60,11 +65,7 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
             <app-project-card 
               [project]="p"
               [stats]="getStatsForProject(p.id)"
-              (selectSprint)="selectSprint.emit($event)"
-              (selectBacklog)="selectBacklog.emit($event)"
-              (editProject)="editProject.emit($event)"
-              (deleteProject)="deleteProject.emit($event)"
-              (toggleStatus)="toggleProjectStatus.emit($event)">
+              (deleteProject)="onDeleteProject(p.id)">
             </app-project-card>
           }
         </div>
@@ -76,9 +77,9 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
-          <h3 class="text-base font-extrabold text-text-primary font-display">No matching projects</h3>
-          <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">We couldn't find any projects matching "{{ searchQuery() }}". Try adjusting your search query.</p>
-          <button (click)="searchQuery.set('')" class="text-xs text-primary font-bold hover:underline">Clear Search</button>
+          <h3 class="text-base font-extrabold text-text-primary font-display">{{ 'PROJECT_HUB.NO_MATCHING' | translate }}</h3>
+          <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">{{ 'PROJECT_HUB.NO_MATCHING_DESC' | translate: { query: searchQuery() } }}</p>
+          <button (click)="searchQuery.set('')" class="text-xs text-primary font-bold hover:underline">{{ 'PROJECT_HUB.CLEAR_SEARCH' | translate }}</button>
         </div>
       } @else {
         <!-- Empty State -->
@@ -90,19 +91,19 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
           </div>
           
           <div class="space-y-2">
-            <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">No projects yet</h2>
+            <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'PROJECT_HUB.NO_PROJECTS' | translate }}</h2>
             <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
-              Start by building your first workspace. You can set it up manually or chat with our AI agent to structure your requirements automatically.
+              {{ 'PROJECT_HUB.NO_PROJECTS_DESC' | translate }}
             </p>
           </div>
 
           <div class="flex flex-col sm:flex-row gap-3 pt-2">
-            <button (click)="createProjectWithAi.emit()" 
+            <button (click)="dashboardService.openAiProjectFlow()" 
                     class="bg-primary hover:bg-primary-hover text-white text-sm font-bold px-5 py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group">
               <svg class="w-4 h-4 animate-pulse text-yellow-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              <span>Generate with AI</span>
+              <span>{{ 'PROJECT_HUB.GENERATE_WITH_AI' | translate }}</span>
             </button>
           </div>
         </div>
@@ -111,19 +112,19 @@ import { ProjectCardComponent, ProjectStats } from '../project-card/project-card
   `
 })
 export class ProjectHubComponent {
-  projects = input.required<ProjectInfo[]>();
-  projectStatsMap = input.required<Map<string, ProjectStats>>();
+  router = inject(Router);
+  dashboardService = inject(DashboardService);
+  projectState = inject(ProjectStateService);
+  toastService = inject(ToastService);
+  confirmDialog = inject(ConfirmDialogService);
+
+  projects = computed(() => this.projectState.projects());
+  projectStatsMap = computed(() => this.dashboardService.projectStatsMap());
 
   searchQuery = signal('');
   activeTab = signal<'active' | 'completed' | 'archived'>('active');
 
-  createProject = output<void>();
-  createProjectWithAi = output<void>();
-  selectSprint = output<string>();
-  selectBacklog = output<string>();
-  editProject = output<string>();
-  deleteProject = output<string>();
-  toggleProjectStatus = output<string>();
+
 
   filteredProjects = computed(() => {
     const tab = this.activeTab();
@@ -150,5 +151,25 @@ export class ProjectHubComponent {
 
   getStatsForProject(projectId: string): ProjectStats | null {
     return this.projectStatsMap().get(projectId) || null;
+  }
+
+  onDeleteProject(projectId: string) {
+    this.confirmDialog.confirm({
+      title: 'Delete Project',
+      message: 'Are you sure you want to delete this project? This will permanently remove all sprints, backlog items, and team assignments.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      type: 'danger'
+    }).then(async (confirmed) => {
+      if (confirmed) {
+        const success = await this.projectState.deleteProject(projectId);
+        if (success) {
+          this.toastService.show('Project deleted successfully', 'success');
+          this.dashboardService.loadAllProjectStats();
+        } else {
+          this.toastService.show('Failed to delete project. Please try again.', 'error');
+        }
+      }
+    });
   }
 }
