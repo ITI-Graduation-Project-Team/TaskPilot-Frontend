@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SprintPlanningService, SprintRetrospectiveData, SprintImprovement, DeveloperMetric, PartiallyCompletedStory } from '../../../../shared/api/sprint-planning.service';
@@ -52,7 +52,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                 {{ currentLang === 'ar' ? 'يقوم الذكاء الاصطناعي بتحليل الأداء حالياً...' : 'AI is running analytical retrospect engines...' }}
               </span>
             </div>
-          } @else if (!retro()) {
+          } @else if (!activeRetro()) {
             <div class="flex flex-col items-center justify-center py-12 text-center space-y-4 bg-sidebar border border-border p-6 rounded-2xl">
               <svg class="w-12 h-12 text-text-secondary opacity-30 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -93,7 +93,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     {{ currentLang === 'ar' ? 'معدل الإنجاز' : 'Completion Rate' }}
                   </span>
                   <span class="text-text-primary text-xl font-black mt-1 block">
-                    {{ (retro()?.completionRate ?? 0) | number:'1.0-2' }}%
+                    {{ (activeRetro()?.completionRate ?? 0) | number:'1.0-2' }}%
                   </span>
                 </div>
 
@@ -103,10 +103,10 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     {{ currentLang === 'ar' ? 'إجمالي المهام' : 'Total Tasks' }}
                   </span>
                   <span class="text-text-primary text-xl font-black mt-1 block">
-                    {{ retro()?.totalTasks ?? 0 }}
+                    {{ activeRetro()?.totalTasks ?? 0 }}
                   </span>
                   <span class="text-[10px] text-emerald-500 font-semibold block mt-0.5">
-                    {{ retro()?.completedTasks ?? 0 }} {{ currentLang === 'ar' ? 'مكتملة' : 'completed' }}
+                    {{ activeRetro()?.completedTasks ?? 0 }} {{ currentLang === 'ar' ? 'مكتملة' : 'completed' }}
                   </span>
                 </div>
 
@@ -116,7 +116,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     {{ currentLang === 'ar' ? 'ساعات التقدير / الفعلية' : 'Est. / Actual Hours' }}
                   </span>
                   <span class="text-text-primary text-base font-black mt-1 block">
-                    {{ retro()?.totalEstimatedHours ?? 0 }}h / {{ retro()?.totalActualHours ?? 0 }}h
+                    {{ activeRetro()?.totalEstimatedHours ?? 0 }}h / {{ activeRetro()?.totalActualHours ?? 0 }}h
                   </span>
                 </div>
 
@@ -126,13 +126,13 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     {{ currentLang === 'ar' ? 'معدل السرعة' : 'Velocity Ratio' }}
                   </span>
                   <span class="text-text-primary text-xl font-black mt-1 block">
-                    {{ (retro()?.velocityRatio ?? (retro()?.estimationAccuracy ? retro()!.estimationAccuracy! / 100 : 1.0)) | number:'1.1-2' }}x
+                    {{ (activeRetro()?.velocityRatio ?? (activeRetro()?.estimationAccuracy ? activeRetro()!.estimationAccuracy! / 100 : 1.0)) | number:'1.1-2' }}x
                   </span>
                 </div>
               </div>
 
               <!-- ─── PARTIALLY COMPLETED STORIES ─── -->
-              @if (retro()?.partiallyCompletedStories && retro()!.partiallyCompletedStories!.length > 0) {
+              @if (activeRetro()?.partiallyCompletedStories && activeRetro()!.partiallyCompletedStories!.length > 0) {
                 <div class="p-4 bg-sidebar border border-amber-500/20 rounded-2xl space-y-3">
                   <div class="flex items-center justify-between">
                     <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -142,12 +142,12 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                       {{ currentLang === 'ar' ? 'القصص شبه المكتملة (أولوية السبرينت القادم)' : 'Partially Completed Stories (Carry-over Priority)' }}
                     </h4>
                     <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                      {{ retro()!.partiallyCompletedStories!.length }} {{ currentLang === 'ar' ? 'قصة' : 'stories' }}
+                      {{ activeRetro()!.partiallyCompletedStories!.length }} {{ currentLang === 'ar' ? 'قصة' : 'stories' }}
                     </span>
                   </div>
 
                   <div class="grid grid-cols-1 gap-2.5">
-                    @for (story of retro()!.partiallyCompletedStories!; track story.userStoryId) {
+                    @for (story of activeRetro()!.partiallyCompletedStories!; track story.userStoryId) {
                       <div class="p-3 bg-surface rounded-xl border border-border flex flex-col space-y-2">
                         <div class="flex items-center justify-between gap-2">
                           <p class="text-xs font-bold text-text-primary">
@@ -177,7 +177,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               }
 
               <!-- ─── AI IMPROVEMENTS / RECOMMENDATIONS ─── -->
-              @if (retro()?.improvements && retro()!.improvements!.length > 0) {
+              @if (activeRetro()?.improvements && activeRetro()!.improvements!.length > 0) {
                 <div class="p-4 bg-sidebar border border-border rounded-2xl space-y-3">
                   <h4 class="text-xs font-bold text-primary uppercase tracking-wider flex items-center justify-between">
                     <span>{{ currentLang === 'ar' ? 'توصيات وتحسينات الذكاء الاصطناعي' : 'AI Strategic Improvements' }}</span>
@@ -189,7 +189,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                   </h4>
 
                   <div class="space-y-2">
-                    @for (imp of retro()!.improvements!; track imp.recommendationEn) {
+                    @for (imp of activeRetro()!.improvements!; track imp.recommendationEn) {
                       <div (click)="imp.targetEmployeeId ? toggleEmployeeFilter(imp.targetEmployeeId) : null"
                            class="p-3 bg-surface rounded-xl border transition-all cursor-pointer"
                            [class.border-primary]="selectedEmployeeId() === imp.targetEmployeeId && imp.targetEmployeeId"
@@ -224,14 +224,14 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               }
 
               <!-- ─── DEVELOPER BREAKDOWN METRICS ─── -->
-              @if (retro()?.developerBreakdowns && retro()!.developerBreakdowns!.length > 0) {
+              @if (activeRetro()?.developerBreakdowns && activeRetro()!.developerBreakdowns!.length > 0) {
                 <div class="p-4 bg-sidebar border border-border rounded-2xl space-y-3">
                   <h4 class="text-xs font-bold text-text-primary uppercase tracking-wider">
                     {{ currentLang === 'ar' ? 'أداء مطوري الفريق' : 'Team Developer Breakdown' }}
                   </h4>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    @for (dev of retro()!.developerBreakdowns!; track dev.employeeId) {
+                    @for (dev of activeRetro()!.developerBreakdowns!; track dev.employeeId) {
                       <div class="p-3 bg-surface rounded-xl border transition-all"
                            [class.ring-2]="selectedEmployeeId() === dev.employeeId"
                            [class.ring-primary]="selectedEmployeeId() === dev.employeeId"
@@ -259,46 +259,46 @@ import { extractApiError } from '../../../../shared/api/auth.api';
 
               <!-- Content Cards -->
               <div class="space-y-3">
-                @if (retro()?.whatWentWellEn || retro()?.whatWentWellAr) {
+                @if (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'ما تم إنجازه بنجاح' : 'What Went Well' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? retro()?.whatWentWellAr : retro()?.whatWentWellEn }}
+                      {{ currentLang === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn }}
                     </p>
                   </div>
                 }
 
-                @if (retro()?.challengesEn || retro()?.challengesAr) {
+                @if (activeRetro()?.challengesEn || activeRetro()?.challengesAr) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-error uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'التحديات والعقبات' : 'Challenges & Blockers' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? retro()?.challengesAr : retro()?.challengesEn }}
+                      {{ currentLang === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn }}
                     </p>
                   </div>
                 }
 
-                @if (retro()?.actionItemsEn || retro()?.actionItemsAr) {
+                @if (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'خطوات العمل القادمة' : 'Action Items' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed">
-                      {{ currentLang === 'ar' ? retro()?.actionItemsAr : retro()?.actionItemsEn }}
+                      {{ currentLang === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn }}
                     </p>
                   </div>
                 }
 
-                @if (retro()?.teamSentimentSummaryEn || retro()?.teamSentimentSummaryAr) {
+                @if (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) {
                   <div class="p-4 bg-sidebar border border-border rounded-2xl">
                     <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1.5">
                       {{ currentLang === 'ar' ? 'ملخص انطباع الفريق' : 'Team Sentiment Summary' }}
                     </h4>
                     <p class="text-xs text-text-primary leading-relaxed font-medium italic">
-                      "{{ currentLang === 'ar' ? retro()?.teamSentimentSummaryAr : retro()?.teamSentimentSummaryEn }}"
+                      "{{ currentLang === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn }}"
                     </p>
                   </div>
                 }
@@ -335,6 +335,72 @@ export class RetrospectiveModalComponent implements OnInit {
   retro = signal<SprintRetrospectiveData | null>(null);
   isLoading = signal(false);
   selectedEmployeeId = signal<string | null>(null);
+
+  activeRetro = computed(() => {
+    const raw: any = this.retro();
+    if (!raw) return null;
+
+    const metrics = raw.metrics;
+    const analysis = raw.analysis;
+
+    const completionRate = metrics?.completionRate ?? raw.completionRate ?? 0;
+    const totalTasks = metrics?.totalTasks ?? raw.totalTasks ?? 0;
+    const completedTasks = metrics?.completedTasks ?? raw.completedTasks ?? 0;
+    const unfinishedTasks = metrics?.unfinishedTasks ?? raw.unfinishedTasks ?? raw.notStartedTasks ?? (totalTasks - completedTasks);
+    const inProgressTasks = raw.inProgressTasks ?? 0;
+    const notStartedTasks = raw.notStartedTasks ?? unfinishedTasks;
+    const totalEstimatedHours = metrics?.totalEstimatedHours ?? raw.totalEstimatedHours ?? 0;
+    const totalActualHours = metrics?.totalActualHours ?? raw.totalActualHours ?? 0;
+    const velocityRatio = metrics?.velocityRatio ?? raw.velocityRatio ?? 1.0;
+    const estimationAccuracy = raw.estimationAccuracy ?? (totalEstimatedHours > 0 ? Math.min(100, Math.round((totalActualHours / totalEstimatedHours) * 100)) : 100);
+    const developerBreakdowns = metrics?.developerMetrics ?? raw.developerBreakdowns ?? [];
+
+    const whatWentWellEn = Array.isArray(analysis?.whatWentWellEn)
+      ? analysis.whatWentWellEn.join('\n• ')
+      : (analysis?.whatWentWellEn || (typeof raw.whatWentWellEn === 'string' ? raw.whatWentWellEn : ''));
+
+    const whatWentWellAr = Array.isArray(analysis?.whatWentWellAr)
+      ? analysis.whatWentWellAr.join('\n• ')
+      : (analysis?.whatWentWellAr || (typeof raw.whatWentWellAr === 'string' ? raw.whatWentWellAr : ''));
+
+    const challengesEn = Array.isArray(analysis?.challengesEn)
+      ? analysis.challengesEn.join('\n• ')
+      : (analysis?.challengesEn || (typeof raw.challengesEn === 'string' ? raw.challengesEn : ''));
+
+    const challengesAr = Array.isArray(analysis?.challengesAr)
+      ? analysis.challengesAr.join('\n• ')
+      : (analysis?.challengesAr || (typeof raw.challengesAr === 'string' ? raw.challengesAr : ''));
+
+    const teamSentimentSummaryEn = analysis?.teamSentiment || raw.teamSentimentSummaryEn || '';
+    const teamSentimentSummaryAr = analysis?.summaryAr || raw.teamSentimentSummaryAr || '';
+
+    return {
+      sprintId: raw.sprintId,
+      sprintTitleEn: raw.sprintTitleEn,
+      generatedAt: raw.generatedAt,
+      completionRate,
+      totalTasks,
+      completedTasks,
+      unfinishedTasks,
+      inProgressTasks,
+      notStartedTasks,
+      totalEstimatedHours,
+      totalActualHours,
+      velocityRatio,
+      estimationAccuracy,
+      developerBreakdowns,
+      whatWentWellEn,
+      whatWentWellAr,
+      challengesEn,
+      challengesAr,
+      teamSentimentSummaryEn,
+      teamSentimentSummaryAr,
+      actionItemsEn: raw.actionItemsEn,
+      actionItemsAr: raw.actionItemsAr,
+      improvements: raw.improvements || [],
+      partiallyCompletedStories: raw.partiallyCompletedStories || []
+    };
+  });
 
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';

@@ -137,7 +137,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               : 'Retrospectives are only generated for completed sprints. Complete your active sprint first to enable AI performance analysis.' }}
           </p>
         </div>
-      } @else if (!retro()) {
+      } @else if (!activeRetro()) {
         <!-- ─── NO RETRO REPORT READY STATE ─── -->
         <div class="flex flex-col items-center justify-center text-center rounded-3xl border border-border bg-surface px-6 py-16 shadow-sm max-w-2xl mx-auto my-6 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
           <div class="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-5 ring-8 ring-primary/5">
@@ -188,14 +188,14 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               </div>
               <div class="space-y-1">
                 <p class="text-3xl font-black text-text-primary tracking-tight">
-                  {{ (retro()?.completionRate ?? 0) | number:'1.0-2' }}%
+                  {{ (activeRetro()?.completionRate ?? 0) | number:'1.0-2' }}%
                 </p>
                 <div class="w-full bg-border/50 h-2 rounded-full overflow-hidden mt-2">
                   <div class="h-full rounded-full transition-all duration-700"
-                       [style.width]="(retro()?.completionRate ?? 0) + '%'"
-                       [class.bg-emerald-500]="(retro()?.completionRate ?? 0) >= 80"
-                       [class.bg-amber-500]="(retro()?.completionRate ?? 0) >= 50 && (retro()?.completionRate ?? 0) < 80"
-                       [class.bg-error]="(retro()?.completionRate ?? 0) < 50">
+                       [style.width]="(activeRetro()?.completionRate ?? 0) + '%'"
+                       [class.bg-emerald-500]="(activeRetro()?.completionRate ?? 0) >= 80"
+                       [class.bg-amber-500]="(activeRetro()?.completionRate ?? 0) >= 50 && (activeRetro()?.completionRate ?? 0) < 80"
+                       [class.bg-error]="(activeRetro()?.completionRate ?? 0) < 50">
                   </div>
                 </div>
               </div>
@@ -213,12 +213,12 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               </div>
               <div>
                 <p class="text-3xl font-black text-text-primary tracking-tight mb-2">
-                  {{ retro()?.totalTasks ?? 0 }}
+                  {{ activeRetro()?.totalTasks ?? 0 }}
                 </p>
                 <div class="flex items-center justify-between text-xs font-semibold text-text-secondary pt-1 border-t border-border/60">
-                  <span class="text-emerald-500">Done: {{ retro()?.completedTasks ?? 0 }}</span>
-                  <span class="text-amber-500">In Progress: {{ retro()?.inProgressTasks ?? 0 }}</span>
-                  <span class="text-text-secondary">Not Started: {{ retro()?.notStartedTasks ?? 0 }}</span>
+                  <span class="text-emerald-500">Done: {{ activeRetro()?.completedTasks ?? 0 }}</span>
+                  <span class="text-amber-500">In Progress: {{ activeRetro()?.inProgressTasks ?? 0 }}</span>
+                  <span class="text-text-secondary">Unfinished: {{ activeRetro()?.unfinishedTasks ?? 0 }}</span>
                 </div>
               </div>
             </div>
@@ -236,15 +236,15 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               <div>
                 <div class="flex items-baseline gap-2">
                   <p class="text-3xl font-black text-text-primary tracking-tight">
-                    {{ retro()?.totalActualHours ?? 0 }}h
+                    {{ activeRetro()?.totalActualHours ?? 0 }}h
                   </p>
                   <span class="text-xs font-bold text-text-secondary">
-                    / {{ retro()?.totalEstimatedHours ?? 0 }}h est.
+                    / {{ activeRetro()?.totalEstimatedHours ?? 0 }}h est.
                   </span>
                 </div>
                 <p class="text-[11px] font-semibold text-text-secondary mt-1">
                   {{ currentLang() === 'ar' ? 'دقة التقدير: ' : 'Accuracy: ' }}
-                  <strong class="text-text-primary">{{ (retro()?.estimationAccuracy ?? 100) | number:'1.0-1' }}%</strong>
+                  <strong class="text-text-primary">{{ (activeRetro()?.estimationAccuracy ?? 100) | number:'1.0-1' }}%</strong>
                 </p>
               </div>
             </div>
@@ -261,10 +261,10 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               </div>
               <div>
                 <p class="text-3xl font-black text-text-primary tracking-tight">
-                  {{ (retro()?.velocityRatio ?? 1.0) | number:'1.1-2' }}x
+                  {{ (activeRetro()?.velocityRatio ?? 1.0) | number:'1.1-2' }}x
                 </p>
                 <span class="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 mt-1">
-                  {{ (retro()?.velocityRatio ?? 1.0) >= 1.0 ? 'Optimal Output' : 'Needs Capacity Balancing' }}
+                  {{ (activeRetro()?.velocityRatio ?? 1.0) >= 1.0 ? 'Optimal Output' : 'Needs Capacity Balancing' }}
                 </span>
               </div>
             </div>
@@ -272,7 +272,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
           </div>
 
           <!-- 2. Partially Completed Stories (Carry-over Priority) Section -->
-          @if (retro()?.partiallyCompletedStories && retro()!.partiallyCompletedStories!.length > 0) {
+          @if (activeRetro()?.partiallyCompletedStories && activeRetro()!.partiallyCompletedStories!.length > 0) {
             <div class="rounded-3xl border border-amber-500/30 bg-surface p-6 shadow-sm space-y-4">
               <div class="flex items-center justify-between gap-4 flex-wrap">
                 <div class="flex items-center gap-3">
@@ -292,12 +292,12 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                 </div>
 
                 <span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-extrabold">
-                  {{ retro()!.partiallyCompletedStories!.length }} {{ currentLang() === 'ar' ? 'قصص شبه منتهية' : 'Partially Done Stories' }}
+                  {{ activeRetro()!.partiallyCompletedStories!.length }} {{ currentLang() === 'ar' ? 'قصص شبه منتهية' : 'Partially Done Stories' }}
                 </span>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @for (story of retro()!.partiallyCompletedStories!; track story.userStoryId) {
+                @for (story of activeRetro()!.partiallyCompletedStories!; track story.userStoryId) {
                   <div class="p-4 rounded-2xl bg-sidebar border border-border/80 space-y-3 hover:border-amber-500/40 transition-all">
                     <div class="flex items-start justify-between gap-3">
                       <h4 class="text-sm font-extrabold text-text-primary leading-snug">
@@ -336,7 +336,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
           }
 
           <!-- 3. AI Improvements & Strategic Recommendations Section -->
-          @if (retro()?.improvements && retro()!.improvements!.length > 0) {
+          @if (activeRetro()?.improvements && activeRetro()!.improvements!.length > 0) {
             <div class="rounded-3xl border border-border bg-surface p-6 shadow-sm space-y-4">
               <div class="flex items-center justify-between flex-wrap gap-3">
                 <div class="flex items-center gap-3">
@@ -363,7 +363,7 @@ import { extractApiError } from '../../../../shared/api/auth.api';
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @for (imp of retro()!.improvements!; track imp.recommendationEn) {
+                @for (imp of activeRetro()!.improvements!; track imp.recommendationEn) {
                   <div
                     (click)="imp.targetEmployeeId ? toggleEmployeeFilter(imp.targetEmployeeId) : null"
                     class="p-4 rounded-2xl border transition-all cursor-pointer space-y-2 relative"
@@ -400,19 +400,19 @@ import { extractApiError } from '../../../../shared/api/auth.api';
           }
 
           <!-- 4. Team Developer Performance Grid -->
-          @if (retro()?.developerBreakdowns && retro()!.developerBreakdowns!.length > 0) {
+          @if (activeRetro()?.developerBreakdowns && activeRetro()!.developerBreakdowns!.length > 0) {
             <div class="rounded-3xl border border-border bg-surface p-6 shadow-sm space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="text-base font-extrabold text-text-primary font-display flex items-center gap-2">
                   <span>{{ currentLang() === 'ar' ? 'أداء مطوري الفريق والإنتاجية' : 'Team Developers Breakdown & Velocity' }}</span>
                   <span class="text-xs font-extrabold text-text-secondary bg-sidebar px-2.5 py-0.5 rounded-full border border-border">
-                    {{ retro()!.developerBreakdowns!.length }} {{ currentLang() === 'ar' ? 'مطوّر' : 'Devs' }}
+                    {{ activeRetro()!.developerBreakdowns!.length }} {{ currentLang() === 'ar' ? 'مطوّر' : 'Devs' }}
                   </span>
                 </h3>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                @for (dev of retro()!.developerBreakdowns!; track dev.employeeId) {
+                @for (dev of activeRetro()!.developerBreakdowns!; track dev.employeeId) {
                   <div
                     class="p-4 rounded-2xl bg-sidebar border transition-all space-y-3"
                     [class.ring-2]="selectedEmployeeId() === dev.employeeId"
@@ -456,49 +456,49 @@ import { extractApiError } from '../../../../shared/api/auth.api';
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <!-- What Went Well -->
-            @if (retro()?.whatWentWellEn || retro()?.whatWentWellAr) {
+            @if (activeRetro()?.whatWentWellEn || activeRetro()?.whatWentWellAr) {
               <div class="p-5 rounded-3xl bg-emerald-500/[0.03] border border-emerald-500/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-emerald-500 uppercase tracking-wider flex items-center gap-2">
                   <span>🎉 {{ currentLang() === 'ar' ? 'ما تم إنجازه بنجاح (What Went Well)' : 'What Went Well' }}</span>
                 </h4>
-                <p class="text-xs text-text-primary leading-relaxed font-medium">
-                  {{ currentLang() === 'ar' ? retro()?.whatWentWellAr : retro()?.whatWentWellEn }}
+                <p class="text-xs text-text-primary leading-relaxed font-medium whitespace-pre-line">
+                  {{ currentLang() === 'ar' ? activeRetro()?.whatWentWellAr : activeRetro()?.whatWentWellEn }}
                 </p>
               </div>
             }
 
             <!-- Challenges & Blockers -->
-            @if (retro()?.challengesEn || retro()?.challengesAr) {
+            @if (activeRetro()?.challengesEn || activeRetro()?.challengesAr) {
               <div class="p-5 rounded-3xl bg-error/[0.03] border border-error/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-error uppercase tracking-wider flex items-center gap-2">
                   <span>🚨 {{ currentLang() === 'ar' ? 'التحديات والعقبات (Challenges & Blockers)' : 'Challenges & Blockers' }}</span>
                 </h4>
-                <p class="text-xs text-text-primary leading-relaxed font-medium">
-                  {{ currentLang() === 'ar' ? retro()?.challengesAr : retro()?.challengesEn }}
+                <p class="text-xs text-text-primary leading-relaxed font-medium whitespace-pre-line">
+                  {{ currentLang() === 'ar' ? activeRetro()?.challengesAr : activeRetro()?.challengesEn }}
                 </p>
               </div>
             }
 
             <!-- Action Items -->
-            @if (retro()?.actionItemsEn || retro()?.actionItemsAr) {
+            @if (activeRetro()?.actionItemsEn || activeRetro()?.actionItemsAr) {
               <div class="p-5 rounded-3xl bg-amber-500/[0.03] border border-amber-500/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-amber-500 uppercase tracking-wider flex items-center gap-2">
                   <span>📋 {{ currentLang() === 'ar' ? 'خطوات العمل القادمة (Action Items)' : 'Action Items' }}</span>
                 </h4>
-                <p class="text-xs text-text-primary leading-relaxed font-medium">
-                  {{ currentLang() === 'ar' ? retro()?.actionItemsAr : retro()?.actionItemsEn }}
+                <p class="text-xs text-text-primary leading-relaxed font-medium whitespace-pre-line">
+                  {{ currentLang() === 'ar' ? activeRetro()?.actionItemsAr : activeRetro()?.actionItemsEn }}
                 </p>
               </div>
             }
 
             <!-- Team Sentiment Summary -->
-            @if (retro()?.teamSentimentSummaryEn || retro()?.teamSentimentSummaryAr) {
+            @if (activeRetro()?.teamSentimentSummaryEn || activeRetro()?.teamSentimentSummaryAr) {
               <div class="p-5 rounded-3xl bg-primary/[0.03] border border-primary/20 space-y-2">
                 <h4 class="text-xs font-extrabold text-primary uppercase tracking-wider flex items-center gap-2">
                   <span>💬 {{ currentLang() === 'ar' ? 'ملخص انطباع الفريق (Team Sentiment)' : 'Team Sentiment Summary' }}</span>
                 </h4>
                 <p class="text-xs text-text-primary leading-relaxed font-medium italic">
-                  "{{ currentLang() === 'ar' ? retro()?.teamSentimentSummaryAr : retro()?.teamSentimentSummaryEn }}"
+                  "{{ currentLang() === 'ar' ? activeRetro()?.teamSentimentSummaryAr : activeRetro()?.teamSentimentSummaryEn }}"
                 </p>
               </div>
             }
@@ -530,6 +530,72 @@ export class RetrospectiveViewComponent implements OnInit {
   selectedSprintId = signal<string>('');
   isLoading = signal<boolean>(false);
   selectedEmployeeId = signal<string | null>(null);
+
+  activeRetro = computed(() => {
+    const raw: any = this.retro();
+    if (!raw) return null;
+
+    const metrics = raw.metrics;
+    const analysis = raw.analysis;
+
+    const completionRate = metrics?.completionRate ?? raw.completionRate ?? 0;
+    const totalTasks = metrics?.totalTasks ?? raw.totalTasks ?? 0;
+    const completedTasks = metrics?.completedTasks ?? raw.completedTasks ?? 0;
+    const unfinishedTasks = metrics?.unfinishedTasks ?? raw.unfinishedTasks ?? raw.notStartedTasks ?? (totalTasks - completedTasks);
+    const inProgressTasks = raw.inProgressTasks ?? 0;
+    const notStartedTasks = raw.notStartedTasks ?? unfinishedTasks;
+    const totalEstimatedHours = metrics?.totalEstimatedHours ?? raw.totalEstimatedHours ?? 0;
+    const totalActualHours = metrics?.totalActualHours ?? raw.totalActualHours ?? 0;
+    const velocityRatio = metrics?.velocityRatio ?? raw.velocityRatio ?? 1.0;
+    const estimationAccuracy = raw.estimationAccuracy ?? (totalEstimatedHours > 0 ? Math.min(100, Math.round((totalActualHours / totalEstimatedHours) * 100)) : 100);
+    const developerBreakdowns = metrics?.developerMetrics ?? raw.developerBreakdowns ?? [];
+
+    const whatWentWellEn = Array.isArray(analysis?.whatWentWellEn)
+      ? analysis.whatWentWellEn.join('\n• ')
+      : (analysis?.whatWentWellEn || (typeof raw.whatWentWellEn === 'string' ? raw.whatWentWellEn : ''));
+
+    const whatWentWellAr = Array.isArray(analysis?.whatWentWellAr)
+      ? analysis.whatWentWellAr.join('\n• ')
+      : (analysis?.whatWentWellAr || (typeof raw.whatWentWellAr === 'string' ? raw.whatWentWellAr : ''));
+
+    const challengesEn = Array.isArray(analysis?.challengesEn)
+      ? analysis.challengesEn.join('\n• ')
+      : (analysis?.challengesEn || (typeof raw.challengesEn === 'string' ? raw.challengesEn : ''));
+
+    const challengesAr = Array.isArray(analysis?.challengesAr)
+      ? analysis.challengesAr.join('\n• ')
+      : (analysis?.challengesAr || (typeof raw.challengesAr === 'string' ? raw.challengesAr : ''));
+
+    const teamSentimentSummaryEn = analysis?.teamSentiment || raw.teamSentimentSummaryEn || '';
+    const teamSentimentSummaryAr = analysis?.summaryAr || raw.teamSentimentSummaryAr || '';
+
+    return {
+      sprintId: raw.sprintId,
+      sprintTitleEn: raw.sprintTitleEn,
+      generatedAt: raw.generatedAt,
+      completionRate,
+      totalTasks,
+      completedTasks,
+      unfinishedTasks,
+      inProgressTasks,
+      notStartedTasks,
+      totalEstimatedHours,
+      totalActualHours,
+      velocityRatio,
+      estimationAccuracy,
+      developerBreakdowns,
+      whatWentWellEn,
+      whatWentWellAr,
+      challengesEn,
+      challengesAr,
+      teamSentimentSummaryEn,
+      teamSentimentSummaryAr,
+      actionItemsEn: raw.actionItemsEn,
+      actionItemsAr: raw.actionItemsAr,
+      improvements: raw.improvements || [],
+      partiallyCompletedStories: raw.partiallyCompletedStories || []
+    };
+  });
 
   async ngOnInit() {
     await this.loadSprintsList();

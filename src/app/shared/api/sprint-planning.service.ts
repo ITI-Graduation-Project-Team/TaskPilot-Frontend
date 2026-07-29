@@ -33,6 +33,37 @@ export interface SprintImprovement {
   suggestedAdjustment: number;
 }
 
+export interface SprintAnalysis {
+  summaryEn: string;
+  summaryAr: string;
+  whatWentWellEn: string[];
+  whatWentWellAr: string[];
+  challengesEn?: string[];
+  challengesAr?: string[];
+  teamSentiment?: string;
+}
+
+export interface SprintMetrics {
+  completionRate: number;
+  velocityRatio: number;
+  totalEstimatedHours: number;
+  totalActualHours: number;
+  totalTasks: number;
+  completedTasks: number;
+  unfinishedTasks: number;
+  developerMetrics: DeveloperMetric[];
+}
+
+export interface SprintRetrospectiveDto {
+  sprintId: string;
+  sprintTitleEn: string;
+  generatedAt: string;
+  metrics: SprintMetrics;
+  analysis: SprintAnalysis;
+  improvements: SprintImprovement[];
+  partiallyCompletedStories?: PartiallyCompletedStory[];
+}
+
 export interface SprintUnfinishedTask {
   taskId: string;
   userStoryId?: string;
@@ -50,19 +81,19 @@ export interface SprintRetrospectiveData {
   endDate?: string;
   actualDurationDays?: number;
   plannedDurationDays?: number;
-  totalTasks: number;
-  completedTasks: number;
+  totalTasks?: number;
+  completedTasks?: number;
   inProgressTasks?: number;
   notStartedTasks?: number;
-  completionRate: number;
+  completionRate?: number;
   estimationAccuracy?: number;
   totalEstimatedHours?: number;
   totalActualHours?: number;
   velocityRatio?: number;
-  whatWentWellEn?: string;
-  whatWentWellAr?: string;
-  challengesEn?: string;
-  challengesAr?: string;
+  whatWentWellEn?: string | string[];
+  whatWentWellAr?: string | string[];
+  challengesEn?: string | string[];
+  challengesAr?: string | string[];
   actionItemsEn?: string;
   actionItemsAr?: string;
   teamSentimentSummaryEn?: string;
@@ -71,10 +102,12 @@ export interface SprintRetrospectiveData {
   unfinishedTasks?: SprintUnfinishedTask[];
   partiallyCompletedStories?: PartiallyCompletedStory[];
   improvements?: SprintImprovement[];
+  metrics?: SprintMetrics;
+  analysis?: SprintAnalysis;
 }
 
 // Alias for backwards compatibility
-export type SprintRetroDto = SprintRetrospectiveData;
+export type SprintRetroDto = SprintRetrospectiveDto | SprintRetrospectiveData;
 
 export interface SuggestedStory {
   storyId: string;
@@ -159,12 +192,18 @@ export class SprintPlanningService {
   }
 
   async generateRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    const { data } = await apiClient.post(`/sprints/${sprintId}/retrospective/generate`);
+    const url = projectId
+      ? `/projects/${projectId}/sprints/${sprintId}/retrospective`
+      : `/sprints/${sprintId}/retrospective/generate`;
+    const { data } = await apiClient.post(url);
     return data;
   }
 
   async getRetrospective(sprintId: string, projectId?: string): Promise<any> {
-    const { data } = await apiClient.get(`/sprints/${sprintId}/retrospective`);
+    const url = projectId
+      ? `/projects/${projectId}/sprints/${sprintId}/retrospective`
+      : `/sprints/${sprintId}/retrospective`;
+    const { data } = await apiClient.get(url);
     return data;
   }
 
