@@ -24,12 +24,27 @@ export class AiChatService {
         };
       }
 
-      const response = await apiClient.post<{ succeeded: boolean; data?: string; message?: string }>(
+      const response = await apiClient.post<any>(
         '/company-policies/ask',
         { companyId, question }
       );
       
-      return response.data;
+      const resData = response.data;
+      let answerText = '';
+      
+      if (resData?.data?.answer) {
+        answerText = resData.data.answer;
+      } else if (resData?.answer) {
+        answerText = resData.answer;
+      } else if (resData?.Data?.Answer) {
+        answerText = resData.Data.Answer;
+      }
+
+      return {
+        succeeded: resData?.succeeded ?? true,
+        data: answerText,
+        message: resData?.message
+      };
     } catch (error: any) {
       console.error('Error asking policy question:', error);
       return {
