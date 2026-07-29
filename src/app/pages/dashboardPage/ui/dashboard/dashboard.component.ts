@@ -23,6 +23,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DashboardService } from '../../services/dashboard.service';
+import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -40,7 +41,7 @@ import { DashboardService } from '../../services/dashboard.service';
     SprintListComponent,
     NotificationBellComponent,
     OrganizationViewComponent,
-    ProjectHistoryModalComponent
+    ProjectHistoryModalComponent,
     TranslatePipe
 
   ],
@@ -144,21 +145,17 @@ import { DashboardService } from '../../services/dashboard.service';
             </a>
           } 
           <!-- Organization Hub / Company Policies Tab -->
-          <a (click)="currentTab.set('organization')"
-             [class.bg-primary/10]="currentTab() === 'organization'"
-             [class.text-primary]="currentTab() === 'organization'"
-             [class.font-bold]="currentTab() === 'organization'"
-             [class.shadow-sm]="currentTab() === 'organization'"
-             [class.text-text-secondary]="currentTab() !== 'organization'"
-             [class.hover:text-text-primary]="currentTab() !== 'organization'"
-             [class.hover:bg-primary/5]="currentTab() !== 'organization'"
-             [class.font-medium]="currentTab() !== 'organization'"
+          <a routerLink="/dashboard/organization" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaOrg="routerLinkActive"
+             [class.text-text-secondary]="!rlaOrg.isActive"
+             [class.hover:text-text-primary]="!rlaOrg.isActive"
+             [class.hover:bg-primary/5]="!rlaOrg.isActive"
+             [class.font-medium]="!rlaOrg.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             @if (projectState.isProjectManager()) {
-              Organization Hub
+              {{ 'SIDEBAR.ORGANIZATION_HUB' | translate }}
             } @else {
-              Company Policies
+              {{ 'SIDEBAR.COMPANY_POLICIES' | translate }}
             }
           </a>
 

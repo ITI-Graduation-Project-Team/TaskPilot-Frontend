@@ -441,12 +441,15 @@
     "EMPTY": "No notifications yet"
   },
   "SIDEBAR": {
+
     "SWITCH": "Switch",
     "ALL_PROJECTS": "All Projects",
     "SPRINTS": "Sprints",
     "BACKLOG": "Backlog",
     "SPRINT_PLANNING": "Sprint Planning",
     "PROJECT_TEAM": "Project Team",
+    "ORGANIZATION_HUB": "Organization Hub",
+    "COMPANY_POLICIES": "Company Policies",
     "MY_PROFILE": "My Profile",
     "PROJECTS": "Projects",
     "SPRINT": "Sprint",
@@ -662,5 +665,14 @@
     "GREETING_DEV": "I can help you understand project requirements, explain tasks, or assist with any technical questions you have. How can I help you today?",
     "TITLE": "AI Project Assistant",
     "SUBTITLE": "Describe your project requirements to generate WBS & user stories"
+  },
+  "ORGANIZATION": {
+    "TITLE_PM": "Organization Hub",
+    "TITLE_EMP": "Company Policies",
+    "DESC_PM": "Manage your company's general settings, upload policy documents, and test the AI HR Assistant.",
+    "DESC_EMP": "Ask the AI Assistant questions about company policies, leave days, and general guidelines.",
+    "TAB_SETTINGS": "General Settings",
+    "TAB_KNOWLEDGE": "Knowledge Base",
+    "TAB_CHAT": "Policy Chat (Test)"
   }
 }
