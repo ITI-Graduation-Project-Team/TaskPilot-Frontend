@@ -24,6 +24,7 @@ export const routes: Routes = [
       { path: 'create-project', loadComponent: () => import('./pages/dashboardPage/ui/create-project/create-project.component').then(m => m.CreateProjectComponent) },
       { path: 'sprint', loadComponent: () => import('./pages/dashboardPage/ui/sprint-view/sprint-view.component').then(m => m.SprintViewComponent) },
       { path: 'sprint-planning', loadComponent: () => import('./pages/dashboardPage/ui/sprint-planning-view/sprint-planning-view.component').then(m => m.SprintPlanningViewComponent) },
+      { path: 'retrospective', loadComponent: () => import('./pages/dashboardPage/ui/retrospective-view/retrospective-view.component').then(m => m.RetrospectiveViewComponent) },
       { path: 'backlog', loadComponent: () => import('./pages/dashboardPage/ui/backlog-view/backlog-view.component').then(m => m.BacklogViewComponent) },
       { path: 'team', loadComponent: () => import('./pages/dashboardPage/ui/team-view/team-view.component').then(m => m.TeamViewComponent) },
       { path: 'profile', loadComponent: () => import('./pages/dashboardPage/ui/profile-view/profile-view.component').then(m => m.ProfileViewComponent) },
