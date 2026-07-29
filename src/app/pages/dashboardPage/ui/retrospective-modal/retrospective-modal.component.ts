@@ -243,12 +243,12 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                         </div>
                         <div class="space-y-1 text-[11px] text-text-secondary">
                           <div class="flex justify-between">
-                            <span>{{ currentLang === 'ar' ? 'المهام (مكتملة/مسندة):' : 'Tasks (Done/Assigned):' }}</span>
-                            <span class="font-semibold text-text-primary">{{ dev.completedTasks }} / {{ dev.assignedTasks }}</span>
+                            <span>{{ currentLang === 'ar' ? 'المهام (مسندة/مكتملة):' : 'Tasks (Assigned/Done):' }}</span>
+                            <span class="font-semibold text-text-primary">{{ dev.assignedTasks ?? 0 }} / {{ dev.completedTasks ?? 0 }}</span>
                           </div>
                           <div class="flex justify-between">
                             <span>{{ currentLang === 'ar' ? 'الساعات (تقديرية/فعلية):' : 'Hours (Est/Actual):' }}</span>
-                            <span class="font-semibold text-text-primary">{{ dev.estimatedHours }}h / {{ dev.actualHours }}h</span>
+                            <span class="font-semibold text-text-primary">{{ dev.estimatedHours ?? 0 }}h / {{ dev.actualHours ?? 0 }}h</span>
                           </div>
                         </div>
                       </div>

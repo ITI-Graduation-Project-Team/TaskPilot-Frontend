@@ -439,11 +439,11 @@ import { extractApiError } from '../../../../shared/api/auth.api';
                     <div class="space-y-1.5 text-xs text-text-secondary pt-2 border-t border-border/60">
                       <div class="flex justify-between">
                         <span>Assigned / Done:</span>
-                        <strong class="text-text-primary">{{ dev.completedTasks }} / {{ dev.assignedTasks }} tasks</strong>
+                        <strong class="text-text-primary">{{ dev.assignedTasks ?? 0 }} / {{ dev.completedTasks ?? 0 }} tasks</strong>
                       </div>
                       <div class="flex justify-between">
                         <span>Est / Actual Hours:</span>
-                        <strong class="text-text-primary">{{ dev.estimatedHours }}h / {{ dev.actualHours }}h</strong>
+                        <strong class="text-text-primary">{{ dev.estimatedHours ?? 0 }}h / {{ dev.actualHours ?? 0 }}h</strong>
                       </div>
                     </div>
                   </div>
