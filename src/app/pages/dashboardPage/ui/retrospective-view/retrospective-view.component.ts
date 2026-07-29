@@ -120,6 +120,23 @@ import { extractApiError } from '../../../../shared/api/auth.api';
             {{ currentLang() === 'ar' ? 'حساب معدل الإنجاز، دقة الساعات، والقصص شبه المكتملة...' : 'Computing completion accuracy, velocity ratios, and carry-over stories...' }}
           </p>
         </div>
+      } @else if (sprints().length === 0) {
+        <!-- ─── NO COMPLETED SPRINTS STATE ─── -->
+        <div class="flex flex-col items-center justify-center text-center rounded-3xl border border-border bg-surface px-6 py-16 shadow-sm max-w-2xl mx-auto my-6 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-5 ring-8 ring-amber-500/5">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-extrabold text-text-primary mb-2 font-display">
+            {{ currentLang() === 'ar' ? 'لا توجد سبرينتات مكتملة بعد' : 'No Completed Sprints Yet' }}
+          </h3>
+          <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
+            {{ currentLang() === 'ar'
+              ? 'تتطلب مراجعة السبرينت الإنتهاء من سبرينت واحد على الأقل. قم بإكمال السبرينت الحالي من لوحة المهام أولاً لتوليد التقرير بنجاح.'
+              : 'Retrospectives are only generated for completed sprints. Complete your active sprint first to enable AI performance analysis.' }}
+          </p>
+        </div>
       } @else if (!retro()) {
         <!-- ─── NO RETRO REPORT READY STATE ─── -->
         <div class="flex flex-col items-center justify-center text-center rounded-3xl border border-border bg-surface px-6 py-16 shadow-sm max-w-2xl mx-auto my-6 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
@@ -524,15 +541,18 @@ export class RetrospectiveViewComponent implements OnInit {
 
     try {
       const list = await this.sprintService.getAllSprints(projId);
-      this.sprints.set(list || []);
+      // Retrospectives are only available for completed sprints
+      const completedSprints = (list || []).filter(s => s.status === 'Completed');
+      this.sprints.set(completedSprints);
 
-      // Check query param sprintId or pick latest completed / active sprint
+      // Check query param sprintId or pick latest completed sprint
       const querySprintId = this.route.snapshot.queryParamMap.get('sprintId');
-      if (querySprintId) {
+      if (querySprintId && completedSprints.some(s => s.sprintId === querySprintId)) {
         this.selectedSprintId.set(querySprintId);
-      } else if (list.length > 0) {
-        const activeOrCompleted = list.find(s => s.status === 'Completed' || s.status === 'Active') || list[0];
-        this.selectedSprintId.set(activeOrCompleted.sprintId);
+      } else if (completedSprints.length > 0) {
+        this.selectedSprintId.set(completedSprints[0].sprintId);
+      } else {
+        this.selectedSprintId.set('');
       }
 
       if (this.selectedSprintId()) {
