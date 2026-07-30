@@ -977,7 +977,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
           <div class="flex items-center justify-end gap-3 pt-2">
             <button (click)="closeReopenModal()" class="px-4 py-2 text-text-secondary hover:text-text-primary text-sm font-semibold transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
-            <button (click)="pmConfirmReopen()" [disabled]="!reopenReasonEn" class="px-5 py-2 bg-warning hover:bg-warning/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">{{ currentLang === 'ar' ? 'إعادة الفتح' : 'Reopen Task' }}</button>
+            <button (click)="pmConfirmReopen()" [disabled]="!reopenReasonEn && !reopenReasonAr" class="px-5 py-2 bg-warning hover:bg-warning/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">{{ currentLang === 'ar' ? 'إعادة الفتح' : 'Reopen Task' }}</button>
           </div>
         </div>
       </div>
