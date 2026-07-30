@@ -56,6 +56,20 @@ export class ProjectStateService {
     this.initializeState();
   }
 
+  private profilePromise: Promise<any> | null = null;
+
+  async getProfile(): Promise<any> {
+    if (!this.profilePromise) {
+      this.profilePromise = apiClient.get<any>('/employees/profile')
+        .then(res => res.data?.data || res.data)
+        .catch(err => {
+          this.profilePromise = null;
+          throw err;
+        });
+    }
+    return this.profilePromise;
+  }
+
   async initializeState() {
     this._loading.set(true);
     try {
@@ -66,8 +80,7 @@ export class ProjectStateService {
       const role = getRoleFromToken();
       const isPM = role === 'ProjectManager';
 
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const profile = data.data || data;
+      const profile = await this.getProfile();
       if (profile) {
         this._isProjectManager.set(isPM || !profile.isEmployee);
         const companyId = profile.companyId || profile.CompanyId || null;
@@ -89,11 +102,18 @@ export class ProjectStateService {
     try {
       const isPM = this._isProjectManager();
       const userId = this._userId();
+      const companyId = this._userCompanyId();
       if (!userId) return;
 
-      const endpoint = isPM ? '/Projects' : `/employees/${userId}/projects`;
+      // Fetch the list of projects for PM (company projects) or Employee
+      const endpoint = (isPM && companyId) 
+        ? `/Projects/company/${companyId}` 
+        : `/employees/${userId}/projects`;
+        
       const { data } = await apiClient.get<any>(endpoint);
       const projects: any[] = data.data || [];
+      
+      // Filter to ensure the PM only sees projects they actually manage
       const accessibleProjects = isPM
         ? projects.filter(p => p.managerId === userId)
         : projects;
@@ -134,7 +154,10 @@ export class ProjectStateService {
     }
   }
 
-  setSelectedProject(projectId: string | null) {
+  setSelectedProject(projectId: string | null, force: boolean = false) {
+    if (!force && this._selectedProjectId() === projectId) {
+      return;
+    }
     this._selectedProjectId.set(projectId);
     if (projectId) {
       localStorage.setItem('selectedProjectId', projectId);

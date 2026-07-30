@@ -220,13 +220,12 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="flex items-center gap-3">
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
-                      [disabled]="hasAssignments()"
-                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:-translate-y-0">
-                👥 {{ hasAssignments() ? (currentLang === 'ar' ? 'تم التعيين' : 'Assigned') : ('BOARD.ASSIGN_TASKS' | translate) }}
+                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
               </button>
               <button (click)="startSprint()" 
-                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
-                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'يجب إسناد جميع المهام قبل بدء السبرينت' : 'All tasks must be assigned before starting a sprint') : '')"
+                      [disabled]="projectState.projectEmployeeCount() === 0"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
                       class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
@@ -1417,9 +1416,38 @@ export class BoardComponent implements OnInit, OnChanges {
     this.todo.set(todoList);
     this.inProgress.set(inProgressList);
     this.review.set(reviewList);
-    this.done.set(doneList);
-    this.hasAssignments.set(tasks.some((t: any) => !!(t.employeeId || t.assignedTo || t.assigneeId)));
-    this.hasUnassignedTasks.set(tasks.some((t: any) => !(t.employeeId || t.assignedTo || t.assigneeId)));
+    const isTaskAssigned = (t: any): boolean => {
+      if (t.isAssigned === true) return true;
+      if (t.isAssigned === false) return false;
+      const val = t.employeeId || t.assignedTo || t.assigneeId || t.assignedEmployeeId ||
+                  t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
+                  t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
+                  t.assignedToName || t.assignedEmployeeName;
+      return val !== undefined && val !== null && val !== '';
+    };
+
+    this.hasAssignments.set(tasks.some((t: any) => isTaskAssigned(t)));
+    const unassignedExist = tasks.length > 0 && tasks.some((t: any) => !isTaskAssigned(t));
+
+    try {
+      if (sprintId && this.activeProjectId) {
+        const { data } = await apiClient.get<any>(`/projects/${this.activeProjectId}/sprints/${sprintId}/assignment/validate`);
+        const valData = data?.data ?? data;
+        if (typeof valData === 'boolean') {
+          this.hasUnassignedTasks.set(!valData);
+        } else if (valData && typeof valData.isValid === 'boolean') {
+          this.hasUnassignedTasks.set(!valData.isValid);
+        } else if (valData && typeof valData.isAllAssigned === 'boolean') {
+          this.hasUnassignedTasks.set(!valData.isAllAssigned);
+        } else {
+          this.hasUnassignedTasks.set(unassignedExist);
+        }
+      } else {
+        this.hasUnassignedTasks.set(unassignedExist);
+      }
+    } catch (e) {
+      this.hasUnassignedTasks.set(unassignedExist);
+    }
   }
 
   private filterTasks(tasks: Task[]): Task[] {

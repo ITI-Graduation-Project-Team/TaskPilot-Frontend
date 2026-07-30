@@ -165,7 +165,6 @@ export class ProjectHubComponent {
         const success = await this.projectState.deleteProject(projectId);
         if (success) {
           this.toastService.show('Project deleted successfully', 'success');
-          this.dashboardService.loadAllProjectStats();
         } else {
           this.toastService.show('Failed to delete project. Please try again.', 'error');
         }

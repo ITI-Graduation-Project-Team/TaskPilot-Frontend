@@ -613,16 +613,6 @@ export class DashboardComponent implements OnInit {
       }
     });
 
-    // Eagerly load all project statistics when the "projects" tab is selected
-    effect(() => {
-      const tab = this.currentTab();
-      const projects = this.projectState.projects();
-      if (tab === 'projects' && projects.length > 0) {
-        untracked(() => {
-          this.dashboardService.loadAllProjectStats();
-        });
-      }
-    });
 
     // If a PM has no projects, default to the create-project tab and open AI chat automatically
     effect(() => {
@@ -687,8 +677,7 @@ export class DashboardComponent implements OnInit {
 
   async loadUserProfile() {
     try {
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const profileData = data.data || data;
+      const profileData = await this.projectState.getProfile();
       if (profileData) {
         this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
         this.userJobTitle.set(profileData.jobTitle || '');
