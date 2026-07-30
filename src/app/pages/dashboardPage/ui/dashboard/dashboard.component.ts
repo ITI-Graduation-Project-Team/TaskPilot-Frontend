@@ -269,14 +269,6 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
                 {{ 'HEADER.ARCHIVED' | translate }}
               </span>
-            } @else if (currentTab() === 'sprint') {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
-                @if (activeSprintName()) {
-                  {{ activeSprintName() }} {{ currentLang() === 'ar' ? 'نشط' : 'Active' }}
-                } @else {
-                  {{ currentLang() === 'ar' ? 'لا يوجد سباق نشط' : 'No Active Sprint' }}
-                }
-              </span>
             }
           </div>
 
@@ -561,7 +553,7 @@ export class DashboardComponent implements OnInit {
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'project-policies'>('sprint');
 
   // Component state
-  activeSprintName = signal('');
+
   isProjectDropdownOpen = signal(false);
 
   // Eager project statistics Map
@@ -603,15 +595,6 @@ export class DashboardComponent implements OnInit {
       this.currentTab.set(tab as any);
     });
 
-    // Reactively update sprint name whenever selected project ID changes
-    effect(() => {
-      const projId = this.projectState.selectedProjectId();
-      if (projId) {
-        this.loadActiveSprint(projId);
-      } else {
-        this.activeSprintName.set('No Active Sprint');
-      }
-    });
 
 
     // If a PM has no projects, default to the create-project tab and open AI chat automatically
@@ -687,22 +670,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  async loadActiveSprint(projectId: string) {
-    try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
-      const sprintData = data.data;
-      if (sprintData) {
-        this.activeSprintName.set(sprintData.titleEn || sprintData.title || '');
-      } else {
-        this.activeSprintName.set('');
-      }
-    } catch (e) {
-      console.warn('Failed to load active sprint info:', e);
-      this.activeSprintName.set('');
-    }
-  }
-
-
 
   onProjectSelect(event: Event) {
     const select = event.target as HTMLSelectElement;
@@ -739,7 +706,6 @@ export class DashboardComponent implements OnInit {
       this.toastService.show('Error finalizing project setup', 'error');
     } finally {
       this.currentTab.set('projects');
-      this.dashboardService.loadAllProjectStats();
     }
   }
 
@@ -764,7 +730,6 @@ export class DashboardComponent implements OnInit {
     );
     if (success) {
       this.dashboardService.isEditProjectModalOpen.set(false);
-      this.dashboardService.loadAllProjectStats();
     }
   }
 
@@ -788,7 +753,6 @@ export class DashboardComponent implements OnInit {
     const success = await this.projectState.deleteProject(projectId);
     if (success) {
       this.toastService.show('Project deleted successfully', 'success');
-      this.dashboardService.loadAllProjectStats();
     } else {
       this.toastService.show('Failed to delete project. Please try again.', 'error');
     }
@@ -815,7 +779,6 @@ export class DashboardComponent implements OnInit {
   onHistoryActionCompleted() {
     this.closeHistoryModal();
     this.toastService.show('Project status updated successfully', 'success');
-    this.dashboardService.loadAllProjectStats();
   }
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {

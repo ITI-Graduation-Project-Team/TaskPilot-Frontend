@@ -1276,6 +1276,9 @@ export class BoardComponent implements OnInit, OnChanges {
     this.isAssignedToProject.set(true);
     this.activeProjectId = projectId;
 
+    // Lazy-load employee count only when the board is actually open
+    this.projectState.loadProjectEmployeeCount(projectId);
+
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
 

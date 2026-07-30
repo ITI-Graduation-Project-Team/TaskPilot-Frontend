@@ -161,7 +161,6 @@ export class ProjectStateService {
     this._selectedProjectId.set(projectId);
     if (projectId) {
       localStorage.setItem('selectedProjectId', projectId);
-      this.loadProjectEmployeeCount(projectId);
     } else {
       localStorage.removeItem('selectedProjectId');
       this._projectEmployeeCount.set(0);
