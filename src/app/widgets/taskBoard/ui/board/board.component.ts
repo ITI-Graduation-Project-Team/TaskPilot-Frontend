@@ -225,8 +225,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 👥 {{ hasAssignments() ? (currentLang === 'ar' ? 'تم التعيين' : 'Assigned') : ('BOARD.ASSIGN_TASKS' | translate) }}
               </button>
               <button (click)="startSprint()" 
-                      [disabled]="projectState.projectEmployeeCount() === 0"
-                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
+                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'يجب إسناد جميع المهام قبل بدء السبرينت' : 'All tasks must be assigned before starting a sprint') : '')"
                       class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
@@ -507,6 +507,14 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
+                      @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                        <button (click)="pmAcceptReview(task)" class="text-xs text-white bg-success px-3 py-1 rounded-md font-semibold hover:bg-success/80 shadow-sm transition-colors">
+                          {{ 'BOARD.ACCEPT' | translate }}
+                        </button>
+                        <button (click)="openRejectModal(task)" class="text-xs text-white bg-error px-3 py-1 rounded-md font-semibold hover:bg-error/80 shadow-sm transition-colors">
+                          {{ 'BOARD.REJECT' | translate }}
+                        </button>
+                      }
                       <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
                         {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
                       </button>
@@ -576,6 +584,11 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
+                        </button>
+                      }
+                      @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                        <button (click)="openReopenModal(task)" class="text-xs text-white bg-warning px-3 py-1 rounded-md font-semibold hover:bg-warning/80 shadow-sm transition-colors">
+                          {{ 'BOARD.REOPEN' | translate }}
                         </button>
                       }
                       <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
@@ -905,6 +918,70 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       </div>
     }
+
+    <!-- ─── PM REJECT MODAL ─── -->
+    @if (rejectModalOpen()) {
+      <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
+          <div class="flex items-center gap-3 border-b border-border pb-3">
+            <div class="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-text-primary">{{ currentLang === 'ar' ? 'رفض المهمة' : 'Reject Task' }}</h3>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالإنجليزية)' : 'Reason (English)' }}</label>
+              <textarea [(ngModel)]="rejectReasonEn" rows="3"
+                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-error focus:ring-2 focus:ring-error/20 transition-all resize-none text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالعربية)' : 'Reason (Arabic)' }}</label>
+              <textarea [(ngModel)]="rejectReasonAr" rows="3" dir="rtl"
+                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-error focus:ring-2 focus:ring-error/20 transition-all resize-none text-sm text-right"></textarea>
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button (click)="closeRejectModal()" class="px-4 py-2 text-text-secondary hover:text-text-primary text-sm font-semibold transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
+            <button (click)="pmConfirmReject()" [disabled]="!rejectReasonEn && !rejectReasonAr" class="px-5 py-2 bg-error hover:bg-error/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">{{ currentLang === 'ar' ? 'رفض وإعادة قيد التنفيذ' : 'Reject to In Progress' }}</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ─── PM REOPEN MODAL ─── -->
+    @if (reopenModalOpen()) {
+      <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
+          <div class="flex items-center gap-3 border-b border-border pb-3">
+            <div class="w-10 h-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-text-primary">{{ currentLang === 'ar' ? 'إعادة فتح المهمة' : 'Reopen Task' }}</h3>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالإنجليزية)' : 'Reason (English)' }}</label>
+              <textarea [(ngModel)]="reopenReasonEn" rows="3"
+                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-warning focus:ring-2 focus:ring-warning/20 transition-all resize-none text-sm"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالعربية)' : 'Reason (Arabic)' }}</label>
+              <textarea [(ngModel)]="reopenReasonAr" rows="3" dir="rtl"
+                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-warning focus:ring-2 focus:ring-warning/20 transition-all resize-none text-sm text-right"></textarea>
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-3 pt-2">
+            <button (click)="closeReopenModal()" class="px-4 py-2 text-text-secondary hover:text-text-primary text-sm font-semibold transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
+            <button (click)="pmConfirmReopen()" [disabled]="!reopenReasonEn" class="px-5 py-2 bg-warning hover:bg-warning/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">{{ currentLang === 'ar' ? 'إعادة الفتح' : 'Reopen Task' }}</button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class BoardComponent implements OnInit, OnChanges {
@@ -981,6 +1058,76 @@ export class BoardComponent implements OnInit, OnChanges {
   review = signal<Task[]>([]);
   done = signal<Task[]>([]);
 
+  // PM Action Modals State
+  rejectModalOpen = signal(false);
+  reopenModalOpen = signal(false);
+  taskToActOn = signal<Task | null>(null);
+  rejectReasonEn = '';
+  rejectReasonAr = '';
+  reopenReasonEn = '';
+  reopenReasonAr = '';
+
+  async pmAcceptReview(task: Task) {
+    if (!this.projectState.isProjectManager() || this.isBoardReadonly()) return;
+    try {
+      await this.tasksService.updateTaskStatus(task.id, TaskItemStatus.Done);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم قبول المهمة وانتقلت للإنجاز' : 'Task accepted and marked Done', 'success');
+      await this.loadWorkspaceData();
+    } catch (err: any) {
+      this.toastService.show(err.response?.data?.message || 'Failed to accept task', 'error');
+    }
+  }
+
+  openRejectModal(task: Task) {
+    this.taskToActOn.set(task);
+    this.rejectReasonEn = '';
+    this.rejectReasonAr = '';
+    this.rejectModalOpen.set(true);
+  }
+
+  closeRejectModal() {
+    this.taskToActOn.set(null);
+    this.rejectModalOpen.set(false);
+  }
+
+  async pmConfirmReject() {
+    const task = this.taskToActOn();
+    if (!task || (!this.rejectReasonEn && !this.rejectReasonAr)) return;
+    try {
+      await this.tasksService.pmRejectReview(task.id, this.rejectReasonEn, this.rejectReasonAr);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم رفض المهمة بنجاح' : 'Task successfully rejected', 'success');
+      this.closeRejectModal();
+      await this.loadWorkspaceData();
+    } catch (err: any) {
+      this.toastService.show(err.response?.data?.message || 'Failed to reject task', 'error');
+    }
+  }
+
+  openReopenModal(task: Task) {
+    this.taskToActOn.set(task);
+    this.reopenReasonEn = '';
+    this.reopenReasonAr = '';
+    this.reopenModalOpen.set(true);
+  }
+
+  closeReopenModal() {
+    this.taskToActOn.set(null);
+    this.reopenModalOpen.set(false);
+  }
+
+  async pmConfirmReopen() {
+    const task = this.taskToActOn();
+    if (!task || (!this.reopenReasonEn && !this.reopenReasonAr)) return;
+    try {
+      await this.tasksService.pmReopenTask(task.id, this.reopenReasonEn, this.reopenReasonAr);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم إعادة فتح المهمة' : 'Task successfully reopened', 'success');
+      this.closeReopenModal();
+      await this.loadWorkspaceData();
+    } catch (err: any) {
+      this.toastService.show(err.response?.data?.message || 'Failed to reopen task', 'error');
+    }
+  }
+
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
   });
@@ -1051,6 +1198,7 @@ export class BoardComponent implements OnInit, OnChanges {
   });
 
   hasAssignments = signal(false);
+  hasUnassignedTasks = signal(false);
   private originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
 
   constructor() {
@@ -1271,6 +1419,7 @@ export class BoardComponent implements OnInit, OnChanges {
     this.review.set(reviewList);
     this.done.set(doneList);
     this.hasAssignments.set(tasks.some((t: any) => !!(t.employeeId || t.assignedTo || t.assigneeId)));
+    this.hasUnassignedTasks.set(tasks.some((t: any) => !(t.employeeId || t.assignedTo || t.assigneeId)));
   }
 
   private filterTasks(tasks: Task[]): Task[] {
@@ -1335,9 +1484,43 @@ export class BoardComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (this.sprintStatus() !== 'Active') {
+      this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن تحريك المهام إلا إذا كان السبرينت نشطاً' : 'Tasks can only be moved when the sprint is Active.', 'error');
+      return;
+    }
+
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
+      const task = event.previousContainer.data[event.previousIndex];
+      const sourceColumnId = event.previousContainer.id;
+      const targetColumnId = event.container.id;
+
+      let oldStatus = 'todo';
+      if (sourceColumnId === 'in-progress-list') oldStatus = 'inProgress';
+      else if (sourceColumnId === 'review-list') oldStatus = 'review';
+      else if (sourceColumnId === 'done-list') oldStatus = 'done';
+
+      let newStatus = 'todo';
+      if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
+      else if (targetColumnId === 'review-list') newStatus = 'review';
+      else if (targetColumnId === 'done-list') newStatus = 'done';
+
+      // PM Drag & Drop Logic
+      if (this.projectState.isProjectManager()) {
+        if (oldStatus === 'review' && newStatus === 'done') {
+          await this.pmAcceptReview(task);
+        } else if (oldStatus === 'review' && newStatus === 'inProgress') {
+          this.openRejectModal(task);
+        } else if (oldStatus === 'done' && newStatus === 'inProgress') {
+          this.openReopenModal(task);
+        } else {
+          this.toastService.show(this.currentLang === 'ar' ? 'غير مسموح بهذا الإجراء' : 'This transition is not allowed for Project Managers.', 'error');
+        }
+        return; // Don't transfer item manually; reloading or modal will handle it.
+      }
+
+      // Developer Drag & Drop Logic
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
@@ -1345,34 +1528,10 @@ export class BoardComponent implements OnInit, OnChanges {
         event.currentIndex
       );
 
-      const task = event.container.data[event.currentIndex];
-      const targetColumnId = event.container.id;
-
-      let newStatus = 'todo';
-      if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
-      else if (targetColumnId === 'review-list') newStatus = 'review';
-      else if (targetColumnId === 'done-list') newStatus = 'done';
-
       try {
-        if (this.projectState.isProjectManager()) {
-          await this.backlogService.updateTask(task.id, {
-            titleEn: task.titleEn || '',
-            titleAr: task.titleAr,
-            descriptionEn: task.descriptionEn,
-            descriptionAr: task.descriptionAr,
-            estimatedHours: task.hours,
-            effortSize: 'Medium',
-            priority: task.priority,
-            type: task.type,
-            status: newStatus
-          });
-          this.toastService.show('Task status updated successfully.', 'success');
-        } else {
-          const statusEnum = this.mapColumnToEnum(newStatus);
-
-          await this.tasksService.updateTaskStatus(task.id, statusEnum);
-          this.toastService.show('Task status updated successfully.', 'success');
-        }
+        const statusEnum = this.mapColumnToEnum(newStatus);
+        await this.tasksService.updateTaskStatus(task.id, statusEnum);
+        this.toastService.show('Task status updated successfully.', 'success');
         // Fetch updated data from backend to get the automatically calculated actualHours
         await this.loadWorkspaceData();
       } catch (err: any) {
