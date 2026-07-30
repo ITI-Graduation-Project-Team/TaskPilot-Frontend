@@ -517,6 +517,9 @@
     "VIEW_BOARD": "View Board"
   },
   "BOARD": {
+    "ACCEPT": "Accept",
+    "REJECT": "Reject",
+    "REOPEN": "Reopen",
     "LOW": "Low",
     "MEDIUM": "Medium",
     "HIGH": "High",
