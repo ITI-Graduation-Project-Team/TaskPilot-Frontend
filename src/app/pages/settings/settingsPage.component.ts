@@ -12,7 +12,7 @@ import { finalize } from 'rxjs/operators';
     <div class="flex h-screen bg-[#F6F6F6] text-[#121338]" [dir]="direction()">
       <!-- Sidebar Placeholder -->
       <aside class="hidden md:flex flex-col w-64 bg-[#FAFAFA] border-r border-gray-200" [class.border-l]="direction() === 'rtl'" [class.border-r-0]="direction() === 'rtl'">
-        <app-sidebar-widget></app-sidebar-widget>
+        <!-- Sidebar content goes here -->
       </aside>
 
       <!-- Main Content -->
@@ -22,7 +22,7 @@ import { finalize } from 'rxjs/operators';
           <div class="flex items-center">
             <!-- Mobile Nav Placeholder -->
             <div class="md:hidden me-4">
-              <app-mobile-nav-widget></app-mobile-nav-widget>
+              <!-- Mobile nav goes here -->
             </div>
             <h1 class="text-2xl font-semibold">Settings</h1>
           </div>

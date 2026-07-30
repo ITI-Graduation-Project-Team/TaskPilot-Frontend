@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GoogleCalendarService } from '../../../shared/api/googleCalendar.service';
+import { GoogleCalendarService } from '../../shared/api/googleCalendar.service';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
