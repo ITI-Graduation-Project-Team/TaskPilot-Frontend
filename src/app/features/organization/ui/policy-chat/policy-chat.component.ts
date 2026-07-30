@@ -103,7 +103,7 @@ interface ChatMessage {
             rows="1"
             placeholder="Ask about company policies..."
             (keydown.enter)="onEnterPressed($event)"
-            class="w-full bg-background border border-border rounded-2xl pl-5 pr-14 py-3.5 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[52px]"
+            class="w-full bg-background border border-border rounded-2xl pl-5 pr-14 py-3.5 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[52px]"
           ></textarea>
           
           <button type="submit" [disabled]="!currentInput.trim() || isTyping()"
