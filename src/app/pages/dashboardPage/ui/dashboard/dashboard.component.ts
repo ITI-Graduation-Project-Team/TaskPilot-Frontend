@@ -8,9 +8,10 @@ import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
-import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
-import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectStats } from '../project-card/project-card.component';
+import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
+import { SettingsViewComponent } from '../settings-view/settings-view.component';
+import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
@@ -43,7 +44,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     SprintPlanningViewComponent,
     OrganizationViewComponent,
     ProjectHistoryModalComponent,
-    SprintListComponent
+    SprintListComponent,
+    SettingsViewComponent
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -199,6 +201,24 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             </svg>
             My Profile
           </a>
+
+          <!-- Settings Tab -->
+          <a (click)="currentTab.set('settings')"
+             [class.bg-primary/10]="currentTab() === 'settings'"
+             [class.text-primary]="currentTab() === 'settings'"
+             [class.font-bold]="currentTab() === 'settings'"
+             [class.shadow-sm]="currentTab() === 'settings'"
+             [class.text-text-secondary]="currentTab() !== 'settings'"
+             [class.hover:text-text-primary]="currentTab() !== 'settings'"
+             [class.hover:bg-primary/5]="currentTab() !== 'settings'"
+             [class.font-medium]="currentTab() !== 'settings'"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Settings
+          </a>
         </nav>
 
         <!-- Footer / Profile Quick view & Dark mode -->
@@ -228,6 +248,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 Create Project
               } @else if (currentTab() === 'profile') {
                 My Profile
+              } @else if (currentTab() === 'settings') {
+                Settings
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
                   <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
@@ -265,7 +287,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
           <div class="flex items-center gap-4">
             <!-- Project selector context dropdown (only shown inside project tabs) -->
-            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'organization' && projectState.projects().length > 0) {
+            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'settings' && currentTab() !== 'organization' && projectState.projects().length > 0) {
               <div class="flex items-center gap-2">
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
@@ -484,6 +506,8 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             <app-organization-view></app-organization-view>
           } @else if (currentTab() === 'profile') {
             <app-profile-view></app-profile-view>
+          } @else if (currentTab() === 'settings') {
+            <app-settings-view></app-settings-view>
           }
         </main>
         
@@ -587,6 +611,19 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           </svg>
           <span class="text-[9px] font-bold">Profile</span>
         </button>
+
+        <!-- Settings Tab -->
+        <button (click)="currentTab.set('settings')" 
+                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
+                [class.text-primary]="currentTab() === 'settings'"
+                [class.scale-105]="currentTab() === 'settings'"
+                [class.text-text-secondary]="currentTab() !== 'settings'">
+          <svg class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span class="text-[9px] font-bold">Settings</span>
+        </button>
       </div>
 
     </div>
@@ -672,7 +709,7 @@ export class DashboardComponent implements OnInit {
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization' | 'settings'>('sprint');
 
   // Component state
   activeSprintName = signal('No Active Sprint');

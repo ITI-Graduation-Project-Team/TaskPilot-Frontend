@@ -126,4 +126,18 @@ export const routes: Routes = [
         (m) => m.AssignmentComponent
       ),
   },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./pages/settings/settings.routes').then((m) => m.settingsRoutes),
+  },
+  {
+    path: 'calendar-callback',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/calendarCallback/calendarCallbackPage.component').then(
+        (m) => m.CalendarCallbackPageComponent
+      ),
+  },
 ];
