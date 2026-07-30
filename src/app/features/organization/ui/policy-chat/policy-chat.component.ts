@@ -27,12 +27,16 @@ interface ChatMessage {
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
           </div>
           <div>
-            <h3 class="text-base font-bold text-text-primary font-display">HR Policy Assistant</h3>
-            <p class="text-xs text-text-secondary">Ask questions about company guidelines, leave policies, etc.</p>
+            <h3 class="text-base font-bold text-text-primary font-display">
+              {{ currentLang === 'ar' ? 'محادث السياسات' : 'HR Policy Assistant' }}
+            </h3>
+            <p class="text-xs text-text-secondary">
+              {{ currentLang === 'ar' ? 'اسأل عن إرشادات الشركة وسياسات الإجازات وغيرها.' : 'Ask questions about company guidelines, leave policies, etc.' }}
+            </p>
           </div>
         </div>
         <button (click)="clearChat()" class="text-[11px] font-bold text-text-secondary hover:text-error transition-colors px-3 py-1.5 rounded-lg hover:bg-error/10">
-          Clear Chat
+          {{ currentLang === 'ar' ? 'مسح المحادثة' : 'Clear Chat' }}
         </button>
       </div>
 
@@ -43,13 +47,23 @@ interface ChatMessage {
             <div class="w-16 h-16 rounded-full bg-primary/5 border-2 border-primary/10 flex items-center justify-center text-primary mb-4">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
             </div>
-            <h4 class="text-lg font-bold text-text-primary mb-2 font-display">How can I help you today?</h4>
-            <p class="text-sm text-text-secondary mb-6">I have read all the company policies uploaded by your manager. Ask me anything about vacations, remote work, or code of conduct.</p>
+            <h4 class="text-lg font-bold text-text-primary mb-2 font-display">
+              {{ currentLang === 'ar' ? 'كيف يمكنني مساعدتك اليوم؟' : 'How can I help you today?' }}
+            </h4>
+            <p class="text-sm text-text-secondary mb-6">
+              {{ currentLang === 'ar' ? 'لقد قرأت جميع سياسات الشركة. اسألني عن الإجازات، العمل عن بعد، أو قواعد السلوك.' : 'I have read all the company policies uploaded by your manager. Ask me anything about vacations, remote work, or code of conduct.' }}
+            </p>
             
             <div class="flex flex-wrap justify-center gap-2">
-              <button (click)="suggestQuestion('How many vacation days do I have?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">Vacation days</button>
-              <button (click)="suggestQuestion('What is the remote work policy?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">Remote work</button>
-              <button (click)="suggestQuestion('How do I request an equipment upgrade?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">Equipment upgrade</button>
+              <button (click)="suggestQuestion(currentLang === 'ar' ? 'كم عدد أيام الإجازة المتاحة لي؟' : 'How many vacation days do I have?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
+                {{ currentLang === 'ar' ? 'أيام الإجازة' : 'Vacation days' }}
+              </button>
+              <button (click)="suggestQuestion(currentLang === 'ar' ? 'ما هي سياسة العمل عن بعد؟' : 'What is the remote work policy?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
+                {{ currentLang === 'ar' ? 'العمل عن بعد' : 'Remote work' }}
+              </button>
+              <button (click)="suggestQuestion(currentLang === 'ar' ? 'كيف يمكنني طلب تحديث للمعدات؟' : 'How do I request an equipment upgrade?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
+                {{ currentLang === 'ar' ? 'تحديث المعدات' : 'Equipment upgrade' }}
+              </button>
             </div>
           </div>
         }
@@ -84,10 +98,10 @@ interface ChatMessage {
             <div class="w-8 h-8 rounded-full bg-sidebar border border-border text-primary flex items-center justify-center shrink-0 mb-1">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             </div>
-            <div class="px-5 py-4 rounded-2xl rounded-bl-sm bg-surface border border-border shadow-sm flex items-center gap-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-primary/60 animate-[bounce_1s_infinite_0ms]"></div>
-              <div class="w-1.5 h-1.5 rounded-full bg-primary/60 animate-[bounce_1s_infinite_200ms]"></div>
-              <div class="w-1.5 h-1.5 rounded-full bg-primary/60 animate-[bounce_1s_infinite_400ms]"></div>
+            <div class="px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border shadow-sm flex items-center justify-center gap-1 min-w-[50px] min-h-[38px]">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
             </div>
           </div>
         }
@@ -101,7 +115,7 @@ interface ChatMessage {
             [(ngModel)]="currentInput"
             name="chatInput"
             rows="1"
-            placeholder="Ask about company policies..."
+            [placeholder]="currentLang === 'ar' ? '...اسأل عن سياسات الشركة' : 'Ask about company policies...'"
             (keydown.enter)="onEnterPressed($event)"
             class="w-full bg-background border border-border rounded-2xl pl-5 pr-14 py-3.5 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[52px]"
           ></textarea>
@@ -112,11 +126,29 @@ interface ChatMessage {
           </button>
         </form>
         <div class="text-center mt-2">
-          <span class="text-[9px] font-semibold text-text-secondary/70">AI can make mistakes. Always verify with official HR documents.</span>
+          <span class="text-[9px] font-semibold text-text-secondary/70">
+            {{ currentLang === 'ar' ? 'قد يخطئ الذكاء الاصطناعي. تحقق دائمًا من مستندات الموارد البشرية الرسمية.' : 'AI can make mistakes. Always verify with official HR documents.' }}
+          </span>
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-secondary);
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out both;
+    }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  `]
 })
 export class PolicyChatComponent implements AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
@@ -130,6 +162,10 @@ export class PolicyChatComponent implements AfterViewChecked {
   isTyping = signal(false);
 
   userInitial = () => 'U'; // Could fetch from actual user profile if available in projectState
+
+  get currentLang(): string {
+    return localStorage?.getItem('app_lang') || 'en';
+  }
 
   ngAfterViewChecked() {
     this.scrollToBottom();
@@ -156,7 +192,8 @@ export class PolicyChatComponent implements AfterViewChecked {
   }
 
   clearChat() {
-    if (confirm('Clear chat history?')) {
+    const msg = this.currentLang === 'ar' ? 'هل تريد مسح سجل المحادثة؟' : 'Clear chat history?';
+    if (confirm(msg)) {
       this.messages.set([]);
     }
   }
@@ -171,7 +208,7 @@ export class PolicyChatComponent implements AfterViewChecked {
 
     const companyId = this.projectState.userCompanyId();
     if (!companyId) {
-      this.toastService.show('Company context missing.', 'error');
+      this.toastService.show(this.currentLang === 'ar' ? 'سياق الشركة مفقود.' : 'Company context missing.', 'error');
       return;
     }
 
@@ -202,15 +239,20 @@ export class PolicyChatComponent implements AfterViewChecked {
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: answer || "I couldn't find an answer to that in the policy documents.",
+        content: answer || (this.currentLang === 'ar' ? 'لم أتمكن من العثور على إجابة في مستندات السياسة.' : "I couldn't find an answer to that in the policy documents."),
         timestamp: new Date()
       };
       
       this.messages.update(m => [...m, aiMsg]);
     } catch (error) {
       console.error('Chat error:', error);
-      this.toastService.show('Failed to get a response from the AI.', 'error');
-      // Remove the user message or show error bubble? We'll just show a toast for simplicity.
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: this.currentLang === 'ar' ? 'عذراً، فشل في الحصول على رد من الذكاء الاصطناعي.' : 'Sorry, failed to get a response from the AI.',
+        timestamp: new Date()
+      };
+      this.messages.update(m => [...m, errorMsg]);
     } finally {
       this.isTyping.set(false);
     }

@@ -137,7 +137,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            Retrospective
+            {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
             <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
           </a>
 
@@ -163,9 +163,9 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             @if (projectState.isProjectManager()) {
-              {{ 'SIDEBAR.ORGANIZATION_HUB' | translate }}
+              {{ currentLang() === 'ar' ? 'مركز المؤسسة' : 'Organization Hub' }}
             } @else {
-              {{ 'SIDEBAR.COMPANY_POLICIES' | translate }}
+              {{ currentLang() === 'ar' ? 'سياسات الشركة' : 'Company Policies' }}
             }
           </a>
 
@@ -226,9 +226,9 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
-                Retrospective
+                {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
               } @else if (currentTab() === 'organization') {
-                @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
+                @if (projectState.isProjectManager()) { {{ currentLang() === 'ar' ? 'مركز المؤسسة' : 'Organization Hub' }} } @else { {{ currentLang() === 'ar' ? 'سياسات الشركة' : 'Company Policies' }} }
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {

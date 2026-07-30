@@ -70,6 +70,10 @@ export class SubscriptionPlansComponent implements OnInit, OnDestroy {
   showStartOverConfirm = signal(false);
   isStartingOver = signal(false);
 
+  get currentLang(): string {
+    return localStorage?.getItem('app_lang') || 'en';
+  }
+
   ngOnInit() {
     this.loadData();
     this.checkPaymentSuccess();

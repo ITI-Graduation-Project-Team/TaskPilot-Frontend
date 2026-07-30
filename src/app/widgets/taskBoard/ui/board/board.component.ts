@@ -220,8 +220,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="flex items-center gap-3">
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
-                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                👥 {{ hasAssignments() ? ('BOARD.ASSIGNED_TASKS' | translate) : ('BOARD.ASSIGN_TASKS' | translate) }}
+                      [disabled]="hasAssignments()"
+                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:-translate-y-0">
+                👥 {{ hasAssignments() ? (currentLang === 'ar' ? 'تم التعيين' : 'Assigned') : ('BOARD.ASSIGN_TASKS' | translate) }}
               </button>
               <button (click)="startSprint()" 
                       [disabled]="projectState.projectEmployeeCount() === 0"

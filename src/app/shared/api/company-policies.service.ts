@@ -44,7 +44,11 @@ export class CompanyPoliciesService {
 
    async askPolicyQuestion(request: PolicyAskRequest): Promise<string> {
     try {
-      const response = await apiClient.post('/company-policies/ask', request);
+      const response = await apiClient.post('/company-policies/ask', request, {
+        headers: {
+          'X-Skip-Loader': 'true'
+        }
+      });
       const resData = response.data;
 
       let answerText = '';
