@@ -1,7 +1,9 @@
-import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy, Injector } from '@angular/core';
+import { Component, signal, OnInit, AfterViewInit, ChangeDetectionStrategy, Injector, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router,  } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { DOCUMENT, CommonModule } from '@angular/common';
 import { saveTokens } from '../../../../shared/lib/auth/cookie.helper';
 import { environment } from '../../../../../environments/environment';
 
@@ -11,7 +13,7 @@ type PageState = 'idle' | 'loading' | 'success' | 'error';
   selector: 'app-confirm-email',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, ],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './confirm-email.component.html',
   styleUrls: ['./confirm-email.component.scss'],
 })
@@ -21,11 +23,33 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
   state        = signal<PageState>('idle');
   errorMessage = signal('');
   resendState  = signal<'idle' | 'loading' | 'sent'>('idle');
+  currentLang = signal('en');
 
   /** Individual OTP digit signals for the 6-box UI */
   digits = signal<string[]>(['', '', '', '', '', '']);
 
-  constructor(private route: ActivatedRoute, private router: Router, private injector: Injector) {}
+  constructor(
+    private route: ActivatedRoute, 
+    private router: Router, 
+    private injector: Injector,
+    private translate: TranslateService,
+    @Inject(DOCUMENT) private document: Document
+  ) {
+    const savedLang = localStorage.getItem('app_lang') || 'en';
+    this.currentLang.set(savedLang);
+    this.translate.use(savedLang);
+    this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = savedLang;
+  }
+
+  toggleLanguage() {
+    const newLang = this.currentLang() === 'en' ? 'ar' : 'en';
+    this.currentLang.set(newLang);
+    localStorage.setItem('app_lang', newLang);
+    this.translate.use(newLang);
+    this.document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = newLang;
+  }
 
   ngOnInit() {
     const email = this.route.snapshot.queryParamMap.get('email') ?? '';
@@ -118,15 +142,16 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
   }
 
   async onSubmit() {
-    const code = this.digits().join('');
-    if (code.length < 6) {
+    const emailVal = this.email();
+    if (!emailVal) {
       this.state.set('error');
-      this.errorMessage.set('Please enter the complete 6-digit code.');
+      this.errorMessage.set(this.translate.instant('confirmEmail.errEmailMissing'));
       return;
     }
-    if (!this.email()) {
+    const otpVal = this.otp().trim();
+    if (otpVal.length < 6) {
       this.state.set('error');
-      this.errorMessage.set('Email address is missing. Please go back and register again.');
+      this.errorMessage.set(this.translate.instant('confirmEmail.errCodeRequired'));
       return;
     }
 
@@ -134,7 +159,7 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
     this.errorMessage.set('');
 
     try {
-      const { data } = await authApi.confirmEmail({ email: this.email(), otp: code });
+      const { data } = await authApi.confirmEmail({ email: this.email(), otp: otpVal });
       if (data.succeeded === false) {
         this.state.set('error');
         this.errorMessage.set(

@@ -37,42 +37,47 @@ export class DashboardService {
       this.projectStatsMap.set(currentMap);
     }
 
-    const promises = projects.map(async (p) => {
-      const stats: ProjectStats = { activeSprint: 'No Active Sprint', memberCount: 0, taskCount: 0, loading: false };
-      try {
-        const [sprintRes, employeesRes, backlogRes] = await Promise.allSettled([
-          apiClient.get<any>(`/projects/${p.id}/sprints/active`),
-          apiClient.get<any>(`/projects/${p.id}/employees`),
-          apiClient.get<any>(`/projects/${p.id}/backlog`)
-        ]);
+    // Process in batches of 3 to avoid network congestion
+    const batchSize = 3;
+    for (let i = 0; i < projects.length; i += batchSize) {
+      const batch = projects.slice(i, i + batchSize);
+      const promises = batch.map(async (p) => {
+        const stats: ProjectStats = { activeSprint: 'No Active Sprint', memberCount: 0, taskCount: 0, loading: false };
+        try {
+          const [sprintRes, employeesRes, backlogRes] = await Promise.allSettled([
+            apiClient.get<any>(`/projects/${p.id}/sprints/active`),
+            apiClient.get<any>(`/projects/${p.id}/employees`),
+            apiClient.get<any>(`/projects/${p.id}/backlog`)
+          ]);
 
-        if (sprintRes.status === 'fulfilled' && sprintRes.value.data?.data) {
-          const sprintData = sprintRes.value.data.data;
-          stats.activeSprint = `${sprintData.titleEn || sprintData.title || ''} Active`;
-        }
-        if (employeesRes.status === 'fulfilled' && employeesRes.value.data?.data) {
-          stats.memberCount = employeesRes.value.data.data.length || 0;
-        }
-        if (backlogRes.status === 'fulfilled' && backlogRes.value.data?.data) {
-          const stories = backlogRes.value.data.data.userStories || [];
-          let totalTasks = 0;
-          for (const story of stories) {
-            totalTasks += (story.tasks || []).length;
+          if (sprintRes.status === 'fulfilled' && sprintRes.value.data?.data) {
+            const sprintData = sprintRes.value.data.data;
+            stats.activeSprint = `${sprintData.titleEn || sprintData.title || ''} Active`;
           }
-          stats.taskCount = totalTasks;
+          if (employeesRes.status === 'fulfilled' && employeesRes.value.data?.data) {
+            stats.memberCount = employeesRes.value.data.data.length || 0;
+          }
+          if (backlogRes.status === 'fulfilled' && backlogRes.value.data?.data) {
+            const stories = backlogRes.value.data.data.userStories || [];
+            let totalTasks = 0;
+            for (const story of stories) {
+              totalTasks += (story.tasks || []).length;
+            }
+            stats.taskCount = totalTasks;
+          }
+        } catch (err) {
+          console.warn('Failed to load stats for project:', p.id, err);
         }
-      } catch (err) {
-        console.warn('Failed to load stats for project:', p.id, err);
-      }
-      return { id: p.id, stats };
-    });
+        return { id: p.id, stats };
+      });
 
-    const results = await Promise.all(promises);
-    const newMap = new Map(this.projectStatsMap());
-    for (const res of results) {
-      newMap.set(res.id, res.stats);
+      const results = await Promise.all(promises);
+      const newMap = new Map(this.projectStatsMap());
+      for (const res of results) {
+        newMap.set(res.id, res.stats);
+      }
+      this.projectStatsMap.set(newMap);
     }
-    this.projectStatsMap.set(newMap);
   }
 
   openAiProjectFlow() {
