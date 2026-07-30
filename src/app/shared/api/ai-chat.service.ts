@@ -26,7 +26,8 @@ export class AiChatService {
 
       const response = await apiClient.post<any>(
         '/company-policies/ask',
-        { companyId, question }
+        { companyId, question },
+        { headers: { 'X-Skip-Loader': 'true' } }
       );
       
       const resData = response.data;

@@ -58,7 +58,7 @@ export class ProjectPoliciesService {
   async askPolicyQuestion(request: ProjectPolicyQuestionRequest, lang: string = 'en'): Promise<string> {
     try {
       const response = await apiClient.post('/project-policies/ask', request, {
-        headers: { 'lang': lang }
+        headers: { 'lang': lang, 'X-Skip-Loader': 'true' }
       });
       const resData = response.data;
 

@@ -149,10 +149,10 @@ interface ChatMessage {
               <div class="w-8 h-8 rounded-full bg-sidebar border border-border text-primary flex items-center justify-center shrink-0 mb-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
               </div>
-              <div class="px-5 py-4 rounded-2xl rounded-bl-sm bg-surface border border-border shadow-sm flex items-center gap-1.5">
-                <div class="w-1.5 h-1.5 rounded-full bg-primary/60 animate-[bounce_1s_infinite_0ms]"></div>
-                <div class="w-1.5 h-1.5 rounded-full bg-primary/60 animate-[bounce_1s_infinite_200ms]"></div>
-                <div class="w-1.5 h-1.5 rounded-full bg-primary/60 animate-[bounce_1s_infinite_400ms]"></div>
+              <div class="px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border shadow-sm flex items-center justify-center gap-1 min-w-[50px] min-h-[38px]">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
               </div>
             </div>
           }
@@ -178,7 +178,23 @@ interface ChatMessage {
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-secondary);
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out both;
+    }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  `]
 })
 export class ProjectPoliciesAdminComponent implements AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
@@ -338,7 +354,13 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
       
       this.messages.update(m => [...m, aiMsg]);
     } catch (error) {
-      this.toastService.show(this.translate.instant('PROJECT_POLICIES.CHAT_ERROR'), 'error');
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: this.translate.instant('PROJECT_POLICIES.CHAT_ERROR'),
+        timestamp: new Date()
+      };
+      this.messages.update(m => [...m, errorMsg]);
     } finally {
       this.isTyping.set(false);
     }

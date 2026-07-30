@@ -64,12 +64,10 @@ interface ChatMessage {
           
           @if (isTyping()) {
             <div class="flex justify-start">
-              <div class="max-w-[85%] md:max-w-[75%] rounded-2xl rounded-bl-sm p-4 bg-surface border border-border text-text-primary shadow-sm flex items-center gap-2">
-                <div class="flex gap-1.5 p-1">
-                  <div class="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style="animation-delay: 0ms"></div>
-                  <div class="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style="animation-delay: 150ms"></div>
-                  <div class="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style="animation-delay: 300ms"></div>
-                </div>
+              <div class="px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border shadow-sm flex items-center justify-center gap-1 min-w-[50px] min-h-[38px]">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
               </div>
             </div>
           }
@@ -104,7 +102,23 @@ interface ChatMessage {
         </form>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-secondary);
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out both;
+    }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  `]
 })
 export class ProjectPoliciesChatComponent implements AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
