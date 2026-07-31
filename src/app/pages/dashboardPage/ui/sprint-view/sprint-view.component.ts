@@ -17,8 +17,7 @@ import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.com
         [overrideSprintId]="selectedSprintId()"
         [overrideSprintStatus]="selectedSprintStatus()"
         (backToSprints)="onBackToSprints()"
-        (sprintStatusChanged)="onSprintStatusChanged()"
-        (navigateToTeam)="navigateToTeam()">
+        (sprintStatusChanged)="onSprintStatusChanged()">
       </app-board>
     } @else {
       @if (projectState.selectedProjectId()) {
@@ -115,7 +114,4 @@ export class SprintViewComponent {
     }
   }
 
-  navigateToTeam(): void {
-    this.router.navigate(['/dashboard', 'team']);
-  }
 }
