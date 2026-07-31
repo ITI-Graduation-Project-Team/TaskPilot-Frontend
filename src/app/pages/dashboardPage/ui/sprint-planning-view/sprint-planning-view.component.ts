@@ -669,6 +669,10 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ──────────────────────────────────────────────────
   async ngOnInit() {
+    const projId = this.projectState.selectedProjectId();
+    if (projId) {
+      this.projectState.loadProjectEmployeeCount(projId);
+    }
     await this.loadBacklogStories();
   }
 

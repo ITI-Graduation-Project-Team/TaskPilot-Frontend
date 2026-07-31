@@ -13,8 +13,12 @@ import { ToastService } from '../../../../shared/services/toast.service';
     <div class="bg-surface rounded-3xl border border-border p-6 md:p-8 shadow-sm">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-bold text-text-primary font-display">Knowledge Base</h3>
-          <p class="text-sm text-text-secondary mt-1">Upload company policies and documents. The AI Assistant will read these to answer team questions.</p>
+          <h3 class="text-lg font-bold text-text-primary font-display">
+            {{ currentLang === 'ar' ? 'قاعدة المعرفة' : 'Knowledge Base' }}
+          </h3>
+          <p class="text-sm text-text-secondary mt-1">
+            {{ currentLang === 'ar' ? 'ارفع سياسات الشركة ومستنداتها. سيقوم المساعد الذكي بقراءتها للإجابة على أسئلة الفريق.' : 'Upload company policies and documents. The AI Assistant will read these to answer team questions.' }}
+          </p>
         </div>
       </div>
 
@@ -36,12 +40,16 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </svg>
         </div>
         
-        <p class="text-sm font-bold text-text-primary mb-1">Drag and drop your policy documents here</p>
-        <p class="text-xs text-text-secondary mb-4">Supported formats: PDF, DOCX (Max 10MB)</p>
+        <p class="text-sm font-bold text-text-primary mb-1">
+          {{ currentLang === 'ar' ? 'اسحب وأفلت مستندات السياسات هنا' : 'Drag and drop your policy documents here' }}
+        </p>
+        <p class="text-xs text-text-secondary mb-4">
+          {{ currentLang === 'ar' ? 'الصيغ المدعومة: PDF, DOCX (الحد الأقصى 10 ميجابايت)' : 'Supported formats: PDF, DOCX (Max 10MB)' }}
+        </p>
         
         <label class="cursor-pointer">
           <span class="px-5 py-2.5 bg-background border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all">
-            Browse Files
+            {{ currentLang === 'ar' ? 'تصفح الملفات' : 'Browse Files' }}
           </span>
           <input type="file" class="hidden" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)">
         </label>
@@ -51,15 +59,21 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <div class="mt-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-4">
           <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
           <div>
-            <p class="text-sm font-bold text-text-primary">Uploading document...</p>
-            <p class="text-xs text-text-secondary">Please wait while the AI processes the file.</p>
+            <p class="text-sm font-bold text-text-primary">
+              {{ currentLang === 'ar' ? 'جاري رفع المستند...' : 'Uploading document...' }}
+            </p>
+            <p class="text-xs text-text-secondary">
+              {{ currentLang === 'ar' ? 'يرجى الانتظار بينما يقوم الذكاء الاصطناعي بمعالجة الملف.' : 'Please wait while the AI processes the file.' }}
+            </p>
           </div>
         </div>
       }
 
       <!-- Uploaded Documents List -->
       <div class="mt-8">
-        <h4 class="text-xs font-bold text-text-secondary mb-4 uppercase tracking-wider">Uploaded Documents</h4>
+        <h4 class="text-xs font-bold text-text-secondary mb-4 uppercase tracking-wider">
+          {{ currentLang === 'ar' ? 'المستندات المرفوعة' : 'Uploaded Documents' }}
+        </h4>
         
         @if (isLoading()) {
           <div class="flex items-center justify-center py-8">
@@ -67,7 +81,9 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </div>
         } @else if (documents().length === 0) {
           <div class="text-center py-8 bg-background border border-border border-dashed rounded-2xl">
-            <p class="text-sm text-text-secondary">No policies uploaded yet.</p>
+            <p class="text-sm text-text-secondary">
+              {{ currentLang === 'ar' ? 'لم يتم رفع أي سياسات بعد.' : 'No policies uploaded yet.' }}
+            </p>
           </div>
         } @else {
           <div class="grid gap-3">
@@ -81,7 +97,9 @@ import { ToastService } from '../../../../shared/services/toast.service';
                   </div>
                   <div class="min-w-0">
                     <p class="text-sm font-bold text-text-primary truncate">{{ doc.fileName }}</p>
-                    <p class="text-[10px] text-text-secondary">Uploaded on {{ doc.uploadedAt | date:'mediumDate' }}</p>
+                    <p class="text-[10px] text-text-secondary">
+                      {{ currentLang === 'ar' ? 'مرفوع في' : 'Uploaded on' }} {{ doc.uploadedAt | date:'mediumDate' }}
+                    </p>
                   </div>
                 </div>
                 
@@ -114,6 +132,10 @@ export class KnowledgeBaseComponent implements OnInit {
   isDragging = signal(false);
   isDeleting = signal<string | null>(null);
 
+  get currentLang(): string {
+    return localStorage?.getItem('app_lang') || 'en';
+  }
+
   ngOnInit() {
     this.loadDocuments();
   }
@@ -129,7 +151,7 @@ export class KnowledgeBaseComponent implements OnInit {
       this.documents.set(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
-      this.toastService.show('Failed to load documents', 'error');
+      this.toastService.show(this.currentLang === 'ar' ? 'فشل تحميل المستندات' : 'Failed to load documents', 'error');
     } finally {
       this.isLoading.set(false);
     }
@@ -171,18 +193,18 @@ export class KnowledgeBaseComponent implements OnInit {
 
     // Validate size (e.g. 10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-      this.toastService.show('File size exceeds 10MB limit', 'error');
+      this.toastService.show(this.currentLang === 'ar' ? 'حجم الملف يتجاوز الحد الأقصى 10 ميجابايت' : 'File size exceeds 10MB limit', 'error');
       return;
     }
 
     try {
       this.isUploading.set(true);
       await this.policyService.uploadDocument(companyId, file);
-      this.toastService.show('Document uploaded successfully', 'success');
+      this.toastService.show(this.currentLang === 'ar' ? 'تم رفع المستند بنجاح' : 'Document uploaded successfully', 'success');
       await this.loadDocuments();
     } catch (error) {
       console.error('Upload error:', error);
-      this.toastService.show('Failed to upload document', 'error');
+      this.toastService.show(this.currentLang === 'ar' ? 'فشل رفع المستند' : 'Failed to upload document', 'error');
     } finally {
       this.isUploading.set(false);
     }
@@ -192,18 +214,19 @@ export class KnowledgeBaseComponent implements OnInit {
     const companyId = this.projectState.userCompanyId();
     if (!companyId) return;
 
-    if (!confirm('Are you sure you want to delete this document? The AI will no longer know about its contents.')) {
+    const msg = this.currentLang === 'ar' ? 'هل أنت متأكد من حذف هذا المستند؟ لن يتمكن الذكاء الاصطناعي من معرفة محتوياته بعد الآن.' : 'Are you sure you want to delete this document? The AI will no longer know about its contents.';
+    if (!confirm(msg)) {
       return;
     }
 
     try {
       this.isDeleting.set(docId);
       await this.policyService.deleteDocument(companyId, docId);
-      this.toastService.show('Document deleted', 'success');
+      this.toastService.show(this.currentLang === 'ar' ? 'تم حذف المستند' : 'Document deleted', 'success');
       this.documents.update(docs => docs.filter(d => d.id !== docId));
     } catch (error) {
       console.error('Delete error:', error);
-      this.toastService.show('Failed to delete document', 'error');
+      this.toastService.show(this.currentLang === 'ar' ? 'فشل حذف المستند' : 'Failed to delete document', 'error');
     } finally {
       this.isDeleting.set(null);
     }

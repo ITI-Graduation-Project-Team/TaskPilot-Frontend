@@ -137,7 +137,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            Retrospective
+            {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
             <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
           </a>
 
@@ -152,6 +152,20 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
               {{ 'SIDEBAR.PROJECT_TEAM' | translate }}
+            </a>
+
+            <!-- Project Policies Tab -->
+            <a routerLink="/dashboard/project-policies" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProjPol="routerLinkActive"
+               [class.text-text-secondary]="!rlaProjPol.isActive"
+               [class.hover:text-text-primary]="!rlaProjPol.isActive"
+               [class.hover:bg-primary/5]="!rlaProjPol.isActive"
+               [class.font-medium]="!rlaProjPol.isActive"
+               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              {{ 'SIDEBAR.PROJECT_POLICIES' | translate }}
+              <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
             </a>
           } 
           <!-- Employees Tab (PM only) -->
@@ -177,9 +191,9 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             @if (projectState.isProjectManager()) {
-              {{ 'SIDEBAR.ORGANIZATION_HUB' | translate }}
+              {{ currentLang() === 'ar' ? 'مركز المؤسسة' : 'Organization Hub' }}
             } @else {
-              {{ 'SIDEBAR.COMPANY_POLICIES' | translate }}
+              {{ currentLang() === 'ar' ? 'سياسات الشركة' : 'Company Policies' }}
             }
           </a>
 
@@ -240,11 +254,31 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
-                Retrospective
+                {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
               } @else if (currentTab() === 'organization') {
                 @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
               } @else if (currentTab() === 'employees') {
                 {{ 'EMPLOYEES.TITLE' | translate }}
+            } @else if (currentTab() === 'project-policies') {
+                @if (projectState.isProjectManager()) {
+                    <span
+                        class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors"
+                        (click)="currentTab.set('projects')">
+                        {{ 'HEADER.ALL_PROJECTS' | translate }}
+                    </span>
+                    <span class="text-text-secondary font-light">/</span>
+                }
+
+                <span class="truncate max-w-[200px]">
+                    {{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}
+                </span>
+
+                <span class="text-text-secondary font-light">/</span>
+
+                Project Policies
+            }   
+
+   
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
@@ -262,14 +296,6 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
             } @else if (projectState.selectedProject()?.status === 'Archived') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
                 {{ 'HEADER.ARCHIVED' | translate }}
-              </span>
-            } @else if (currentTab() === 'sprint') {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
-                @if (activeSprintName()) {
-                  {{ activeSprintName() }} {{ currentLang() === 'ar' ? 'نشط' : 'Active' }}
-                } @else {
-                  {{ currentLang() === 'ar' ? 'لا يوجد سباق نشط' : 'No Active Sprint' }}
-                }
               </span>
             }
           </div>
@@ -443,6 +469,16 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             <span class="text-[9px] font-bold">{{ 'SIDEBAR.TEAM' | translate }}</span>
           </a>
+
+          <!-- Mobile Project Policies Tab -->
+          <a routerLink="/dashboard/project-policies" routerLinkActive="text-primary scale-105" #rlaProjPolM="routerLinkActive"
+             [class.text-text-secondary]="!rlaProjPolM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 relative">
+            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-[9px] font-bold">AI Policies</span>
+          </a>
         }
 
         <!-- Mobile Employees Tab -->
@@ -552,10 +588,10 @@ export class DashboardComponent implements OnInit {
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'| 'project-policies'>('sprint');
 
   // Component state
-  activeSprintName = signal('');
+
   isProjectDropdownOpen = signal(false);
 
   // Eager project statistics Map
@@ -597,26 +633,7 @@ export class DashboardComponent implements OnInit {
       this.currentTab.set(tab as any);
     });
 
-    // Reactively update sprint name whenever selected project ID changes
-    effect(() => {
-      const projId = this.projectState.selectedProjectId();
-      if (projId) {
-        this.loadActiveSprint(projId);
-      } else {
-        this.activeSprintName.set('No Active Sprint');
-      }
-    });
 
-    // Eagerly load all project statistics when the "projects" tab is selected
-    effect(() => {
-      const tab = this.currentTab();
-      const projects = this.projectState.projects();
-      if (tab === 'projects' && projects.length > 0) {
-        untracked(() => {
-          this.dashboardService.loadAllProjectStats();
-        });
-      }
-    });
 
     // If a PM has no projects, default to the create-project tab and open AI chat automatically
     effect(() => {
@@ -681,8 +698,7 @@ export class DashboardComponent implements OnInit {
 
   async loadUserProfile() {
     try {
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const profileData = data.data || data;
+      const profileData = await this.projectState.getProfile();
       if (profileData) {
         this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
         this.userJobTitle.set(profileData.jobTitle || '');
@@ -691,22 +707,6 @@ export class DashboardComponent implements OnInit {
       console.warn('Failed to load profile details for sidebar:', e);
     }
   }
-
-  async loadActiveSprint(projectId: string) {
-    try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
-      const sprintData = data.data;
-      if (sprintData) {
-        this.activeSprintName.set(sprintData.titleEn || sprintData.title || '');
-      } else {
-        this.activeSprintName.set('');
-      }
-    } catch (e) {
-      console.warn('Failed to load active sprint info:', e);
-      this.activeSprintName.set('');
-    }
-  }
-
 
 
   onProjectSelect(event: Event) {
@@ -744,7 +744,6 @@ export class DashboardComponent implements OnInit {
       this.toastService.show('Error finalizing project setup', 'error');
     } finally {
       this.currentTab.set('projects');
-      this.dashboardService.loadAllProjectStats();
     }
   }
 
@@ -769,7 +768,6 @@ export class DashboardComponent implements OnInit {
     );
     if (success) {
       this.dashboardService.isEditProjectModalOpen.set(false);
-      this.dashboardService.loadAllProjectStats();
     }
   }
 
@@ -793,7 +791,6 @@ export class DashboardComponent implements OnInit {
     const success = await this.projectState.deleteProject(projectId);
     if (success) {
       this.toastService.show('Project deleted successfully', 'success');
-      this.dashboardService.loadAllProjectStats();
     } else {
       this.toastService.show('Failed to delete project. Please try again.', 'error');
     }
@@ -820,7 +817,6 @@ export class DashboardComponent implements OnInit {
   onHistoryActionCompleted() {
     this.closeHistoryModal();
     this.toastService.show('Project status updated successfully', 'success');
-    this.dashboardService.loadAllProjectStats();
   }
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {

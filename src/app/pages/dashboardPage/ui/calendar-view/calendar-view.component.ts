@@ -624,6 +624,7 @@ export class CalendarViewComponent implements OnInit {
 
   constructor() {
     effect(() => {
+      this.translate.currentLang();
       const d = this.currentDate();
       const start = new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString();
       const end = new Date(d.getFullYear(), d.getMonth() + 2, 0).toISOString();
@@ -631,6 +632,7 @@ export class CalendarViewComponent implements OnInit {
     });
 
     effect(() => {
+      this.translate.currentLang();
       if (this.isPM()) {
         this.calendarService.loadWorkload();
       }
@@ -813,8 +815,8 @@ export class CalendarViewComponent implements OnInit {
 
     this.editingTask.set({
       id: task.id,
-      title: task.titleEn || task.titleAr || '',
-      description: task.descriptionEn || task.descriptionAr || '',
+      title: this.isAr() ? (task.titleAr || task.titleEn || '') : (task.titleEn || task.titleAr || ''),
+      description: this.isAr() ? (task.descriptionAr || task.descriptionEn || '') : (task.descriptionEn || task.descriptionAr || ''),
       startDateTime: st,
       endDateTime: et,
       priority: task.priority || 'Low',

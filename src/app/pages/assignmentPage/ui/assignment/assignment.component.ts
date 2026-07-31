@@ -132,7 +132,7 @@ export class AssignmentComponent implements OnInit {
   }
 
   goBackToDashboard() {
-    this.router.navigate(['/dashboard'], {
+    this.router.navigate(['/dashboard/sprint'], {
       queryParams: {
         sprintId: this.sprintId,
         sprintStatus: 'Planned'

@@ -78,33 +78,32 @@ export interface ProjectStats {
         {{ getProjectDescription() || ('PROJECT_CARD.NO_DESCRIPTION' | translate) }}
       </p>
 
-      <!-- Stats / Skeletons -->
-      @if (stats() && !stats()?.loading) {
-        <div class="space-y-4">
-          <!-- Status / Active Sprint pill -->
-          <div class="flex items-center">
-            @if (project().status === 'Completed') {
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
-                {{ 'PROJECT_CARD.COMPLETED' | translate }}
-              </div>
-            } @else if (project().status === 'Archived') {
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 border border-slate-500/20">
-                {{ 'PROJECT_CARD.ARCHIVED' | translate }}
-              </div>
-            } @else {
-              @if (stats()?.activeSprint && stats()?.activeSprint !== 'No Active Sprint') {
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
-                  <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
-                  {{ stats()?.activeSprint }}
-                </div>
-              } @else {
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-text-secondary/10 text-text-secondary border border-border">
-                  {{ 'PROJECT_CARD.NO_ACTIVE_SPRINT' | translate }}
-                </div>
-              }
-            }
-          </div>
+      <!-- Stats / Status Pill -->
+      <div class="space-y-4">
+        <!-- Status / Active Sprint pill -->
+        <div class="flex items-center">
+          @if (project().status === 'Completed') {
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+              {{ 'PROJECT_CARD.COMPLETED' | translate }}
+            </div>
+          } @else if (project().status === 'Archived') {
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 border border-slate-500/20">
+              {{ 'PROJECT_CARD.ARCHIVED' | translate }}
+            </div>
+          } @else if (stats()?.activeSprint && stats()?.activeSprint !== 'No Active Sprint') {
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+              {{ stats()?.activeSprint }}
+            </div>
+          } @else {
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
+              {{ 'PROJECT_HUB.ACTIVE_DRAFT' | translate }}
+            </div>
+          }
+        </div>
 
+        @if (stats() && (stats()?.memberCount || stats()?.taskCount)) {
           <!-- Bottom stats row -->
           <div class="flex items-center justify-between pt-2 border-t border-border/60">
             <div class="flex gap-4">
@@ -120,26 +119,15 @@ export interface ProjectStats {
               <!-- Tasks Count -->
               <div class="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors">
                 <svg class="w-4 h-4 text-text-secondary/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 <span class="text-xs font-bold font-mono">{{ stats()?.taskCount ?? 0 }}</span>
                 <span class="text-[10px] text-text-secondary uppercase font-semibold">{{ 'PROJECT_CARD.TASKS' | translate }}</span>
               </div>
             </div>
           </div>
-        </div>
-      } @else {
-        <!-- Skeleton loading state -->
-        <div class="space-y-4 animate-pulse">
-          <div class="h-6 w-28 bg-border rounded-lg"></div>
-          <div class="flex items-center justify-between pt-2 border-t border-border/60">
-            <div class="flex gap-4">
-              <div class="h-4 w-12 bg-border rounded"></div>
-              <div class="h-4 w-12 bg-border rounded"></div>
-            </div>
-          </div>
-        </div>
-      }
+        }
+      </div>
 
       <!-- Actions -->
       <div class="grid grid-cols-2 gap-2 mt-5">

@@ -1,15 +1,17 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { authApi, extractApiError } from '../../../../shared/api/auth.api';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
+import { DOCUMENT } from '@angular/common';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss'],
 })
@@ -22,8 +24,28 @@ export class ResetPasswordComponent implements OnInit {
   showConfirm = signal(false);
   state = signal<PageState>('idle');
   errorMessage = signal('');
+  currentLang = signal('en');
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private translate: TranslateService,
+    @Inject(DOCUMENT) private document: Document
+  ) {
+    const savedLang = localStorage.getItem('app_lang') || 'en';
+    this.currentLang.set(savedLang);
+    this.translate.use(savedLang);
+    this.document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = savedLang;
+  }
+
+  toggleLanguage() {
+    const newLang = this.currentLang() === 'en' ? 'ar' : 'en';
+    this.currentLang.set(newLang);
+    localStorage.setItem('app_lang', newLang);
+    this.translate.use(newLang);
+    this.document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    this.document.documentElement.lang = newLang;
+  }
 
   ngOnInit() {
     // Retrieve email passed from forgot-password page
@@ -68,31 +90,31 @@ export class ResetPasswordComponent implements OnInit {
     const otpVal = this.otp().trim();
     const emailVal = this.email().trim();
     const passVal = this.password();
-    const confirmVal = this.confirmPassword();
+    const confPassVal = this.confirmPassword();
 
     // Validation
-    if (!otpVal || !emailVal || !passVal || !confirmVal) {
+    if (!emailVal || !otpVal || !passVal || !confPassVal) {
       this.state.set('error');
-      this.errorMessage.set('All fields are required.');
+      this.errorMessage.set(this.translate.instant('resetPassword.errAllRequired'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailVal)) {
       this.state.set('error');
-      this.errorMessage.set('Please enter a valid email address.');
+      this.errorMessage.set(this.translate.instant('resetPassword.errInvalidEmail'));
       return;
     }
 
     if (passVal.length < 6) {
       this.state.set('error');
-      this.errorMessage.set('Password must be at least 6 characters.');
+      this.errorMessage.set(this.translate.instant('resetPassword.errPasswordLength'));
       return;
     }
 
-    if (passVal !== confirmVal) {
+    if (passVal !== confPassVal) {
       this.state.set('error');
-      this.errorMessage.set('Passwords do not match.');
+      this.errorMessage.set(this.translate.instant('resetPassword.errPasswordMatch'));
       return;
     }
 

@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { AiChatService } from '../../../../shared/api/ai-chat.service';
+import { ProjectPoliciesService } from '../../../../shared/api/project-policies.service';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 interface ChatMessage {
   id: string;
@@ -12,12 +14,12 @@ interface ChatMessage {
 }
 
 @Component({
-  selector: 'app-company-policies-chat',
+  selector: 'app-project-policies-chat',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
-    <div class="flex flex-col h-full bg-surface border border-border rounded-2xl shadow-sm overflow-hidden font-dashboard" 
+    <div class="flex flex-col h-[calc(100vh-140px)] min-h-[600px] bg-surface border border-border rounded-2xl shadow-sm overflow-hidden font-dashboard" 
          [attr.dir]="isRtl() ? 'rtl' : 'ltr'">
       
       <!-- Header -->
@@ -29,31 +31,31 @@ interface ChatMessage {
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-extrabold text-text-primary">{{ 'employee.chat.title' | translate }}</h2>
-            <p class="text-xs text-text-secondary">{{ 'employee.chat.subtitle' | translate }}</p>
+            <h2 class="text-lg font-extrabold text-text-primary">{{ 'PROJECT_POLICIES.CHAT_TITLE' | translate }}</h2>
+            <p class="text-xs text-text-secondary">{{ 'PROJECT_POLICIES.CHAT_EMP_SUB' | translate }}</p>
           </div>
         </div>
       </div>
 
       <!-- Messages Area -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" #messagesContainer>
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-background/30" #messagesContainer>
         @if (messages().length === 0) {
           <div class="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto animate-[fadeUp_0.4s_ease_both]">
             <div class="w-20 h-20 rounded-2xl bg-primary/5 flex items-center justify-center mb-6">
               <svg class="w-10 h-10 text-primary opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 class="text-xl font-extrabold text-text-primary mb-2">{{ 'employee.chat.welcomeTitle' | translate }}</h3>
-            <p class="text-sm text-text-secondary leading-relaxed">{{ 'employee.chat.welcomeDesc' | translate }}</p>
+            <h3 class="text-xl font-extrabold text-text-primary mb-2">{{ 'PROJECT_POLICIES.CHAT_EMPTY_TITLE' | translate }}</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">{{ 'PROJECT_POLICIES.CHAT_EMPTY_DESC' | translate }}</p>
           </div>
         } @else {
           @for (msg of messages(); track msg.id) {
             <div class="flex" [class.justify-end]="msg.sender === 'user'">
               <div class="max-w-[85%] md:max-w-[75%] rounded-2xl p-4 shadow-sm"
-                   [ngClass]="msg.sender === 'user' ? 'bg-primary text-white rounded-tr-sm' : 'bg-sidebar border border-border text-text-primary rounded-tl-sm'">
-                <p class="text-sm leading-relaxed whitespace-pre-wrap font-medium" [class.opacity-90]="msg.sender === 'user'">{{ msg.text }}</p>
-                <div class="mt-2 text-[10px] opacity-70 flex justify-end">
+                   [ngClass]="msg.sender === 'user' ? 'bg-primary text-white rounded-br-sm' : 'bg-surface border border-border text-text-primary rounded-bl-sm'">
+                <p class="text-[13px] leading-relaxed whitespace-pre-wrap font-medium" [class.opacity-90]="msg.sender === 'user'">{{ msg.text }}</p>
+                <div class="mt-2 text-[10px] opacity-70 flex" [class.justify-end]="msg.sender === 'user'">
                   {{ msg.timestamp | date:'shortTime' }}
                 </div>
               </div>
@@ -81,8 +83,8 @@ interface ChatMessage {
               [(ngModel)]="currentInput"
               name="currentInput"
               rows="1"
-              class="w-full bg-transparent border-0 focus:ring-0 resize-none py-3 px-4 text-sm text-text-primary placeholder:text-text-secondary disabled:opacity-50"
-              [placeholder]="'employee.chat.placeholder' | translate"
+              class="w-full bg-transparent border-0 focus:ring-0 outline-none focus:outline-none resize-none py-3 px-4 text-sm text-text-primary placeholder:text-text-secondary disabled:opacity-50"
+              [placeholder]="'PROJECT_POLICIES.ASK_PLACEHOLDER' | translate"
               (keydown.enter)="onEnter($event)"
               (input)="adjustTextareaHeight($event)"
               [disabled]="isTyping()"
@@ -91,7 +93,7 @@ interface ChatMessage {
           </div>
           
           <button type="submit" 
-                  [disabled]="!currentInput().trim() || isTyping()"
+                  [disabled]="!currentInput.trim() || isTyping()"
                   class="shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
             <svg class="w-5 h-5 rtl:-scale-x-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -118,19 +120,30 @@ interface ChatMessage {
     }
   `]
 })
-export class CompanyPoliciesChatComponent implements AfterViewChecked {
+export class ProjectPoliciesChatComponent implements AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('chatInput') private chatInput!: ElementRef;
 
-  private aiChatService = inject(AiChatService);
+  private policyService = inject(ProjectPoliciesService);
+  private projectState = inject(ProjectStateService);
+  private toastService = inject(ToastService);
   private translate = inject(TranslateService);
 
   messages = signal<ChatMessage[]>([]);
   isTyping = signal(false);
-  currentInput = signal('');
+  currentInput = '';
 
   isRtl() {
     return this.translate.currentLang() === 'ar';
+  }
+
+  constructor() {
+    effect(() => {
+      const id = this.projectState.selectedProjectId();
+      if (id) {
+        this.messages.set([]);
+      }
+    });
   }
 
   ngAfterViewChecked() {
@@ -160,31 +173,40 @@ export class CompanyPoliciesChatComponent implements AfterViewChecked {
   }
 
   async sendMessage() {
-    const text = this.currentInput().trim();
+    const text = this.currentInput.trim();
     if (!text || this.isTyping()) return;
 
-    // Reset input
-    this.currentInput.set('');
+    const projectId = this.projectState.selectedProjectId();
+    if (!projectId) {
+      this.toastService.show(this.translate.instant('PROJECT_POLICIES.NO_PROJECT'), 'error');
+      return;
+    }
+
+    this.currentInput = '';
     if (this.chatInput) {
       this.chatInput.nativeElement.style.height = 'auto';
     }
 
-    // Add user message
     this.addMessage('user', text);
     this.isTyping.set(true);
 
     try {
-      const response = await this.aiChatService.askPolicyQuestion(text);
-      this.isTyping.set(false);
+      const history = this.messages().slice(0, -1).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
+      const response = await this.policyService.askPolicyQuestion({
+        projectId,
+        question: text,
+        history
+      }, this.translate.currentLang() || 'en');
       
-      if (response && response.succeeded) {
-        this.addMessage('ai', response.data || this.translate.instant('employee.chat.defaultAnswer'));
-      } else {
-        this.addMessage('ai', this.translate.instant('employee.chat.errorAnswer'));
-      }
+      this.addMessage('ai', response || this.translate.instant('PROJECT_POLICIES.NO_ANSWER'));
     } catch (error) {
+      this.addMessage('ai', this.translate.instant('PROJECT_POLICIES.CHAT_ERROR'));
+    } finally {
       this.isTyping.set(false);
-      this.addMessage('ai', this.translate.instant('employee.chat.errorAnswer'));
     }
   }
 

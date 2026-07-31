@@ -10,7 +10,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
   template: `
     <div class="space-y-6">
       <div class="flex items-center justify-between">
-        <h2 class="text-xl font-extrabold text-[var(--text-primary)]">Project History</h2>
+        <h2 class="text-xl font-extrabold text-[var(--text-primary)]">{{ currentLang === 'ar' ? 'سجل المشاريع' : 'Project History' }}</h2>
       </div>
 
       @if (projectState.loading()) {
@@ -27,9 +27,9 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 class="text-xl font-extrabold text-[var(--text-primary)] mb-2">No historical projects</h3>
+          <h3 class="text-xl font-extrabold text-[var(--text-primary)] mb-2">{{ currentLang === 'ar' ? 'لا توجد مشاريع سابقة' : 'No historical projects' }}</h3>
           <p class="text-sm text-[var(--text-secondary)] leading-relaxed max-w-sm">
-            You haven't completed any projects yet. When a project you're assigned to is closed or completed, it will appear here.
+            {{ currentLang === 'ar' ? 'لم تكمل أي مشاريع بعد. عندما يتم إغلاق مشروع معين لك أو اكتماله، سيظهر هنا.' : "You haven't completed any projects yet. When a project you're assigned to is closed or completed, it will appear here." }}
           </p>
         </div>
       } @else {
@@ -65,6 +65,10 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 })
 export class ProjectHistory {
   projectState = inject(ProjectStateService);
+
+  get currentLang(): string {
+    return localStorage?.getItem('app_lang') || 'en';
+  }
 
   historicalProjects = computed(() => {
     return this.projectState.projects().filter((p: any) => p.status === 'Completed' || p.status === 'Closed' || p.status === 'Archived');
