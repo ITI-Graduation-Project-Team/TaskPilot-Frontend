@@ -70,7 +70,7 @@ const LOADING_HINTS = [
             </div>
           </div>
           <button
-            (click)="navigateToTeam.emit()"
+            (click)="goToTeam()"
             class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -606,7 +606,7 @@ const LOADING_HINTS = [
                 {{ currentLang() === 'ar' ? 'إلغاء' : 'Cancel' }}
               </button>
               <button
-                (click)="showNoEmployeesModal.set(false); navigateToTeam.emit()"
+                (click)="showNoEmployeesModal.set(false); goToTeam()"
                 class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -627,7 +627,7 @@ const LOADING_HINTS = [
 export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   /** Emitted when sprint confirmed — parent should navigate to 'sprint' tab */
   /** Emitted when PM needs to assign team members */
-  @Output() navigateToTeam = new EventEmitter<void>();
+
 
   private sprintService = inject(SprintPlanningService);
   private backlogService = inject(BacklogService);
@@ -812,6 +812,10 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     await this.onGenerate();
   }
 
+  goToTeam(): void {
+    this.router.navigate(['/dashboard', 'team']);
+  }
+
   // ── Confirm ────────────────────────────────────────────────────
   async onConfirmSprint() {
     const projId = this.projectState.selectedProjectId();
@@ -877,6 +881,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
         if (story) total += this.storyHours(story);
       }
     }
+    
     // If backlog tasks have no estimated hours (0), fall back to the AI API total
     if (total === 0 && this.apiTotalHours() > 0) {
       return this.apiTotalHours();

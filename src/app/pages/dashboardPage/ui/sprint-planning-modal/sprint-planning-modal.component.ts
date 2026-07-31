@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, inject, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SprintPlanningService, SprintSuggestionDto } from '../../../../shared/api/sprint-planning.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { BacklogService } from '../../../../shared/api/backlog.service';
@@ -63,7 +64,7 @@ const LOADING_HINTS = [
                 </div>
               </div>
               <button
-                (click)="close.emit(); navigateToTeam.emit()"
+                (click)="close.emit(); goToTeam()"
                 class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -313,7 +314,7 @@ const LOADING_HINTS = [
                 {{ currentLang() === 'ar' ? 'إلغاء' : 'Cancel' }}
               </button>
               <button
-                (click)="showNoEmployeesModal.set(false); close.emit(); navigateToTeam.emit()"
+                (click)="showNoEmployeesModal.set(false); close.emit(); goToTeam()"
                 class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -337,12 +338,13 @@ const LOADING_HINTS = [
 export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() sprintConfirmed = new EventEmitter<void>();
-  @Output() navigateToTeam = new EventEmitter<void>();
+
 
   private sprintService = inject(SprintPlanningService);
   private backlogService = inject(BacklogService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
+  private router = inject(Router);
 
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
   showNoEmployeesModal = signal<boolean>(false);
@@ -535,5 +537,9 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
     } finally {
       this.isSaving.set(false);
     }
+  }
+
+  goToTeam(): void {
+    this.router.navigate(['/dashboard', 'team']);
   }
 }

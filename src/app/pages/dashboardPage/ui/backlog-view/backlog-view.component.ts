@@ -400,7 +400,7 @@ const EMPTY_TASK: TaskFormModel = {
     }
 
     @if (isSprintPlanningModalOpen()) {
-      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)" (navigateToTeam)="navigateToTeam.emit()"></app-sprint-planning-modal>
+      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
     }
 
     @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {
