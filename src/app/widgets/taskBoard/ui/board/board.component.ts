@@ -1419,6 +1419,7 @@ export class BoardComponent implements OnInit, OnChanges {
     this.todo.set(todoList);
     this.inProgress.set(inProgressList);
     this.review.set(reviewList);
+    this.done.set(doneList);
     const isTaskAssigned = (t: any): boolean => {
       if (t.isAssigned === true) return true;
       if (t.isAssigned === false) return false;
