@@ -2,29 +2,9 @@ import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, e
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { TeamCollaborationService, EmployeeAssignmentDto } from '../../../../shared/api/team-collaboration.service';
+import { TeamCollaborationService, EmployeeAssignmentDto, CompanyEmployee, ProjectEmployee } from '../../../../shared/api/team-collaboration.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
-
-interface CompanyEmployee {
-  employeeId: string;
-  id?: string;
-  fullName: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  jobTitle: string;
-  seniorityLevel?: string;
-  availabilityStatus?: string;
-  skills?: string[];
-}
-
-interface ProjectEmployee {
-  employeeId: string;
-  fullName: string;
-  email: string;
-  role: string;
-}
 
 @Component({
   selector: 'app-team-view',
@@ -246,14 +226,35 @@ interface ProjectEmployee {
               } @else {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   @for (member of projectTeam(); track member.employeeId) {
-                    <div class="bg-sidebar border border-border p-4 rounded-xl flex items-center justify-between gap-3 hover:border-primary/20 transition-all">
-                      <div>
-                        <h5 class="text-sm font-bold text-text-primary">{{ member.fullName }}</h5>
+                    <div class="bg-sidebar border border-border p-4 rounded-xl flex items-center justify-between gap-3 transition-all relative group"
+                         [ngClass]="member.isDeactivated ? 'opacity-60 grayscale bg-surface' : 'hover:border-primary/20'">
+                      
+                      @if (member.isDeactivated) {
+                        <div class="absolute inset-0 bg-transparent z-0" 
+                             [title]="'Deactivated At: ' + (member.deactivatedAt | date:'mediumDate') + '\nReason: ' + (member.deactivationReason || 'No reason provided')">
+                        </div>
+                      }
+
+                      <div class="relative z-10">
+                        <h5 class="text-sm font-bold text-text-primary flex items-center gap-2">
+                          {{ member.fullName }}
+                        </h5>
                         <p class="text-xs text-text-secondary">{{ member.email }}</p>
                       </div>
-                      <span class="px-2.5 py-1 text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 rounded-full">
-                        {{ member.role }}
-                      </span>
+                      
+                      <div class="flex items-center gap-2 relative z-10">
+                        <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full"
+                              [ngClass]="member.isDeactivated ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-primary/10 text-primary border-primary/20'">
+                          {{ member.role }}
+                        </span>
+                        
+                        <!-- Actions -->
+                        @if (member.isDeactivated) {
+                          <span class="px-2.5 py-1 text-[10px] font-bold text-slate-500 border border-slate-200 bg-slate-100 rounded-lg shadow-sm">
+                            Deactivated
+                          </span>
+                        }
+                      </div>
                     </div>
                   }
                 </div>
@@ -280,7 +281,7 @@ export class TeamViewComponent implements OnInit {
   
   readonly unassignedCompanyEmployees = computed(() => {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
-    return this.companyEmployees().filter(emp => !assignedIds.has(emp.employeeId || emp.id || ''));
+    return this.companyEmployees().filter(emp => !emp.isDeactivated && !assignedIds.has(emp.employeeId || emp.id || ''));
   });
 
   selectedEmployeeId = '';
@@ -363,13 +364,15 @@ export class TeamViewComponent implements OnInit {
     this.isLoadingTeam.set(true);
     try {
       const res = await this.teamService.getProjectEmployees(projectId);
-      const list = res.data || res || [];
-      // Backend returns details or mapping
-      const mapped = list.map((e: any) => ({
-        employeeId: e.employeeId || e.id,
-        fullName: e.fullName || `${e.firstName} ${e.lastName}` || e.email,
+      const list = res.data || (res as any) || [];
+      const mapped: ProjectEmployee[] = list.map((e: ProjectEmployee) => ({
+        employeeId: e.employeeId,
+        fullName: e.fullName || e.email,
         email: e.email,
-        role: e.role || 'Contributor'
+        role: e.role || 'Contributor',
+        isDeactivated: e.isDeactivated,
+        deactivationReason: e.deactivationReason,
+        deactivatedAt: e.deactivatedAt
       }));
       this.projectTeam.set(mapped);
       this.projectState.setProjectEmployeeCount(mapped.length);
