@@ -276,9 +276,6 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                 <span class="text-text-secondary font-light">/</span>
 
                 Project Policies
-            }   
-
-   
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {

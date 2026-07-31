@@ -30,7 +30,7 @@ export const routes: Routes = [
       { path: 'profile', loadComponent: () => import('./pages/dashboardPage/ui/profile-view/profile-view.component').then(m => m.ProfileViewComponent) },
       { path: 'organization', loadComponent: () => import('./features/organization/ui/organization-view/organization-view.component').then(m => m.OrganizationViewComponent) },
       { path: 'employees', loadComponent: () => import('./pages/employeesPage/ui/employees/employees').then(m => m.EmployeesComponent) },
-      { path: 'employees/:id', loadComponent: () => import('./pages/employeesPage/ui/employee-details/employee-details.component').then(m => m.EmployeeDetailsComponent) }
+      { path: 'employees/:id', loadComponent: () => import('./pages/employeesPage/ui/employee-details/employee-details.component').then(m => m.EmployeeDetailsComponent) },
       { path: 'project-policies', loadComponent: () => import('./features/projectPolicies/ui/project-policies-admin/project-policies-admin.component').then(m => m.ProjectPoliciesAdminComponent) }
     ]
   },
