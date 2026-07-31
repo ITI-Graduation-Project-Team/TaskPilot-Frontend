@@ -1,13 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { CompanyService, CompanyEmployeeModel } from '../../../../shared/api/Company-api/company';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-employee-details',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="w-full h-full flex flex-col gap-8 animate-fade-in relative">
       <!-- Header -->
@@ -70,7 +70,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
               Skills & Expertise
             </h3>
             
-            <div class="flex flex-wrap gap-2" *ngIf="employee()!.skills?.length; else noSkills">
+            <div class="flex flex-wrap gap-2" *ngIf="employee()!.skills.length; else noSkills">
               <span *ngFor="let skill of employee()!.skills" class="px-3 py-1.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg border border-slate-200 hover:border-brandPrimary/30 hover:bg-blue-50 transition-colors">
                 {{ skill }}
               </span>
