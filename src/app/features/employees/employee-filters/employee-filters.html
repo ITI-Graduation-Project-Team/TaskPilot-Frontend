@@ -1,0 +1,41 @@
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full bg-surface p-4 rounded-2xl border border-border shadow-sm">
+  
+  <!-- Search -->
+  <div class="relative w-full sm:w-72">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="h-4 w-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </div>
+    <input type="text" 
+           [(ngModel)]="searchValue" 
+           (ngModelChange)="onSearchInput($event)"
+           class="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-text-secondary/70"
+           [placeholder]="'EMPLOYEES.SEARCH' | translate">
+  </div>
+
+  <!-- Status Filters -->
+  <div class="flex items-center bg-background rounded-xl p-1 border border-border">
+    <button (click)="onStatusSelect('')"
+            [class.bg-primary]="statusValue === ''"
+            [class.text-white]="statusValue === ''"
+            [class.text-text-secondary]="statusValue !== ''"
+            class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all">
+      {{ 'EMPLOYEES.FILTER_ALL' | translate }}
+    </button>
+    <button (click)="onStatusSelect('active')"
+            [class.bg-primary]="statusValue === 'active'"
+            [class.text-white]="statusValue === 'active'"
+            [class.text-text-secondary]="statusValue !== 'active'"
+            class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all">
+      {{ 'EMPLOYEES.FILTER_ACTIVE' | translate }}
+    </button>
+    <button (click)="onStatusSelect('deactivated')"
+            [class.bg-primary]="statusValue === 'deactivated'"
+            [class.text-white]="statusValue === 'deactivated'"
+            [class.text-text-secondary]="statusValue !== 'deactivated'"
+            class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all">
+      {{ 'EMPLOYEES.FILTER_DEACTIVATED' | translate }}
+    </button>
+  </div>
+</div>

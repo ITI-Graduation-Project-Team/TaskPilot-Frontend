@@ -1,0 +1,161 @@
+<div class="space-y-6 animate-[fadeIn_0.25s_ease_both] pb-10">
+  
+  <!-- Back button -->
+  <button (click)="goBack()" class="flex items-center gap-2 text-sm font-bold text-text-secondary hover:text-primary transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+    Back to Employees
+  </button>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="flex flex-col justify-center items-center py-20">
+    <div class="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+    <p class="text-sm font-bold text-text-secondary mt-4 animate-pulse">Loading details...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading() && employee()">
+    <!-- Header Card -->
+    <div class="bg-surface border border-border rounded-3xl p-6 shadow-sm relative overflow-hidden" [class.bg-sidebar]="employee()!.isDeactivated">
+      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-hover" [class.from-slate-400]="employee()!.isDeactivated" [class.to-slate-500]="employee()!.isDeactivated"></div>
+      
+      <div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+        <div class="flex items-center gap-5">
+          <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-white font-black text-3xl shadow-md"
+               [ngClass]="employee()!.isDeactivated ? 'bg-slate-400' : 'bg-gradient-to-br from-primary to-primary-hover'">
+            {{ initials }}
+          </div>
+          <div>
+            <h1 class="text-2xl font-extrabold text-text-primary">{{ employee()!.fullName }}</h1>
+            <p class="text-base text-text-secondary">{{ employee()!.email }}</p>
+            
+            <div class="flex items-center gap-2 mt-2">
+              <span *ngIf="!employee()!.isDeactivated" class="px-2.5 py-1 text-xs font-bold rounded-full bg-success/15 text-success uppercase tracking-wider">
+                {{ 'EMPLOYEES.FILTER_ACTIVE' | translate }}
+              </span>
+              <span *ngIf="employee()!.isDeactivated" class="px-2.5 py-1 text-xs font-bold rounded-full bg-slate-500/15 text-slate-500 uppercase tracking-wider">
+                {{ 'EMPLOYEES.FILTER_DEACTIVATED' | translate }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Left Column: Info & Skills -->
+      <div class="space-y-6">
+        
+        <!-- Professional Info -->
+        <div class="bg-surface border border-border rounded-2xl p-6 shadow-sm">
+          <h3 class="text-sm font-black text-text-primary uppercase tracking-widest mb-4">Professional Profile</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <p class="text-xs text-text-secondary uppercase tracking-wider font-bold mb-1">Job Title</p>
+              <p class="text-sm font-semibold text-text-primary">{{ employee()!.jobTitle || 'Not specified' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-text-secondary uppercase tracking-wider font-bold mb-1">Seniority Level</p>
+              <p class="text-sm font-semibold text-text-primary">{{ employee()!.seniorityLevel || 'Not specified' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-text-secondary uppercase tracking-wider font-bold mb-1">Availability</p>
+              <p class="text-sm font-semibold text-text-primary">{{ employee()!.availabilityStatus || 'Unknown' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="bg-surface border border-border rounded-2xl p-6 shadow-sm">
+          <h3 class="text-sm font-black text-text-primary uppercase tracking-widest mb-4">Skills & Expertise</h3>
+          
+          <div class="flex flex-wrap gap-2" *ngIf="employee()!.skills.length">
+            <span *ngFor="let skill of employee()!.skills" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary/10 text-primary border border-primary/20">
+              {{ skill }}
+            </span>
+          </div>
+          <p *ngIf="!employee()!.skills.length" class="text-sm text-text-secondary italic">No skills listed</p>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Workload & Danger Zone -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Workload Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+            <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">{{ 'EMPLOYEES.IN_PROJECTS' | translate }}</p>
+            <span class="text-3xl font-black text-text-primary">{{ employee()!.activeProjectsCount }}</span>
+          </div>
+          <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+            <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">Assigned Tasks</p>
+            <span class="text-3xl font-black text-text-primary">{{ employee()!.currentAssignedTasksCount }}</span>
+          </div>
+          <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm col-span-2 md:col-span-1">
+            <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">Workload Status</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span *ngIf="workloadStatus === 'Available'" class="w-3 h-3 rounded-full bg-success"></span>
+              <span *ngIf="workloadStatus === 'Moderate'" class="w-3 h-3 rounded-full bg-warning"></span>
+              <span *ngIf="workloadStatus === 'Busy'" class="w-3 h-3 rounded-full bg-error"></span>
+              <span class="text-lg font-bold text-text-primary">{{ workloadStatus }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deactivated Info Banner -->
+        <div *ngIf="employee()!.isDeactivated" class="bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-2xl p-6 shadow-inner">
+          <div class="flex items-start gap-4">
+            <div class="p-3 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">Account Deactivated</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">This employee was deactivated on <strong>{{ employee()!.deactivatedAt | date:'mediumDate' }}</strong>.</p>
+              <div class="mt-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                <p class="text-sm italic text-slate-600 dark:text-slate-400">"{{ employee()!.deactivationReason || 'No reason provided.' }}"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-surface border border-error/20 rounded-2xl p-6 shadow-sm relative overflow-hidden" *ngIf="!employee()!.isDeactivated">
+          <div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
+          <h3 class="text-sm font-black text-error uppercase tracking-widest mb-2">{{ 'EMPLOYEES.DANGER_ZONE' | translate }}</h3>
+          <p class="text-sm text-text-secondary mb-6">Deactivating this employee will prevent them from logging in and suspend their active assignments. {{ 'EMPLOYEES.DEACTIVATE_HINT' | translate }}</p>
+          
+          <button (click)="openDeactivateModal()" 
+                  class="px-5 py-2.5 bg-error/10 hover:bg-error text-error hover:text-white border border-error/30 hover:border-error font-bold rounded-xl transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+            Deactivate Employee
+          </button>
+        </div>
+
+        <!-- Placeholders -->
+        <div class="bg-surface border border-border rounded-2xl p-8 shadow-sm border-dashed flex flex-col items-center justify-center text-center opacity-70">
+          <svg class="w-8 h-8 text-text-secondary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <h3 class="text-sm font-bold text-text-primary">Activity Timeline</h3>
+          <p class="text-xs text-text-secondary mt-1">Coming soon</p>
+        </div>
+        
+        <div class="bg-surface border border-border rounded-2xl p-8 shadow-sm border-dashed flex flex-col items-center justify-center text-center opacity-70">
+          <svg class="w-8 h-8 text-text-secondary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <h3 class="text-sm font-bold text-text-primary">AI Insights</h3>
+          <p class="text-xs text-text-secondary mt-1">Burnout risk & velocity metrics coming soon</p>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
+
+<!-- Deactivation Modal -->
+<app-deactivation-dialog
+  *ngIf="isDeactivateModalOpen()"
+  [isOpen]="true"
+  [employeeId]="employee()!.employeeId"
+  [employeeName]="employee()!.fullName || employee()!.email"
+  (closed)="closeDeactivateModal()"
+  (deactivated)="onDeactivated()">
+</app-deactivation-dialog>

@@ -1,0 +1,97 @@
+<div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-text-primary">{{ 'EMPLOYEES.TITLE' | translate }}</h1>
+      <p class="text-sm text-text-secondary mt-1">{{ 'EMPLOYEES.SUBTITLE' | translate }}</p>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4" *ngIf="isMetricsLoaded()">
+    <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center text-center">
+      <span class="text-2xl font-black text-text-primary">{{ totalEmployees() }}</span>
+      <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mt-1">{{ 'EMPLOYEES.TOTAL' | translate }}</span>
+    </div>
+    <div class="bg-success/5 border border-success/20 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center text-center">
+      <span class="text-2xl font-black text-success">{{ activeCount() }}</span>
+      <span class="text-[10px] font-bold text-success uppercase tracking-wider mt-1">{{ 'EMPLOYEES.ACTIVE' | translate }}</span>
+    </div>
+    <div class="bg-error/5 border border-error/20 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center text-center">
+      <span class="text-2xl font-black text-error">{{ deactivatedCount() }}</span>
+      <span class="text-[10px] font-bold text-error uppercase tracking-wider mt-1">{{ 'EMPLOYEES.DEACTIVATED' | translate }}</span>
+    </div>
+    <div class="bg-primary/5 border border-primary/20 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center text-center">
+      <span class="text-2xl font-black text-primary">{{ availableCount() }}</span>
+      <span class="text-[10px] font-bold text-primary uppercase tracking-wider mt-1">{{ 'EMPLOYEES.AVAILABLE' | translate }}</span>
+    </div>
+    <div class="bg-warning/5 border border-warning/20 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center text-center">
+      <span class="text-2xl font-black text-warning">{{ inProjectsCount() }}</span>
+      <span class="text-[10px] font-bold text-warning uppercase tracking-wider mt-1">{{ 'EMPLOYEES.IN_PROJECTS' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <app-employee-filters 
+    [searchValue]="searchQuery()" 
+    [statusValue]="statusFilter()"
+    (searchChange)="onSearch($event)"
+    (statusChange)="onStatusChange($event)">
+  </app-employee-filters>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="flex flex-col justify-center items-center py-20">
+    <div class="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+    <p class="text-sm font-bold text-text-secondary mt-4 animate-pulse">Loading employees...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && employees().length === 0" class="flex flex-col justify-center items-center py-20 bg-surface border border-border rounded-2xl border-dashed">
+    <div class="w-16 h-16 bg-sidebar rounded-full flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+    </div>
+    <p class="text-base font-bold text-text-primary">{{ 'EMPLOYEES.NO_RESULTS' | translate }}</p>
+    <p class="text-sm text-text-secondary mt-1">Try adjusting your search or filters.</p>
+  </div>
+
+  <!-- Employees Grid -->
+  <div *ngIf="!isLoading() && employees().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <app-employee-card 
+      *ngFor="let emp of employees()" 
+      [employee]="emp"
+      (viewDetails)="onViewDetails($event)"
+      (deactivate)="openDeactivateModal($event)">
+    </app-employee-card>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading() && totalPages() > 1" class="flex items-center justify-between pt-6 border-t border-border mt-6">
+    <span class="text-sm text-text-secondary">
+      Showing <span class="font-bold text-text-primary">{{ (currentPage() - 1) * pageSize() + 1 }}</span> to <span class="font-bold text-text-primary">{{ Math.min(currentPage() * pageSize(), totalItems()) }}</span> of <span class="font-bold text-text-primary">{{ totalItems() }}</span>
+    </span>
+    
+    <div class="flex items-center gap-2">
+      <button (click)="onPageChange(currentPage() - 1)" 
+              [disabled]="currentPage() === 1"
+              class="px-4 py-2 text-sm font-bold rounded-xl border border-border hover:bg-sidebar transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Previous
+      </button>
+      <span class="px-3 text-sm font-bold text-primary">{{ currentPage() }} / {{ totalPages() }}</span>
+      <button (click)="onPageChange(currentPage() + 1)" 
+              [disabled]="currentPage() === totalPages()"
+              class="px-4 py-2 text-sm font-bold rounded-xl border border-border hover:bg-sidebar transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Deactivation Modal -->
+<app-deactivation-dialog
+  *ngIf="isDeactivateModalOpen()"
+  [isOpen]="true"
+  [employeeId]="selectedEmployeeId()!"
+  [employeeName]="selectedEmployeeName()"
+  (closed)="closeDeactivateModal()"
+  (deactivated)="onDeactivated()">
+</app-deactivation-dialog>
