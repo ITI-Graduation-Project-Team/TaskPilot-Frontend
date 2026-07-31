@@ -129,6 +129,13 @@ export class CompanyService {
     return response.data;
   }
 
+  async getCompanyEmployeeById(employeeId: string): Promise<{ succeeded: boolean; data?: CompanyEmployeeModel; message: string }> {
+    const response = await apiClient.get<{ succeeded: boolean; data?: CompanyEmployeeModel; message: string }>(`/companies/employees/${employeeId}`, {
+      withCredentials: false
+    });
+    return response.data;
+  }
+
   async getEmployeesPaged(query: EmployeeListQuery = {}): Promise<PaginatedEmployeeResponse> {
     const params = new URLSearchParams();
     if (query.page) params.set('page', String(query.page));
