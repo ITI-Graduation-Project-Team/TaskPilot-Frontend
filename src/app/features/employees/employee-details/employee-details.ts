@@ -37,22 +37,15 @@ export class EmployeeDetailsComponent implements OnInit {
     });
   }
 
-  // Load employee details by fetching the paginated list filtered by email/name or just taking all and finding.
-  // For V1, since we don't have a dedicated GET /employees/{id} endpoint yet, 
-  // we can fetch the first page and search, or since this is PM context, just get everything and find.
   async loadEmployeeDetails(id: string) {
     this.isLoading.set(true);
     try {
-      // Fetch large page since we don't have a single-employee endpoint yet
-      const res = await this.companyService.getCompanyEmployees(1, 1000);
+      const res = await this.companyService.getCompanyEmployeeById(id);
       if (res.succeeded && res.data) {
-        const found = res.data.items.find(e => e.employeeId === id);
-        if (found) {
-          this.employee.set(found);
-        } else {
-          this.toastService.show('Employee not found', 'error');
-          this.router.navigate(['/employees']);
-        }
+        this.employee.set(res.data);
+      } else {
+        this.toastService.show('Employee not found', 'error');
+        this.router.navigate(['/employees']);
       }
     } catch (e) {
       console.error('Failed to load employee details', e);

@@ -195,14 +195,11 @@ export class EmployeeDetailsComponent implements OnInit {
   async loadEmployee(id: string) {
     try {
       this.isLoading.set(true);
-      const res = await this.companyService.getCompanyEmployees(1, 1000);
+      const res = await this.companyService.getCompanyEmployeeById(id);
       if (res.succeeded && res.data) {
-        const found = res.data.items.find(e => e.employeeId === id);
-        if (found) {
-          this.employee.set(found);
-        } else {
-          this.toastService.show('Employee not found.', 'error');
-        }
+        this.employee.set(res.data);
+      } else {
+        this.toastService.show('Employee not found.', 'error');
       }
     } catch (e) {
       console.error(e);
