@@ -26,17 +26,36 @@ export class EmployeeSelectorComponent {
   }
 
   onAssign(dev: DeveloperSuggestion) {
-    if (this.selectedTask && !this.isAssigned(dev)) {
-      this.assignEmployee.emit({
-        taskId: this.selectedTask.taskId,
-        employeeId: dev.employeeId
-      });
+    if (this.selectedTask) {
+      if (this.isAssigned(dev)) {
+        // Unassign candidate if already assigned
+        this.assignEmployee.emit({
+          taskId: this.selectedTask.taskId,
+          employeeId: ''
+        });
+      } else {
+        // Assign candidate
+        this.assignEmployee.emit({
+          taskId: this.selectedTask.taskId,
+          employeeId: dev.employeeId
+        });
+      }
     }
   }
 
+  getDevInitials(name: string): string {
+    if (!name) return 'DEV';
+    return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+  }
+
   getScoreColorClass(score: number): string {
-    if (score >= 80) return 'text-success-base';
-    if (score >= 60) return 'text-warning-base';
-    return 'text-error-base';
+    if (score >= 80) return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+    if (score >= 60) return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+    return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
+  }
+
+  cleanReasonAr(reason: string | undefined): string {
+    if (!reason) return '';
+    return reason.replace(/\uFFFD/g, '');
   }
 }

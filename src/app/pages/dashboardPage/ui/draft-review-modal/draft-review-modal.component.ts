@@ -168,32 +168,11 @@ export class DraftReviewModalComponent implements OnInit {
   isSaving = signal(false);
 
   ngOnInit() {
-    // Fill in default placeholders if missing
-    if (!this.draft.techStack) this.draft.techStack = 'Not Specified';
-    if (!this.draft.platformTargets) this.draft.platformTargets = 'Web';
-    if (!this.draft.projectType) this.draft.projectType = 'Custom';
   }
 
   async onConfirmSave() {
     this.isSaving.set(true);
     try {
-      // Setup payload based on backend structure
-      const payload: any = {
-        nameEn: this.draft.nameEn,
-        nameAr: this.draft.nameAr,
-        descriptionEn: this.draft.descriptionEn,
-        descriptionAr: this.draft.descriptionAr,
-        techStack: this.draft.techStack.split(',').map(s => s.trim()),
-        platformTargets: this.draft.platformTargets.split(',').map(s => s.trim()),
-        projectType: this.draft.projectType,
-        companyId: this.projectState.userCompanyId(),
-        managerId: this.projectState.userId(),
-        requirementsSnapshot: this.chatId,
-        milestones: this.draft.milestones
-      };
-
-      await this.aiRequirements.confirmProject(payload);
-      
       // Force reload projects reactively
       await this.projectState.loadProjects();
       

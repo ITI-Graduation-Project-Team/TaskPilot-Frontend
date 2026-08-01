@@ -1,12 +1,18 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, timer } from 'rxjs';
 
-export type ToastType = 'success' | 'error';
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
 
 export interface ToastMessage {
   id: number;
   message: string;
   type: ToastType;
+  action?: ToastAction;
 }
 
 @Injectable({
@@ -17,9 +23,9 @@ export class ToastService {
   toast$: Observable<ToastMessage | null> = this.toastSubject.asObservable();
   private nextId = 0;
 
-  show(message: string, type: ToastType = 'success', durationMs = 4000): void {
+  show(message: string, type: ToastType = 'success', durationMs = 4000, action?: ToastAction): void {
     const id = ++this.nextId;
-    this.toastSubject.next({ id, message, type });
+    this.toastSubject.next({ id, message, type, action });
 
     if (durationMs > 0) {
       timer(durationMs).subscribe(() => {

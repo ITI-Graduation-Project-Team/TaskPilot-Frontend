@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, Inject } from '@angular/core';
+import { Component, OnInit, inject, signal, Inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { GoogleCalendarService } from '../../shared/api/googleCalendar.service';
@@ -8,6 +8,7 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-settings-page',
   standalone: true,
   imports: [CommonModule, RouterOutlet],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="flex h-screen bg-[#F6F6F6] text-[#121338]" [dir]="direction()">
       <!-- Sidebar Placeholder -->
@@ -104,7 +105,7 @@ export class SettingsPageComponent implements OnInit {
 
   connectGoogleCalendar() {
     this.isConnectingCalendar.set(true);
-    
+
     this.googleCalendarService.getConnectUrl()
       .pipe(
         finalize(() => this.isConnectingCalendar.set(false))

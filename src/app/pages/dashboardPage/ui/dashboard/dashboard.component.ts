@@ -1,9 +1,5 @@
-import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
-import { BacklogViewComponent } from '../backlog-view/backlog-view.component';
-import { ProfileViewComponent } from '../profile-view/profile-view.component';
-import { TeamViewComponent } from '../team-view/team-view.component';
+import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, effect, untracked, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
@@ -13,39 +9,41 @@ import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-plan
 import { SettingsViewComponent } from '../settings-view/settings-view.component';
 import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
-import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
+import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 
 import { apiClient } from '../../../../shared/api/axios.instance';
 import { ProjectStateService, ProjectInfo } from '../../../../shared/services/project-state.service';
 import { ThemeService } from '../../../../shared/services/theme.service';
-import { RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router, RouterModule, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
+import { DashboardService } from '../../services/dashboard.service';
+import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    RouterModule,
     RouterLink,
     FormsModule,
-    BoardComponent,
-    BacklogViewComponent,
-    ProfileViewComponent,
-    TeamViewComponent,
     AiChatModalComponent,
-    DraftReviewModalComponent,
-    TechStackAdvisorModalComponent,
-    ProjectHubComponent,
-    SprintPlanningViewComponent,
-    OrganizationViewComponent,
+    NotificationBellComponent,
     ProjectHistoryModalComponent,
+<<<<<<< HEAD
     SprintListComponent,
     SettingsViewComponent
+=======
+    TranslatePipe
+
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -69,11 +67,11 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
               <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="sp.nameEn">
-                  📁 {{ sp.nameEn }}
+                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="getSprintName(sp)">
+                  📁 {{ getSprintName(sp) }}
                 </span>
                 <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
-                  Switch
+                  {{ 'SIDEBAR.SWITCH' | translate }}
                 </button>
               </div>
             }
@@ -84,122 +82,139 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         <nav class="flex-1 space-y-1.5">
           <!-- All Projects Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <a (click)="currentTab.set('projects')"
-               [class.bg-primary/10]="currentTab() === 'projects'"
-               [class.text-primary]="currentTab() === 'projects'"
-               [class.font-bold]="currentTab() === 'projects'"
-               [class.shadow-sm]="currentTab() === 'projects'"
-               [class.text-text-secondary]="currentTab() !== 'projects'"
-               [class.hover:text-text-primary]="currentTab() !== 'projects'"
-               [class.hover:bg-primary/5]="currentTab() !== 'projects'"
-               [class.font-medium]="currentTab() !== 'projects'"
+            <a routerLink="/dashboard/projects" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProj="routerLinkActive"
+               [class.text-text-secondary]="!rlaProj.isActive"
+               [class.hover:text-text-primary]="!rlaProj.isActive"
+               [class.hover:bg-primary/5]="!rlaProj.isActive"
+               [class.font-medium]="!rlaProj.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
               </svg>
-              All Projects
+              {{ 'SIDEBAR.ALL_PROJECTS' | translate }}
             </a>
           }
 
-          <a (click)="currentTab.set('sprint')"
-             [class.bg-primary/10]="currentTab() === 'sprint'"
-             [class.text-primary]="currentTab() === 'sprint'"
-             [class.font-bold]="currentTab() === 'sprint'"
-             [class.shadow-sm]="currentTab() === 'sprint'"
-             [class.text-text-secondary]="currentTab() !== 'sprint'"
-             [class.hover:text-text-primary]="currentTab() !== 'sprint'"
-             [class.hover:bg-primary/5]="currentTab() !== 'sprint'"
-             [class.font-medium]="currentTab() !== 'sprint'"
+          <a routerLink="/dashboard/sprint" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprint="routerLinkActive"
+             [class.text-text-secondary]="!rlaSprint.isActive"
+             [class.hover:text-text-primary]="!rlaSprint.isActive"
+             [class.hover:bg-primary/5]="!rlaSprint.isActive"
+             [class.font-medium]="!rlaSprint.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
-            Sprints
+            {{ 'SIDEBAR.SPRINTS' | translate }}
           </a>
-          <a (click)="currentTab.set('backlog')"
-             [class.bg-primary/10]="currentTab() === 'backlog'"
-             [class.text-primary]="currentTab() === 'backlog'"
-             [class.font-bold]="currentTab() === 'backlog'"
-             [class.shadow-sm]="currentTab() === 'backlog'"
-             [class.text-text-secondary]="currentTab() !== 'backlog'"
-             [class.hover:text-text-primary]="currentTab() !== 'backlog'"
-             [class.hover:bg-primary/5]="currentTab() !== 'backlog'"
-             [class.font-medium]="currentTab() !== 'backlog'"
+          <a routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
+             [class.text-text-secondary]="!rlaBacklog.isActive"
+             [class.hover:text-text-primary]="!rlaBacklog.isActive"
+             [class.hover:bg-primary/5]="!rlaBacklog.isActive"
+             [class.font-medium]="!rlaBacklog.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            Backlog
+            {{ 'SIDEBAR.BACKLOG' | translate }}
           </a>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
-            <a (click)="currentTab.set('sprint-planning')"
-               [class.bg-primary/10]="currentTab() === 'sprint-planning'"
-               [class.text-primary]="currentTab() === 'sprint-planning'"
-               [class.font-bold]="currentTab() === 'sprint-planning'"
-               [class.shadow-sm]="currentTab() === 'sprint-planning'"
-               [class.text-text-secondary]="currentTab() !== 'sprint-planning'"
-               [class.hover:text-text-primary]="currentTab() !== 'sprint-planning'"
-               [class.hover:bg-primary/5]="currentTab() !== 'sprint-planning'"
-               [class.font-medium]="currentTab() !== 'sprint-planning'"
+            <a routerLink="/dashboard/sprint-planning" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprintPlan="routerLinkActive"
+               [class.text-text-secondary]="!rlaSprintPlan.isActive"
+               [class.hover:text-text-primary]="!rlaSprintPlan.isActive"
+               [class.hover:bg-primary/5]="!rlaSprintPlan.isActive"
+               [class.font-medium]="!rlaSprintPlan.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              Sprint Planning
+              {{ 'SIDEBAR.SPRINT_PLANNING' | translate }}
               <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
             </a>
           }
 
+          <!-- Retrospective Tab -->
+          <a routerLink="/dashboard/retrospective" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaRetro="routerLinkActive"
+             [class.text-text-secondary]="!rlaRetro.isActive"
+             [class.hover:text-text-primary]="!rlaRetro.isActive"
+             [class.hover:bg-primary/5]="!rlaRetro.isActive"
+             [class.font-medium]="!rlaRetro.isActive"
+             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
+            <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+          </a>
+
+
+
           @if (projectState.isProjectManager()) {
-            <a (click)="currentTab.set('team')"
-               [class.bg-primary/10]="currentTab() === 'team'"
-               [class.text-primary]="currentTab() === 'team'"
-               [class.font-bold]="currentTab() === 'team'"
-               [class.shadow-sm]="currentTab() === 'team'"
-               [class.text-text-secondary]="currentTab() !== 'team'"
-               [class.hover:text-text-primary]="currentTab() !== 'team'"
-               [class.hover:bg-primary/5]="currentTab() !== 'team'"
-               [class.font-medium]="currentTab() !== 'team'"
+            <a routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaTeam="routerLinkActive"
+               [class.text-text-secondary]="!rlaTeam.isActive"
+               [class.hover:text-text-primary]="!rlaTeam.isActive"
+               [class.hover:bg-primary/5]="!rlaTeam.isActive"
+               [class.font-medium]="!rlaTeam.isActive"
                class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              Project Team
+              {{ 'SIDEBAR.PROJECT_TEAM' | translate }}
+            </a>
+
+            <!-- Project Policies Tab -->
+            <a routerLink="/dashboard/project-policies" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProjPol="routerLinkActive"
+               [class.text-text-secondary]="!rlaProjPol.isActive"
+               [class.hover:text-text-primary]="!rlaProjPol.isActive"
+               [class.hover:bg-primary/5]="!rlaProjPol.isActive"
+               [class.font-medium]="!rlaProjPol.isActive"
+               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              {{ 'SIDEBAR.PROJECT_POLICIES' | translate }}
+              <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+            </a>
+          } 
+          <!-- Employees Tab (PM only) -->
+          @if (projectState.isProjectManager()) {
+            <a routerLink="/dashboard/employees" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaEmp="routerLinkActive"
+               [class.text-text-secondary]="!rlaEmp.isActive"
+               [class.hover:text-text-primary]="!rlaEmp.isActive"
+               [class.hover:bg-primary/5]="!rlaEmp.isActive"
+               [class.font-medium]="!rlaEmp.isActive"
+               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              {{ 'SIDEBAR.EMPLOYEES' | translate }}
             </a>
           }
-          
           <!-- Organization Hub / Company Policies Tab -->
-          <a (click)="currentTab.set('organization')"
-             [class.bg-primary/10]="currentTab() === 'organization'"
-             [class.text-primary]="currentTab() === 'organization'"
-             [class.font-bold]="currentTab() === 'organization'"
-             [class.shadow-sm]="currentTab() === 'organization'"
-             [class.text-text-secondary]="currentTab() !== 'organization'"
-             [class.hover:text-text-primary]="currentTab() !== 'organization'"
-             [class.hover:bg-primary/5]="currentTab() !== 'organization'"
-             [class.font-medium]="currentTab() !== 'organization'"
+          <a routerLink="/dashboard/organization" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaOrg="routerLinkActive"
+             [class.text-text-secondary]="!rlaOrg.isActive"
+             [class.hover:text-text-primary]="!rlaOrg.isActive"
+             [class.hover:bg-primary/5]="!rlaOrg.isActive"
+             [class.font-medium]="!rlaOrg.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             @if (projectState.isProjectManager()) {
-              Organization Hub
+              {{ currentLang() === 'ar' ? 'مركز المؤسسة' : 'Organization Hub' }}
             } @else {
-              Company Policies
+              {{ currentLang() === 'ar' ? 'سياسات الشركة' : 'Company Policies' }}
             }
           </a>
 
-          <a (click)="currentTab.set('profile')"
-             [class.bg-primary/10]="currentTab() === 'profile'"
-             [class.text-primary]="currentTab() === 'profile'"
-             [class.font-bold]="currentTab() === 'profile'"
-             [class.shadow-sm]="currentTab() === 'profile'"
-             [class.text-text-secondary]="currentTab() !== 'profile'"
-             [class.hover:text-text-primary]="currentTab() !== 'profile'"
-             [class.hover:bg-primary/5]="currentTab() !== 'profile'"
-             [class.font-medium]="currentTab() !== 'profile'"
+
+          <a routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
+             [class.text-text-secondary]="!rlaProfile.isActive"
+             [class.hover:text-text-primary]="!rlaProfile.isActive"
+             [class.hover:bg-primary/5]="!rlaProfile.isActive"
+             [class.font-medium]="!rlaProfile.isActive"
+
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            My Profile
+            {{ 'SIDEBAR.MY_PROFILE' | translate }}
           </a>
 
           <!-- Settings Tab -->
@@ -223,7 +238,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
         <!-- Footer / Profile Quick view & Dark mode -->
         <div class="border-t border-border pt-6 mt-6 space-y-4">
-          <div (click)="currentTab.set('profile')" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
+          <div routerLink="/dashboard/profile" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
             <div class="w-9 h-9 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">
               {{ userInitial() }}
             </div>
@@ -243,51 +258,82 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           <div class="flex items-center gap-3">
             <h1 class="text-lg font-extrabold text-text-primary font-display flex items-center gap-1.5">
               @if (currentTab() === 'projects') {
-                Projects Hub
+                {{ 'HEADER.PROJECTS_HUB' | translate }}
               } @else if (currentTab() === 'create-project') {
-                Create Project
+                {{ 'HEADER.CREATE_PROJECT' | translate }}
               } @else if (currentTab() === 'profile') {
+<<<<<<< HEAD
                 My Profile
               } @else if (currentTab() === 'settings') {
                 Settings
+=======
+                {{ 'HEADER.MY_PROFILE' | translate }}
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
-                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
-                Sprint Planning
+                {{ 'HEADER.SPRINT_PLANNING' | translate }}
+              } @else if (currentTab() === 'retrospective') {
+                @if (projectState.isProjectManager()) {
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary font-light">/</span>
+                }
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
+                <span class="text-text-secondary font-light">/</span>
+                {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
               } @else if (currentTab() === 'organization') {
                 @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
+              } @else if (currentTab() === 'employees') {
+                {{ 'EMPLOYEES.TITLE' | translate }}
+            } @else if (currentTab() === 'project-policies') {
+                @if (projectState.isProjectManager()) {
+                    <span
+                        class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors"
+                        (click)="currentTab.set('projects')">
+                        {{ 'HEADER.ALL_PROJECTS' | translate }}
+                    </span>
+                    <span class="text-text-secondary font-light">/</span>
+                }
+
+                <span class="truncate max-w-[200px]">
+                    {{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}
+                </span>
+
+                <span class="text-text-secondary font-light">/</span>
+
+                Project Policies
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">All Projects</span>
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
-                <span class="truncate max-w-[200px]">{{ projectState.selectedProject()?.nameEn || 'Workspace' }}</span>
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
               }
             </h1>
             
             @if (projectState.selectedProject()?.status === 'Completed') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-blue-500/15 text-blue-600 rounded-full font-mono uppercase tracking-wider">
-                Completed
+                {{ 'HEADER.COMPLETED' | translate }}
               </span>
             } @else if (projectState.selectedProject()?.status === 'Archived') {
               <span class="px-2.5 py-0.5 text-xs font-semibold bg-slate-500/15 text-slate-600 rounded-full font-mono uppercase tracking-wider">
-                Archived
-              </span>
-            } @else if (currentTab() === 'sprint') {
-              <span class="px-2.5 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full font-mono">
-                {{ activeSprintName() }}
+                {{ 'HEADER.ARCHIVED' | translate }}
               </span>
             }
           </div>
 
           <div class="flex items-center gap-4">
             <!-- Project selector context dropdown (only shown inside project tabs) -->
+<<<<<<< HEAD
             @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'settings' && currentTab() !== 'organization' && projectState.projects().length > 0) {
+=======
+            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'organization' && currentTab() !== 'employees' && projectState.projects().length > 0) {
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
               <div class="flex items-center gap-2">
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
@@ -297,7 +343,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                     </svg>
                     <span class="truncate max-w-[100px]">
-                      {{ projectState.selectedProject()?.nameEn || 'Select Project' }}
+                      {{ getProjectName(projectState.selectedProject()) || ('HEADER.SELECT_PROJECT' | translate) }}
                     </span>
                     <svg class="w-3 h-3 ml-auto text-text-secondary transition-transform duration-200 shrink-0"
                          [class.rotate-180]="isProjectDropdownOpen()"
@@ -312,7 +358,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                     <!-- Dropdown Panel -->
                     <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both]">
                       <div class="px-3 py-2 border-b border-border">
-                        <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Your Projects</p>
+                        <p class="text-[10px] font-bold text-text-secondary uppercase tracking-widest">{{ 'HEADER.YOUR_PROJECTS' | translate }}</p>
                       </div>
                       <div class="py-1 max-h-60 overflow-y-auto">
                         @for (p of projectState.projects(); track p.id) {
@@ -321,9 +367,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                                   [class.bg-primary/8]="p.id === projectState.selectedProjectId()">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white text-xs font-bold"
                                  [style.background]="getProjectColor(p.id)">
-                              {{ (p.nameEn || p.name || '?')[0].toUpperCase() }}
+                              {{ (getProjectName(p) || '?')[0].toUpperCase() }}
                             </div>
-                            <span class="font-medium text-text-primary truncate">{{ p.nameEn || p.name }}</span>
+                            <span class="font-medium text-text-primary truncate">{{ getProjectName(p) }}</span>
                             @if (p.id === projectState.selectedProjectId()) {
                               <svg class="w-4 h-4 text-primary ml-auto shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -343,22 +389,25 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               <button (click)="openCreateProjectPage()"
                       class="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                Create Project
+                {{ 'HEADER.CREATE_PROJECT_BTN' | translate }}
               </button>
             }
+
+            <!-- Notification Bell -->
+            <app-notification-bell />
 
             <!-- Subscription button -->
             <a routerLink="/subscription"
                class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-              Subscription
+              {{ 'HEADER.SUBSCRIPTION' | translate }}
             </a>
 
             <!-- Logout button -->
             <button (click)="logout()"
                     class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-              Logout
+              {{ 'HEADER.LOGOUT' | translate }}
             </button>
 
             <!-- Dark mode toggle -->
@@ -380,6 +429,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
+<<<<<<< HEAD
           @if (currentTab() === 'projects') {
             <app-project-hub
               [projects]="projectState.projects()"
@@ -509,22 +559,15 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           } @else if (currentTab() === 'settings') {
             <app-settings-view></app-settings-view>
           }
+=======
+          <router-outlet></router-outlet>
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
         </main>
         
-        <!-- Floating AI Chat Button -->
-        <button (click)="isAiChatOpen.set(true)"
-                class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center hover:scale-110 transition-transform duration-300 z-50 group">
-          <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-          </svg>
-          <!-- Tooltip -->
-          <span class="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-sidebar border border-border text-text-primary text-xs font-bold rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg pointer-events-none">
-            Ask AI Assistant
-          </span>
-        </button>
+
 
         <!-- AI Chat Modal (Floating mode) -->
-        @if (isAiChatOpen()) {
+        @if (dashboardService.isAiChatOpen()) {
           <app-ai-chat-modal 
             [embedded]="false" 
             (close)="onAiChatClose()" 
@@ -538,77 +581,87 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         
         <!-- Projects Hub Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('projects')" 
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'projects'"
-                  [class.scale-105]="currentTab() === 'projects'"
-                  [class.text-text-secondary]="currentTab() !== 'projects'">
+          <a routerLink="/dashboard/projects" routerLinkActive="text-primary scale-105" #rlaProjM="routerLinkActive"
+             [class.text-text-secondary]="!rlaProjM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
             </svg>
-            <span class="text-[9px] font-bold">Projects</span>
-          </button>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROJECTS' | translate }}</span>
+          </a>
         }
 
         <!-- Sprint Tab -->
-        <button (click)="currentTab.set('sprint')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'sprint'"
-                [class.scale-105]="currentTab() === 'sprint'"
-                [class.text-text-secondary]="currentTab() !== 'sprint'">
+        <a routerLink="/dashboard/sprint" routerLinkActive="text-primary scale-105" #rlaSprintM="routerLinkActive"
+           [class.text-text-secondary]="!rlaSprintM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
-          <span class="text-[9px] font-bold">Sprint</span>
-        </button>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.SPRINT' | translate }}</span>
+        </a>
 
-        <!-- Sprint Planning Tab (Mobile PM) -->
+        <!-- Sprint Planning (Mobile PM only) -->
         @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('sprint-planning')"
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'sprint-planning'"
-                  [class.scale-105]="currentTab() === 'sprint-planning'"
-                  [class.text-text-secondary]="currentTab() !== 'sprint-planning'">
+          <a routerLink="/dashboard/sprint-planning" routerLinkActive="text-primary scale-105" #rlaSprintPlanM="routerLinkActive"
+             [class.text-text-secondary]="!rlaSprintPlanM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 relative">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <span class="text-[9px] font-bold">Planning</span>
-          </button>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.PLANNING' | translate }}</span>
+            <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          </a>
         }
 
         <!-- Backlog Tab -->
-        <button (click)="currentTab.set('backlog')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'backlog'"
-                [class.scale-105]="currentTab() === 'backlog'"
-                [class.text-text-secondary]="currentTab() !== 'backlog'">
+        <a routerLink="/dashboard/backlog" routerLinkActive="text-primary scale-105" #rlaBacklogM="routerLinkActive"
+           [class.text-text-secondary]="!rlaBacklogM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          <span class="text-[9px] font-bold">Backlog</span>
-        </button>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.BACKLOG_SHORT' | translate }}</span>
+        </a>
 
         <!-- Mobile Team Tab -->
         @if (projectState.isProjectManager()) {
-          <button (click)="currentTab.set('team')" 
-                  class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                  [class.text-primary]="currentTab() === 'team'"
-                  [class.scale-105]="currentTab() === 'team'"
-                  [class.text-text-secondary]="currentTab() !== 'team'">
+          <a routerLink="/dashboard/team" routerLinkActive="text-primary scale-105" #rlaTeamM="routerLinkActive"
+             [class.text-text-secondary]="!rlaTeamM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            <span class="text-[9px] font-bold">Team</span>
-          </button>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.TEAM' | translate }}</span>
+          </a>
+
+          <!-- Mobile Project Policies Tab -->
+          <a routerLink="/dashboard/project-policies" routerLinkActive="text-primary scale-105" #rlaProjPolM="routerLinkActive"
+             [class.text-text-secondary]="!rlaProjPolM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 relative">
+            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="text-[9px] font-bold">AI Policies</span>
+          </a>
+        }
+
+        <!-- Mobile Employees Tab -->
+        @if (projectState.isProjectManager()) {
+          <a routerLink="/dashboard/employees" routerLinkActive="text-primary scale-105" #rlaEmpM="routerLinkActive"
+             [class.text-text-secondary]="!rlaEmpM.isActive"
+             class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
+            <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            <span class="text-[9px] font-bold">{{ 'SIDEBAR.EMPLOYEES' | translate }}</span>
+          </a>
         }
 
         <!-- Profile Tab -->
-        <button (click)="currentTab.set('profile')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'profile'"
-                [class.scale-105]="currentTab() === 'profile'"
-                [class.text-text-secondary]="currentTab() !== 'profile'">
+        <a routerLink="/dashboard/profile" routerLinkActive="text-primary scale-105" #rlaProfileM="routerLinkActive"
+           [class.text-text-secondary]="!rlaProfileM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
+<<<<<<< HEAD
           <span class="text-[9px] font-bold">Profile</span>
         </button>
 
@@ -624,17 +677,21 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           </svg>
           <span class="text-[9px] font-bold">Settings</span>
         </button>
+=======
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROFILE' | translate }}</span>
+        </a>
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
       </div>
 
     </div>
 
     <!-- Edit Project Modal -->
-    @if (isEditProjectModalOpen()) {
+    @if (dashboardService.isEditProjectModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
         <div class="bg-surface border border-border rounded-3xl w-full max-w-xl p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-text-primary font-display">Edit Project Details</h3>
-            <button (click)="isEditProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-sidebar rounded-full transition-colors focus:outline-none">
+            <h3 class="text-lg font-bold text-text-primary font-display">{{ 'MODALS.EDIT_PROJECT_TITLE' | translate }}</h3>
+            <button (click)="dashboardService.isEditProjectModalOpen.set(false)" class="p-1.5 text-text-secondary hover:bg-sidebar rounded-full transition-colors focus:outline-none">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
@@ -642,35 +699,35 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           <form (submit)="onEditProjectSubmit($event)" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Project Name (English)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'MODALS.PROJ_NAME_EN' | translate }}</label>
                 <input type="text" [(ngModel)]="editNameEn" name="editNameEn" required placeholder="e.g. Mobile Application" 
                        class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
               </div>
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">اسم المشروع (عربي)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">{{ 'MODALS.PROJ_NAME_AR' | translate }}</label>
                 <input type="text" [(ngModel)]="editNameAr" name="editNameAr" required placeholder="مثال: تطبيق الجوال" dir="rtl"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+                       class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all text-right">
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Description (English)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'MODALS.PROJ_DESC_EN' | translate }}</label>
                 <textarea [(ngModel)]="editDescEn" name="editDescEn" placeholder="English details..." rows="3" required
                           class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
               </div>
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">الوصف (عربي)</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider text-right">{{ 'MODALS.PROJ_DESC_AR' | translate }}</label>
                 <textarea [(ngModel)]="editDescAr" name="editDescAr" placeholder="تفاصيل باللغة العربية..." rows="3" required dir="rtl"
-                          class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all"></textarea>
+                          class="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all text-right"></textarea>
               </div>
             </div>
 
             <div class="flex justify-end gap-3 pt-3">
-              <button type="button" (click)="isEditProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-sidebar font-semibold text-sm transition-colors">
-                Cancel
+              <button type="button" (click)="dashboardService.isEditProjectModalOpen.set(false)" class="px-4 py-2.5 border border-border rounded-xl hover:bg-sidebar font-semibold text-sm transition-colors">
+                {{ 'MODALS.CANCEL' | translate }}
               </button>
               <button type="submit" class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all">
-                Save Changes
+                {{ 'MODALS.SAVE_CHANGES' | translate }}
               </button>
             </div>
           </form>
@@ -678,14 +735,12 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
       </div>
     }
 
-    <!-- AI Requirement Chat modal -->
-
     <!-- Project History Modal -->
-    @if (isHistoryModalOpen() && selectedHistoryProject()) {
+    @if (dashboardService.isHistoryModalOpen() && dashboardService.selectedHistoryProject()) {
       <app-project-history-modal 
-        [projectId]="selectedHistoryProject()!.id"
-        [projectName]="selectedHistoryProject()!.nameEn || 'Project'"
-        [currentStatus]="selectedHistoryProject()!.status"
+        [projectId]="dashboardService.selectedHistoryProject()!.id"
+        [projectName]="getProjectName(dashboardService.selectedHistoryProject()) || 'Project'"
+        [currentStatus]="dashboardService.selectedHistoryProject()!.status"
         (close)="closeHistoryModal()"
         (actionCompleted)="onHistoryActionCompleted()">
       </app-project-history-modal>
@@ -708,47 +763,42 @@ export class DashboardComponent implements OnInit {
   userJobTitle = signal('');
   userInitial = computed(() => this.userName().trim().charAt(0).toUpperCase() || 'U');
 
+  private doc = inject(DOCUMENT);
+  private tr = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
+  currentLang = signal<'en' | 'ar'>('en');
+
   // Active navigation tab signal
+<<<<<<< HEAD
   currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization' | 'settings'>('sprint');
+=======
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'| 'project-policies'>('sprint');
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
 
   // Component state
-  activeSprintName = signal('No Active Sprint');
-  showManualForm = signal(false);
-  isProjectDropdownOpen = signal(false);
-  
-  selectedSprintId = signal<string | null>(null);
-  selectedSprintStatus = signal<string | null>(null);
-  cachedSprints = signal<SprintListItem[]>([]);
-  isSprintsLoading = signal(true);
 
-  // Status History Modal state
-  isHistoryModalOpen = signal(false);
-  selectedHistoryProject = signal<{id: string, nameEn: string, status: string} | null>(null);
+  isProjectDropdownOpen = signal(false);
+
+  // Eager project statistics Map
+  projectStatsMap = signal<Map<string, ProjectStats>>(new Map());
 
   // Edit Project properties
-  isEditProjectModalOpen = signal(false);
-  selectedEditProjectId = signal('');
   editNameEn = '';
   editNameAr = '';
   editDescEn = '';
   editDescAr = '';
 
-  // Eager project statistics Map
-  projectStatsMap = signal<Map<string, ProjectStats>>(new Map());
 
   // AI Project creation signals
-  isAiChatOpen = signal(false);
-  isDraftReviewOpen = signal(false);
-  aiDraft = signal<any>(null);
-  chatId = signal<string>('');
-  isTechStackAdvisorOpen = signal(false);
-  advisorProjectId = signal<string | null>(null);
 
+
+  public dashboardService = inject(DashboardService);
   public projectState = inject(ProjectStateService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private sprintService = inject(SprintPlanningService);
 
   logout(): void {
@@ -756,26 +806,19 @@ export class DashboardComponent implements OnInit {
   }
 
   constructor() {
-    // Reactively update sprint name whenever selected project ID changes
-    effect(() => {
-      const projId = this.projectState.selectedProjectId();
-      if (projId) {
-        this.loadActiveSprint(projId);
-      } else {
-        this.activeSprintName.set('No Active Sprint');
-      }
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      const url = event.urlAfterRedirects || event.url;
+      // Extract the last segment of the dashboard route
+      const segments = url.split('?')[0].split('/');
+      let tab = segments.pop() || 'projects';
+      if (tab === 'dashboard') tab = 'projects';
+
+      this.currentTab.set(tab as any);
     });
 
-    // Eagerly load all project statistics when the "projects" tab is selected
-    effect(() => {
-      const tab = this.currentTab();
-      const projects = this.projectState.projects();
-      if (tab === 'projects' && projects.length > 0) {
-        untracked(() => {
-          this.loadAllProjectStats();
-        });
-      }
-    });
+
 
     // If a PM has no projects, default to the create-project tab and open AI chat automatically
     effect(() => {
@@ -784,24 +827,43 @@ export class DashboardComponent implements OnInit {
       const initialized = !this.projectState.loading();
       if (initialized && isPM && projCount === 0) {
         untracked(() => {
-          this.currentTab.set('create-project');
-          this.isAiChatOpen.set(true);
-          this.showManualForm.set(false);
+          this.router.navigate(['/dashboard', 'create-project']);
         });
       }
     });
 
+    // Populate edit modal fields when opened from a child routed component
     effect(() => {
-      this.projectState.selectedProjectId(); // Track project id change
-      untracked(() => {
-        this.selectedSprintId.set(null);
-        this.selectedSprintStatus.set(null);
-        this.loadSprints();
-      });
+      const isOpen = this.dashboardService.isEditProjectModalOpen();
+      const projectId = this.dashboardService.selectedEditProjectId();
+      if (isOpen && projectId) {
+        untracked(() => {
+          const proj = this.projectState.projects().find(p => p.id === projectId);
+          if (proj) {
+            this.editNameEn = proj.nameEn || '';
+            this.editNameAr = proj.nameAr || '';
+            this.editDescEn = proj.descriptionEn || proj.description || '';
+            this.editDescAr = proj.descriptionAr || proj.description || '';
+            this.cdr.markForCheck();
+          }
+        });
+      }
     });
   }
-
   ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const tab = params.get('tab');
+      if (tab && ['projects', 'create-project', 'sprint', 'sprint-planning', 'retrospective', 'backlog', 'team', 'profile', 'employees'].includes(tab)) {
+        this.currentTab.set(tab as any);
+      }
+    });
+
+    const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar';
+    if (savedLang) {
+      this.currentLang.set(savedLang);
+      this.applyDirection(savedLang);
+    }
+
     this.currentDate = new Date().toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -821,8 +883,7 @@ export class DashboardComponent implements OnInit {
 
   async loadUserProfile() {
     try {
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const profileData = data.data || data;
+      const profileData = await this.projectState.getProfile();
       if (profileData) {
         this.userName.set(`${profileData.firstName} ${profileData.lastName}`);
         this.userJobTitle.set(profileData.jobTitle || '');
@@ -832,77 +893,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  async loadActiveSprint(projectId: string) {
-    try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
-      const sprintData = data.data;
-      if (sprintData) {
-        this.activeSprintName.set(`${sprintData.titleEn || sprintData.title || ''} Active`);
-      } else {
-        this.activeSprintName.set('No Active Sprint');
-      }
-    } catch (e) {
-      console.warn('Failed to load active sprint info:', e);
-      this.activeSprintName.set('No Active Sprint');
-    }
-  }
-
-  async loadAllProjectStats() {
-    const projects = this.projectState.projects();
-    const currentMap = new Map(this.projectStatsMap());
-
-    // Set initial loading state keys
-    let updated = false;
-    for (const p of projects) {
-      if (!currentMap.has(p.id)) {
-        currentMap.set(p.id, { activeSprint: 'Loading...', memberCount: 0, taskCount: 0, loading: true });
-        updated = true;
-      }
-    }
-    if (updated) {
-      this.projectStatsMap.set(currentMap);
-    }
-
-    // Fire API requests in parallel using Promise.allSettled
-    const promises = projects.map(async (p) => {
-      const stats: ProjectStats = { activeSprint: 'No Active Sprint', memberCount: 0, taskCount: 0, loading: false };
-
-      try {
-        const [sprintRes, employeesRes, backlogRes] = await Promise.allSettled([
-          apiClient.get<any>(`/projects/${p.id}/sprints/active`),
-          apiClient.get<any>(`/projects/${p.id}/employees`),
-          apiClient.get<any>(`/projects/${p.id}/backlog`)
-        ]);
-
-        if (sprintRes.status === 'fulfilled' && sprintRes.value.data?.data) {
-          const sprintData = sprintRes.value.data.data;
-          stats.activeSprint = `${sprintData.titleEn || sprintData.title || ''} Active`;
-        }
-        if (employeesRes.status === 'fulfilled' && employeesRes.value.data?.data) {
-          stats.memberCount = employeesRes.value.data.data.length || 0;
-        }
-        if (backlogRes.status === 'fulfilled' && backlogRes.value.data?.data) {
-          const stories = backlogRes.value.data.data.userStories || [];
-          let totalTasks = 0;
-          for (const story of stories) {
-            totalTasks += (story.tasks || []).length;
-          }
-          stats.taskCount = totalTasks;
-        }
-      } catch (err) {
-        console.warn('Failed to load stats for project:', p.id, err);
-      }
-
-      return { id: p.id, stats };
-    });
-
-    const results = await Promise.all(promises);
-    const newMap = new Map(this.projectStatsMap());
-    for (const res of results) {
-      newMap.set(res.id, res.stats);
-    }
-    this.projectStatsMap.set(newMap);
-  }
 
   onProjectSelect(event: Event) {
     const select = event.target as HTMLSelectElement;
@@ -910,90 +900,59 @@ export class DashboardComponent implements OnInit {
   }
 
   openCreateProjectPage() {
-    this.showManualForm.set(false);
-    this.currentTab.set('create-project');
-  }
-
-  openAiProjectFlow() {
-    this.showManualForm.set(false);
-    this.currentTab.set('create-project');
-    this.isAiChatOpen.set(true);
+    this.router.navigate(['/dashboard', 'create-project']);
   }
 
   onAiChatClose() {
-    this.isAiChatOpen.set(false);
+    this.dashboardService.isAiChatOpen.set(false);
   }
 
   async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
-    this.isAiChatOpen.set(false);
-    this.aiDraft.set(event.draft);
-    this.chatId.set(event.chatId);
-    this.advisorProjectId.set(event.projectId);
-    this.isTechStackAdvisorOpen.set(true);
+    this.dashboardService.isAiChatOpen.set(false);
     await this.projectState.loadProjects();
     this.projectState.setSelectedProject(event.projectId);
   }
 
   onTechStackAdvisorClose() {
-    this.isTechStackAdvisorOpen.set(false);
-    this.advisorProjectId.set(null);
+    this.dashboardService.advisorProjectId.set(null);
   }
 
   async onTechStackAdvisorCompleted(projectId: string) {
-    this.isTechStackAdvisorOpen.set(false);
-    this.advisorProjectId.set(null);
-    await this.projectState.loadProjects();
-    this.projectState.setSelectedProject(projectId);
-    this.currentTab.set('backlog');
-    this.loadAllProjectStats();
+    try {
+      this.dashboardService.isTechStackAdvisorOpen.set(false);
+      this.dashboardService.advisorProjectId.set(null);
+      await this.projectState.loadProjects();
+      this.projectState.setSelectedProject(projectId);
+      this.toastService.show('Project created successfully', 'success');
+    } catch (e) {
+      console.warn('Error during tech stack completion:', e);
+      this.toastService.show('Error finalizing project setup', 'error');
+    } finally {
+      this.currentTab.set('projects');
+    }
   }
 
   onProjectSaved() {
-    this.isDraftReviewOpen.set(false);
+    this.dashboardService.isDraftReviewOpen.set(false);
     this.projectState.loadProjects();
   }
 
-  async onCreateProjectSubmit(event: Event) {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const nameEn = (form.elements.namedItem('projNameEn') as HTMLInputElement).value;
-    const nameAr = (form.elements.namedItem('projNameAr') as HTMLInputElement).value;
-    const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
-    const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
-    if (success) {
-      this.showManualForm.set(false);
-      this.currentTab.set('projects');
-      form.reset();
-      this.loadAllProjectStats();
-    }
-  }
-
-  openEditProjectModal(projectId: string) {
-    const proj = this.projectState.projects().find(p => p.id === projectId);
-    if (proj) {
-      this.selectedEditProjectId.set(projectId);
-      this.editNameEn = proj.nameEn || '';
-      this.editNameAr = proj.nameAr || '';
-      this.editDescEn = proj.descriptionEn || proj.description || '';
-      this.editDescAr = proj.descriptionAr || proj.description || '';
-      this.isEditProjectModalOpen.set(true);
-    }
-  }
 
   async onEditProjectSubmit(event: Event) {
     event.preventDefault();
+    const projectId = this.dashboardService.selectedEditProjectId();
+    if (!projectId) return;
+
     const success = await this.projectState.updateProject(
-      this.selectedEditProjectId(),
+      projectId,
       this.editNameEn,
       this.editNameAr,
       this.editDescEn,
       this.editDescAr
     );
     if (success) {
-      this.isEditProjectModalOpen.set(false);
-      this.loadAllProjectStats();
+      this.dashboardService.isEditProjectModalOpen.set(false);
     }
   }
 
@@ -1017,7 +976,6 @@ export class DashboardComponent implements OnInit {
     const success = await this.projectState.deleteProject(projectId);
     if (success) {
       this.toastService.show('Project deleted successfully', 'success');
-      this.loadAllProjectStats();
     } else {
       this.toastService.show('Failed to delete project. Please try again.', 'error');
     }
@@ -1026,24 +984,24 @@ export class DashboardComponent implements OnInit {
   async onToggleProjectStatus(projectId: string) {
     const p = this.projectState.projects().find(x => x.id === projectId);
     if (p) {
-      this.selectedHistoryProject.set({
+      this.dashboardService.selectedHistoryProject.set({
         id: p.id,
         nameEn: p.nameEn || 'Project',
+        nameAr: p.nameAr,
         status: p.status || 'Active'
       });
-      this.isHistoryModalOpen.set(true);
+      this.dashboardService.isHistoryModalOpen.set(true);
     }
   }
 
   closeHistoryModal() {
-    this.isHistoryModalOpen.set(false);
-    this.selectedHistoryProject.set(null);
+    this.dashboardService.isHistoryModalOpen.set(false);
+    this.dashboardService.selectedHistoryProject.set(null);
   }
 
   onHistoryActionCompleted() {
     this.closeHistoryModal();
     this.toastService.show('Project status updated successfully', 'success');
-    this.loadAllProjectStats();
   }
 
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {
@@ -1073,37 +1031,33 @@ export class DashboardComponent implements OnInit {
     this.themeService.toggle();
   }
 
-  onViewBoard(event: { sprintId: string; sprintStatus: string }): void {
-    this.selectedSprintId.set(event.sprintId);
-    this.selectedSprintStatus.set(event.sprintStatus);
+
+
+  setLanguage(lang: 'en' | 'ar') {
+    this.currentLang.set(lang);
+    localStorage.setItem('app_lang', lang);
+    this.tr.use(lang);
+    this.applyDirection(lang);
   }
 
-  onBackToSprints(): void {
-    this.selectedSprintId.set(null);
-    this.selectedSprintStatus.set(null);
-    this.loadSprints();
+  toggleLanguage() {
+    this.setLanguage(this.currentLang() === 'en' ? 'ar' : 'en');
   }
 
-  async loadSprints(): Promise<void> {
-    const projectId = this.projectState.selectedProjectId();
-    if (!projectId) return;
-    this.isSprintsLoading.set(true);
-    const sprints = await this.sprintService.getAllSprints(projectId);
-    this.cachedSprints.set(sprints);
-    this.isSprintsLoading.set(false);
+  getProjectName(p: any): string {
+    if (!p) return '';
+    return this.currentLang() === 'ar' ? (p.nameAr || p.nameEn || p.name) : (p.nameEn || p.nameAr || p.name);
   }
 
-  async onSprintStatusChanged(): Promise<void> {
-    await this.loadSprints();
-    // Find the updated status for the currently viewed sprint
-    const currentId = this.selectedSprintId();
-    if (currentId) {
-      const updated = this.cachedSprints().find(
-        s => s.sprintId === currentId
-      );
-      if (updated) {
-        this.selectedSprintStatus.set(updated.status);
-      }
-    }
+  getSprintName(sp: any): string {
+    if (!sp) return '';
+    return this.currentLang() === 'ar' ? (sp.titleAr || sp.nameAr || sp.titleEn || sp.nameEn || sp.name) : (sp.titleEn || sp.nameEn || sp.titleAr || sp.nameAr || sp.name);
+  }
+
+  private applyDirection(lang: 'en' | 'ar') {
+    const dir = lang === 'ar' ? 'rtl' : 'ltr';
+    this.doc.documentElement.setAttribute('dir', dir);
+    this.doc.documentElement.setAttribute('lang', lang);
   }
 }
+

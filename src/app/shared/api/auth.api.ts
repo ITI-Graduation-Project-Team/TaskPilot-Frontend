@@ -54,6 +54,9 @@ export const authApi = {
   confirmEmail: (payload: { email: string; otp: string }) =>
     apiClient.post<ApiResponse>('/Auth/confirm-email', payload, NO_CREDS),
 
+  resendConfirmation: (payload: { email: string }) =>
+    apiClient.post<ApiResponse>('/Auth/resend-confirmation', payload, NO_CREDS),
+
   login: (payload: LoginPayload) =>
     apiClient.post<ApiResponse>('/Auth/login', payload, NO_CREDS),
 

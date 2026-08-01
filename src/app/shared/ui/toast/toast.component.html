@@ -4,14 +4,18 @@
   class="fixed bottom-6 right-6 z-50 flex items-start gap-3 p-4 rounded-xl shadow-lg border animate-[fadeUp_0.3s_ease_both]"
   [ngClass]="{
     'bg-green-50 border-green-200': toast.type === 'success',
-    'bg-brandPrimary/5 border-brandPrimary/30': toast.type === 'error'
+    'bg-red-50 border-red-200': toast.type === 'error',
+    'bg-blue-50 border-blue-200': toast.type === 'info',
+    'bg-amber-50 border-amber-200': toast.type === 'warning'
   }"
 >
   <div
     class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full"
     [ngClass]="{
       'bg-green-100 text-green-600': toast.type === 'success',
-      'bg-brandPrimary/10 text-brandPrimary': toast.type === 'error'
+      'bg-red-100 text-red-600': toast.type === 'error',
+      'bg-blue-100 text-blue-600': toast.type === 'info',
+      'bg-amber-100 text-amber-600': toast.type === 'warning'
     }"
   >
     <!-- Success Icon -->
@@ -45,18 +49,68 @@
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
+
+    <!-- Info Icon -->
+    <svg
+      *ngIf="toast.type === 'info'"
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+
+    <!-- Warning Icon -->
+    <svg
+      *ngIf="toast.type === 'warning'"
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
   </div>
 
-  <div class="flex-grow pt-1">
+  <div class="flex-grow pt-1 flex items-center justify-between gap-3">
     <p
       class="text-sm font-medium leading-relaxed"
       [ngClass]="{
         'text-green-800': toast.type === 'success',
-        'text-brandPrimary': toast.type === 'error'
+        'text-red-800': toast.type === 'error',
+        'text-blue-800': toast.type === 'info',
+        'text-amber-800': toast.type === 'warning'
       }"
     >
       {{ toast.message }}
     </p>
+
+    <button
+      *ngIf="toast.action"
+      (click)="toast.action.onClick(); close()"
+      class="shrink-0 px-3 py-1 text-xs font-bold rounded-lg border transition-all"
+      [ngClass]="{
+        'bg-green-600 text-white border-green-600 hover:bg-green-700': toast.type === 'success',
+        'bg-brandPrimary text-white border-brandPrimary hover:opacity-90': toast.type === 'error',
+        'bg-blue-600 text-white border-blue-600 hover:bg-blue-700': toast.type === 'info',
+        'bg-amber-600 text-white border-amber-600 hover:bg-amber-700': toast.type === 'warning'
+      }"
+    >
+      {{ toast.action.label }}
+    </button>
   </div>
 
   <button
@@ -64,7 +118,9 @@
     class="shrink-0 p-1 -mt-1 -mr-1 rounded-full opacity-60 hover:opacity-100 transition-opacity"
     [ngClass]="{
       'text-green-800 hover:bg-green-100': toast.type === 'success',
-      'text-brandPrimary hover:bg-brandPrimary/10': toast.type === 'error'
+      'text-red-800 hover:bg-red-100': toast.type === 'error',
+      'text-blue-800 hover:bg-blue-100': toast.type === 'info',
+      'text-amber-800 hover:bg-amber-100': toast.type === 'warning'
     }"
   >
     <svg

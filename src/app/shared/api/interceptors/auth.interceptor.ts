@@ -2,17 +2,18 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { getAccessToken } from '../../lib/auth/cookie.helper';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // 1. جلب التوكن من الـ Cookies (لأننا نقوم بتخزينه هناك وليس في localStorage)
   const token = getAccessToken();
 
+  let setHeaders: any = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  };
+
   if (token) {
-    const clonedRequest = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return next(clonedRequest);
+    setHeaders['Authorization'] = `Bearer ${token}`;
   }
 
-  return next(req);
+  const clonedRequest = req.clone({ setHeaders });
+  return next(clonedRequest);
 };

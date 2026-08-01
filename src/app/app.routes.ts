@@ -17,19 +17,34 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [authGuard, roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] },
-    loadComponent: () =>
-      import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(
-        (m) => m.DashboardComponent
-      ),
+    loadComponent: () => import('./pages/dashboardPage/ui/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    children: [
+      { path: '', redirectTo: 'projects', pathMatch: 'full' },
+      { path: 'projects', loadComponent: () => import('./pages/dashboardPage/ui/project-hub/project-hub.component').then(m => m.ProjectHubComponent) },
+      { path: 'create-project', loadComponent: () => import('./pages/dashboardPage/ui/create-project/create-project.component').then(m => m.CreateProjectComponent) },
+      { path: 'sprint', loadComponent: () => import('./pages/dashboardPage/ui/sprint-view/sprint-view.component').then(m => m.SprintViewComponent) },
+      { path: 'sprint-planning', loadComponent: () => import('./pages/dashboardPage/ui/sprint-planning-view/sprint-planning-view.component').then(m => m.SprintPlanningViewComponent) },
+      { path: 'retrospective', loadComponent: () => import('./pages/dashboardPage/ui/retrospective-view/retrospective-view.component').then(m => m.RetrospectiveViewComponent) },
+      { path: 'backlog', loadComponent: () => import('./pages/dashboardPage/ui/backlog-view/backlog-view.component').then(m => m.BacklogViewComponent) },
+      { path: 'team', loadComponent: () => import('./pages/dashboardPage/ui/team-view/team-view.component').then(m => m.TeamViewComponent) },
+      { path: 'profile', loadComponent: () => import('./pages/dashboardPage/ui/profile-view/profile-view.component').then(m => m.ProfileViewComponent) },
+      { path: 'organization', loadComponent: () => import('./features/organization/ui/organization-view/organization-view.component').then(m => m.OrganizationViewComponent) },
+      { path: 'employees', loadComponent: () => import('./pages/employeesPage/ui/employees/employees').then(m => m.EmployeesComponent) },
+      { path: 'employees/:id', loadComponent: () => import('./pages/employeesPage/ui/employee-details/employee-details.component').then(m => m.EmployeeDetailsComponent) },
+      { path: 'project-policies', loadComponent: () => import('./features/projectPolicies/ui/project-policies-admin/project-policies-admin.component').then(m => m.ProjectPoliciesAdminComponent) }
+    ]
   },
   {
     path: 'employee-dashboard',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Employee'] },
-    loadComponent: () =>
-      import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then(
-        (m) => m.EmployeeDashboardComponent
-      ),
+    children: [
+      { path: '', redirectTo: 'sprint', pathMatch: 'full' },
+      {
+        path: ':tab',
+        loadComponent: () => import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then((m) => m.EmployeeDashboardComponent)
+      }
+    ]
   },
   {
     path: 'subscription',
@@ -45,6 +60,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/paymentCallbackPage/ui/payment-callback/payment-callback.component').then(
         (m) => m.PaymentCallbackComponent
+      )
+  },
+  {
+    path: 'select-role',
+    loadComponent: () =>
+      import('./pages/selectRolePage/ui/select-role/select-role').then(
+        (m) => m.SelectRoleComponent
       )
   },
   {
@@ -108,15 +130,7 @@ export const routes: Routes = [
         (m) => m.CompleteProfileComponent
       ),
   },
-  {
-    path: 'employees',
-    canActivate: [roleGuard, companySetupGuard],
-    data: { roles: ['ProjectManager'] },
-    loadComponent: () =>
-      import('./pages/employeesPage/ui/employees/employees').then(
-        (m) => m.EmployeesComponent
-      ),
-  },
+
   {
     path: 'assignment/:sprintId',
     canActivate: [authGuard, roleGuard],

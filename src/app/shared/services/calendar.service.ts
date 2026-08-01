@@ -62,15 +62,24 @@ export class CalendarService {
       const rawData = response.data?.data?.events || response.data?.events || response.data?.data || response.data || [];
       const eventsList = Array.isArray(rawData) ? rawData : [];
 
-      const mappedTasks = eventsList.map((item: any) => ({
-        ...item,
-        titleEn: item.titleEn || item.title || '',
-        titleAr: item.titleAr || item.title || '',
-        descriptionEn: item.descriptionEn || item.description || '',
-        descriptionAr: item.descriptionAr || item.description || '',
-        startDate: item.startDate || item.start || '',
-        endDate: item.endDate || item.end || ''
-      }));
+      const mappedTasks = eventsList.map((item: any) => {
+        let normalizedStatus = item.status || 'ToDo';
+        if (normalizedStatus === 0 || normalizedStatus === '0') normalizedStatus = 'ToDo';
+        if (normalizedStatus === 1 || normalizedStatus === '1') normalizedStatus = 'InProgress';
+        if (normalizedStatus === 2 || normalizedStatus === '2') normalizedStatus = 'Review';
+        if (normalizedStatus === 3 || normalizedStatus === '3') normalizedStatus = 'Done';
+
+        return {
+          ...item,
+          status: normalizedStatus,
+          titleEn: item.taskEn || item.titleEn || item.title || '',
+          titleAr: item.taskAr || item.titleAr || item.title || '',
+          descriptionEn: item.descriptionEn || item.description || '',
+          descriptionAr: item.descriptionAr || item.description || '',
+          startDate: item.startDate || item.start || '',
+          endDate: item.endDate || item.end || ''
+        };
+      });
 
       this.tasks.set(mappedTasks);
     } catch (error) {
@@ -145,32 +154,32 @@ export class CalendarService {
   /**
    * Update task details (title, status, priority, etc.)
    */
-  async updateTask(taskId: string, payload: any): Promise<boolean> {
+  async updateTask(taskId: string, payload: any): Promise<any> {
     try {
-      await apiClient.patch(`/calendar/tasks/${taskId}`, payload);
+      const response = await apiClient.patch(`/calendar/tasks/${taskId}`, payload);
       this.toastService.show('Task updated successfully', 'success');
 
       // Optimistically update
-      this.tasks.update(currentTasks => 
-        currentTasks.map(t => 
-          t.id === taskId 
-            ? { 
-                ...t, 
-                titleEn: payload.title || payload.titleEn || t.titleEn, 
-                descriptionEn: payload.description !== undefined ? payload.description : t.descriptionEn,
-                status: payload.status || t.status, 
-                priority: payload.priority || t.priority,
-                startDate: payload.startDate || t.startDate,
-                endDate: payload._endDate || t.endDate
-              } 
+      this.tasks.update(currentTasks =>
+        currentTasks.map(t =>
+          t.id === taskId
+            ? {
+              ...t,
+              titleEn: payload.title || payload.titleEn || t.titleEn,
+              descriptionEn: payload.description !== undefined ? payload.description : t.descriptionEn,
+              status: payload.status || t.status,
+              priority: payload.priority || t.priority,
+              startDate: payload.startDate || t.startDate,
+              endDate: payload._endDate || t.endDate
+            }
             : t
         )
       );
-      return true;
+      return response.data?.data || response.data || true;
     } catch (error) {
       console.error('Failed to update task', error);
       this.toastService.show('Failed to update task', 'error');
-      return false;
+      return null;
     }
   }
 

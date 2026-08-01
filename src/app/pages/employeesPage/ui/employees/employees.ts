@@ -1,14 +1,16 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { CompanyService, EmployeeModel, InvitationModel } from '../../../../shared/api/Company-api/company';
+import { CompanyService, CompanyEmployeeModel, EmployeeSuggestionModel, InvitationModel } from '../../../../shared/api/Company-api/company';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { DeactivationDialogComponent } from '../../../../features/deactivation-dialog/deactivation-dialog.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, DeactivationDialogComponent, TranslatePipe],
   templateUrl: './employees.html',
   styleUrls: ['./employees.scss']
 })
@@ -16,14 +18,32 @@ export class EmployeesComponent implements OnInit {
   companyService = inject(CompanyService);
   toastService = inject(ToastService);
 
-  activeTab = signal<'active' | 'invitations'>('active');
+  activeTab = signal<'active' | 'deactivated' | 'invitations'>('active');
   
   // Active Employees State
-  activeEmployees = signal<InvitationModel[]>([]);
-  localSearchQuery = signal<string>(''); // For filtering the table locally
-  isLoadingEmployees = signal<boolean>(false);
+  activeEmployees = signal<CompanyEmployeeModel[]>([]);
   activeEmployeesPage = signal<number>(1);
   totalActiveEmployees = signal<number>(0);
+
+  // Deactivated Employees State
+  deactivatedEmployees = signal<CompanyEmployeeModel[]>([]);
+  deactivatedEmployeesPage = signal<number>(1);
+  totalDeactivatedEmployees = signal<number>(0);
+
+  localSearchQuery = signal<string>(''); // Kept for local filter if needed, though usually server-side search is preferred. We will just use it on the current page for now.
+  isLoadingEmployees = signal<boolean>(false);
+
+  paginatedActiveEmployees = computed(() => {
+    const q = this.localSearchQuery().toLowerCase().trim();
+    if (!q) return this.activeEmployees();
+    return this.activeEmployees().filter(e => e.fullName?.toLowerCase().includes(q) || e.email?.toLowerCase().includes(q));
+  });
+
+  paginatedDeactivatedEmployees = computed(() => {
+    const q = this.localSearchQuery().toLowerCase().trim();
+    if (!q) return this.deactivatedEmployees();
+    return this.deactivatedEmployees().filter(e => e.fullName?.toLowerCase().includes(q) || e.email?.toLowerCase().includes(q));
+  });
 
   // Invitations State
   invitations = signal<InvitationModel[]>([]);
@@ -36,10 +56,26 @@ export class EmployeesComponent implements OnInit {
   // Invite Modal State
   isInviteModalOpen = signal<boolean>(false);
   systemSearchQuery = signal<string>('');
-  searchResults = signal<EmployeeModel[]>([]);
+  searchResults = signal<EmployeeSuggestionModel[]>([]);
   isSearchingSystem = signal<boolean>(false);
   isInviting = signal<boolean>(false);
-  companyEmployees = signal<EmployeeModel[]>([]);
+  inviteEmailError = signal<string | null>(null);
+  inviteEmailFailedAddress = signal<string | null>(null);
+
+  // Deactivation State
+  isDeactivateModalOpen = signal<boolean>(false);
+  selectedEmployeeId = signal<string | null>(null);
+  selectedEmployeeName = signal<string>('');
+
+  // Summary Cards Data
+  activeCount = computed(() => this.totalActiveEmployees());
+  deactivatedCount = computed(() => this.totalDeactivatedEmployees());
+  totalCount = computed(() => this.activeCount() + this.deactivatedCount());
+  
+  // Computed on current visible page since full dataset is not loaded
+  availableCount = computed(() => this.activeEmployees().filter(e => (!e.availabilityStatus || e.availabilityStatus.toLowerCase() === 'available')).length);
+  assignedCount = computed(() => this.activeEmployees().filter(e => (e.activeProjectsCount > 0 || e.currentAssignedTasksCount > 0)).length);
+
 
 
   ngOnInit() {
@@ -50,27 +86,32 @@ export class EmployeesComponent implements OnInit {
   async loadEmployees() {
     try {
       this.isLoadingEmployees.set(true);
-      // Fetch accepted invitations
-      const res = await this.companyService.getInvitations('accepted', this.activeEmployeesPage(), this.pageSize());
-      if (res.succeeded && res.data) {
-        this.activeEmployees.set(res.data.items);
-        this.totalActiveEmployees.set(res.data.totalCount);
+      // Load Active Employees
+      const activeRes = await this.companyService.getCompanyEmployees(this.activeEmployeesPage(), this.pageSize(), false);
+      if (activeRes.succeeded && activeRes.data) {
+        this.activeEmployees.set(activeRes.data.items);
+        this.totalActiveEmployees.set(activeRes.data.totalItems);
       } else {
         this.activeEmployees.set([]);
         this.totalActiveEmployees.set(0);
       }
+
+      // Load Deactivated Employees
+      const deactivatedRes = await this.companyService.getCompanyEmployees(this.deactivatedEmployeesPage(), this.pageSize(), true);
+      if (deactivatedRes.succeeded && deactivatedRes.data) {
+        this.deactivatedEmployees.set(deactivatedRes.data.items);
+        this.totalDeactivatedEmployees.set(deactivatedRes.data.totalItems);
+      } else {
+        this.deactivatedEmployees.set([]);
+        this.totalDeactivatedEmployees.set(0);
+      }
     } catch (e) {
       console.error(e);
       this.activeEmployees.set([]);
+      this.deactivatedEmployees.set([]);
     } finally {
       this.isLoadingEmployees.set(false);
     }
-  }
-
-  get filteredEmployees() {
-    const q = this.localSearchQuery().toLowerCase().trim();
-    if (!q) return this.activeEmployees();
-    return this.activeEmployees().filter(e => e.email?.toLowerCase().includes(q));
   }
 
   async loadInvitations() {
@@ -113,6 +154,59 @@ export class EmployeesComponent implements OnInit {
     }
   }
 
+  prevDeactivatedPage() {
+    if (this.deactivatedEmployeesPage() > 1) {
+      this.deactivatedEmployeesPage.set(this.deactivatedEmployeesPage() - 1);
+      this.loadEmployees();
+    }
+  }
+
+  nextDeactivatedPage() {
+    const maxPage = Math.ceil(this.totalDeactivatedEmployees() / this.pageSize());
+    if (this.deactivatedEmployeesPage() < maxPage) {
+      this.deactivatedEmployeesPage.set(this.deactivatedEmployeesPage() + 1);
+      this.loadEmployees();
+    }
+  }
+
+  getInvitationStatus(inv: InvitationModel): 'accepted' | 'expired' | 'pending' {
+    if (inv.accepted) return 'accepted';
+    const expiresAt = new Date(inv.expiresAt).getTime();
+    const now = new Date().getTime();
+    if (expiresAt < now) return 'expired';
+    return 'pending';
+  }
+
+  async resendInvitation(id: string) {
+    try {
+      const res = await this.companyService.resendInvitation(id);
+      if (res.succeeded) {
+        this.toastService.show('Invitation resent successfully!', 'success');
+        this.loadInvitations();
+      } else {
+        this.toastService.show(res.message || 'Failed to resend invitation', 'error');
+      }
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || 'Error resending invitation';
+      this.toastService.show(msg, 'error');
+    }
+  }
+
+  async deleteInvitation(id: string) {
+    try {
+      const res = await this.companyService.cancelInvitation(id);
+      if (res.succeeded) {
+        this.toastService.show('Invitation deleted successfully!', 'success');
+        this.loadInvitations();
+      } else {
+        this.toastService.show(res.message || 'Failed to delete invitation', 'error');
+      }
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || 'Error deleting invitation';
+      this.toastService.show(msg, 'error');
+    }
+  }
+
   prevPage() {
     if (this.currentPage() > 1) {
       this.currentPage.set(this.currentPage() - 1);
@@ -131,13 +225,15 @@ export class EmployeesComponent implements OnInit {
   async openInviteModal() {
     this.systemSearchQuery.set('');
     this.searchResults.set([]);
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
     this.isInviteModalOpen.set(true);
 
     try {
-      // Use 50 instead of 9999 in case the backend rejects large page sizes
-      const res = await this.companyService.getInvitations('accepted', 1, 50);
+      // For invite modal, fetch up to 500 employees to check for existing users
+      const res = await this.companyService.getCompanyEmployees(1, 500);
       if (res.succeeded && res.data) {
-        this.companyEmployees.set(res.data.items as any[]);
+        // We just keep this local to the modal or we could just skip local validation and rely on backend validation
       }
     } catch (e) {
       console.error('Failed to load company employees', e);
@@ -145,6 +241,8 @@ export class EmployeesComponent implements OnInit {
   }
 
   closeInviteModal() {
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
     this.isInviteModalOpen.set(false);
   }
 
@@ -152,6 +250,9 @@ export class EmployeesComponent implements OnInit {
   private searchTimeout: any;
 
   onSystemSearchChange() {
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
+
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
@@ -183,28 +284,69 @@ export class EmployeesComponent implements OnInit {
   async inviteEmail(email: string) {
     if (!email.trim()) return;
 
+    this.inviteEmailError.set(null);
+    this.inviteEmailFailedAddress.set(null);
+
     try {
       this.isInviting.set(true);
       const res = await this.companyService.inviteEmployees([email.trim()]);
-      if (res.succeeded) {
+      if (res.succeeded && (!res.data?.skippedEmployees || res.data.skippedEmployees.length === 0)) {
         this.toastService.show('🎉 Invitation sent successfully!', 'success');
         this.loadInvitations();
         this.closeInviteModal();
       } else {
-        this.toastService.show(res.message || 'Failed to invite.', 'error');
+        this.handleInviteError(res, email);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      this.toastService.show('An error occurred while inviting.', 'error');
+      const errResponse = e?.response?.data || e;
+      this.handleInviteError(errResponse, email);
     } finally {
       this.isInviting.set(false);
+    }
+  }
+
+  handleInviteError(errResponse: any, email: string) {
+    const data = errResponse?.data;
+    const skipped = data?.skippedEmployees || errResponse?.skippedEmployees || [];
+    const errors = errResponse?.errors || [];
+    const code = errResponse?.code;
+
+    const hasSkippedBelongs = skipped.some((s: any) => s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY');
+    const isAlreadyBelongsError = hasSkippedBelongs || (code === 'USER_ALREADY_BELONGS_TO_COMPANY') ||
+      errors.some((err: any) => err.code === 'USER_ALREADY_BELONGS_TO_COMPANY');
+
+    if (isAlreadyBelongsError) {
+      this.inviteEmailError.set('This user is already registered under another company.');
+      this.inviteEmailFailedAddress.set(email);
+      this.toastService.show('This user is already registered under another company.', 'error');
+    } else {
+      const errorMsg = errResponse?.message || 'An error occurred while inviting.';
+      this.toastService.show(errorMsg, 'error');
     }
   }
 
   isUserInCompany(email: string): boolean {
     if (!email) return false;
     const cleanEmail = email.toLowerCase().trim();
-    return this.companyEmployees().some(e => e.email?.toLowerCase().trim() === cleanEmail);
+    return this.activeEmployees().some(e => e.email?.toLowerCase().trim() === cleanEmail) || 
+           this.deactivatedEmployees().some(e => e.email?.toLowerCase().trim() === cleanEmail);
+  }
+
+  openDeactivateModal(emp: CompanyEmployeeModel) {
+    this.selectedEmployeeId.set(emp.employeeId);
+    this.selectedEmployeeName.set(emp.fullName || emp.email);
+    this.isDeactivateModalOpen.set(true);
+  }
+
+  closeDeactivateModal() {
+    this.isDeactivateModalOpen.set(false);
+    this.selectedEmployeeId.set(null);
+  }
+
+  onDeactivated() {
+    this.closeDeactivateModal();
+    this.loadEmployees();
   }
 }
 

@@ -1,20 +1,11 @@
-<div class="min-h-screen bg-brandLight font-sans flex flex-col items-center">
-  <!-- Header / Navigation (Simple minimal header for standalone page, or assuming it's part of dashboard?) -->
-  <!-- We'll build a self-contained header here just in case, but link back to Dashboard -->
-  <nav
-    class="w-full bg-brandWhite border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
-    <div class="flex items-center gap-3 cursor-pointer" routerLink="/dashboard">
-      <div
-        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brandBlue to-brandTeal flex items-center justify-center text-brandWhite font-extrabold text-xl shadow-md">
-        T
+<div class="w-full h-full flex flex-col gap-8 animate-fade-in relative">
+  <!-- Page Title & Tabs -->
+  <div class="flex flex-col gap-6">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-4xl font-extrabold text-brandNavy tracking-tight mb-2">Company Directory</h1>
+        <p class="text-slate-500 text-lg">Manage your team members and oversee pending invitations.</p>
       </div>
-      <span class="text-2xl font-bold text-brandNavy tracking-tight">TaskPilot</span>
-    </div>
-    <div class="flex items-center gap-4">
-      <button routerLink="/dashboard"
-        class="text-sm font-semibold text-slate-500 hover:text-brandPrimary transition-colors">
-        Back to Dashboard
-      </button>
       <button (click)="openInviteModal()"
         class="py-2.5 px-5 rounded-xl font-bold bg-brandPrimary hover:bg-blue-700 text-brandWhite shadow-lg shadow-blue-500/30 flex items-center gap-2 text-sm transition-transform hover:-translate-y-0.5">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,16 +15,30 @@
         Invite Employees
       </button>
     </div>
-  </nav>
 
-  <main class="w-full max-w-6xl mx-auto p-8 mt-4 flex flex-col gap-8">
-
-    <!-- Page Title & Tabs -->
-    <div class="flex flex-col gap-6">
-      <div>
-        <h1 class="text-4xl font-extrabold text-brandNavy tracking-tight mb-2">Company Directory</h1>
-        <p class="text-slate-500 text-lg">Manage your team members and oversee pending invitations.</p>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-1">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total</span>
+        <span class="text-2xl font-extrabold text-brandNavy">{{ totalCount() }}</span>
       </div>
+      <div class="bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-1">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Active</span>
+        <span class="text-2xl font-extrabold text-emerald-600">{{ activeCount() }}</span>
+      </div>
+      <div class="bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-1">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Deactivated</span>
+        <span class="text-2xl font-extrabold text-red-500">{{ deactivatedCount() }}</span>
+      </div>
+      <div class="bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-1">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Available</span>
+        <span class="text-2xl font-extrabold text-blue-600">{{ availableCount() }}</span>
+      </div>
+      <div class="bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-1">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned</span>
+        <span class="text-2xl font-extrabold text-purple-600">{{ assignedCount() }}</span>
+      </div>
+    </div>
 
       <!-- Custom Tabs -->
       <div class="flex gap-4 border-b border-slate-200">
@@ -42,6 +47,12 @@
           [class.text-slate-500]="activeTab() !== 'active'"
           class="pb-4 px-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors hover:text-brandPrimary">
           Active Employees
+        </button>
+        <button (click)="activeTab.set('deactivated')" [class.border-brandPrimary]="activeTab() === 'deactivated'"
+          [class.text-brandPrimary]="activeTab() === 'deactivated'" [class.border-transparent]="activeTab() !== 'deactivated'"
+          [class.text-slate-500]="activeTab() !== 'deactivated'"
+          class="pb-4 px-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors hover:text-brandPrimary">
+          Deactivated Employees
         </button>
         <button (click)="activeTab.set('invitations')" [class.border-brandPrimary]="activeTab() === 'invitations'"
           [class.text-brandPrimary]="activeTab() === 'invitations'"
@@ -83,35 +94,85 @@
             <thead>
               <tr class="border-b border-slate-100">
                 <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Employee</th>
-                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Email</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 hidden lg:table-cell">Details</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 hidden xl:table-cell">Skills</th>
                 <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let emp of filteredEmployees"
+              <tr *ngFor="let emp of paginatedActiveEmployees()"
                 class="group border-b border-slate-50 last:border-0 hover:bg-brandLight/50 transition-colors">
                 <td class="py-4 px-6">
                   <div class="flex items-center gap-4">
-                    <div
-                      class="w-10 h-10 rounded-full bg-gradient-to-tr from-brandTeal to-brandBlue flex items-center justify-center text-brandWhite font-bold shadow-sm">
+                    <div [ngClass]="emp.isDeactivated ? 'from-slate-400 to-slate-500 opacity-60' : 'from-brandTeal to-brandBlue'"
+                      class="w-10 h-10 rounded-full bg-gradient-to-tr flex items-center justify-center text-brandWhite font-bold shadow-sm">
                       {{ emp.email ? emp.email[0].toUpperCase() : 'U' }}
                     </div>
                     <div>
-                      <div class="font-bold text-brandNavy">TaskPilot Member</div>
-                      <div class="text-xs text-slate-400">Joined {{ emp.invitedAt | date:'mediumDate' }}</div>
+                      <a [routerLink]="['/dashboard/employees', emp.employeeId]" class="font-bold hover:underline" [ngClass]="emp.isDeactivated ? 'text-slate-500' : 'text-brandNavy'">
+                        {{ emp.fullName || 'TaskPilot Member' }}
+                      </a>
+                      <div class="text-xs text-slate-400 mt-0.5 flex flex-col gap-0.5">
+                        <span class="truncate max-w-[200px]" title="{{ emp.email }}">{{ emp.email }}</span>
+                        <ng-container *ngIf="emp.isDeactivated">
+                          <span class="text-red-500 font-semibold">{{ 'DEACTIVATION.DEACTIVATED' | translate }} {{ emp.deactivatedAt | date:'mediumDate' }}</span>
+                        </ng-container>
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td class="py-4 px-6 text-sm text-slate-600 font-medium">{{ emp.email }}</td>
+                <td class="py-4 px-6 hidden lg:table-cell">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-sm font-semibold text-brandNavy" *ngIf="!emp.isDeactivated">{{ emp.jobTitle || 'Team Member' }}</span>
+                    <span class="text-xs text-slate-500">{{ emp.seniorityLevel || 'N/A' }}</span>
+                    <span class="text-[10px] uppercase font-bold text-blue-600" *ngIf="emp.activeProjectsCount > 0">{{ emp.activeProjectsCount }} Active Projects</span>
+                  </div>
+                </td>
+                <td class="py-4 px-6 hidden xl:table-cell">
+                  <div class="flex flex-wrap gap-1 max-w-[200px]" *ngIf="emp.skills && emp.skills.length">
+                    <span *ngFor="let skill of emp.skills | slice:0:3" class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md border border-slate-200">
+                      {{ skill }}
+                    </span>
+                    <span *ngIf="emp.skills.length > 3" class="px-2 py-0.5 bg-slate-50 text-slate-400 text-[10px] font-bold rounded-md border border-slate-100">
+                      +{{ emp.skills.length - 3 }}
+                    </span>
+                  </div>
+                </td>
                 <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
-                  </span>
+                  <div class="flex flex-col gap-2 items-start">
+                    <span *ngIf="!emp.isDeactivated"
+                      class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                    </span>
+                    <span *ngIf="emp.isDeactivated" title="{{ emp.deactivationReason }}"
+                      class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                      <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Deactivated
+                    </span>
+                    <span *ngIf="!emp.isDeactivated && emp.availabilityStatus" class="text-[10px] font-bold uppercase text-slate-400">
+                      {{ emp.availabilityStatus }}
+                    </span>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-right">
+                  <div class="flex justify-end gap-2">
+                    <a [routerLink]="['/dashboard/employees', emp.employeeId]" class="p-2 text-slate-400 hover:text-brandPrimary hover:bg-blue-50 rounded-lg transition-colors" title="View Details">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </a>
+                    <button *ngIf="!emp.isDeactivated" (click)="openDeactivateModal(emp)"
+                      class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Deactivate">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
-              <tr *ngIf="!isLoadingEmployees() && filteredEmployees.length === 0">
-                <td colspan="3" class="py-12 text-center text-slate-400">
+              <tr *ngIf="!isLoadingEmployees() && totalActiveEmployees() === 0">
+                <td colspan="4" class="py-12 text-center text-slate-400">
                   <div class="flex flex-col items-center gap-2">
                     <svg class="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -137,6 +198,118 @@
               </svg>
             </button>
             <button (click)="nextActivePage()" [disabled]="activeEmployeesPage() * pageSize() >= totalActiveEmployees()"
+              class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deactivated Employees Tab -->
+    <section *ngIf="activeTab() === 'deactivated'" class="flex flex-col gap-6 animate-fade-in">
+      <div class="flex items-center justify-between bg-brandWhite p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div class="relative w-full max-w-md">
+          <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" [ngModel]="localSearchQuery()" (ngModelChange)="localSearchQuery.set($event)" placeholder="Filter deactivated employees by name or email..."
+            class="w-full pl-12 pr-4 py-3 bg-brandLight border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brandPrimary/20 focus:border-brandPrimary transition-all">
+        </div>
+      </div>
+
+      <div class="bg-brandWhite rounded-3xl p-1 shadow-sm border border-slate-100 relative min-h-[300px]">
+        <div *ngIf="isLoadingEmployees()"
+          class="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+          <svg class="animate-spin h-8 w-8 text-brandPrimary" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Employee</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 hidden lg:table-cell">Details</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let emp of paginatedDeactivatedEmployees()"
+                class="group border-b border-slate-50 last:border-0 hover:bg-brandLight/50 transition-colors">
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-4">
+                    <div class="from-slate-400 to-slate-500 opacity-60 w-10 h-10 rounded-full bg-gradient-to-tr flex items-center justify-center text-brandWhite font-bold shadow-sm">
+                      {{ emp.email ? emp.email[0].toUpperCase() : 'U' }}
+                    </div>
+                    <div>
+                      <a [routerLink]="['/dashboard/employees', emp.employeeId]" class="font-bold hover:underline text-slate-500">
+                        {{ emp.fullName || 'TaskPilot Member' }}
+                      </a>
+                      <div class="text-xs text-slate-400 mt-0.5 flex flex-col gap-0.5">
+                        <span class="truncate max-w-[200px]" title="{{ emp.email }}">{{ emp.email }}</span>
+                        <span class="text-red-500 font-semibold">{{ 'DEACTIVATION.DEACTIVATED' | translate }} {{ emp.deactivatedAt | date:'mediumDate' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 hidden lg:table-cell">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-slate-500">{{ emp.seniorityLevel || 'N/A' }}</span>
+                  </div>
+                </td>
+                <td class="py-4 px-6">
+                  <span title="{{ emp.deactivationReason }}" class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Deactivated
+                  </span>
+                </td>
+                <td class="py-4 px-6 text-right">
+                  <div class="flex justify-end gap-2">
+                    <a [routerLink]="['/dashboard/employees', emp.employeeId]" class="p-2 text-slate-400 hover:text-brandPrimary hover:bg-blue-50 rounded-lg transition-colors" title="View Details">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="!isLoadingEmployees() && totalDeactivatedEmployees() === 0">
+                <td colspan="4" class="py-12 text-center text-slate-400">
+                  <div class="flex flex-col items-center gap-2">
+                    <svg class="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <p>No deactivated employees found.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination for Deactivated Employees -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100"
+          *ngIf="totalDeactivatedEmployees() > 0">
+          <span class="text-sm text-slate-500">Showing page <span class="font-bold text-brandNavy">{{
+              deactivatedEmployeesPage() }}</span></span>
+          <div class="flex gap-2">
+            <button (click)="prevDeactivatedPage()" [disabled]="deactivatedEmployeesPage() === 1"
+              class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button (click)="nextDeactivatedPage()" [disabled]="deactivatedEmployeesPage() * pageSize() >= totalDeactivatedEmployees()"
               class="p-2 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-50 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -185,6 +358,7 @@
                 <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
                 <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Invited At</th>
                 <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Expires At</th>
+                <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -192,17 +366,37 @@
                 class="group border-b border-slate-50 last:border-0 hover:bg-brandLight/50 transition-colors">
                 <td class="py-4 px-6 font-semibold text-brandNavy">{{ inv.email }}</td>
                 <td class="py-4 px-6">
-                  <span *ngIf="inv.accepted"
+                  <span *ngIf="getInvitationStatus(inv) === 'accepted'"
                     class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Accepted
                   </span>
-                  <span *ngIf="!inv.accepted"
+                  <span *ngIf="getInvitationStatus(inv) === 'pending'"
                     class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                  </span>
+                  <span *ngIf="getInvitationStatus(inv) === 'expired'"
+                    class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Expired
                   </span>
                 </td>
                 <td class="py-4 px-6 text-sm text-slate-500">{{ inv.invitedAt | date:'mediumDate' }}</td>
                 <td class="py-4 px-6 text-sm text-slate-500">{{ inv.expiresAt | date:'mediumDate' }}</td>
+                <td class="py-4 px-6 text-right">
+                  <div class="flex justify-end gap-2" *ngIf="getInvitationStatus(inv) !== 'accepted'">
+                    <button (click)="resendInvitation(inv.id)"
+                      class="p-2 text-slate-400 hover:text-brandPrimary hover:bg-blue-50 rounded-lg transition-colors" title="Resend">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    <button (click)="deleteInvitation(inv.id)"
+                      class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
               </tr>
               <tr *ngIf="!isLoadingInvitations() && invitations().length === 0">
                 <td colspan="4" class="py-12 text-center text-slate-400">
@@ -241,7 +435,6 @@
       </div>
     </section>
 
-  </main>
 </div>
 
 <!-- Search & Invite System Users Modal -->
@@ -304,11 +497,11 @@
           <div class="flex items-center gap-3">
             <div
               class="w-10 h-10 rounded-full bg-gradient-to-tr from-brandPrimary to-brandAccent flex items-center justify-center text-white font-bold shadow-sm">
-              {{ user.firstNameEn ? user.firstNameEn[0] : user.email[0].toUpperCase() }}
+              {{ user.fullName ? user.fullName[0].toUpperCase() : user.email[0].toUpperCase() }}
             </div>
             <div>
               <div class="text-sm font-bold text-brandNavy flex items-center gap-2">
-                {{ user.firstNameEn || 'TaskPilot User' }} {{ user.lastNameEn }}
+                {{ user.fullName || 'TaskPilot User' }}
                 <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" title="Available"></span>
               </div>
               <div class="text-xs text-slate-500">{{ user.email }}</div>
@@ -326,14 +519,18 @@
       </ng-container>
 
       <!-- Email Fallback Option -->
-      <div *ngIf="systemSearchQuery().trim() && !isSearchingSystem()" class="mt-4 border-t border-slate-100 pt-4">
-        <div class="flex items-center justify-between p-4 bg-brandLight rounded-xl border border-blue-100">
+      <div *ngIf="systemSearchQuery().trim() && !isSearchingSystem()" class="mt-4 border-t border-slate-100 pt-4 flex flex-col gap-2">
+        <div class="flex items-center justify-between p-4 bg-brandLight rounded-xl border border-blue-100"
+             [class.border-red-200]="inviteEmailError() && systemSearchQuery() === inviteEmailFailedAddress()"
+             [class.bg-red-50/50]="inviteEmailError() && systemSearchQuery() === inviteEmailFailedAddress()">
           <div class="flex flex-col gap-0.5">
-            <span class="text-sm font-bold text-brandNavy">Invite via Email</span>
+            <span class="text-sm font-bold text-brandNavy" [class.text-red-700]="inviteEmailError() && systemSearchQuery() === inviteEmailFailedAddress()">Invite via Email</span>
             <span class="text-xs text-slate-500 break-all">{{ systemSearchQuery() }}</span>
           </div>
           <button (click)="inviteEmail(systemSearchQuery())" [disabled]="isInviting()"
-            class="px-5 py-2.5 rounded-xl font-bold bg-brandPrimary hover:bg-blue-700 text-brandWhite shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 text-sm disabled:opacity-50">
+            class="px-5 py-2.5 rounded-xl font-bold bg-brandPrimary hover:bg-blue-700 text-brandWhite shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 text-sm disabled:opacity-50"
+            [class.bg-red-600]="inviteEmailError() && systemSearchQuery() === inviteEmailFailedAddress()"
+            [class.hover:bg-red-700]="inviteEmailError() && systemSearchQuery() === inviteEmailFailedAddress()">
             <svg *ngIf="isInviting()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -344,8 +541,23 @@
             Send Invite
           </button>
         </div>
+        <p class="text-xs text-red-600 font-semibold px-2 animate-[fadeIn_0.18s_ease_both] flex items-center gap-1" *ngIf="inviteEmailError() && systemSearchQuery() === inviteEmailFailedAddress()">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          {{ inviteEmailError() }}
+        </p>
       </div>
 
     </div>
   </div>
 </div>
+
+<!-- Deactivation Modal -->
+<app-deactivation-dialog 
+  [isOpen]="isDeactivateModalOpen()" 
+  [employeeId]="selectedEmployeeId()!" 
+  [employeeName]="selectedEmployeeName()"
+  (closed)="closeDeactivateModal()" 
+  (deactivated)="onDeactivated()">
+</app-deactivation-dialog>

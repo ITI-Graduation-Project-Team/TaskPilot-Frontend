@@ -1,10 +1,17 @@
 export const environment = {
   production: false,
+<<<<<<< HEAD
   // apiUrl: 'https://taskpilotapi.runasp.net/api',
   //  apiUrl: 'https://127.0.0.1:9443/api',
   // apiUrl: 'https://taskpilotapi.runasp.net/api',
   hubUrl: 'https://taskpilotapi.runasp.net/hubs/notifications',
   apiUrl: 'https://127.0.0.1:9443/api',
+=======
+
+  apiUrl: 'https://taskpilotapi.runasp.net/api',
+  hubUrl: 'https://taskpilotapi.runasp.net/hubs/notifications',
+ //apiUrl: 'https://127.0.0.1:7185/api',
+>>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
   auth: {
     tokenKey: 'taskpilot_token',
     refreshTokenKey: 'taskpilot_refreshToken',

@@ -30,6 +30,7 @@ export class ProjectStateService {
   private _userId = signal<string | null>(null);
   private _loading = signal<boolean>(false);
   private _localCompletedIds = signal<string[]>([]);
+  private _projectEmployeeCount = signal<number>(0);
 
   readonly projects = this._projects.asReadonly();
   readonly selectedProjectId = this._selectedProjectId.asReadonly();
@@ -38,6 +39,7 @@ export class ProjectStateService {
   readonly companyName = this._companyName.asReadonly();
   readonly userId = this._userId.asReadonly();
   readonly loading = this._loading.asReadonly();
+  readonly projectEmployeeCount = this._projectEmployeeCount.asReadonly();
 
   readonly selectedProject = computed(() => {
     const id = this._selectedProjectId();
@@ -54,6 +56,20 @@ export class ProjectStateService {
     this.initializeState();
   }
 
+  private profilePromise: Promise<any> | null = null;
+
+  async getProfile(): Promise<any> {
+    if (!this.profilePromise) {
+      this.profilePromise = apiClient.get<any>('/employees/profile')
+        .then(res => res.data?.data || res.data)
+        .catch(err => {
+          this.profilePromise = null;
+          throw err;
+        });
+    }
+    return this.profilePromise;
+  }
+
   async initializeState() {
     this._loading.set(true);
     try {
@@ -64,8 +80,7 @@ export class ProjectStateService {
       const role = getRoleFromToken();
       const isPM = role === 'ProjectManager';
 
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const profile = data.data || data;
+      const profile = await this.getProfile();
       if (profile) {
         this._isProjectManager.set(isPM || !profile.isEmployee);
         const companyId = profile.companyId || profile.CompanyId || null;
@@ -87,63 +102,44 @@ export class ProjectStateService {
     try {
       const isPM = this._isProjectManager();
       const userId = this._userId();
+      const companyId = this._userCompanyId();
       if (!userId) return;
 
-      const { data } = await apiClient.get<any>('/Projects');
-      const allProjects: any[] = data.data || [];
+      // Fetch the list of projects for PM (company projects) or Employee
+      const endpoint = (isPM && companyId) 
+        ? `/Projects/company/${companyId}` 
+        : `/employees/${userId}/projects`;
+        
+      const { data } = await apiClient.get<any>(endpoint);
+      const projects: any[] = data.data || [];
+      
+      // Filter to ensure the PM only sees projects they actually manage
+      const accessibleProjects = isPM
+        ? projects.filter(p => p.managerId === userId)
+        : projects;
 
-      let filtered: ProjectInfo[] = [];
-
-      if (isPM) {
-        filtered = allProjects
-          .filter(p => p.managerId === userId)
-          .map(p => ({
-            id: p.id,
-            name: p.name || p.nameEn || '',
-            nameEn: p.nameEn || p.name || '',
-            nameAr: p.nameAr || p.name || '',
-            description: p.description || p.descriptionEn || '',
-            descriptionEn: p.descriptionEn || p.description || '',
-            descriptionAr: p.descriptionAr || p.description || '',
-            companyId: p.companyId,
-            managerId: p.managerId,
-            techStack: p.techStack || [],
-            platformTargets: p.platformTargets || [],
-            projectType: p.projectType || '',
-            status: p.status || 'Active'
-          }));
-      } else {
-        for (const p of allProjects) {
-          try {
-            const teamResponse = await apiClient.get<any>('/Projects/' + p.id + '/employees');
-            const employeesList = teamResponse.data?.data || [];
-            if (employeesList.some((e: any) => e.employeeId === userId)) {
-              filtered.push({
-                id: p.id,
-                name: p.name || p.nameEn || '',
-                nameEn: p.nameEn || p.name || '',
-                nameAr: p.nameAr || p.name || '',
-                description: p.description || p.descriptionEn || '',
-                descriptionEn: p.descriptionEn || p.description || '',
-                descriptionAr: p.descriptionAr || p.description || '',
-                companyId: p.companyId,
-                managerId: p.managerId,
-                techStack: p.techStack || [],
-                platformTargets: p.platformTargets || [],
-                projectType: p.projectType || '',
-                status: p.status || 'Active'
-              });
-            }
-          } catch (err) { }
-        }
-      }
+      const filtered: ProjectInfo[] = accessibleProjects.map(p => ({
+        id: p.id,
+        name: p.name || p.nameEn || '',
+        nameEn: p.nameEn || p.name || '',
+        nameAr: p.nameAr || p.name || '',
+        description: p.description || p.descriptionEn || '',
+        descriptionEn: p.descriptionEn || p.description || '',
+        descriptionAr: p.descriptionAr || p.description || '',
+        companyId: p.companyId,
+        managerId: p.managerId,
+        techStack: p.techStack || [],
+        platformTargets: p.platformTargets || [],
+        projectType: p.projectType || '',
+        status: p.status || 'Active'
+      }));
 
       this._projects.set(filtered);
 
       if (typeof localStorage !== 'undefined') {
         const savedId = localStorage.getItem('selectedProjectId');
         if (savedId && filtered.some(p => p.id === savedId)) {
-          this._selectedProjectId.set(savedId);
+          this.setSelectedProject(savedId);
           return;
         }
       }
@@ -151,20 +147,41 @@ export class ProjectStateService {
       if (filtered.length > 0) {
         this.setSelectedProject(filtered[0].id);
       } else {
-        this._selectedProjectId.set(null);
+        this.setSelectedProject(null);
       }
     } catch (e) {
       console.error('Failed to load projects in state service:', e);
     }
   }
 
-  setSelectedProject(projectId: string | null) {
+  setSelectedProject(projectId: string | null, force: boolean = false) {
+    if (!force && this._selectedProjectId() === projectId) {
+      return;
+    }
     this._selectedProjectId.set(projectId);
     if (projectId) {
       localStorage.setItem('selectedProjectId', projectId);
     } else {
       localStorage.removeItem('selectedProjectId');
+      this._projectEmployeeCount.set(0);
     }
+  }
+
+  async loadProjectEmployeeCount(projectId: string): Promise<number> {
+    try {
+      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees`);
+      const list = data.data || data || [];
+      const count = Array.isArray(list) ? list.length : 0;
+      this._projectEmployeeCount.set(count);
+      return count;
+    } catch (e) {
+      console.warn('Failed to load project employee count:', e);
+      return this._projectEmployeeCount();
+    }
+  }
+
+  setProjectEmployeeCount(count: number): void {
+    this._projectEmployeeCount.set(count);
   }
 
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
@@ -175,6 +192,8 @@ export class ProjectStateService {
     const descAr = descriptionAr || descriptionEn;
     try {
       this._loading.set(true);
+      const existingIds = this._projects().map(p => p.id);
+      
       await apiClient.post('/Projects', {
         nameEn,
         nameAr,
@@ -184,6 +203,11 @@ export class ProjectStateService {
         companyId: companyId
       });
       await this.loadProjects();
+
+      const newProject = this._projects().find(p => !existingIds.includes(p.id));
+      if (newProject) {
+        this.setSelectedProject(newProject.id);
+      }
       return true;
     } catch (e) {
       console.error('Failed to create project:', e);

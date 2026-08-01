@@ -1,7 +1,7 @@
-<section class="relative min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 overflow-hidden font-dashboard text-text-secondary">
+<section class="relative min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 overflow-hidden font-dashboard text-text-secondary" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
   
   <!-- Language Toggle -->
-  <div class="absolute top-6 right-6 z-50" [class.right-6]="currentLang() === 'en'" [class.left-6]="currentLang() === 'ar'">
+  <div class="absolute top-6 z-50 transition-all duration-300" [class.right-6]="currentLang() === 'en'" [class.left-6]="currentLang() === 'ar'">
     <button (click)="toggleLanguage()"
             class="flex items-center gap-2 px-3.5 py-1.5 bg-surface text-text-primary rounded-full border border-border shadow-sm hover:bg-background transition-all font-bold uppercase text-xs">
       <span>{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
@@ -91,10 +91,10 @@
           <label class="block text-[11px] font-extrabold text-text-secondary mb-1.5 uppercase tracking-wider">{{ 'PROFILE.SENIORITY_LEVEL' | translate }}</label>
           <select [ngModel]="seniorityLevel()" (ngModelChange)="seniorityLevel.set($event)"
                   class="w-full bg-transparent text-text-primary font-semibold outline-none border-none focus:ring-0 focus:outline-none cursor-pointer text-sm">
-            <option value="Junior" class="bg-surface text-text-primary">Junior</option>
-            <option value="MidLevel" class="bg-surface text-text-primary">Mid Level</option>
-            <option value="Senior" class="bg-surface text-text-primary">Senior</option>
-            <option value="Lead" class="bg-surface text-text-primary">Lead</option>
+            <option value="Junior" class="bg-surface text-text-primary">{{ 'PROFILE.LEVELS.JUNIOR' | translate }}</option>
+            <option value="MidLevel" class="bg-surface text-text-primary">{{ 'PROFILE.LEVELS.MID' | translate }}</option>
+            <option value="Senior" class="bg-surface text-text-primary">{{ 'PROFILE.LEVELS.SENIOR' | translate }}</option>
+            <option value="Lead" class="bg-surface text-text-primary">{{ 'PROFILE.LEVELS.LEAD' | translate }}</option>
           </select>
         </div>
         <div class="p-4 bg-background border border-border rounded-xl">
