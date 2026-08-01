@@ -204,28 +204,8 @@ export class CreateProjectComponent {
       return;
     }
 
-    if (!draft.techStack) draft.techStack = 'Not Specified';
-    if (!draft.platformTargets) draft.platformTargets = 'Web';
-    if (!draft.projectType) draft.projectType = 'Custom';
-
     try {
-      const payload: any = {
-        nameEn: draft.nameEn,
-        nameAr: draft.nameAr,
-        descriptionEn: draft.descriptionEn,
-        descriptionAr: draft.descriptionAr,
-        techStack: draft.techStack.split(',').map((s: string) => s.trim()),
-        platformTargets: draft.platformTargets.split(',').map((s: string) => s.trim()),
-        projectType: draft.projectType,
-        companyId: this.projectState.userCompanyId(),
-        managerId: this.projectState.userId(),
-        requirementsSnapshot: this.chatId(),
-        milestones: draft.milestones
-      };
-
       const existingIds = this.projectState.projects().map(p => p.id);
-
-      await this.aiRequirements.confirmProject(payload);
 
       await this.projectState.loadProjects();
 
