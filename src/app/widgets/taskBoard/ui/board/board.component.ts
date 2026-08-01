@@ -224,14 +224,14 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
               </button>
               <button (click)="startSprint()" 
-                      [disabled]="projectState.projectEmployeeCount() === 0"
-                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
+                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
                       class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
             }
             @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
-              <button (click)="completeSprintFromBoard()" 
+              <button (click)="completeSprintBtnClicked()" 
                       class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 {{ 'BOARD.COMPLETE_SPRINT' | translate }}
               </button>
@@ -914,6 +914,93 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
       </div>
     }
 
+    <!-- ─── COMPLETE SPRINT MODAL ─── -->
+    @if (showCompleteSprintModal()) {
+      <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+          <!-- Header -->
+          <div class="px-6 py-5 border-b border-border bg-sidebar/50 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-text-primary tracking-wide">{{ currentLang === 'ar' ? 'إنهاء السبرنت' : 'Complete Sprint' }}</h2>
+                <p class="text-[11px] text-text-secondary uppercase tracking-wider font-semibold">{{ currentLang === 'ar' ? 'تأكيد المهام المتبقية' : 'Confirm remaining tasks' }}</p>
+              </div>
+            </div>
+            <button (click)="showCompleteSprintModal.set(false)" class="p-2 text-text-secondary hover:text-text-primary hover:bg-background rounded-xl transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <div class="p-6 space-y-6 overflow-y-auto">
+            <!-- Unfinished Tasks Info -->
+            <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4">
+              <h3 class="text-sm font-bold text-amber-600 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {{ currentLang === 'ar' ? 'مهام سيتم نقلها للباك لوج' : 'Tasks moving to Backlog' }}
+              </h3>
+              <ul class="text-xs text-text-secondary space-y-1.5 list-disc list-inside marker:text-amber-500/50">
+                @if (todo().length > 0) {
+                  <li><strong class="text-text-primary">{{ todo().length }}</strong> {{ currentLang === 'ar' ? 'مهام (ToDo) ستعود للباك لوج' : 'tasks (ToDo) will move to Backlog' }}</li>
+                }
+                @if (inProgress().length > 0) {
+                  <li><strong class="text-text-primary">{{ inProgress().length }}</strong> {{ currentLang === 'ar' ? 'مهام (In Progress) ستعود للباك لوج (سيتم إزالة تعيينها)' : 'tasks (In Progress) will move to Backlog (assignments cleared)' }}</li>
+                }
+                @if (todo().length === 0 && inProgress().length === 0) {
+                  <li>{{ currentLang === 'ar' ? 'لا يوجد مهام غير مكتملة' : 'No unfinished tasks' }}</li>
+                }
+              </ul>
+            </div>
+
+            <!-- Review Action Required -->
+            @if (review().length > 0) {
+              <div class="space-y-4">
+                <div>
+                  <h3 class="text-sm font-bold text-text-primary">{{ currentLang === 'ar' ? 'مهام تحتاج قرارك (المراجعة)' : 'Tasks in Review - Action Required' }}</h3>
+                  <p class="text-xs text-text-secondary mt-1">{{ review().length }} {{ currentLang === 'ar' ? 'مهام بانتظار قرارك كمراجع. ماذا تود أن تفعل بها؟' : 'tasks are waiting for your review. What would you like to do with them?' }}</p>
+                </div>
+                
+                <div class="grid sm:grid-cols-2 gap-3">
+                  <!-- Accept All -->
+                  <button (click)="completeSprintFromBoard('AcceptAll')" class="group p-4 rounded-2xl border-2 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition-all active:scale-[0.98]">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div class="font-bold text-emerald-700 text-sm mb-1">{{ currentLang === 'ar' ? 'قبول الجميع' : 'Accept All' }}</div>
+                    <div class="text-[11px] text-emerald-600/80">{{ currentLang === 'ar' ? 'تحويل لـ Done' : 'Mark as Done' }}</div>
+                  </button>
+
+                  <!-- Reject All -->
+                  <button (click)="completeSprintFromBoard('SendToBacklog')" class="group p-4 rounded-2xl border-2 border-error/20 bg-error/5 hover:border-error/40 hover:bg-error/10 text-left transition-all active:scale-[0.98]">
+                    <div class="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                    </div>
+                    <div class="font-bold text-error text-sm mb-1">{{ currentLang === 'ar' ? 'رفض الجميع' : 'Reject All' }}</div>
+                    <div class="text-[11px] text-error/80">{{ currentLang === 'ar' ? 'إرسال للباك لوج' : 'Send to Backlog' }}</div>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="p-6 border-t border-border flex items-center justify-end gap-3 bg-surface shrink-0">
+            <button (click)="showCompleteSprintModal.set(false)" class="px-5 py-2.5 text-text-secondary hover:text-text-primary text-sm font-bold transition-colors">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            @if (review().length === 0) {
+              <button (click)="completeSprintFromBoard()" class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-md transition-all hover:-translate-y-px">
+                {{ currentLang === 'ar' ? 'إنهاء السبرنت' : 'Complete Sprint' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- ─── NO EMPLOYEES REQUIRED MODAL ─── -->
     @if (showNoEmployeesModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
@@ -958,6 +1045,7 @@ export class BoardComponent implements OnInit, OnChanges {
   @ViewChild(TaskDiscussionComponent) discussionComponent!: TaskDiscussionComponent;
 
   showNoEmployeesModal = signal(false);
+  showCompleteSprintModal = signal(false);
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -1207,18 +1295,25 @@ export class BoardComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (this.hasUnassignedTasks()) {
+      this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.', 'error');
+      return;
+    }
+
     try {
       await this.sprintService.startSprint(projectId, sprintId);
-      this.toastService.show('Sprint started successfully', 'success');
+      this.toastService.show(this.currentLang === 'ar' ? 'تم بدء السبرنت بنجاح' : 'Sprint started successfully', 'success');
       this.sprintStatusChanged.emit();
     } catch (e: any) {
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      const errorCode = e?.response?.data?.errors?.[0]?.code || e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
       if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
         this.showNoEmployeesModal.set(true);
+      } else if (errorCode === 'SPRINT_UNASSIGNED_TASKS_EXIST') {
+        this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين.' : 'Cannot start sprint. Make sure all tasks are assigned to employees.', 'error');
       } else if (errorCode === 'ANOTHER_SPRINT_ALREADY_ACTIVE') {
-        this.toastService.show('Cannot start: Another sprint is already active in this project.', 'error');
+        this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن البدء: يوجد سبرنت نشط بالفعل في هذا المشروع.' : 'Cannot start: Another sprint is already active in this project.', 'error');
       } else {
-        this.toastService.show(e?.response?.data?.message || 'Failed to start sprint', 'error');
+        this.toastService.show(e?.response?.data?.message || (this.currentLang === 'ar' ? 'فشل بدء السبرنت' : 'Failed to start sprint'), 'error');
       }
     }
   }
@@ -1396,14 +1491,10 @@ export class BoardComponent implements OnInit, OnChanges {
 
     try {
       if (sprintId && this.activeProjectId) {
-        const { data } = await apiClient.get<any>(`/projects/${this.activeProjectId}/sprints/${sprintId}/assignment/validate`);
-        const valData = data?.data ?? data;
-        if (typeof valData === 'boolean') {
-          this.hasUnassignedTasks.set(!valData);
-        } else if (valData && typeof valData.isValid === 'boolean') {
-          this.hasUnassignedTasks.set(!valData.isValid);
-        } else if (valData && typeof valData.isAllAssigned === 'boolean') {
-          this.hasUnassignedTasks.set(!valData.isAllAssigned);
+        const snapRes = await this.sprintService.getAssignmentSnapshot(this.activeProjectId, sprintId);
+        const snapData = snapRes?.data ?? snapRes;
+        if (snapData && snapData.unassignedTasks) {
+          this.hasUnassignedTasks.set(snapData.unassignedTasks.length > 0);
         } else {
           this.hasUnassignedTasks.set(unassignedExist);
         }
@@ -1658,19 +1749,35 @@ export class BoardComponent implements OnInit, OnChanges {
     }
   }
 
-  async completeSprintFromBoard(): Promise<void> {
+  async completeSprintBtnClicked(): Promise<void> {
+    if (this.todo().length > 0 || this.inProgress().length > 0 || this.review().length > 0) {
+      this.showCompleteSprintModal.set(true);
+    } else {
+      await this.completeSprintFromBoard();
+    }
+  }
+
+  async completeSprintFromBoard(reviewAction?: 'AcceptAll' | 'SendToBacklog'): Promise<void> {
     const projectId = this.projectState.selectedProjectId();
     const sprintId = this.activeSprintId();
     if (!projectId || !sprintId) return;
 
     try {
-      await this.sprintService.completeSprint(projectId, sprintId);
-      this.toastService.show('Sprint completed successfully', 'success');
+      await this.sprintService.completeSprint(projectId, sprintId, reviewAction);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم إنهاء السبرنت بنجاح' : 'Sprint completed successfully', 'success');
+      this.showCompleteSprintModal.set(false);
       this.sprintStatusChanged.emit();
-    } catch {
-      this.toastService.show('Failed to complete sprint', 'error');
+    } catch (e: any) {
+      const errorCode = e?.response?.data?.errors?.[0]?.code || e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'SPRINT_HAS_UNFINISHED_TASKS') {
+        this.showCompleteSprintModal.set(true);
+      } else {
+        this.toastService.show(this.currentLang === 'ar' ? 'فشل إنهاء السبرنت' : 'Failed to complete sprint', 'error');
+      }
     }
   }
+
+
 
   goToTeam(): void {
     this.router.navigate(['/dashboard', 'team']);
