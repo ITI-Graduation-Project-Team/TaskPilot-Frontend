@@ -121,7 +121,6 @@ const EMPTY_TASK: TaskFormModel = {
               @if ((backlog()?.userStories?.length || 0) > 0) {
               }
               <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">{{ 'BACKLOG.EDIT_BACKLOG' | translate }}</button>
-              <button type="button" (click)="openStoryModal()" class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">{{ 'BACKLOG.ADD_USER_STORY' | translate }}</button>
             }
           </div>
         </header>
@@ -401,7 +400,7 @@ const EMPTY_TASK: TaskFormModel = {
     }
 
     @if (isSprintPlanningModalOpen()) {
-      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)" (navigateToTeam)="navigateToTeam.emit()"></app-sprint-planning-modal>
+      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
     }
 
     @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {

@@ -35,7 +35,7 @@ function shouldShowLoader(url: string | undefined): boolean {
   if (!url) return false;
   const lowerUrl = url.toLowerCase();
   // Skip loader for auth endpoints and AI requirements chat/streaming/status endpoints
-  if (lowerUrl.includes('/auth/') || lowerUrl.includes('/requirements/')) {
+  if (lowerUrl.includes('/auth/') || lowerUrl.includes('/requirements')) {
     return false;
   }
   return true;

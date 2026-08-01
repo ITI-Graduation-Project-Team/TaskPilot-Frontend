@@ -101,7 +101,7 @@ export class CompleteProfileComponent {
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (ext !== 'pdf' && ext !== 'docx') {
       this.uploadState.set('error');
-      this.errorMessage.set('Invalid file type. Please upload a .pdf or .docx file.');
+      this.errorMessage.set(this.translate.instant('PROFILE.UPLOAD_ERROR_EXT') || 'Invalid file type. Please upload a .pdf or .docx file.');
       return;
     }
 

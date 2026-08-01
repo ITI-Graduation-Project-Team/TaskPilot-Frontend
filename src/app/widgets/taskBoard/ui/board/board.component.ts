@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
@@ -221,17 +221,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               <button (click)="goToAssignment()" 
                       class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                👥 {{ hasAssignments() ? ('BOARD.ASSIGNED_TASKS' | translate) : ('BOARD.ASSIGN_TASKS' | translate) }}
+                👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
               </button>
               <button (click)="startSprint()" 
-                      [disabled]="projectState.projectEmployeeCount() === 0"
-                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
+                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
                       class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
             }
             @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
-              <button (click)="completeSprintFromBoard()" 
+              <button (click)="completeSprintBtnClicked()" 
                       class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 {{ 'BOARD.COMPLETE_SPRINT' | translate }}
               </button>
@@ -801,22 +801,65 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
                 <!-- Buttons inside left column if it's editing -->
                 @if (isEditing()) {
-                  <div class="flex items-center space-x-3 pt-6 border-t border-border mt-6">
-                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
-                      <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
-                        {{ currentLang === 'ar' ? 'حذف المهمة' : 'Delete Task' }}
-                      </button>
-                    }
-                    <div class="flex-1"></div>
-                    <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
-                      {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-                    </button>
-                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
-                      <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                        {{ currentLang === 'ar' ? 'حفظ التغييرات' : 'Save Changes' }}
-                      </button>
-                    }
-                  </div>
+                  @if (!inlineAction()) {
+                    <div class="pt-6 border-t border-border mt-6">
+                      <!-- PM Actions for Review and Done columns -->
+                      @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                        @if (originalColumn === 'review') {
+                          <div class="flex items-center gap-3 w-full pb-5 mb-5 border-b border-border border-dashed">
+                            <button (click)="pmAcceptReview(modalTask()); closeModal()" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all hover:-translate-y-px">
+                              {{ currentLang === 'ar' ? 'قبول (مكتملة)' : 'Accept (Done)' }}
+                            </button>
+                            <button (click)="inlineAction.set('reject')" class="flex-1 py-3 bg-error hover:bg-error/90 text-white text-sm font-bold rounded-xl shadow-md shadow-error/20 transition-all hover:-translate-y-px">
+                              {{ currentLang === 'ar' ? 'رفض (قيد التنفيذ)' : 'Reject (In Progress)' }}
+                            </button>
+                          </div>
+                        } @else if (originalColumn === 'done') {
+                          <div class="flex items-center gap-3 w-full pb-5 mb-5 border-b border-border border-dashed">
+                            <button (click)="inlineAction.set('reopen')" class="w-full py-3 bg-warning hover:bg-warning/90 text-white text-sm font-bold rounded-xl shadow-md shadow-warning/20 transition-all hover:-translate-y-px">
+                              {{ currentLang === 'ar' ? 'إعادة فتح (قيد التنفيذ)' : 'Reopen (In Progress)' }}
+                            </button>
+                          </div>
+                        }
+                      }
+                      
+                      <div class="flex items-center space-x-3">
+                        @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                          <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
+                            {{ currentLang === 'ar' ? 'حذف المهمة' : 'Delete Task' }}
+                          </button>
+                        }
+                        <div class="flex-1"></div>
+                        <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
+                          {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+                        </button>
+                        @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                          <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
+                            {{ currentLang === 'ar' ? 'حفظ التغييرات' : 'Save Changes' }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="flex flex-col gap-4 p-5 rounded-xl border border-border bg-surface mt-6 animate-[fadeIn_0.2s_ease_both]">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-text-primary text-sm">{{ inlineAction() === 'reject' ? (currentLang === 'ar' ? 'رفض المهمة' : 'Reject Task') : (currentLang === 'ar' ? 'إعادة فتح المهمة' : 'Reopen Task') }}</h4>
+                        <button (click)="inlineAction.set(null)" class="text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-background transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                      <div class="space-y-3">
+                        <textarea [(ngModel)]="inlineReasonEn" rows="2" placeholder="{{ currentLang === 'ar' ? 'السبب (بالإنجليزية)' : 'Reason (English)' }}" class="w-full px-4 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm resize-none"></textarea>
+                        <textarea [(ngModel)]="inlineReasonAr" rows="2" dir="rtl" placeholder="{{ currentLang === 'ar' ? 'السبب (بالعربية)' : 'Reason (Arabic)' }}" class="w-full px-4 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm resize-none"></textarea>
+                      </div>
+                      <div class="flex justify-end gap-3 mt-1">
+                        <button (click)="inlineAction.set(null)" class="px-5 py-2.5 text-sm text-text-secondary font-bold hover:text-text-primary transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
+                        <button (click)="confirmInlineAction()" [disabled]="!inlineReasonEn && !inlineReasonAr" class="px-6 py-2.5 text-sm text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0" [ngClass]="inlineAction() === 'reject' ? 'bg-error hover:bg-error/90 shadow-error/20' : 'bg-warning hover:bg-warning/90 shadow-warning/20'">
+                          {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
+                        </button>
+                      </div>
+                    </div>
+                  }
                 }
               </div>
 
@@ -871,6 +914,93 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
       </div>
     }
 
+    <!-- ─── COMPLETE SPRINT MODAL ─── -->
+    @if (showCompleteSprintModal()) {
+      <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+          <!-- Header -->
+          <div class="px-6 py-5 border-b border-border bg-sidebar/50 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-text-primary tracking-wide">{{ currentLang === 'ar' ? 'إنهاء السبرنت' : 'Complete Sprint' }}</h2>
+                <p class="text-[11px] text-text-secondary uppercase tracking-wider font-semibold">{{ currentLang === 'ar' ? 'تأكيد المهام المتبقية' : 'Confirm remaining tasks' }}</p>
+              </div>
+            </div>
+            <button (click)="showCompleteSprintModal.set(false)" class="p-2 text-text-secondary hover:text-text-primary hover:bg-background rounded-xl transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <div class="p-6 space-y-6 overflow-y-auto">
+            <!-- Unfinished Tasks Info -->
+            <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4">
+              <h3 class="text-sm font-bold text-amber-600 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {{ currentLang === 'ar' ? 'مهام سيتم نقلها للباك لوج' : 'Tasks moving to Backlog' }}
+              </h3>
+              <ul class="text-xs text-text-secondary space-y-1.5 list-disc list-inside marker:text-amber-500/50">
+                @if (todo().length > 0) {
+                  <li><strong class="text-text-primary">{{ todo().length }}</strong> {{ currentLang === 'ar' ? 'مهام (ToDo) ستعود للباك لوج' : 'tasks (ToDo) will move to Backlog' }}</li>
+                }
+                @if (inProgress().length > 0) {
+                  <li><strong class="text-text-primary">{{ inProgress().length }}</strong> {{ currentLang === 'ar' ? 'مهام (In Progress) ستعود للباك لوج (سيتم إزالة تعيينها)' : 'tasks (In Progress) will move to Backlog (assignments cleared)' }}</li>
+                }
+                @if (todo().length === 0 && inProgress().length === 0) {
+                  <li>{{ currentLang === 'ar' ? 'لا يوجد مهام غير مكتملة' : 'No unfinished tasks' }}</li>
+                }
+              </ul>
+            </div>
+
+            <!-- Review Action Required -->
+            @if (review().length > 0) {
+              <div class="space-y-4">
+                <div>
+                  <h3 class="text-sm font-bold text-text-primary">{{ currentLang === 'ar' ? 'مهام تحتاج قرارك (المراجعة)' : 'Tasks in Review - Action Required' }}</h3>
+                  <p class="text-xs text-text-secondary mt-1">{{ review().length }} {{ currentLang === 'ar' ? 'مهام بانتظار قرارك كمراجع. ماذا تود أن تفعل بها؟' : 'tasks are waiting for your review. What would you like to do with them?' }}</p>
+                </div>
+                
+                <div class="grid sm:grid-cols-2 gap-3">
+                  <!-- Accept All -->
+                  <button (click)="completeSprintFromBoard('AcceptAll')" class="group p-4 rounded-2xl border-2 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition-all active:scale-[0.98]">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div class="font-bold text-emerald-700 text-sm mb-1">{{ currentLang === 'ar' ? 'قبول الجميع' : 'Accept All' }}</div>
+                    <div class="text-[11px] text-emerald-600/80">{{ currentLang === 'ar' ? 'تحويل لـ Done' : 'Mark as Done' }}</div>
+                  </button>
+
+                  <!-- Reject All -->
+                  <button (click)="completeSprintFromBoard('SendToBacklog')" class="group p-4 rounded-2xl border-2 border-error/20 bg-error/5 hover:border-error/40 hover:bg-error/10 text-left transition-all active:scale-[0.98]">
+                    <div class="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                    </div>
+                    <div class="font-bold text-error text-sm mb-1">{{ currentLang === 'ar' ? 'رفض الجميع' : 'Reject All' }}</div>
+                    <div class="text-[11px] text-error/80">{{ currentLang === 'ar' ? 'إرسال للباك لوج' : 'Send to Backlog' }}</div>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="p-6 border-t border-border flex items-center justify-end gap-3 bg-surface shrink-0">
+            <button (click)="showCompleteSprintModal.set(false)" class="px-5 py-2.5 text-text-secondary hover:text-text-primary text-sm font-bold transition-colors">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            @if (review().length === 0) {
+              <button (click)="completeSprintFromBoard()" class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-md transition-all hover:-translate-y-px">
+                {{ currentLang === 'ar' ? 'إنهاء السبرنت' : 'Complete Sprint' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- ─── NO EMPLOYEES REQUIRED MODAL ─── -->
     @if (showNoEmployeesModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
@@ -893,7 +1023,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
             </button>
             <button
-              (click)="showNoEmployeesModal.set(false); navigateToTeam.emit()"
+              (click)="showNoEmployeesModal.set(false); goToTeam()"
               class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -911,9 +1041,11 @@ export class BoardComponent implements OnInit, OnChanges {
   @Input() overrideSprintStatus: string | null = null;
   @Output() backToSprints = new EventEmitter<void>();
   @Output() sprintStatusChanged = new EventEmitter<void>();
-  @Output() navigateToTeam = new EventEmitter<void>();
+
+  @ViewChild(TaskDiscussionComponent) discussionComponent!: TaskDiscussionComponent;
 
   showNoEmployeesModal = signal(false);
+  showCompleteSprintModal = signal(false);
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -979,6 +1111,70 @@ export class BoardComponent implements OnInit, OnChanges {
   inProgress = signal<Task[]>([]);
   review = signal<Task[]>([]);
   done = signal<Task[]>([]);
+
+  // PM Action Modals State
+  inlineAction = signal<'reject' | 'reopen' | null>(null);
+  inlineReasonEn = '';
+  inlineReasonAr = '';
+
+  async pmAcceptReview(task: Task) {
+    if (!this.projectState.isProjectManager() || this.isBoardReadonly()) return;
+    try {
+      await this.tasksService.updateTaskStatus(task.id, TaskItemStatus.Done);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم قبول المهمة وانتقلت للإنجاز' : 'Task accepted and marked Done', 'success');
+      await this.loadWorkspaceData();
+    } catch (err: any) {
+      this.toastService.show(err.response?.data?.message || 'Failed to accept task', 'error');
+    }
+  }
+
+  async confirmInlineAction() {
+    const action = this.inlineAction();
+    const task = this.modalTask();
+    if (!task || !action || (!this.inlineReasonEn && !this.inlineReasonAr)) return;
+    try {
+      if (action === 'reject') {
+        await this.tasksService.pmRejectReview(task.id, this.inlineReasonEn, this.inlineReasonAr);
+        this.toastService.show(this.currentLang === 'ar' ? 'تم رفض المهمة بنجاح' : 'Task successfully rejected', 'success');
+      } else {
+        await this.tasksService.pmReopenTask(task.id, this.inlineReasonEn, this.inlineReasonAr);
+        this.toastService.show(this.currentLang === 'ar' ? 'تم إعادة فتح المهمة' : 'Task successfully reopened', 'success');
+      }
+
+      // Auto-post the reason as a comment so developers can see it in chat
+      const actionTitleEn = action === 'reject' ? 'Task Status Update: Returned to In Progress ' : 'Task Status Update: Reopened ';
+      const actionTitleAr = action === 'reject' ? 'تحديث حالة المهمة: إعادة المهمة للتنفيذ ' : 'تحديث لحالة المهمة : تمت إعادة الفتح ';
+      
+      const reasonLabelEn = 'Manager\'s Feedback:';
+      const reasonLabelAr = 'ملاحظة مدير المشروع:';
+      
+      const actionTitle = this.currentLang === 'ar' ? actionTitleAr : actionTitleEn;
+      const reasonLabel = this.currentLang === 'ar' ? reasonLabelAr : reasonLabelEn;
+      
+      const reasonText = [this.inlineReasonEn, this.inlineReasonAr].filter(r => !!r).join('\n');
+      const commentContent = `${actionTitle}\n\n${reasonLabel}\n"${reasonText}"`;
+      
+      await this.tasksService.addComment(task.id, commentContent);
+
+      this.inlineAction.set(null);
+      this.inlineReasonEn = '';
+      this.inlineReasonAr = '';
+      
+      // Update local modal state so the UI reflects the new "InProgress" status 
+      // and hides the Review/Done PM action buttons immediately without closing the modal
+      this.originalColumn = 'inProgress';
+      this.modalTask.set({ ...task });
+
+      if (this.discussionComponent) {
+        this.discussionComponent.loadData();
+      }
+
+      // Refresh background data quietly
+      await this.loadWorkspaceData();
+    } catch (err: any) {
+      this.toastService.show(err.response?.data?.message || `Failed to ${action} task`, 'error');
+    }
+  }
 
   totalTasksCount = computed(() => {
     return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
@@ -1050,7 +1246,8 @@ export class BoardComponent implements OnInit, OnChanges {
   });
 
   hasAssignments = signal(false);
-  private originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
+  hasUnassignedTasks = signal(false);
+  originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
 
   constructor() {
     // Automatically trigger reload when the active selected project changes
@@ -1098,18 +1295,25 @@ export class BoardComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (this.hasUnassignedTasks()) {
+      this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.', 'error');
+      return;
+    }
+
     try {
       await this.sprintService.startSprint(projectId, sprintId);
-      this.toastService.show('Sprint started successfully', 'success');
+      this.toastService.show(this.currentLang === 'ar' ? 'تم بدء السبرنت بنجاح' : 'Sprint started successfully', 'success');
       this.sprintStatusChanged.emit();
     } catch (e: any) {
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      const errorCode = e?.response?.data?.errors?.[0]?.code || e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
       if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
         this.showNoEmployeesModal.set(true);
+      } else if (errorCode === 'SPRINT_UNASSIGNED_TASKS_EXIST') {
+        this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين.' : 'Cannot start sprint. Make sure all tasks are assigned to employees.', 'error');
       } else if (errorCode === 'ANOTHER_SPRINT_ALREADY_ACTIVE') {
-        this.toastService.show('Cannot start: Another sprint is already active in this project.', 'error');
+        this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن البدء: يوجد سبرنت نشط بالفعل في هذا المشروع.' : 'Cannot start: Another sprint is already active in this project.', 'error');
       } else {
-        this.toastService.show(e?.response?.data?.message || 'Failed to start sprint', 'error');
+        this.toastService.show(e?.response?.data?.message || (this.currentLang === 'ar' ? 'فشل بدء السبرنت' : 'Failed to start sprint'), 'error');
       }
     }
   }
@@ -1127,6 +1331,9 @@ export class BoardComponent implements OnInit, OnChanges {
 
     this.isAssignedToProject.set(true);
     this.activeProjectId = projectId;
+
+    // Lazy-load employee count only when the board is actually open
+    this.projectState.loadProjectEmployeeCount(projectId);
 
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
@@ -1269,7 +1476,34 @@ export class BoardComponent implements OnInit, OnChanges {
     this.inProgress.set(inProgressList);
     this.review.set(reviewList);
     this.done.set(doneList);
-    this.hasAssignments.set(tasks.some((t: any) => !!(t.employeeId || t.assignedTo || t.assigneeId)));
+    const isTaskAssigned = (t: any): boolean => {
+      if (t.isAssigned === true) return true;
+      if (t.isAssigned === false) return false;
+      const val = t.employeeId || t.assignedTo || t.assigneeId || t.assignedEmployeeId ||
+                  t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
+                  t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
+                  t.assignedToName || t.assignedEmployeeName;
+      return val !== undefined && val !== null && val !== '';
+    };
+
+    this.hasAssignments.set(tasks.some((t: any) => isTaskAssigned(t)));
+    const unassignedExist = tasks.length > 0 && tasks.some((t: any) => !isTaskAssigned(t));
+
+    try {
+      if (sprintId && this.activeProjectId) {
+        const snapRes = await this.sprintService.getAssignmentSnapshot(this.activeProjectId, sprintId);
+        const snapData = snapRes?.data ?? snapRes;
+        if (snapData && snapData.unassignedTasks) {
+          this.hasUnassignedTasks.set(snapData.unassignedTasks.length > 0);
+        } else {
+          this.hasUnassignedTasks.set(unassignedExist);
+        }
+      } else {
+        this.hasUnassignedTasks.set(unassignedExist);
+      }
+    } catch (e) {
+      this.hasUnassignedTasks.set(unassignedExist);
+    }
   }
 
   private filterTasks(tasks: Task[]): Task[] {
@@ -1334,9 +1568,43 @@ export class BoardComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (this.sprintStatus() !== 'Active') {
+      this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن تحريك المهام إلا إذا كان السبرينت نشطاً' : 'Tasks can only be moved when the sprint is Active.', 'error');
+      return;
+    }
+
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
+      const task = event.previousContainer.data[event.previousIndex];
+      const sourceColumnId = event.previousContainer.id;
+      const targetColumnId = event.container.id;
+
+      let oldStatus = 'todo';
+      if (sourceColumnId === 'in-progress-list') oldStatus = 'inProgress';
+      else if (sourceColumnId === 'review-list') oldStatus = 'review';
+      else if (sourceColumnId === 'done-list') oldStatus = 'done';
+
+      let newStatus = 'todo';
+      if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
+      else if (targetColumnId === 'review-list') newStatus = 'review';
+      else if (targetColumnId === 'done-list') newStatus = 'done';
+
+      // PM Drag & Drop Logic
+      if (this.projectState.isProjectManager()) {
+        if (oldStatus === 'review' && newStatus === 'done') {
+          await this.pmAcceptReview(task);
+        } else if (oldStatus === 'review' && newStatus === 'inProgress') {
+          this.openEditModal(task, 'reject');
+        } else if (oldStatus === 'done' && newStatus === 'inProgress') {
+          this.openEditModal(task, 'reopen');
+        } else {
+          this.toastService.show(this.currentLang === 'ar' ? 'غير مسموح بهذا الإجراء' : 'This transition is not allowed for Project Managers.', 'error');
+        }
+        return; // Don't transfer item manually; reloading or modal will handle it.
+      }
+
+      // Developer Drag & Drop Logic
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
@@ -1344,34 +1612,10 @@ export class BoardComponent implements OnInit, OnChanges {
         event.currentIndex
       );
 
-      const task = event.container.data[event.currentIndex];
-      const targetColumnId = event.container.id;
-
-      let newStatus = 'todo';
-      if (targetColumnId === 'in-progress-list') newStatus = 'inProgress';
-      else if (targetColumnId === 'review-list') newStatus = 'review';
-      else if (targetColumnId === 'done-list') newStatus = 'done';
-
       try {
-        if (this.projectState.isProjectManager()) {
-          await this.backlogService.updateTask(task.id, {
-            titleEn: task.titleEn || '',
-            titleAr: task.titleAr,
-            descriptionEn: task.descriptionEn,
-            descriptionAr: task.descriptionAr,
-            estimatedHours: task.hours,
-            effortSize: 'Medium',
-            priority: task.priority,
-            type: task.type,
-            status: newStatus
-          });
-          this.toastService.show('Task status updated successfully.', 'success');
-        } else {
-          const statusEnum = this.mapColumnToEnum(newStatus);
-
-          await this.tasksService.updateTaskStatus(task.id, statusEnum);
-          this.toastService.show('Task status updated successfully.', 'success');
-        }
+        const statusEnum = this.mapColumnToEnum(newStatus);
+        await this.tasksService.updateTaskStatus(task.id, statusEnum);
+        this.toastService.show('Task status updated successfully.', 'success');
         // Fetch updated data from backend to get the automatically calculated actualHours
         await this.loadWorkspaceData();
       } catch (err: any) {
@@ -1391,7 +1635,7 @@ export class BoardComponent implements OnInit, OnChanges {
     return TaskItemStatus.ToDo;
   }
 
-  openEditModal(task: Task) {
+  openEditModal(task: Task, defaultAction: 'reject' | 'reopen' | null = null) {
     this.isChatOpen.set(false);
     this.isEditing.set(true);
     if (this.todo().some(t => t.id === task.id)) this.originalColumn = 'todo';
@@ -1399,12 +1643,17 @@ export class BoardComponent implements OnInit, OnChanges {
     else if (this.review().some(t => t.id === task.id)) this.originalColumn = 'review';
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
+    this.inlineAction.set(defaultAction);
+    this.inlineReasonEn = '';
+    this.inlineReasonAr = '';
+
     this.modalTask.set({ ...task });
     this.showModal.set(true);
   }
 
   closeModal() {
     this.isChatOpen.set(false);
+    this.inlineAction.set(null);
     this.showModal.set(false);
   }
 
@@ -1500,23 +1749,37 @@ export class BoardComponent implements OnInit, OnChanges {
     }
   }
 
-  async completeSprintFromBoard(): Promise<void> {
+  async completeSprintBtnClicked(): Promise<void> {
+    if (this.todo().length > 0 || this.inProgress().length > 0 || this.review().length > 0) {
+      this.showCompleteSprintModal.set(true);
+    } else {
+      await this.completeSprintFromBoard();
+    }
+  }
+
+  async completeSprintFromBoard(reviewAction?: 'AcceptAll' | 'SendToBacklog'): Promise<void> {
     const projectId = this.projectState.selectedProjectId();
     const sprintId = this.activeSprintId();
     if (!projectId || !sprintId) return;
 
     try {
-      await this.sprintService.completeSprint(projectId, sprintId);
-      this.toastService.show('Sprint completed successfully', 'success');
+      await this.sprintService.completeSprint(projectId, sprintId, reviewAction);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم إنهاء السبرنت بنجاح' : 'Sprint completed successfully', 'success');
+      this.showCompleteSprintModal.set(false);
       this.sprintStatusChanged.emit();
-    } catch {
-      this.toastService.show('Failed to complete sprint', 'error');
+    } catch (e: any) {
+      const errorCode = e?.response?.data?.errors?.[0]?.code || e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'SPRINT_HAS_UNFINISHED_TASKS') {
+        this.showCompleteSprintModal.set(true);
+      } else {
+        this.toastService.show(this.currentLang === 'ar' ? 'فشل إنهاء السبرنت' : 'Failed to complete sprint', 'error');
+      }
     }
   }
+
+
+
+  goToTeam(): void {
+    this.router.navigate(['/dashboard', 'team']);
+  }
 }
-
-
-
-
-
-

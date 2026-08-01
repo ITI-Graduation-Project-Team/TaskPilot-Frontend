@@ -22,8 +22,7 @@ export const companySetupGuard: CanActivateFn = async (route, state) => {
   let companyId = projectState.userCompanyId();
   if (!companyId) {
     try {
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const profile = data.data || data;
+      const profile = await projectState.getProfile();
       companyId = profile?.companyId || profile?.CompanyId || null;
     } catch (e) {
       console.error('CompanySetupGuard profile check failed:', e);

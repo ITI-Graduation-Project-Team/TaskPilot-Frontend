@@ -3,8 +3,12 @@
     
     <!-- Header -->
     <div class="text-center mb-12">
-      <h1 class="text-4xl font-extrabold text-text-primary tracking-tight mb-3">Choose Your Plan</h1>
-      <p class="text-lg text-text-secondary max-w-2xl mx-auto">Select the perfect plan for your team's needs.</p>
+      <h1 class="text-4xl font-extrabold text-text-primary tracking-tight mb-3">
+        {{ currentLang === 'ar' ? 'اختر خطتك' : 'Choose Your Plan' }}
+      </h1>
+      <p class="text-lg text-text-secondary max-w-2xl mx-auto">
+        {{ currentLang === 'ar' ? 'اختر الخطة المثالية لاحتياجات فريقك.' : "Select the perfect plan for your team's needs." }}
+      </p>
     </div>
 
     <!-- Cancel At Period End Banner -->
@@ -18,7 +22,7 @@
           </div>
           <div class="ml-3">
             <p class="text-sm text-warning">
-              ⚠️ Your <span class="font-bold">{{ currentSub()?.planName }}</span> plan is active until {{ currentSub()?.endDate | date:'mediumDate' }}. You'll automatically move to the Free plan after that.
+              {{ currentLang === 'ar' ? '⚠️ خطتك ' : '⚠️ Your ' }}<span class="font-bold">{{ currentSub()?.planName }}</span>{{ currentLang === 'ar' ? ' مفعلة حتى ' : ' plan is active until ' }}{{ currentSub()?.endDate | date:'mediumDate' }}{{ currentLang === 'ar' ? '. سيتم نقلك تلقائياً إلى الخطة المجانية بعد ذلك.' : ". You'll automatically move to the Free plan after that." }}
             </p>
           </div>
         </div>
@@ -30,17 +34,17 @@
       <div class="bg-surface rounded-xl border-l-4 border-l-brandPrimary shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 class="text-lg font-bold text-text-primary mb-1">
-            You are on the <span class="text-primary">{{ sub.planName }}</span> plan — {{ sub.status }}
+            {{ currentLang === 'ar' ? 'أنت على خطة ' : 'You are on the ' }}<span class="text-primary">{{ sub.planName }}</span>{{ currentLang === 'ar' ? ' — ' : ' plan — ' }}{{ sub.status }}
           </h3>
           <p class="text-sm text-text-secondary">
             <ng-container *ngIf="sub.status === 'Pending'">
-              Payment processing...
+              {{ currentLang === 'ar' ? 'جاري معالجة الدفع...' : 'Payment processing...' }}
             </ng-container>
             <ng-container *ngIf="sub.status === 'Trialing'">
-              Trial ends {{ sub.trialEndDate | date:'mediumDate' }} • {{ sub.billingCycle }} billing
+              {{ currentLang === 'ar' ? 'تنتهي التجربة في ' : 'Trial ends ' }}{{ sub.trialEndDate | date:'mediumDate' }} • {{ currentLang === 'ar' ? 'فوترة ' : '' }}{{ sub.billingCycle }}{{ currentLang === 'ar' ? '' : ' billing' }}
             </ng-container>
             <ng-container *ngIf="sub.status !== 'Pending' && sub.status !== 'Trialing'">
-              {{ sub.status === 'Active' ? 'Renews on' : 'Expires on' }} {{ sub.endDate | date:'mediumDate' }} • {{ sub.billingCycle }} billing
+              {{ sub.status === 'Active' ? (currentLang === 'ar' ? 'تتجدد في ' : 'Renews on ') : (currentLang === 'ar' ? 'تنتهي في ' : 'Expires on ') }}{{ sub.endDate | date:'mediumDate' }} • {{ currentLang === 'ar' ? 'فوترة ' : '' }}{{ sub.billingCycle }}{{ currentLang === 'ar' ? '' : ' billing' }}
             </ng-container>
           </p>
         </div>
@@ -51,21 +55,21 @@
             <ng-container *ngIf="!showCancelConfirm()">
               <button (click)="initiateCancel()" 
                       class="px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-border transition-colors">
-                Cancel Plan
+                {{ currentLang === 'ar' ? 'إلغاء الخطة' : 'Cancel Plan' }}
               </button>
             </ng-container>
             
             <ng-container *ngIf="showCancelConfirm()">
               <div class="flex items-center gap-2 animate-[fadeIn_0.2s_ease_out]">
-                <span class="text-sm text-text-primary font-medium mr-2">Are you sure?</span>
+                <span class="text-sm text-text-primary font-medium mr-2">{{ currentLang === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?' }}</span>
                 <button (click)="abortCancel()" [disabled]="isCanceling()"
                         class="px-3 py-1.5 text-sm font-medium text-text-secondary bg-surface border border-border rounded hover:bg-border transition-colors">
-                  Keep Plan
+                  {{ currentLang === 'ar' ? 'الاحتفاظ بالخطة' : 'Keep Plan' }}
                 </button>
                 <button (click)="confirmCancel()" [disabled]="isCanceling()"
                         class="px-3 py-1.5 text-sm font-medium text-white bg-primary rounded hover:bg-error shadow-md transition-colors flex items-center gap-2">
                   <span *ngIf="isCanceling()" class="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-                  Yes, cancel
+                  {{ currentLang === 'ar' ? 'نعم، إلغاء' : 'Yes, cancel' }}
                 </button>
               </div>
             </ng-container>
@@ -73,7 +77,7 @@
           
           <ng-container *ngIf="sub.cancelAtPeriodEnd && (sub.status === 'Active' || sub.status === 'Trialing')">
             <span class="px-4 py-2 text-sm font-medium text-text-secondary bg-surface border border-border rounded-lg cursor-not-allowed">
-              Cancellation scheduled
+              {{ currentLang === 'ar' ? 'تمت جدولة الإلغاء' : 'Cancellation scheduled' }}
             </span>
           </ng-container>
         </div>
@@ -125,12 +129,12 @@
           <button (click)="setBillingCycle('Monthly')"
                   class="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200"
                   [ngClass]="billingCycle() === 'Monthly' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'">
-            Monthly
+            {{ currentLang === 'ar' ? 'شهري' : 'Monthly' }}
           </button>
           <button (click)="setBillingCycle('Annually')"
                   class="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200"
                   [ngClass]="billingCycle() === 'Annually' ? 'bg-surface text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'">
-            Annually <span *ngIf="maxAnnualSavingPercent() > 0" class="text-primary ml-1 font-bold">Save up to {{ maxAnnualSavingPercent() }}%</span>
+            {{ currentLang === 'ar' ? 'سنوي' : 'Annually' }} <span *ngIf="maxAnnualSavingPercent() > 0" class="text-primary ml-1 font-bold">{{ currentLang === 'ar' ? 'وفر حتى' : 'Save up to' }} {{ maxAnnualSavingPercent() }}%</span>
           </button>
         </div>
       </div>
@@ -148,14 +152,14 @@
           <!-- Current Plan Badge -->
           <div *ngIf="isCurrentPlan(plan.id)" class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <span class="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-              Current Plan
+              {{ currentLang === 'ar' ? 'الخطة الحالية' : 'Current Plan' }}
             </span>
           </div>
           
           <!-- Savings Badge (Annual only) -->
           <div *ngIf="billingCycle() === 'Annually' && getSavingsPercentage(plan) > 0" class="absolute top-4 right-4">
             <span class="bg-success/20 text-success text-xs font-bold px-2 py-1 rounded-md">
-              Save {{ getSavingsPercentage(plan) }}%
+              {{ currentLang === 'ar' ? 'وفر' : 'Save' }} {{ getSavingsPercentage(plan) }}%
             </span>
           </div>
 
@@ -166,7 +170,7 @@
               <span class="text-4xl font-extrabold text-text-primary">
                 {{ (billingCycle() === 'Monthly' ? plan.monthlyPrice : plan.annualPrice) | currency:plan.currency:'symbol-narrow':'1.0-0' }}
               </span>
-              <span class="text-text-secondary font-medium">/{{ billingCycle() === 'Monthly' ? 'mo' : 'yr' }}</span>
+              <span class="text-text-secondary font-medium">/{{ billingCycle() === 'Monthly' ? (currentLang === 'ar' ? 'شهر' : 'mo') : (currentLang === 'ar' ? 'سنة' : 'yr') }}</span>
             </div>
           </div>
 
@@ -174,35 +178,34 @@
           <ul class="space-y-4 mb-8 flex-grow">
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-text-primary">Up to <strong>{{ plan.maxProjects }}</strong> projects</span>
+              <span class="text-text-primary">{{ currentLang === 'ar' ? 'حتى' : 'Up to' }} <strong>{{ plan.maxProjects }}</strong> {{ currentLang === 'ar' ? 'مشاريع' : 'projects' }}</span>
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-text-primary">Up to <strong>{{ plan.maxUsersPerProject }}</strong> users/project</span>
+              <span class="text-text-primary">{{ currentLang === 'ar' ? 'حتى' : 'Up to' }} <strong>{{ plan.maxUsersPerProject }}</strong> {{ currentLang === 'ar' ? 'مستخدمين/مشروع' : 'users/project' }}</span>
             </li>
             <li *ngIf="plan.hasAi" class="flex items-start gap-3">
               <svg class="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-text-primary">AI Context Advisor</span>
+              <span class="text-text-primary">{{ currentLang === 'ar' ? 'مستشار الذكاء الاصطناعي' : 'AI Context Advisor' }}</span>
             </li>
             <li *ngIf="plan.hasAdvancedAnalytics" class="flex items-start gap-3">
               <svg class="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-text-primary">Advanced Analytics</span>
+              <span class="text-text-primary">{{ currentLang === 'ar' ? 'تحليلات متقدمة' : 'Advanced Analytics' }}</span>
             </li>
-
           </ul>
 
           <!-- Payment Pending State -->
           <div *ngIf="pendingSubscription()?.subscriptionPlanId === plan.id" class="w-full border border-warning bg-warning/10 rounded-xl p-4 flex flex-col items-center text-center">
             <span class="text-xl mb-1">⏳</span>
-            <h4 class="font-bold text-warning mb-1">Payment Pending</h4>
-            <p class="text-xs text-warning mb-3">Your payment for this plan is incomplete.</p>
+            <h4 class="font-bold text-warning mb-1">{{ currentLang === 'ar' ? 'الدفعة معلقة' : 'Payment Pending' }}</h4>
+            <p class="text-xs text-warning mb-3">{{ currentLang === 'ar' ? 'دفعتك لهذه الخطة غير مكتملة.' : 'Your payment for this plan is incomplete.' }}</p>
             <div class="flex w-full gap-2">
               <button (click)="resumePayment()" [disabled]="isPaying()" class="flex-1 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-error shadow-md transition-colors">
-                Resume Payment
+                {{ currentLang === 'ar' ? 'استكمال الدفع' : 'Resume Payment' }}
               </button>
             </div>
             <button (click)="startOver()" [disabled]="isPaying()" class="mt-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">
-              Start Over
+              {{ currentLang === 'ar' ? 'البدء من جديد' : 'Start Over' }}
             </button>
           </div>
 
@@ -211,12 +214,12 @@
                   (click)="choosePlan(plan)"
                   class="w-full py-3.5 rounded-xl font-bold transition-all duration-200"
                   [ngClass]="plans().length === 3 && i === 1 ? 'bg-primary text-white hover:bg-error shadow-md' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'">
-            Choose Plan
+            {{ currentLang === 'ar' ? 'اختر الخطة' : 'Choose Plan' }}
           </button>
           
           <button *ngIf="isCurrentPlan(plan.id)" disabled
                   class="w-full py-3.5 rounded-xl font-bold bg-surface border border-border text-text-secondary opacity-70 cursor-not-allowed">
-            Current Plan
+            {{ currentLang === 'ar' ? 'الخطة الحالية' : 'Current Plan' }}
           </button>
         </div>
       </div>
@@ -231,8 +234,8 @@
      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-text-primary/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_out]">
   
   <div class="bg-surface w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-6 text-center animate-[fadeUp_0.3s_ease_out]">
-    <h3 class="text-xl font-bold text-text-primary mb-2">Switch to the Free plan?</h3>
-    <p class="text-text-secondary mb-6">You'll lose access to paid features immediately.</p>
+    <h3 class="text-xl font-bold text-text-primary mb-2">{{ currentLang === 'ar' ? 'التبديل إلى الخطة المجانية؟' : 'Switch to the Free plan?' }}</h3>
+    <p class="text-text-secondary mb-6">{{ currentLang === 'ar' ? 'ستفقد إمكانية الوصول إلى الميزات المدفوعة على الفور.' : "You'll lose access to paid features immediately." }}</p>
     
     <div *ngIf="paymentError()" class="mb-4 text-sm text-primary font-medium">
       {{ paymentError() }}
@@ -241,12 +244,12 @@
     <div class="flex gap-3 justify-center">
       <button (click)="cancelFreeConfirm()" [disabled]="isPaying()"
               class="px-4 py-2 text-text-primary bg-surface border border-border rounded-lg font-semibold hover:bg-border transition-colors flex-1">
-        Cancel
+        {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
       </button>
       <button (click)="confirmFreePlan()" [disabled]="isPaying()"
               class="px-4 py-2 bg-primary text-white rounded-lg font-bold transition-colors hover:bg-error shadow-md flex-1 flex items-center justify-center gap-2">
         <span *ngIf="isPaying()" class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-        Confirm
+        {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
       </button>
     </div>
   </div>
@@ -257,18 +260,18 @@
      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-text-primary/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_out]">
   
   <div class="bg-surface w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-6 text-center animate-[fadeUp_0.3s_ease_out]">
-    <h3 class="text-xl font-bold text-text-primary mb-2">Start Over?</h3>
-    <p class="text-text-secondary mb-6">This will cancel your pending payment. Are you sure you want to start over?</p>
+    <h3 class="text-xl font-bold text-text-primary mb-2">{{ currentLang === 'ar' ? 'البدء من جديد؟' : 'Start Over?' }}</h3>
+    <p class="text-text-secondary mb-6">{{ currentLang === 'ar' ? 'سيؤدي هذا إلى إلغاء دفعتك المعلقة. هل أنت متأكد أنك تريد البدء من جديد؟' : 'This will cancel your pending payment. Are you sure you want to start over?' }}</p>
     
     <div class="flex gap-3 justify-center">
       <button (click)="abortStartOver()" [disabled]="isStartingOver()"
               class="px-4 py-2 text-text-primary bg-surface border border-border rounded-lg font-semibold hover:bg-border transition-colors flex-1">
-        Keep Waiting
+        {{ currentLang === 'ar' ? 'الاستمرار في الانتظار' : 'Keep Waiting' }}
       </button>
       <button (click)="confirmStartOver()" [disabled]="isStartingOver()"
               class="px-4 py-2 bg-primary text-white rounded-lg font-bold transition-colors hover:bg-error shadow-md flex-1 flex items-center justify-center gap-2">
         <span *ngIf="isStartingOver()" class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-        Yes, Start Over
+        {{ currentLang === 'ar' ? 'نعم، البدء من جديد' : 'Yes, Start Over' }}
       </button>
     </div>
   </div>
@@ -282,7 +285,7 @@
     
     <!-- Payment Header -->
     <div class="px-6 py-5 border-b border-border flex justify-between items-center bg-sidebar">
-      <h2 class="text-xl font-bold text-text-primary">Complete Subscription</h2>
+      <h2 class="text-xl font-bold text-text-primary">{{ currentLang === 'ar' ? 'إكمال الاشتراك' : 'Complete Subscription' }}</h2>
       <button (click)="cancelPayment()" class="text-text-secondary opacity-70 hover:text-text-primary transition-colors p-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
@@ -293,7 +296,7 @@
       <div class="flex justify-between items-center mb-6 p-4 bg-background rounded-xl border border-border">
         <div>
           <p class="font-bold text-text-primary text-lg">{{ selectedPlan()?.name }}</p>
-          <p class="text-sm text-text-secondary">{{ billingCycle() }} Billing</p>
+          <p class="text-sm text-text-secondary">{{ currentLang === 'ar' ? 'فوترة' : 'Billing' }} {{ billingCycle() === 'Monthly' ? (currentLang === 'ar' ? 'شهرية' : '') : (currentLang === 'ar' ? 'سنوية' : '') }}</p>
         </div>
         <div class="text-right">
           <p class="font-extrabold text-xl text-primary">
@@ -304,7 +307,7 @@
 
       <!-- Payment Method -->
       <div class="mb-6">
-        <label class="block text-sm font-semibold text-text-primary mb-3">Select Payment Method</label>
+        <label class="block text-sm font-semibold text-text-primary mb-3">{{ currentLang === 'ar' ? 'اختر طريقة الدفع' : 'Select Payment Method' }}</label>
         <div class="grid grid-cols-2 gap-4 mb-6">
           <!-- Paymob Tile -->
           <div (click)="selectGateway('Paymob')"
@@ -312,7 +315,7 @@
                [ngClass]="selectedGateway() === 'Paymob' ? 'border-2 border-primary shadow-md bg-primary/5' : 'border border-border shadow-sm hover:shadow-md'">
             <span class="text-2xl mb-1">💳</span>
             <span class="font-bold text-text-primary">Paymob</span>
-            <span class="text-xs text-text-secondary">Pay with card (EGP)</span>
+            <span class="text-xs text-text-secondary">{{ currentLang === 'ar' ? 'الدفع بالبطاقة (جنيه مصري)' : 'Pay with card (EGP)' }}</span>
           </div>
           <!-- PayPal Tile -->
           <div (click)="selectGateway('PayPal')"
@@ -320,7 +323,7 @@
                [ngClass]="selectedGateway() === 'PayPal' ? 'border-2 border-primary shadow-md bg-primary/5' : 'border border-border shadow-sm hover:shadow-md'">
             <span class="text-2xl mb-1">🅿</span>
             <span class="font-bold text-text-primary">PayPal</span>
-            <span class="text-xs text-text-secondary">Redirect to PayPal</span>
+            <span class="text-xs text-text-secondary">{{ currentLang === 'ar' ? 'التحويل إلى PayPal' : 'Redirect to PayPal' }}</span>
           </div>
         </div>
 
@@ -328,7 +331,7 @@
         <ng-container *ngIf="selectedGateway() === 'Paymob'">
           <div class="p-4 bg-background border border-border rounded-xl text-center">
             <p class="text-text-primary font-medium text-sm">
-              You will be redirected to Paymob's secure payment page to complete your payment in EGP.
+              {{ currentLang === 'ar' ? 'ستتم إعادة توجيهك إلى صفحة الدفع الآمنة الخاصة بـ Paymob لإكمال الدفع بالجنيه المصري.' : "You will be redirected to Paymob's secure payment page to complete your payment in EGP." }}
             </p>
           </div>
         </ng-container>
@@ -337,7 +340,7 @@
         <ng-container *ngIf="selectedGateway() === 'PayPal'">
           <div class="p-4 bg-background border border-border rounded-xl text-center">
             <p class="text-text-primary font-medium text-sm">
-              You will be redirected to PayPal to complete your payment securely.
+              {{ currentLang === 'ar' ? 'ستتم إعادة توجيهك إلى PayPal لإكمال الدفع بأمان.' : 'You will be redirected to PayPal to complete your payment securely.' }}
             </p>
           </div>
         </ng-container>
@@ -353,7 +356,7 @@
       <label class="flex items-center gap-3 mb-8 cursor-pointer">
         <input type="checkbox" [ngModel]="autoRenew()" (ngModelChange)="autoRenew.set($event)"
                class="w-5 h-5 rounded border-border text-primary focus:ring-primary/30">
-        <span class="text-sm font-medium text-text-primary">Auto-renew subscription</span>
+        <span class="text-sm font-medium text-text-primary">{{ currentLang === 'ar' ? 'تجديد الاشتراك تلقائياً' : 'Auto-renew subscription' }}</span>
       </label>
 
       <!-- Submit Button -->
@@ -362,7 +365,7 @@
               class="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg transition-all
                      hover:bg-error shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
         <span *ngIf="isPaying()" class="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-        {{ isPaying() ? 'Processing...' : 'Subscribe Now' }}
+        {{ isPaying() ? (currentLang === 'ar' ? 'جاري المعالجة...' : 'Processing...') : (currentLang === 'ar' ? 'اشترك الآن' : 'Subscribe Now') }}
       </button>
     </div>
   </div>

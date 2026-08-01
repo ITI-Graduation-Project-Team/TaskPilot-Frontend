@@ -72,8 +72,8 @@ export class CalendarService {
         return {
           ...item,
           status: normalizedStatus,
-          titleEn: item.titleEn || item.title || '',
-          titleAr: item.titleAr || item.title || '',
+          titleEn: item.taskEn || item.titleEn || item.title || '',
+          titleAr: item.taskAr || item.titleAr || item.title || '',
           descriptionEn: item.descriptionEn || item.description || '',
           descriptionAr: item.descriptionAr || item.description || '',
           startDate: item.startDate || item.start || '',
@@ -160,18 +160,18 @@ export class CalendarService {
       this.toastService.show('Task updated successfully', 'success');
 
       // Optimistically update
-      this.tasks.update(currentTasks => 
-        currentTasks.map(t => 
-          t.id === taskId 
-            ? { 
-                ...t, 
-                titleEn: payload.title || payload.titleEn || t.titleEn, 
-                descriptionEn: payload.description !== undefined ? payload.description : t.descriptionEn,
-                status: payload.status || t.status, 
-                priority: payload.priority || t.priority,
-                startDate: payload.startDate || t.startDate,
-                endDate: payload._endDate || t.endDate
-              } 
+      this.tasks.update(currentTasks =>
+        currentTasks.map(t =>
+          t.id === taskId
+            ? {
+              ...t,
+              titleEn: payload.title || payload.titleEn || t.titleEn,
+              descriptionEn: payload.description !== undefined ? payload.description : t.descriptionEn,
+              status: payload.status || t.status,
+              priority: payload.priority || t.priority,
+              startDate: payload.startDate || t.startDate,
+              endDate: payload._endDate || t.endDate
+            }
             : t
         )
       );

@@ -13,7 +13,7 @@ export const routes: Routes = [
         (m) => m.LandingComponent
       ),
   },
-    {
+  {
     path: 'dashboard',
     canActivate: [authGuard, roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] },
@@ -28,17 +28,20 @@ export const routes: Routes = [
       { path: 'backlog', loadComponent: () => import('./pages/dashboardPage/ui/backlog-view/backlog-view.component').then(m => m.BacklogViewComponent) },
       { path: 'team', loadComponent: () => import('./pages/dashboardPage/ui/team-view/team-view.component').then(m => m.TeamViewComponent) },
       { path: 'profile', loadComponent: () => import('./pages/dashboardPage/ui/profile-view/profile-view.component').then(m => m.ProfileViewComponent) },
-      { path: 'organization', loadComponent: () => import('./features/organization/ui/organization-view/organization-view.component').then(m => m.OrganizationViewComponent) }
+      { path: 'organization', loadComponent: () => import('./features/organization/ui/organization-view/organization-view.component').then(m => m.OrganizationViewComponent) },
+      { path: 'employees', loadComponent: () => import('./pages/employeesPage/ui/employees/employees').then(m => m.EmployeesComponent) },
+      { path: 'employees/:id', loadComponent: () => import('./pages/employeesPage/ui/employee-details/employee-details.component').then(m => m.EmployeeDetailsComponent) },
+      { path: 'project-policies', loadComponent: () => import('./features/projectPolicies/ui/project-policies-admin/project-policies-admin.component').then(m => m.ProjectPoliciesAdminComponent) }
     ]
   },
-    {
+  {
     path: 'employee-dashboard',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['Employee'] },
     children: [
       { path: '', redirectTo: 'sprint', pathMatch: 'full' },
-      { 
-        path: ':tab', 
+      {
+        path: ':tab',
         loadComponent: () => import('./pages/employeeDashboardPage/ui/employee-dashboard/employee-dashboard.component').then((m) => m.EmployeeDashboardComponent)
       }
     ]
@@ -127,15 +130,7 @@ export const routes: Routes = [
         (m) => m.CompleteProfileComponent
       ),
   },
-  {
-    path: 'employees',
-    canActivate: [roleGuard, companySetupGuard],
-    data: { roles: ['ProjectManager'] },
-    loadComponent: () =>
-      import('./pages/employeesPage/ui/employees/employees').then(
-        (m) => m.EmployeesComponent
-      ),
-  },
+
   {
     path: 'assignment/:sprintId',
     canActivate: [authGuard, roleGuard],

@@ -225,10 +225,10 @@ export class SprintPlanningService {
     }
   }
 
-  async completeSprint(projectId: string, sprintId: string): Promise<void> {
+  async completeSprint(projectId: string, sprintId: string, reviewAction?: 'AcceptAll' | 'SendToBacklog'): Promise<void> {
     await apiClient.post(
       `/projects/${projectId}/sprints/${sprintId}/complete`,
-      {}
+      { reviewAction }
     );
   }
 
