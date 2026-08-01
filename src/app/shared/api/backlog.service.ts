@@ -160,11 +160,6 @@ export function mapEffortSizeToBackend(effortSize: string): number {
   providedIn: 'root',
 })
 export class BacklogService {
-  async getProjects(): Promise<ProjectDto[]> {
-    const { data } = await apiClient.get<any>('/Projects');
-    return data.data || [];
-  }
-
   async getBacklog(projectId: string): Promise<BacklogDto> {
     const { data } = await apiClient.get<any>(`/projects/${projectId}/backlog`);
     return data.data;
