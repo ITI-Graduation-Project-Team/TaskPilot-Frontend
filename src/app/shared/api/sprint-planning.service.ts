@@ -172,9 +172,23 @@ export class SprintPlanningService {
     return data;
   }
 
+  private activeSprintPromises = new Map<string, Promise<any>>();
+
   async getActiveSprint(projectId: string): Promise<any> {
-    const { data } = await apiClient.get(`/projects/${projectId}/sprints/active`);
-    return data;
+    if (!this.activeSprintPromises.has(projectId)) {
+      const promise = apiClient.get(`/projects/${projectId}/sprints/active`)
+        .then(res => {
+          // Clear cache after a short delay so future manual refreshes still work
+          setTimeout(() => this.activeSprintPromises.delete(projectId), 2000);
+          return res.data;
+        })
+        .catch(err => {
+          this.activeSprintPromises.delete(projectId);
+          throw err;
+        });
+      this.activeSprintPromises.set(projectId, promise);
+    }
+    return this.activeSprintPromises.get(projectId);
   }
 
   async getPlannedSprint(projectId: string): Promise<{ sprintId: string; status: string } | null> {

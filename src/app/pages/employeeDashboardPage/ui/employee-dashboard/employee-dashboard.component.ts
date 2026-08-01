@@ -1,6 +1,6 @@
 import {
   Component, ChangeDetectionStrategy, signal, OnInit,
-  computed, inject, effect, DOCUMENT
+  computed, inject, effect, untracked, DOCUMENT
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { ThemeService } from '../../../../shared/services/theme.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
 import { CurrentProjects } from '../current-projects/current-projects';
 import { ProjectHistory } from '../project-history/project-history';
@@ -609,6 +610,7 @@ export class EmployeeDashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private tr = inject(TranslateService);
   projectState = inject(ProjectStateService);
+  sprintService = inject(SprintPlanningService);
 
   // ── Signals ─────────────────────────────────
   activeTab = signal<EmployeeTab>('sprint');
@@ -663,7 +665,11 @@ export class EmployeeDashboardComponent implements OnInit {
     // Reload sprint info when selected project changes
     effect(() => {
       const id = this.projectState.selectedProjectId();
-      if (id) this.loadActiveSprint(id);
+      if (id) {
+        untracked(() => {
+          this.loadActiveSprint(id);
+        });
+      }
     });
 
     // Apply RTL whenever language changes
@@ -681,7 +687,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore persisted tab
     const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar',, 'policies-chat'].includes(savedTab)) {
+    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', , 'policies-chat'].includes(savedTab)) {
       this.router.navigate(['/employee-dashboard', savedTab]);
     }
 
@@ -740,8 +746,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
   private async loadUserProfile() {
     try {
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const p = data.data ?? data;
+      const p = await this.projectState.getProfile();
       if (p) {
         this.userName.set(`${p.firstName ?? ''} ${p.lastName ?? ''}`.trim());
         this.userJobTitle.set(p.jobTitle ?? '');
@@ -757,10 +762,10 @@ export class EmployeeDashboardComponent implements OnInit {
 
   private async loadActiveSprint(projectId: string) {
     try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
-      const s = data.data;
+      const data = await this.sprintService.getActiveSprint(projectId);
+      const s = data.data ?? data;
       if (s) {
-        const sprintName = this.currentLang() === 'ar' 
+        const sprintName = this.currentLang() === 'ar'
           ? (s.titleAr || s.titleEn || s.title || '')
           : (s.titleEn || s.titleAr || s.title || '');
         this.activeSprintLabel.set(sprintName);

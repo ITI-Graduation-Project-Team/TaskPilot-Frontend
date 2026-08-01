@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, untracked, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
@@ -1253,10 +1253,12 @@ export class BoardComponent implements OnInit, OnChanges {
     // Automatically trigger reload when the active selected project changes
     effect(() => {
       const projId = this.projectState.selectedProjectId();
-      this.isLoading.set(true);
-      this.loadWorkspaceData()
-        .catch(err => console.error('Error loading backlog data:', err))
-        .finally(() => this.isLoading.set(false));
+      untracked(() => {
+        this.isLoading.set(true);
+        this.loadWorkspaceData()
+          .catch(err => console.error('Error loading backlog data:', err))
+          .finally(() => this.isLoading.set(false));
+      });
     });
   }
 
@@ -1332,8 +1334,10 @@ export class BoardComponent implements OnInit, OnChanges {
     this.isAssignedToProject.set(true);
     this.activeProjectId = projectId;
 
-    // Lazy-load employee count only when the board is actually open
-    this.projectState.loadProjectEmployeeCount(projectId);
+    // Lazy-load employee count only when the board is actually open and user is PM
+    if (this.projectState.isProjectManager()) {
+      this.projectState.loadProjectEmployeeCount(projectId);
+    }
 
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
@@ -1490,7 +1494,7 @@ export class BoardComponent implements OnInit, OnChanges {
     const unassignedExist = tasks.length > 0 && tasks.some((t: any) => !isTaskAssigned(t));
 
     try {
-      if (sprintId && this.activeProjectId) {
+      if (sprintId && this.activeProjectId && this.projectState.isProjectManager()) {
         const snapRes = await this.sprintService.getAssignmentSnapshot(this.activeProjectId, sprintId);
         const snapData = snapRes?.data ?? snapRes;
         if (snapData && snapData.unassignedTasks) {
