@@ -62,10 +62,7 @@ export class AiRequirementsService {
     return data;
   }
 
-  async confirmProject(draft: GeneratedProjectDTO): Promise<any> {
-    const { data } = await apiClient.post('/aiproject/confirm', draft);
-    return data;
-  }
+
 
   async generateWbs(projectId: string): Promise<any> {
     const { data } = await apiClient.post(`/projects/${projectId}/wbs/generate`);

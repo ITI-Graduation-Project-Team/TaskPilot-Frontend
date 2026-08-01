@@ -53,8 +53,43 @@ const LOADING_HINTS = [
   template: `
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
+      <!-- ─── ACTIVE SPRINT WARNING BANNER ─── -->
+      @if (projectState.selectedProjectId() && hasActiveSprint()) {
+        <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 flex-wrap" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-lg">
+              ℹ️
+            </div>
+            <div>
+              <h4 class="text-sm font-extrabold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                <span>{{ currentLang() === 'ar' ? 'سبرينت نشط قيد التشغيل' : 'Active Sprint in Progress' }}</span>
+                @if (activeSprintTitle()) {
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-900 dark:text-amber-200 font-mono">
+                    {{ activeSprintTitle() }}
+                  </span>
+                }
+              </h4>
+              <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5 leading-relaxed">
+                {{ currentLang() === 'ar' 
+                  ? 'يوجد سبرينت نشط حالياً لهذا المشروع. لا يمكنك تخطيط سبرينت جديد أو توليد مقترحات حتى يتم إكمال السبرينت الحالي أو إغلاقه.' 
+                  : 'An active sprint is currently running for this project. You cannot plan or generate suggestions for a new sprint until the current active sprint is completed or closed.' }}
+              </p>
+            </div>
+          </div>
+          <button
+            (click)="navigateToActiveSprint()"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            {{ currentLang() === 'ar' ? 'عرض السبرينت النشط' : 'View Active Sprint' }}
+          </button>
+        </div>
+      }
+
       <!-- ─── NO EMPLOYEES WARNING BANNER ─── -->
-      @if (projectState.selectedProjectId() && projectState.projectEmployeeCount() === 0) {
+      @if (projectState.selectedProjectId() && !hasActiveSprint() && projectState.projectEmployeeCount() === 0) {
         <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 flex-wrap" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
           <div class="flex items-start gap-3 min-w-0">
             <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-lg">
@@ -103,9 +138,9 @@ const LOADING_HINTS = [
           <div class="flex items-center gap-2 shrink-0">
             <button
               (click)="onRegenerate()"
-              [disabled]="pageState() === 'confirming' || projectState.projectEmployeeCount() === 0"
-              [title]="projectState.projectEmployeeCount() === 0 ? (currentLang() === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً' : 'At least one employee must be assigned to this project first') : ''"
-              class="flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-40">
+              [disabled]="pageState() === 'confirming' || projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [title]="getGenerationDisabledTooltip()"
+              class="flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -115,8 +150,8 @@ const LOADING_HINTS = [
 
             <button
               (click)="onConfirmSprint()"
-              [disabled]="pageState() === 'confirming' || totalVisibleStories() === 0 || projectState.projectEmployeeCount() === 0"
-              [title]="projectState.projectEmployeeCount() === 0 ? (currentLang() === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً' : 'At least one employee must be assigned to this project first') : ''"
+              [disabled]="pageState() === 'confirming' || totalVisibleStories() === 0 || projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [title]="getGenerationDisabledTooltip()"
               class="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               @if (pageState() === 'confirming') {
                 <div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
@@ -133,9 +168,9 @@ const LOADING_HINTS = [
           <div class="flex items-center gap-2 shrink-0">
             <button
               (click)="onGenerate()"
-              [disabled]="projectState.projectEmployeeCount() === 0"
-              [title]="projectState.projectEmployeeCount() === 0 ? (currentLang() === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً' : 'At least one employee must be assigned to this project first') : ''"
-              class="flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-40">
+              [disabled]="projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [title]="getGenerationDisabledTooltip()"
+              class="flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
               <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
@@ -232,7 +267,9 @@ const LOADING_HINTS = [
 
             <button
               (click)="onGenerate()"
-              class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-xs">
+              [disabled]="hasActiveSprint()"
+              [title]="getGenerationDisabledTooltip()"
+              class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
@@ -308,8 +345,8 @@ const LOADING_HINTS = [
             <button
               id="generate-sprint-btn"
               (click)="onGenerate()"
-              [disabled]="projectState.projectEmployeeCount() === 0"
-              [title]="projectState.projectEmployeeCount() === 0 ? (currentLang() === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً' : 'At least one employee must be assigned to this project first') : ''"
+              [disabled]="projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [title]="getGenerationDisabledTooltip()"
               class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -584,6 +621,48 @@ const LOADING_HINTS = [
         </div>
       }
 
+      <!-- ─── ACTIVE SPRINT ALREADY RUNNING MODAL ─── -->
+      @if (showActiveSprintModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+          <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 text-center animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-2xl">
+              ℹ️
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-text-primary">
+                {{ currentLang() === 'ar' ? 'يوجد سبرينت نشط حالياً' : 'Active Sprint Already Running' }}
+              </h3>
+              <p class="text-xs text-text-secondary mt-2 leading-relaxed">
+                {{ currentLang() === 'ar' 
+                  ? 'هناك سبرينت نشط يعمل حالياً على هذا المشروع. لا يمكنك تخطيط سبرينت جديد حتى يتم إكمال السبرينت الحالي.' 
+                  : 'There is an active sprint currently running on this project. You cannot plan or generate a new sprint until the active sprint is completed.' }}
+              </p>
+              @if (activeSprintTitle()) {
+                <div class="mt-3 inline-block px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold font-mono">
+                  🏃 {{ activeSprintTitle() }}
+                </div>
+              }
+            </div>
+            <div class="flex items-center justify-center gap-3 pt-2">
+              <button
+                (click)="showActiveSprintModal.set(false)"
+                class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-semibold rounded-xl transition-all">
+                {{ currentLang() === 'ar' ? 'إغلاق' : 'Close' }}
+              </button>
+              <button
+                (click)="showActiveSprintModal.set(false); navigateToActiveSprint()"
+                class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                {{ currentLang() === 'ar' ? 'عرض السبرينت النشط' : 'View Active Sprint' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- ─── NO EMPLOYEES REQUIRED MODAL ─── -->
       @if (showNoEmployeesModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
@@ -638,6 +717,10 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   // ── State signals ──────────────────────────────────────────────
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
   showNoEmployeesModal = signal<boolean>(false);
+  showActiveSprintModal = signal<boolean>(false);
+  hasActiveSprint = signal<boolean>(false);
+  activeSprintId = signal<string | null>(null);
+  activeSprintTitle = signal<string>('');
   pageState = signal<PageState>('empty');
   isBacklogLoading = signal<boolean>(false);
   suggestions = signal<SprintSuggestionDto[]>([]);
@@ -673,11 +756,81 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     if (projId) {
       this.projectState.loadProjectEmployeeCount(projId);
     }
+    await this.checkActiveSprint();
     await this.loadBacklogStories();
   }
 
   ngOnDestroy() {
     this.clearHintTimer();
+  }
+
+  // ── Active Sprint Validation ───────────────────────────────────
+  async checkActiveSprint(): Promise<boolean> {
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) {
+      this.hasActiveSprint.set(false);
+      this.activeSprintId.set(null);
+      this.activeSprintTitle.set('');
+      return false;
+    }
+
+    try {
+      // 1. Try fetching all sprints to check for any sprint with status 'Active'
+      const sprints = await this.sprintService.getAllSprints(projId);
+      const active = sprints.find(s => s.status === 'Active');
+      if (active) {
+        this.hasActiveSprint.set(true);
+        this.activeSprintId.set(active.sprintId);
+        this.activeSprintTitle.set(this.currentLang() === 'ar' ? (active.titleAr || active.titleEn) : (active.titleEn || active.titleAr));
+        return true;
+      }
+
+      // 2. Fallback: query active sprint endpoint
+      const activeRes = await this.sprintService.getActiveSprint(projId);
+      const activeData = activeRes?.data || activeRes;
+      if (activeData && activeData.sprintId) {
+        this.hasActiveSprint.set(true);
+        this.activeSprintId.set(activeData.sprintId);
+        this.activeSprintTitle.set(this.currentLang() === 'ar' ? (activeData.titleAr || activeData.titleEn) : (activeData.titleEn || activeData.titleAr));
+        return true;
+      }
+
+      this.hasActiveSprint.set(false);
+      this.activeSprintId.set(null);
+      this.activeSprintTitle.set('');
+      return false;
+    } catch {
+      this.hasActiveSprint.set(false);
+      this.activeSprintId.set(null);
+      this.activeSprintTitle.set('');
+      return false;
+    }
+  }
+
+  navigateToActiveSprint(): void {
+    const activeId = this.activeSprintId();
+    if (activeId) {
+      this.router.navigate(['/dashboard', 'sprint'], {
+        queryParams: { sprintId: activeId, sprintStatus: 'Active' }
+      });
+    } else {
+      this.router.navigate(['/dashboard', 'sprint']);
+    }
+  }
+
+  getGenerationDisabledTooltip(): string {
+    const isAr = this.currentLang() === 'ar';
+    if (this.hasActiveSprint()) {
+      return isAr
+        ? 'قم بإكمال السبرينت النشط الحالي قبل تخطيط سبرينت جديد.'
+        : 'Complete the current active sprint before planning a new one.';
+    }
+    if (this.projectState.projectEmployeeCount() === 0) {
+      return isAr
+        ? 'يجب تعيين موظف واحد على الأقل للمشروع أولاً'
+        : 'At least one employee must be assigned to this project first';
+    }
+    return '';
   }
 
   // ── Backlog loader ─────────────────────────────────────────────
@@ -710,6 +863,13 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
     if (this.projectState.projectEmployeeCount() === 0) {
       this.showNoEmployeesModal.set(true);
+      return;
+    }
+
+    // Pre-check active sprint state before triggering generation
+    const isAlreadyActive = await this.checkActiveSprint();
+    if (isAlreadyActive) {
+      this.showActiveSprintModal.set(true);
       return;
     }
 
@@ -934,6 +1094,26 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
   private handleApiError(err: any, context: 'generate' | 'confirm') {
     const errorCode = err?.response?.data?.error?.code || err?.response?.data?.code || err?.error?.code || err?.code;
+    const errorDesc = err?.response?.data?.error?.description || err?.response?.data?.message || err?.message;
+
+    if (errorCode === 'ANOTHER_SPRINT_ALREADY_ACTIVE' || errorCode === 'Sprint.AnotherAlreadyActive' || errorDesc === 'Sprint.AnotherAlreadyActive') {
+      this.hasActiveSprint.set(true);
+      this.showActiveSprintModal.set(true);
+      const isAr = this.currentLang() === 'ar';
+      this.toastService.show(
+        isAr 
+          ? 'يوجد سبرينت نشط قيد التشغيل لهذا المشروع بالفعل. يرجى إكماله أولاً.' 
+          : 'An active sprint is currently running for this project. Please complete it first.',
+        'warning',
+        6000,
+        {
+          label: isAr ? 'عرض السبرينت' : 'View Active Sprint',
+          onClick: () => this.navigateToActiveSprint()
+        }
+      );
+      return;
+    }
+
     if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
       this.showNoEmployeesModal.set(true);
       return;
@@ -956,6 +1136,24 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
           serverMsg = `${firstKey}: ${errorsObj[firstKey]}`;
         }
       }
+    }
+
+    if (status === 409) {
+      this.hasActiveSprint.set(true);
+      this.showActiveSprintModal.set(true);
+      const isAr = this.currentLang() === 'ar';
+      this.toastService.show(
+        isAr 
+          ? 'يوجد تعارض: هناك سبرينت نشط بالفعل.' 
+          : 'Conflict: An active sprint is already running for this project.',
+        'warning',
+        6000,
+        {
+          label: isAr ? 'عرض السبرينت' : 'View Active Sprint',
+          onClick: () => this.navigateToActiveSprint()
+        }
+      );
+      return;
     }
 
     if (status === 403) {
