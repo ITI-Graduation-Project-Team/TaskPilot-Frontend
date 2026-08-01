@@ -48,8 +48,8 @@ export class TeamCollaborationService {
     return data;
   }
 
-  async getCompanyEmployees(companyId: string): Promise<ApiResponse<CompanyEmployee[]>> {
-    const { data } = await apiClient.get<ApiResponse<CompanyEmployee[]>>(`/companies/${companyId}/employees`);
+  async getCompanyEmployees(companyId?: string): Promise<ApiResponse<CompanyEmployee[]>> {
+    const { data } = await apiClient.get<ApiResponse<CompanyEmployee[]>>('/companies/employees');
     return data;
   }
 

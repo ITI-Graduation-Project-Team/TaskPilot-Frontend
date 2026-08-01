@@ -281,7 +281,10 @@ export class TeamViewComponent implements OnInit {
   
   readonly unassignedCompanyEmployees = computed(() => {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
-    return this.companyEmployees().filter(emp => !emp.isDeactivated && !assignedIds.has(emp.employeeId || emp.id || ''));
+    return this.companyEmployees().filter(emp => {
+      const empId = emp.employeeId || emp.id || '';
+      return !emp.isDeactivated && !assignedIds.has(empId);
+    });
   });
 
   selectedEmployeeId = '';
@@ -352,8 +355,13 @@ export class TeamViewComponent implements OnInit {
 
   async loadCompanyEmployees(companyId: string) {
     try {
-      const res = await this.teamService.getCompanyEmployees(companyId);
-      const list = res.data || res || [];
+      const res: any = await this.teamService.getCompanyEmployees(companyId);
+      const rawList = res?.data?.items || res?.data || res?.items || res || [];
+      const list: CompanyEmployee[] = (Array.isArray(rawList) ? rawList : []).map((e: any) => ({
+        ...e,
+        employeeId: e.employeeId || e.id || '',
+        fullName: e.fullName || (e.firstName ? `${e.firstName} ${e.lastName || ''}`.trim() : e.email)
+      }));
       this.companyEmployees.set(list);
     } catch (e) {
       console.warn('Failed to load company employees:', e);
