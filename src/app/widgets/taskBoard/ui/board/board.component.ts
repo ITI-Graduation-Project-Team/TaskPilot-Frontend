@@ -1054,8 +1054,8 @@ export class BoardComponent implements OnInit, OnChanges {
       }
 
       // Auto-post the reason as a comment so developers can see it in chat
-      const actionTitleEn = action === 'reject' ? 'Status Update: Returned to In Progress ⚠️' : 'Status Update: Reopened 🔄';
-      const actionTitleAr = action === 'reject' ? 'تحديث الحالة: إعادة المهمة للتنفيذ ⚠️' : 'تحديث الحالة: تمت إعادة الفتح 🔄';
+      const actionTitleEn = action === 'reject' ? 'Task Status Update: Returned to In Progress ' : 'Task Status Update: Reopened ';
+      const actionTitleAr = action === 'reject' ? 'تحديث حالة المهمة: إعادة المهمة للتنفيذ ' : 'تحديث لحالة المهمة : تمت إعادة الفتح ';
       
       const reasonLabelEn = 'Manager\'s Feedback:';
       const reasonLabelAr = 'ملاحظة مدير المشروع:';
