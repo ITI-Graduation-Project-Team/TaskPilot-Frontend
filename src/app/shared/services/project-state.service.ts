@@ -193,6 +193,8 @@ export class ProjectStateService {
     const descAr = descriptionAr || descriptionEn;
     try {
       this._loading.set(true);
+      const existingIds = this._projects().map(p => p.id);
+      
       await apiClient.post('/Projects', {
         nameEn,
         nameAr,
@@ -202,6 +204,11 @@ export class ProjectStateService {
         companyId: companyId
       });
       await this.loadProjects();
+
+      const newProject = this._projects().find(p => !existingIds.includes(p.id));
+      if (newProject) {
+        this.setSelectedProject(newProject.id);
+      }
       return true;
     } catch (e) {
       console.error('Failed to create project:', e);

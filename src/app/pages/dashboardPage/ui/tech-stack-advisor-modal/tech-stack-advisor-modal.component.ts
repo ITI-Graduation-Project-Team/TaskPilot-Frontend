@@ -17,8 +17,8 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   template: `
-    <div [class.fixed]="!embedded" [class.inset-0]="!embedded" [class.z-50]="!embedded" [class.flex]="!embedded" [class.items-center]="!embedded" [class.justify-center]="!embedded" [class.bg-black/65]="!embedded" [class.p-4]="!embedded" [class.backdrop-blur-sm]="!embedded" [class.animate-[fadeIn_0.18s_ease_both]]="!embedded">
-      <section class="flex w-full flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-2xl" [class.max-h-[90vh]]="!embedded" [class.max-w-6xl]="!embedded" [class.animate-[scaleUp_0.22s_ease_both]]="!embedded" role="dialog" aria-modal="true" aria-labelledby="tech-stack-title">
+    <div class="flex" [class.h-full]="embedded" [class.w-full]="embedded" [class.flex-col]="embedded" [class.fixed]="!embedded" [class.inset-0]="!embedded" [class.z-50]="!embedded" [class.items-center]="!embedded" [class.justify-center]="!embedded" [class.bg-black/65]="!embedded" [class.p-4]="!embedded" [class.backdrop-blur-sm]="!embedded" [class.animate-[fadeIn_0.18s_ease_both]]="!embedded">
+      <section class="flex w-full flex-col overflow-hidden bg-surface" [class.flex-1]="embedded" [class.rounded-3xl]="!embedded" [class.border]="!embedded" [class.border-border]="!embedded" [class.shadow-2xl]="!embedded" [class.max-h-[90vh]]="!embedded" [class.max-w-6xl]="!embedded" [class.animate-[scaleUp_0.22s_ease_both]]="!embedded" role="dialog" aria-modal="true" aria-labelledby="tech-stack-title">
         <header class="shrink-0 border-b border-border bg-sidebar px-6 py-5">
           <div class="flex items-start justify-between gap-4">
             <div>

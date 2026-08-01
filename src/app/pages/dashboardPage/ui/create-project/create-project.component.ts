@@ -5,8 +5,9 @@ import { DashboardService } from '../../services/dashboard.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
-import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-create-project',
@@ -16,7 +17,6 @@ import { TranslatePipe } from '@ngx-translate/core';
     CommonModule,
     AiChatModalComponent,
     TechStackAdvisorModalComponent,
-    DraftReviewModalComponent,
     TranslatePipe
   ],
   styles: [`
@@ -125,35 +125,31 @@ import { TranslatePipe } from '@ngx-translate/core';
       </div>
     }
 
-    <!-- Tech Stack Advisor (modal overlay) -->
+    <!-- ─── FULL-PAGE TECH STACK ADVISOR ─── -->
     @if (isTechStackAdvisorOpen() && advisorProjectId()) {
-      <app-tech-stack-advisor-modal
-        [projectId]="advisorProjectId()!"
-        (close)="onTechStackAdvisorClose()"
-        (completed)="onTechStackAdvisorCompleted($event)">
-      </app-tech-stack-advisor-modal>
+      <div class="absolute -inset-6 md:-inset-8 z-10 bg-background flex flex-col overflow-hidden" style="animation: fadeIn 0.2s ease both;">
+        <app-tech-stack-advisor-modal
+          class="flex-1 overflow-hidden"
+          [embedded]="true"
+          [projectId]="advisorProjectId()!"
+          (close)="onTechStackAdvisorClose()"
+          (completed)="onTechStackAdvisorCompleted($event)">
+        </app-tech-stack-advisor-modal>
+      </div>
     }
 
-    <!-- Draft Review (modal overlay) -->
-    @if (isDraftReviewOpen()) {
-      <app-draft-review-modal
-        [draft]="aiDraft()"
-        [chatId]="chatId()"
-        (close)="isDraftReviewOpen.set(false)"
-        (projectSaved)="onProjectSaved()">
-      </app-draft-review-modal>
-    }
   `
 })
 export class CreateProjectComponent {
   public dashboardService = inject(DashboardService);
   private projectState = inject(ProjectStateService);
   private router = inject(Router);
+  private aiRequirements = inject(AiRequirementsService);
+  private toastService = inject(ToastService);
 
   isLocalAiChatOpen = signal(false);
   isTechStackAdvisorOpen = signal(false);
   advisorProjectId = signal<string | null>(null);
-  isDraftReviewOpen = signal(false);
   aiDraft = signal<any>(null);
   chatId = signal<string>('');
 
@@ -190,19 +186,60 @@ export class CreateProjectComponent {
     this.isTechStackAdvisorOpen.set(true);
   }
 
-  onTechStackAdvisorClose() {
+  async onTechStackAdvisorClose() {
     this.isTechStackAdvisorOpen.set(false);
-    this.isDraftReviewOpen.set(true);
+    await this.confirmAndSaveProject();
   }
 
-  onTechStackAdvisorCompleted(projectId: string) {
+  async onTechStackAdvisorCompleted(projectId: string) {
     this.isTechStackAdvisorOpen.set(false);
-    this.isDraftReviewOpen.set(true);
+    await this.confirmAndSaveProject();
   }
 
-  onProjectSaved() {
-    this.isDraftReviewOpen.set(false);
-    this.projectState.loadProjects();
-    this.router.navigate(['/dashboard', 'projects']);
+  async confirmAndSaveProject() {
+    const draft = this.aiDraft();
+    if (!draft) {
+      this.projectState.loadProjects();
+      this.router.navigate(['/dashboard', 'backlog']);
+      return;
+    }
+
+    if (!draft.techStack) draft.techStack = 'Not Specified';
+    if (!draft.platformTargets) draft.platformTargets = 'Web';
+    if (!draft.projectType) draft.projectType = 'Custom';
+
+    try {
+      const payload: any = {
+        nameEn: draft.nameEn,
+        nameAr: draft.nameAr,
+        descriptionEn: draft.descriptionEn,
+        descriptionAr: draft.descriptionAr,
+        techStack: draft.techStack.split(',').map((s: string) => s.trim()),
+        platformTargets: draft.platformTargets.split(',').map((s: string) => s.trim()),
+        projectType: draft.projectType,
+        companyId: this.projectState.userCompanyId(),
+        managerId: this.projectState.userId(),
+        requirementsSnapshot: this.chatId(),
+        milestones: draft.milestones
+      };
+
+      const existingIds = this.projectState.projects().map(p => p.id);
+
+      await this.aiRequirements.confirmProject(payload);
+
+      await this.projectState.loadProjects();
+
+      const newProject = this.projectState.projects().find(p => !existingIds.includes(p.id));
+      if (newProject) {
+        this.projectState.setSelectedProject(newProject.id);
+      }
+
+      this.router.navigate(['/dashboard', 'backlog']);
+    } catch (e) {
+      console.error(e);
+      this.toastService.show('Failed to save project details. Redirecting...', 'error');
+      this.projectState.loadProjects();
+      this.router.navigate(['/dashboard', 'backlog']);
+    }
   }
 }
