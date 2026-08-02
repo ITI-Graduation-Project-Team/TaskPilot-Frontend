@@ -15,17 +15,12 @@ import { CurrentProjects } from '../current-projects/current-projects';
 import { ProjectHistory } from '../project-history/project-history';
 import { MyProfileComponent } from '../my-profile/my-profile.component';
 import { CalendarViewComponent } from '../../../dashboardPage/ui/calendar-view/calendar-view.component';
-<<<<<<< HEAD
 import { SettingsViewComponent } from '../../../dashboardPage/ui/settings-view/settings-view.component';
-
-type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'settings';
-=======
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 import { CompanyPoliciesChatComponent } from '../company-policies-chat/company-policies-chat.component';
 import { ProjectPoliciesChatComponent } from '../../../../features/projectPolicies/ui/project-policies-chat/project-policies-chat.component';
 
-type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'policies-chat' | 'project-policies';
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
+type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'settings' | 'policies-chat' | 'project-policies';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -40,13 +35,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
     ProjectHistory,
     MyProfileComponent,
     CalendarViewComponent,
-<<<<<<< HEAD
-    SettingsViewComponent
-=======
+    SettingsViewComponent,
     NotificationBellComponent,
     CompanyPoliciesChatComponent,
     ProjectPoliciesChatComponent
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
   ],
   template: `
     <div
@@ -693,12 +685,9 @@ export class EmployeeDashboardComponent implements OnInit {
     if (tab === 'current-projects') return this.tr.instant('employee.pages.currentProjects');
     if (tab === 'project-history') return this.tr.instant('employee.pages.projectHistory');
     if (tab === 'calendar') return this.tr.instant('calendar.title');
-<<<<<<< HEAD
     if (tab === 'settings') return 'Settings';
-=======
     if (tab === 'project-policies') return this.tr.instant('PROJECT_POLICIES.PROJECT_POLICIES');
     if (tab === 'policies-chat') return this.tr.instant('employee.pages.policies');
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
     return this.tr.instant('employee.pages.myProfile');
   });
 
@@ -735,13 +724,8 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore persisted tab
     const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-<<<<<<< HEAD
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'settings'].includes(savedTab)) {
-      this.activeTab.set(savedTab);
-=======
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', , 'policies-chat'].includes(savedTab)) {
+    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'settings', 'policies-chat', 'project-policies'].includes(savedTab)) {
       this.router.navigate(['/employee-dashboard', savedTab]);
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
     }
 
     this.loadUserProfile();

@@ -32,18 +32,13 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
   imports: [
     CommonModule,
     RouterModule,
-    RouterLink,
     FormsModule,
     AiChatModalComponent,
     NotificationBellComponent,
     ProjectHistoryModalComponent,
-<<<<<<< HEAD
     SprintListComponent,
-    SettingsViewComponent
-=======
+    SettingsViewComponent,
     TranslatePipe
-
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
   ],
   template: `
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
@@ -262,13 +257,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
               } @else if (currentTab() === 'create-project') {
                 {{ 'HEADER.CREATE_PROJECT' | translate }}
               } @else if (currentTab() === 'profile') {
-<<<<<<< HEAD
-                My Profile
-              } @else if (currentTab() === 'settings') {
-                Settings
-=======
                 {{ 'HEADER.MY_PROFILE' | translate }}
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
                   <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
@@ -329,11 +318,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
 
           <div class="flex items-center gap-4">
             <!-- Project selector context dropdown (only shown inside project tabs) -->
-<<<<<<< HEAD
-            @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'settings' && currentTab() !== 'organization' && projectState.projects().length > 0) {
-=======
             @if (currentTab() !== 'projects' && currentTab() !== 'profile' && currentTab() !== 'organization' && currentTab() !== 'employees' && projectState.projects().length > 0) {
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
               <div class="flex items-center gap-2">
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
@@ -429,139 +414,7 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
-<<<<<<< HEAD
-          @if (currentTab() === 'projects') {
-            <app-project-hub
-              [projects]="projectState.projects()"
-              [projectStatsMap]="projectStatsMap()"
-              (createProject)="openCreateProjectPage()"
-              (createProjectWithAi)="openAiProjectFlow()"
-              (selectSprint)="goToProject($event, 'sprint')"
-              (selectBacklog)="goToProject($event, 'backlog')"
-              (editProject)="openEditProjectModal($event)"
-              (deleteProject)="deleteProject($event)"
-              (toggleProjectStatus)="onToggleProjectStatus($event)">
-            </app-project-hub>
-          } @else if (currentTab() === 'create-project') {
-            <section class="mx-auto max-w-6xl animate-[fadeIn_0.22s_ease_both]">
-              <div class="grid gap-5 border-b border-border/70 pb-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-                <div>
-                  <button type="button" (click)="currentTab.set('projects')" class="mb-4 inline-flex items-center gap-2 text-xs font-extrabold text-text-secondary transition-colors hover:text-primary">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                    Back to projects
-                  </button>
-                  <p class="text-[11px] font-extrabold uppercase tracking-[0.24em] text-primary">New workspace</p>
-                  <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-text-primary font-display">Create a project your team can actually run</h2>
-                  <p class="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">Start with AI when requirements are still fuzzy, or use manual setup when you already know the project name and scope. Either path lands in the same project workspace.</p>
-                </div>
-                <div class="mt-1 flex w-full rounded-2xl border border-border bg-surface p-1 shadow-sm sm:w-auto xl:justify-self-end">
-                  <button type="button" (click)="showManualForm.set(false)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
-                          [class.bg-primary]="!showManualForm()" [class.text-white]="!showManualForm()" [class.text-text-secondary]="showManualForm()">AI assisted</button>
-                  <button type="button" (click)="showManualForm.set(true)" class="flex-1 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-all sm:flex-none"
-                          [class.bg-primary]="showManualForm()" [class.text-white]="showManualForm()" [class.text-text-secondary]="!showManualForm()">Manual setup</button>
-                </div>
-              </div>
-
-              <div class="mt-7 md:mt-8">
-              @if (!showManualForm()) {
-                @if (isAiChatOpen()) {
-                  <app-ai-chat-modal [embedded]="true" (close)="onAiChatClose()" (draftGenerated)="onDraftGenerated($event)"></app-ai-chat-modal>
-                } @else if (isTechStackAdvisorOpen() && advisorProjectId()) {
-                  <app-tech-stack-advisor-modal [embedded]="true" [projectId]="advisorProjectId()!" (close)="onTechStackAdvisorClose()" (completed)="onTechStackAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
-                } @else if (isDraftReviewOpen()) {
-                  <app-draft-review-modal [embedded]="true" [draft]="aiDraft()" [chatId]="chatId()" (close)="isDraftReviewOpen.set(false)" (projectSaved)="onProjectSaved()"></app-draft-review-modal>
-                } @else {
-                <div class="grid gap-6 lg:grid-cols-[1fr_380px]">
-                  <button type="button" (click)="openAiProjectFlow()" class="group min-h-[360px] rounded-3xl border border-primary/25 bg-surface p-8 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl">
-                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
-                      <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </div>
-                    <h3 class="mt-6 text-2xl font-extrabold text-text-primary font-display">Build from requirements chat</h3>
-                    <p class="mt-3 max-w-xl text-sm leading-7 text-text-secondary">Use the AI flow to clarify scope, finalize the project, review tech stack recommendations, and generate the initial backlog with WBS.</p>
-                    <div class="mt-8 grid gap-3 sm:grid-cols-2">
-                      @for (step of ['Requirements interview', 'Project draft saved', 'Tech stack advisor', 'Backlog generated']; track step) {
-                        <div class="rounded-2xl border border-border bg-sidebar px-4 py-3 text-xs font-bold text-text-primary">{{ step }}</div>
-                      }
-                    </div>
-                    <span class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-white shadow-md transition-colors group-hover:bg-primary-hover">
-                      Start AI flow
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </span>
-                  </button>
-
-                  <aside class="rounded-3xl border border-border bg-sidebar p-6 shadow-sm">
-                    <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-text-secondary">Best for</p>
-                    <div class="mt-5 space-y-4">
-                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Unclear scope</p><p class="mt-1 text-xs leading-5 text-text-secondary">Let the assistant ask clarifying questions before the project exists.</p></div>
-                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Backlog generation</p><p class="mt-1 text-xs leading-5 text-text-secondary">Tech Stack Advisor runs before WBS so tasks match the chosen architecture.</p></div>
-                      <div class="rounded-2xl bg-surface p-4"><p class="text-sm font-extrabold text-text-primary">Team handoff</p><p class="mt-1 text-xs leading-5 text-text-secondary">The final project opens directly into a backlog your team can refine.</p></div>
-                    </div>
-                  </aside>
-                </div>
-                }
-              } @else {
-                <form (submit)="onCreateProjectSubmit($event)" class="grid gap-6 lg:grid-cols-[1fr_340px]">
-                  <div class="rounded-3xl border border-border bg-surface p-6 shadow-sm">
-                    <div class="grid gap-5 md:grid-cols-2">
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name EN<input type="text" name="projNameEn" required placeholder="e.g. Mobile Application" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project name AR<input type="text" name="projNameAr" required placeholder="&#1605;&#1579;&#1575;&#1604;: &#1578;&#1591;&#1576;&#1610;&#1602; &#1575;&#1604;&#1580;&#1608;&#1575;&#1604;" dir="rtl" class="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description EN<textarea name="projDescEn" required rows="7" placeholder="What will this project deliver?" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
-                      <label class="space-y-2 text-xs font-extrabold uppercase tracking-wider text-text-secondary">Description AR<textarea name="projDescAr" required rows="7" placeholder="&#1605;&#1575; &#1575;&#1604;&#1584;&#1610; &#1587;&#1610;&#1602;&#1583;&#1605;&#1607; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1588;&#1585;&#1608;&#1593;&#1567;" dir="rtl" class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-text-primary outline-none transition-all focus:ring-2 focus:ring-primary/20"></textarea></label>
-                    </div>
-                    <div class="mt-6 flex flex-wrap justify-end gap-3 border-t border-border pt-5">
-                      <button type="button" (click)="currentTab.set('projects')" class="rounded-xl border border-border px-4 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:bg-sidebar hover:text-text-primary">Cancel</button>
-                      <button type="submit" class="rounded-xl bg-primary px-6 py-2.5 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-primary-hover">Create project</button>
-                    </div>
-                  </div>
-
-                  <aside class="rounded-3xl border border-border bg-sidebar p-6 shadow-sm">
-                    <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Manual setup</p>
-                    <h3 class="mt-2 text-lg font-extrabold text-text-primary">Keep it lean</h3>
-                    <p class="mt-2 text-sm leading-6 text-text-secondary">Manual projects start empty. After creation, assign team members, confirm stack when needed, and build the backlog from the Backlog tab.</p>
-                    <div class="mt-5 space-y-3 text-xs font-semibold text-text-secondary">
-                      <p class="rounded-2xl bg-surface p-3">Bilingual names and descriptions are stored separately.</p>
-                      <p class="rounded-2xl bg-surface p-3">No WBS is generated until you ask for it.</p>
-                      <p class="rounded-2xl bg-surface p-3">You can switch to the AI path before submitting.</p>
-                    </div>
-                  </aside>
-                </form>
-              }
-              </div>
-            </section>
-          } @else if (currentTab() === 'sprint') {
-            @if (selectedSprintId()) {
-              <app-board 
-                [overrideSprintId]="selectedSprintId()"
-                [overrideSprintStatus]="selectedSprintStatus()"
-                (backToSprints)="onBackToSprints()"
-                (sprintStatusChanged)="onSprintStatusChanged()">
-              </app-board>
-            } @else {
-              <app-sprint-list
-                [projectId]="projectState.selectedProjectId()!"
-                [sprints]="cachedSprints()"
-                [isLoading]="isSprintsLoading()"
-                (viewBoard)="onViewBoard($event)">
-              </app-sprint-list>
-            }
-          } @else if (currentTab() === 'sprint-planning') {
-            <app-sprint-planning-view 
-              (sprintConfirmed)="currentTab.set('sprint'); loadActiveSprint(projectState.selectedProjectId()!)">
-            </app-sprint-planning-view>
-          } @else if (currentTab() === 'backlog') {
-            <app-backlog-view></app-backlog-view>
-          } @else if (currentTab() === 'team') {
-            <app-team-view></app-team-view>
-          } @else if (currentTab() === 'organization') {
-            <app-organization-view></app-organization-view>
-          } @else if (currentTab() === 'profile') {
-            <app-profile-view></app-profile-view>
-          } @else if (currentTab() === 'settings') {
-            <app-settings-view></app-settings-view>
-          }
-=======
           <router-outlet></router-outlet>
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
         </main>
         
 
@@ -661,26 +514,19 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-<<<<<<< HEAD
-          <span class="text-[9px] font-bold">Profile</span>
-        </button>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROFILE' | translate }}</span>
+        </a>
 
-        <!-- Settings Tab -->
-        <button (click)="currentTab.set('settings')" 
-                class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200"
-                [class.text-primary]="currentTab() === 'settings'"
-                [class.scale-105]="currentTab() === 'settings'"
-                [class.text-text-secondary]="currentTab() !== 'settings'">
+        <!-- Settings Tab (Mobile) -->
+        <a routerLink="/dashboard/settings" routerLinkActive="text-primary scale-105" #rlaSettingsM="routerLinkActive"
+           [class.text-text-secondary]="!rlaSettingsM.isActive"
+           class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span class="text-[9px] font-bold">Settings</span>
-        </button>
-=======
-          <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROFILE' | translate }}</span>
+          <span class="text-[9px] font-bold">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
         </a>
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
       </div>
 
     </div>
@@ -769,11 +615,7 @@ export class DashboardComponent implements OnInit {
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-<<<<<<< HEAD
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'backlog' | 'team' | 'profile' | 'organization' | 'settings'>('sprint');
-=======
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'| 'project-policies'>('sprint');
->>>>>>> fd3edc264dbf762730a5ed69fedf44456818b81e
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'settings' | 'employees' | 'project-policies'>('sprint');
 
   // Component state
 
