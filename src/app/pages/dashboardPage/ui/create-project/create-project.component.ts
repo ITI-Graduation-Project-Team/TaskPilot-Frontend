@@ -8,6 +8,7 @@ import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech
 import { TranslatePipe } from '@ngx-translate/core';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { AiChatStateService } from '../../services/ai-chat-state.service';
 
 @Component({
   selector: 'app-create-project',
@@ -142,12 +143,14 @@ import { ToastService } from '../../../../shared/services/toast.service';
 })
 export class CreateProjectComponent {
   public dashboardService = inject(DashboardService);
+  private aiChatState = inject(AiChatStateService);
   private projectState = inject(ProjectStateService);
   private router = inject(Router);
   private aiRequirements = inject(AiRequirementsService);
   private toastService = inject(ToastService);
 
-  isLocalAiChatOpen = signal(false);
+  get isLocalAiChatOpen() { return this.aiChatState.isLocalAiChatOpen; }
+  
   isTechStackAdvisorOpen = signal(false);
   advisorProjectId = signal<string | null>(null);
   aiDraft = signal<any>(null);
@@ -171,15 +174,15 @@ export class CreateProjectComponent {
   }
 
   openAiProjectFlow() {
-    this.isLocalAiChatOpen.set(true);
+    this.aiChatState.isLocalAiChatOpen.set(true);
   }
 
   onAiChatClose() {
-    this.isLocalAiChatOpen.set(false);
+    this.aiChatState.clearChat();
   }
 
   async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
-    this.isLocalAiChatOpen.set(false);
+    this.aiChatState.clearChat();
     this.aiDraft.set(event.draft);
     this.chatId.set(event.chatId);
     this.advisorProjectId.set(event.projectId);
