@@ -384,6 +384,11 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
               {{ 'HEADER.LOGOUT' | translate }}
             </button>
 
+            <!-- Language Toggle Button -->
+            <button (click)="toggleLanguage()" class="p-2 text-text-secondary hover:text-text-primary font-bold text-xs rounded-lg hover:bg-border transition-colors uppercase">
+              {{ currentLang() === 'en' ? 'AR' : 'EN' }}
+            </button>
+
             <!-- Dark mode toggle -->
             <button (click)="toggleDarkMode()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-border transition-colors">
               @if (isDark()) {
@@ -594,6 +599,7 @@ export class DashboardComponent implements OnInit {
   private doc = inject(DOCUMENT);
   private tr = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
+  
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
@@ -648,6 +654,13 @@ export class DashboardComponent implements OnInit {
 
       this.currentTab.set(tab as any);
     });
+
+    if (typeof localStorage !== 'undefined') {
+      const savedLang = localStorage.getItem('app_lang') as 'en' | 'ar';
+      if (savedLang) {
+        this.currentLang.set(savedLang);
+      }
+    }
 
 
 
@@ -865,10 +878,8 @@ export class DashboardComponent implements OnInit {
 
 
   setLanguage(lang: 'en' | 'ar') {
-    this.currentLang.set(lang);
     localStorage.setItem('app_lang', lang);
-    this.tr.use(lang);
-    this.applyDirection(lang);
+    window.location.reload();
   }
 
   toggleLanguage() {

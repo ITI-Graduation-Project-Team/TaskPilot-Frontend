@@ -141,11 +141,11 @@ const EMPTY_TASK: TaskFormModel = {
                     <button type="button" (click)="toggleStory(story.id)" class="min-w-0 text-left">
                       <div class="flex flex-wrap items-center gap-2">
                         <h3 class="truncate text-sm font-extrabold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyTitle(story) }}</h3>
-                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ story.status }}</span>
+                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ localizedEnum(story.status) }}</span>
                       </div>
                       <p class="mt-1 line-clamp-1 text-xs text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyDescription(story) }}</p>
                     </button>
-                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ story.priority }}</span>
+                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ localizedEnum(story.priority) }}</span>
                     <span class="hidden text-xs font-bold text-text-secondary md:block">{{ story.tasks.length }}</span>
                     @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
                       <div class="flex justify-end gap-2">
@@ -185,10 +185,10 @@ const EMPTY_TASK: TaskFormModel = {
                                   <p class="font-bold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskTitle(task) }}</p>
                                   <p class="mt-0.5 line-clamp-1 text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskDescription(task) }}</p>
                                 </td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.status }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.type }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.priority }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.effortSize }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.status) }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.type) }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.priority) }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.effortSize) }}</td>
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.estimatedHours }}</td>
                                 <td class="px-3 py-3">
                                   <div class="flex items-center justify-end gap-2">
@@ -487,6 +487,25 @@ export class BacklogViewComponent implements OnInit {
       noDescription: 'No detail yet.'
     };
     return (this.isArabic() ? ar : en)[key] || key;
+  }
+
+  localizedEnum(val: string | undefined): string {
+    if (!val) return '';
+    if (!this.isArabic()) return val;
+    const ar: Record<string, string> = {
+      'ToDo': 'قيد الانتظار',
+      'InProgress': 'قيد التنفيذ',
+      'Review': 'للمراجعة',
+      'Done': 'مكتمل',
+      'Technical': 'تقني',
+      'NonTechnical': 'غير تقني',
+      'Low': 'منخفض',
+      'Medium': 'متوسط',
+      'High': 'عالي',
+      'Small': 'صغير',
+      'Large': 'كبير'
+    };
+    return ar[val] || val;
   }
 
   localizedProjectName(): string {
