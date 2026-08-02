@@ -276,6 +276,14 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                 <span class="text-text-secondary font-light">/</span>
 
                 Project Policies
+              } @else if (currentTab() === 'assignment') {
+                @if (projectState.isProjectManager()) {
+                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary font-light">/</span>
+                }
+                <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
+                <span class="text-text-secondary font-light">/</span>
+                {{ currentLang() === 'ar' ? 'تعيين المهام' : 'Task Assignment' }}
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
@@ -394,7 +402,11 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto p-6 md:p-8">
+        <main class="flex-1 min-h-0"
+          [class.overflow-y-auto]="currentTab() !== 'assignment'"
+          [class.overflow-hidden]="currentTab() === 'assignment'"
+          [class.p-6]="currentTab() !== 'assignment'"
+          [class.md:p-8]="currentTab() !== 'assignment'">
           <router-outlet></router-outlet>
         </main>
         
@@ -585,7 +597,7 @@ export class DashboardComponent implements OnInit {
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'| 'project-policies'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'| 'project-policies' | 'assignment'>('sprint');
 
   // Component state
 
@@ -622,9 +634,16 @@ export class DashboardComponent implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       const url = event.urlAfterRedirects || event.url;
-      // Extract the last segment of the dashboard route
-      const segments = url.split('?')[0].split('/');
+      const urlWithoutQuery = url.split('?')[0];
+      const segments = urlWithoutQuery.split('/');
       let tab = segments.pop() || 'projects';
+      
+      if (urlWithoutQuery.includes('/dashboard/assignment/')) {
+        tab = 'assignment';
+      } else if (urlWithoutQuery.includes('/dashboard/employees/')) {
+        tab = 'employees';
+      }
+      
       if (tab === 'dashboard') tab = 'projects';
 
       this.currentTab.set(tab as any);

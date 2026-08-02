@@ -600,6 +600,7 @@
     "WORKSPACE": "Workspace",
     "MANAGE_MONITOR": "Manage and monitor",
     "ASSIGN_TASKS": "Assign Tasks",
+    "ASSIGNED": "Assigned",
     "ASSIGNED_TASKS": "Assigned Tasks",
     "START_SPRINT": "Start Sprint",
     "COMPLETE_SPRINT": "Complete Sprint",

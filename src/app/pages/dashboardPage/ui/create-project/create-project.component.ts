@@ -193,25 +193,30 @@ export class CreateProjectComponent {
 
   async onTechStackAdvisorCompleted(projectId: string) {
     this.isTechStackAdvisorOpen.set(false);
-    await this.confirmAndSaveProject();
+    await this.confirmAndSaveProject(projectId);
   }
 
-  async confirmAndSaveProject() {
+  async confirmAndSaveProject(explicitProjectId?: string) {
     const draft = this.aiDraft();
-    if (!draft) {
+    if (!draft && !explicitProjectId) {
       this.projectState.loadProjects();
       this.router.navigate(['/dashboard', 'backlog']);
       return;
     }
 
     try {
+      const newProjectId = explicitProjectId || this.advisorProjectId();
       const existingIds = this.projectState.projects().map(p => p.id);
 
       await this.projectState.loadProjects();
 
-      const newProject = this.projectState.projects().find(p => !existingIds.includes(p.id));
-      if (newProject) {
-        this.projectState.setSelectedProject(newProject.id);
+      if (newProjectId) {
+        this.projectState.setSelectedProject(newProjectId);
+      } else {
+        const newProject = this.projectState.projects().find(p => !existingIds.includes(p.id));
+        if (newProject) {
+          this.projectState.setSelectedProject(newProject.id);
+        }
       }
 
       this.router.navigate(['/dashboard', 'backlog']);

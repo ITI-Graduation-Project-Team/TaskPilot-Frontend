@@ -219,10 +219,20 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           
           <div class="flex items-center gap-3">
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
-              <button (click)="goToAssignment()" 
-                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
-              </button>
+              @if (hasUnassignedTasks()) {
+                <button (click)="goToAssignment()" 
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                  👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
+                </button>
+              } @else {
+                <button disabled 
+                        class="px-5 py-2.5 bg-surface border border-border text-text-secondary font-semibold rounded-xl shadow-sm flex items-center gap-1.5 text-sm cursor-not-allowed opacity-70">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {{ 'BOARD.ASSIGNED' | translate }}
+                </button>
+              }
               <button (click)="startSprint()" 
                       [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
                       [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
@@ -1283,7 +1293,7 @@ export class BoardComponent implements OnInit, OnChanges {
   goToAssignment() {
     const sprintId = this.plannedSprintId();
     if (sprintId) {
-      this.router.navigate(['/assignment', sprintId]);
+      this.router.navigate(['/dashboard/assignment', sprintId]);
     }
   }
 

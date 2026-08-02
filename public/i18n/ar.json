@@ -600,6 +600,7 @@
     "MANAGE_MONITOR": "إدارة ومراقبة",
     "ASSIGNED_TASKS": "المهام المعينة",
     "ASSIGN_TASKS": "تعيين مهام",
+    "ASSIGNED": "تم التعيين",
     "START_SPRINT": "بدء السبرنت",
     "COMPLETE_SPRINT": "إنهاء السبرنت",
     "SPRINT_RETRO": "استرجاع السبرنت",

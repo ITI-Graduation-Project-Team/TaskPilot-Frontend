@@ -43,7 +43,8 @@ export class ProjectStateService {
 
   readonly selectedProject = computed(() => {
     const id = this._selectedProjectId();
-    return this._projects().find(p => p.id === id) || null;
+    if (!id) return null;
+    return this._projects().find(p => String(p.id).toLowerCase() === String(id).toLowerCase()) || null;
   });
 
   constructor() {
@@ -138,9 +139,12 @@ export class ProjectStateService {
 
       if (typeof localStorage !== 'undefined') {
         const savedId = localStorage.getItem('selectedProjectId');
-        if (savedId && filtered.some(p => p.id === savedId)) {
-          this.setSelectedProject(savedId);
-          return;
+        if (savedId) {
+          const matchingProject = filtered.find(p => String(p.id).toLowerCase() === String(savedId).toLowerCase());
+          if (matchingProject) {
+            this.setSelectedProject(matchingProject.id);
+            return;
+          }
         }
       }
 
@@ -155,7 +159,7 @@ export class ProjectStateService {
   }
 
   setSelectedProject(projectId: string | null, force: boolean = false) {
-    if (!force && this._selectedProjectId() === projectId) {
+    if (!force && String(this._selectedProjectId()).toLowerCase() === String(projectId).toLowerCase()) {
       return;
     }
     this._selectedProjectId.set(projectId);
