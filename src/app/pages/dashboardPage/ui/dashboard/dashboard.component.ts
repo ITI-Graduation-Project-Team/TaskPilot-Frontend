@@ -213,21 +213,17 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
           </a>
 
           <!-- Settings Tab -->
-          <a (click)="currentTab.set('settings')"
-             [class.bg-primary/10]="currentTab() === 'settings'"
-             [class.text-primary]="currentTab() === 'settings'"
-             [class.font-bold]="currentTab() === 'settings'"
-             [class.shadow-sm]="currentTab() === 'settings'"
-             [class.text-text-secondary]="currentTab() !== 'settings'"
-             [class.hover:text-text-primary]="currentTab() !== 'settings'"
-             [class.hover:bg-primary/5]="currentTab() !== 'settings'"
-             [class.font-medium]="currentTab() !== 'settings'"
+          <a routerLink="/dashboard/settings" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSettings="routerLinkActive"
+             [class.text-text-secondary]="!rlaSettings.isActive"
+             [class.hover:text-text-primary]="!rlaSettings.isActive"
+             [class.hover:bg-primary/5]="!rlaSettings.isActive"
+             [class.font-medium]="!rlaSettings.isActive"
              class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Settings
+            {{ 'SIDEBAR.SETTINGS' | translate }}
           </a>
         </nav>
 
@@ -278,6 +274,8 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
                 @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
               } @else if (currentTab() === 'employees') {
                 {{ 'EMPLOYEES.TITLE' | translate }}
+              } @else if (currentTab() === 'settings') {
+                {{ 'SIDEBAR.SETTINGS' | translate }}
             } @else if (currentTab() === 'project-policies') {
                 @if (projectState.isProjectManager()) {
                     <span
