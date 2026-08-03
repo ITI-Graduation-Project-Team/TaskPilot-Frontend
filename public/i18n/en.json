@@ -507,7 +507,6 @@
     "EMPTY": "No notifications yet"
   },
   "SIDEBAR": {
-
     "SWITCH": "Switch",
     "ALL_PROJECTS": "All Projects",
     "SPRINTS": "Sprints",
@@ -600,6 +599,7 @@
     "WORKSPACE": "Workspace",
     "MANAGE_MONITOR": "Manage and monitor",
     "ASSIGN_TASKS": "Assign Tasks",
+    "ASSIGNED": "Assigned",
     "ASSIGNED_TASKS": "Assigned Tasks",
     "START_SPRINT": "Start Sprint",
     "COMPLETE_SPRINT": "Complete Sprint",

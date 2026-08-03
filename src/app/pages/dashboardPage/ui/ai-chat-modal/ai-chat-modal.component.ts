@@ -19,11 +19,7 @@ import { AiRequirementsService } from '../../../../shared/api/ai-requirements.se
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
-interface ChatMessage {
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
+import { AiChatStateService } from '../../services/ai-chat-state.service';
 
 @Component({
   selector: 'app-ai-chat-modal',
@@ -487,11 +483,12 @@ export class AiChatModalComponent implements AfterViewChecked {
   @ViewChild('chatScrollContainer') private chatScrollContainer!: ElementRef;
 
   private aiRequirements = inject(AiRequirementsService);
+  private aiChatState = inject(AiChatStateService);
   projectState = inject(ProjectStateService);
   toastService = inject(ToastService);
 
-  chatId = signal<string | null>(null);
-  completenessScore = signal(0);
+  get chatId() { return this.aiChatState.chatId; }
+  get completenessScore() { return this.aiChatState.completenessScore; }
 
   detectTextDir = detectTextDir;
 
@@ -524,9 +521,9 @@ export class AiChatModalComponent implements AfterViewChecked {
     return 'Requirements Completeness';
   });
 
-  isReadyForFinalization = signal(false);
-  clarifyingQuestions = signal<string[]>([]);
-  chatHistory = signal<ChatMessage[]>([]);
+  get isReadyForFinalization() { return this.aiChatState.isReadyForFinalization; }
+  get clarifyingQuestions() { return this.aiChatState.clarifyingQuestions; }
+  get chatHistory() { return this.aiChatState.chatHistory; }
 
   messageInput = '';
   selectedFile = signal<File | null>(null);
@@ -694,15 +691,16 @@ export class AiChatModalComponent implements AfterViewChecked {
     }
   }
 
-  private suggestedSprintDuration = signal<number | null>(null);
-  private suggestedTargetHours = signal<number | null>(null);
-  showNamePrompt = signal(false);
-  projectNameInput = signal('');
-  projectNameArInput = signal('');
-  projectDescriptionEnInput = signal('');
-  projectDescriptionArInput = signal('');
-  sprintDurationInput = signal<number | null>(null);
-  targetSprintHoursInput = signal<number | null>(null);
+  get suggestedSprintDuration() { return this.aiChatState.suggestedSprintDuration; }
+  get suggestedTargetHours() { return this.aiChatState.suggestedTargetHours; }
+  get showNamePrompt() { return this.aiChatState.showNamePrompt; }
+  get projectNameInput() { return this.aiChatState.projectNameInput; }
+  get projectNameArInput() { return this.aiChatState.projectNameArInput; }
+  get projectDescriptionEnInput() { return this.aiChatState.projectDescriptionEnInput; }
+  get projectDescriptionArInput() { return this.aiChatState.projectDescriptionArInput; }
+  get sprintDurationInput() { return this.aiChatState.sprintDurationInput; }
+  get targetSprintHoursInput() { return this.aiChatState.targetSprintHoursInput; }
+  
   sprintDurationPlaceholder = signal('14');
   targetSprintHoursPlaceholder = signal('80');
 
