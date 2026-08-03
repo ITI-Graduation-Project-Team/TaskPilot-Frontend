@@ -17,7 +17,7 @@ export interface GoogleCalendarVerifyResponse {
 })
 export class GoogleCalendarService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/api/GoogleCalendarIntegration`;
+  private readonly baseUrl = `${environment.apiUrl}/GoogleCalendarIntegration`;
 
   /**
    * Retrieves the Google Calendar OAuth connect URL.

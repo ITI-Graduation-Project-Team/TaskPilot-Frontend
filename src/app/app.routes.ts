@@ -132,4 +132,27 @@ export const routes: Routes = [
       ),
   },
 
+  {
+    path: 'assignment/:sprintId',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ProjectManager'] },
+    loadComponent: () =>
+      import('./pages/assignmentPage/ui/assignment/assignment.component').then(
+        (m) => m.AssignmentComponent
+      ),
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./pages/settings/settings.routes').then((m) => m.settingsRoutes),
+  },
+  {
+    path: 'calendar-callback',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/calendarCallback/calendarCallbackPage.component').then(
+        (m) => m.CalendarCallbackPageComponent
+      ),
+  },
 ];

@@ -15,11 +15,12 @@ import { CurrentProjects } from '../current-projects/current-projects';
 import { ProjectHistory } from '../project-history/project-history';
 import { MyProfileComponent } from '../my-profile/my-profile.component';
 import { CalendarViewComponent } from '../../../dashboardPage/ui/calendar-view/calendar-view.component';
+import { SettingsViewComponent } from '../../../dashboardPage/ui/settings-view/settings-view.component';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 import { CompanyPoliciesChatComponent } from '../company-policies-chat/company-policies-chat.component';
 import { ProjectPoliciesChatComponent } from '../../../../features/projectPolicies/ui/project-policies-chat/project-policies-chat.component';
 
-type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'policies-chat' | 'project-policies';
+type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'settings' | 'policies-chat' | 'project-policies';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -34,6 +35,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
     ProjectHistory,
     MyProfileComponent,
     CalendarViewComponent,
+    SettingsViewComponent,
     NotificationBellComponent,
     CompanyPoliciesChatComponent,
     ProjectPoliciesChatComponent
@@ -205,6 +207,22 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             </svg>
             <span class="text-start">{{ 'employee.nav.myProfile' | translate }}</span>
           </button>
+
+          <!-- Settings -->
+          <button
+            (click)="activeTab.set('settings')"
+            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            [class.nav-item-active]="activeTab() === 'settings'"
+            [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="text-start">Settings</span>
+          </button>
+
 
           <!-- Project Switcher (if multiple projects) -->
           @if (projectState.projects().length > 1) {
@@ -501,6 +519,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               <div class="animate-[fadeUp_0.3s_ease_both]">
                 <app-my-profile></app-my-profile>
               </div>
+            } @else if (activeTab() === 'settings') {
+              <div class="animate-[fadeUp_0.3s_ease_both]">
+                <app-settings-view></app-settings-view>
+              </div>
             }
           }
         </main>
@@ -595,6 +617,20 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             </svg>
             <span class="text-[9px] font-bold">{{ 'employee.nav.profile' | translate }}</span>
           </button>
+
+          <!-- Settings -->
+          <button
+            (click)="activeTab.set('settings')"
+            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            [class.mobile-tab-active]="activeTab() === 'settings'"
+            [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="text-[9px] font-bold">Settings</span>
+          </button>
         </div>
       </div>
 
@@ -649,6 +685,7 @@ export class EmployeeDashboardComponent implements OnInit {
     if (tab === 'current-projects') return this.tr.instant('employee.pages.currentProjects');
     if (tab === 'project-history') return this.tr.instant('employee.pages.projectHistory');
     if (tab === 'calendar') return this.tr.instant('calendar.title');
+    if (tab === 'settings') return 'Settings';
     if (tab === 'project-policies') return this.tr.instant('PROJECT_POLICIES.PROJECT_POLICIES');
     if (tab === 'policies-chat') return this.tr.instant('employee.pages.policies');
     return this.tr.instant('employee.pages.myProfile');
@@ -687,7 +724,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore persisted tab
     const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', , 'policies-chat'].includes(savedTab)) {
+    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'settings', 'policies-chat', 'project-policies'].includes(savedTab)) {
       this.router.navigate(['/employee-dashboard', savedTab]);
     }
 
