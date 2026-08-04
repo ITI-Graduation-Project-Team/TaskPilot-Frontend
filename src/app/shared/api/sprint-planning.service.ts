@@ -131,6 +131,8 @@ export interface SprintSuggestionDto {
   goalAr?: string;
   totalEstimatedHours?: number;
   risks?: string[];
+  capacityExplanationEn?: string;
+  capacityExplanationAr?: string;
   stories?: SuggestedStory[];
   userStoryIds: string[];
 }

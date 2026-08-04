@@ -471,6 +471,14 @@ const LOADING_HINTS = [
                   </div>
                 </div>
 
+                <!-- Capacity Explanation -->
+                @if (currentLang() === 'ar' ? card.sprint.capacityExplanationAr : card.sprint.capacityExplanationEn) {
+                  <div class="mb-4 text-[11px] text-text-secondary bg-primary/5 p-2 rounded-lg border border-primary/10">
+                    <span class="font-bold mr-1">{{ currentLang() === 'ar' ? 'معلومات الاستيعاب:' : 'Capacity Info:' }}</span>
+                    {{ currentLang() === 'ar' ? card.sprint.capacityExplanationAr : card.sprint.capacityExplanationEn }}
+                  </div>
+                }
+
                 <!-- Goal input -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
                   <div>

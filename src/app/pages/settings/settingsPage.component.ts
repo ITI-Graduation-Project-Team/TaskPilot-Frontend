@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { GoogleCalendarService } from '../../shared/api/googleCalendar.service';
 import { finalize } from 'rxjs/operators';
+import { CompanySettingsComponent } from './company-settings.component';
 import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, TranslatePipe],
+  imports: [CommonModule, RouterOutlet, CompanySettingsComponent,TranslatePipe],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white min-h-[calc(100vh-4rem)] rounded-tl-3xl relative">
@@ -83,6 +84,9 @@ import { TranslatePipe } from '@ngx-translate/core';
               </div>
             </div>
           </section>
+
+          <!-- Company Settings Section -->
+          <app-company-settings></app-company-settings>
 
           <!-- Nested Settings Routes -->
           <div class="relative z-10">

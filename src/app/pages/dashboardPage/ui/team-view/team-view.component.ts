@@ -201,6 +201,12 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                 </select>
               </div>
 
+              <div>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5">Allocation %</label>
+                <input type="number" [(ngModel)]="assignedAllocationPercentage" name="allocationPercentage" min="1" max="100" required
+                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none">
+              </div>
+
               <div class="flex items-end">
                 <button type="submit" 
                         [disabled]="isAssigning() || !selectedEmployeeId"
@@ -247,6 +253,11 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                         <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full"
                               [ngClass]="member.isDeactivated ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-primary/10 text-primary border-primary/20'">
                           {{ member.role }}
+                        </span>
+
+                        <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full bg-surface text-text-secondary border-border"
+                              *ngIf="member.allocationPercentage">
+                          {{ member.allocationPercentage }}% Alloc.
                         </span>
                         
                         <!-- Actions -->
@@ -306,6 +317,7 @@ export class TeamViewComponent implements OnInit {
 
   selectedEmployeeId = '';
   assignedRole = 'Developer';
+  assignedAllocationPercentage = 100;
   isAssigning = signal(false);
   isRemoving = signal<string | null>(null);
   isLoadingTeam = signal(false);
@@ -396,6 +408,7 @@ export class TeamViewComponent implements OnInit {
         fullName: e.fullName || e.email,
         email: e.email,
         role: e.role || 'Contributor',
+        allocationPercentage: e.allocationPercentage,
         isDeactivated: e.isDeactivated,
         deactivationReason: e.deactivationReason,
         deactivatedAt: e.deactivatedAt
@@ -584,7 +597,8 @@ export class TeamViewComponent implements OnInit {
     try {
       const assignment: EmployeeAssignmentDto = {
         employeeId: this.selectedEmployeeId,
-        role: this.assignedRole
+        role: this.assignedRole,
+        allocationPercentage: this.assignedAllocationPercentage
       };
       const res = await this.teamService.assignEmployees(projId, [assignment]);
       if (res && res.succeeded === false) {
