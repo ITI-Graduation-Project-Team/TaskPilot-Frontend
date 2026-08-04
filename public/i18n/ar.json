@@ -811,7 +811,22 @@
     "NO_RESULTS": "لم يتم العثور على موظفين",
     "VIEW_DETAILS": "عرض التفاصيل",
     "DANGER_ZONE": "منطقة الخطر",
-    "DEACTIVATE_HINT": "يمكن التراجع عن هذا الإجراء لاحقاً."
+    "DEACTIVATE_HINT": "يمكن التراجع عن هذا الإجراء لاحقاً.",
+    "STATUS": "الحالة",
+    "SKILLS": "المهارات",
+    "ACTIONS": "الإجراءات",
+    "EMAIL": "البريد الإلكتروني",
+    "INVITED_AT": "تاريخ الدعوة",
+    "EXPIRES_AT": "تاريخ الانتهاء",
+    "PENDING": "قيد الانتظار",
+    "EXPIRED": "منتهي",
+    "ACCEPTED": "مقبول",
+    "STATUS_FILTER": "تصفية الحالة:",
+    "INVITE_VIA_EMAIL": "دعوة عبر البريد الإلكتروني",
+    "SEND_INVITE": "إرسال دعوة",
+    "ALREADY_IN_COMPANY": "موجود في الشركة مسبقاً",
+    "INVITE": "دعوة",
+    "SEARCH_USERS": "ابحث عن مستخدمين حاليين أو ادعُ مستخدمين جدد عبر البريد الإلكتروني."
   },
   "PROJECT_POLICIES": {
     "PROJECT_POLICIES": "سياسات المشروع",
@@ -842,5 +857,36 @@
     "CLEAR_CONFIRM": "هل تريد مسح سجل المحادثة بالكامل؟",
     "NO_ANSWER": "لم أتمكن من العثور على إجابة في مستندات المشروع.",
     "CHAT_ERROR": "حدث خطأ أثناء التواصل مع الذكاء الاصطناعي."
+  },
+  "SETTINGS_VIEW": {
+    "TITLE": "الإعدادات والتكاملات",
+    "SUBTITLE": "إدارة حساباتك الخارجية وتفضيلات التطبيق.",
+    "CONNECTED_ACCOUNTS": "الحسابات المتصلة",
+    "GOOGLE_CALENDAR_TITLE": "تقويم جوجل",
+    "GOOGLE_CALENDAR_DESC": "قم بمزامنة مهام مشروعك والمواعيد النهائية مباشرة مع تقويم جوجل الخاص بك.",
+    "CONNECT_ACCOUNT": "ربط الحساب",
+    "CONNECTING": "جاري الربط..."
+  },
+  "EMPLOYEE_DETAILS": {
+    "TITLE": "تفاصيل الموظف",
+    "SUBTITLE": "عرض معلومات شاملة حول عضو الفريق هذا.",
+    "LOADING": "جاري تحميل معلومات الموظف...",
+    "ACTIVE": "نشط",
+    "DEACTIVATED": "مجمد",
+    "SKILLS_TITLE": "المهارات والخبرات",
+    "NO_SKILLS": "لا توجد مهارات مدرجة.",
+    "PROFESSIONAL_INFO": "المعلومات المهنية",
+    "JOB_TITLE": "المسمى الوظيفي",
+    "NOT_SPECIFIED": "غير محدد",
+    "SENIORITY_LEVEL": "مستوى الخبرة",
+    "CURRENT_WORKLOAD": "حجم العمل الحالي",
+    "ACTIVE_PROJECTS": "المشاريع النشطة",
+    "ASSIGNED_TASKS": "المهام المعينة",
+    "DEACTIVATION_INFO": "معلومات التجميد",
+    "DEACTIVATED_ON": "تاريخ التجميد",
+    "REASON": "السبب",
+    "NOT_FOUND_TITLE": "الموظف غير موجود",
+    "NOT_FOUND_DESC": "الموظف الذي تبحث عنه غير موجود أو ليس لديك صلاحية للوصول.",
+    "RETURN_DIR": "العودة للدليل"
   }
 }

@@ -242,6 +242,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
             }
+
             @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
               <button (click)="completeSprintBtnClicked()" 
                       class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
@@ -1174,22 +1175,22 @@ export class BoardComponent implements OnInit, OnChanges {
       // Auto-post the reason as a comment so developers can see it in chat
       const actionTitleEn = action === 'reject' ? 'Task Status Update: Returned to In Progress ' : 'Task Status Update: Reopened ';
       const actionTitleAr = action === 'reject' ? 'تحديث حالة المهمة: إعادة المهمة للتنفيذ ' : 'تحديث لحالة المهمة : تمت إعادة الفتح ';
-      
+
       const reasonLabelEn = 'Manager\'s Feedback:';
       const reasonLabelAr = 'ملاحظة مدير المشروع:';
-      
+
       const actionTitle = this.currentLang === 'ar' ? actionTitleAr : actionTitleEn;
       const reasonLabel = this.currentLang === 'ar' ? reasonLabelAr : reasonLabelEn;
-      
+
       const reasonText = [this.inlineReasonEn, this.inlineReasonAr].filter(r => !!r).join('\n');
       const commentContent = `${actionTitle}\n\n${reasonLabel}\n"${reasonText}"`;
-      
+
       await this.tasksService.addComment(task.id, commentContent);
 
       this.inlineAction.set(null);
       this.inlineReasonEn = '';
       this.inlineReasonAr = '';
-      
+
       // Update local modal state so the UI reflects the new "InProgress" status 
       // and hides the Review/Done PM action buttons immediately without closing the modal
       this.originalColumn = 'inProgress';
@@ -1572,9 +1573,9 @@ export class BoardComponent implements OnInit, OnChanges {
       if (t.isAssigned === true) return true;
       if (t.isAssigned === false) return false;
       const val = t.employeeId || t.assignedTo || t.assigneeId || t.assignedEmployeeId ||
-                  t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
-                  t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
-                  t.assignedToName || t.assignedEmployeeName;
+        t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
+        t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
+        t.assignedToName || t.assignedEmployeeName;
       return val !== undefined && val !== null && val !== '';
     };
 
@@ -1840,6 +1841,8 @@ export class BoardComponent implements OnInit, OnChanges {
       this.toastService.show('Failed to create project.', 'error');
     }
   }
+
+
 
   async completeSprintBtnClicked(): Promise<void> {
     if (this.todo().length > 0 || this.inProgress().length > 0 || this.review().length > 0) {
