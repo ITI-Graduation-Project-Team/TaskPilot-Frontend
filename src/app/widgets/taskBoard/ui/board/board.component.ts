@@ -22,7 +22,7 @@ import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.co
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
@@ -41,6 +41,8 @@ interface Task {
   hours: number;
   actualHours?: number;
   type: 'Feature' | 'Bug' | 'Refactor';
+  assigneeId?: string;
+  assigneeName?: string;
 }
 
 type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
@@ -240,6 +242,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
             }
+
             @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
               <button (click)="completeSprintBtnClicked()" 
                       class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
@@ -758,6 +761,21 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                             [ngClass]="currentLang === 'ar' ? 'left-4' : 'right-4'">{{ currentLang === 'ar' ? 'ساعات' : 'hrs' }}</span>
                     </div>
                   </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الموظف المعين' : 'Assigned Employee' }}</label>
+                    <div class="px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl flex items-center gap-3 shadow-sm">
+                      <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
+                        {{ modalTask().assigneeName ? modalTask().assigneeName!.charAt(0) : '?' }}
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="font-bold text-[13px]">{{ modalTask().assigneeName || (currentLang === 'ar' ? 'غير معين' : 'Unassigned') }}</span>
+                        @if (modalTask().assigneeId) {
+                          <span class="text-[10px] text-text-secondary">{{ currentLang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
                 } @else {
                   <div class="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
                     <div class="p-6 space-y-4">
@@ -825,11 +843,13 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                             </button>
                           </div>
                         } @else if (originalColumn === 'done') {
-                          <div class="flex items-center gap-3 w-full pb-5 mb-5 border-b border-border border-dashed">
-                            <button (click)="inlineAction.set('reopen')" class="w-full py-3 bg-warning hover:bg-warning/90 text-white text-sm font-bold rounded-xl shadow-md shadow-warning/20 transition-all hover:-translate-y-px">
-                              {{ currentLang === 'ar' ? 'إعادة فتح (قيد التنفيذ)' : 'Reopen (In Progress)' }}
-                            </button>
-                          </div>
+                          @if (sprintStatus() !== 'Completed') {
+                            <div class="flex items-center gap-3 w-full pb-5 mb-5 border-b border-border border-dashed">
+                              <button (click)="inlineAction.set('reopen')" class="w-full py-3 bg-warning hover:bg-warning/90 text-white text-sm font-bold rounded-xl shadow-md shadow-warning/20 transition-all hover:-translate-y-px">
+                                {{ currentLang === 'ar' ? 'إعادة فتح (قيد التنفيذ)' : 'Reopen (In Progress)' }}
+                              </button>
+                            </div>
+                          }
                         }
                       }
                       
@@ -1063,6 +1083,7 @@ export class BoardComponent implements OnInit, OnChanges {
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
   private tasksService = inject(TasksService);
   public tr = inject(TranslateService);
 
@@ -1154,22 +1175,22 @@ export class BoardComponent implements OnInit, OnChanges {
       // Auto-post the reason as a comment so developers can see it in chat
       const actionTitleEn = action === 'reject' ? 'Task Status Update: Returned to In Progress ' : 'Task Status Update: Reopened ';
       const actionTitleAr = action === 'reject' ? 'تحديث حالة المهمة: إعادة المهمة للتنفيذ ' : 'تحديث لحالة المهمة : تمت إعادة الفتح ';
-      
+
       const reasonLabelEn = 'Manager\'s Feedback:';
       const reasonLabelAr = 'ملاحظة مدير المشروع:';
-      
+
       const actionTitle = this.currentLang === 'ar' ? actionTitleAr : actionTitleEn;
       const reasonLabel = this.currentLang === 'ar' ? reasonLabelAr : reasonLabelEn;
-      
+
       const reasonText = [this.inlineReasonEn, this.inlineReasonAr].filter(r => !!r).join('\n');
       const commentContent = `${actionTitle}\n\n${reasonLabel}\n"${reasonText}"`;
-      
+
       await this.tasksService.addComment(task.id, commentContent);
 
       this.inlineAction.set(null);
       this.inlineReasonEn = '';
       this.inlineReasonAr = '';
-      
+
       // Update local modal state so the UI reflects the new "InProgress" status 
       // and hides the Review/Done PM action buttons immediately without closing the modal
       this.originalColumn = 'inProgress';
@@ -1274,6 +1295,62 @@ export class BoardComponent implements OnInit, OnChanges {
 
   async ngOnInit() {
     this.sprintStatus.set(this.overrideSprintStatus);
+
+    this.activatedRoute.queryParams.subscribe(params => {
+      const taskId = params['taskId'];
+      if (taskId) {
+        this.handleDeepLinkTaskId(taskId);
+      }
+    });
+  }
+
+  private deepLinkInterval: any;
+
+  private handleDeepLinkTaskId(taskId: string) {
+    if (this.deepLinkInterval) {
+      clearInterval(this.deepLinkInterval);
+    }
+    
+    // We must wait for isLoading to be completely false before searching
+    this.deepLinkInterval = setInterval(() => {
+      if (!this.isLoading()) {
+        clearInterval(this.deepLinkInterval);
+        this.deepLinkInterval = null;
+        this.executeTaskDeepLink(taskId);
+      }
+    }, 100);
+  }
+
+  ngOnDestroy() {
+    if (this.deepLinkInterval) {
+      clearInterval(this.deepLinkInterval);
+    }
+  }
+
+  private executeTaskDeepLink(taskId: string) {
+    const allLoadedTasks = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()];
+    console.log(`[DeepLink] Searching for taskId: ${taskId}`);
+    console.log(`[DeepLink] Total loaded tasks: ${allLoadedTasks.length}`);
+    const targetTask = allLoadedTasks.find(t => String(t.id).toLowerCase() === String(taskId).toLowerCase());
+    console.log(`[DeepLink] Found task:`, targetTask);
+    
+    if (targetTask) {
+      setTimeout(() => this.openEditModal(targetTask), 200);
+    } else {
+      this.toastService.show(
+        this.currentLang === 'ar' 
+          ? 'المهمة المطلوبة غير موجودة في السبرينت الحالي (قد تكون محذوفة أو في سبرينت منتهي)' 
+          : 'The requested task is not found in the current sprint (it might be in a completed sprint).',
+        'warning'
+      );
+    }
+    
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { taskId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -1475,7 +1552,9 @@ export class BoardComponent implements OnInit, OnChanges {
         descriptionAr: t.descriptionAr,
         priority: mapPriorityToFrontend(t.priority),
         hours: t.estimatedHours || 0,
-        type: mapTypeToFrontend(t.type)
+        type: mapTypeToFrontend(t.type),
+        assigneeId: t.assigneeId,
+        assigneeName: t.assigneeName
       };
       (task as any).actualHours = t.actualHours || 0;
 
@@ -1494,9 +1573,9 @@ export class BoardComponent implements OnInit, OnChanges {
       if (t.isAssigned === true) return true;
       if (t.isAssigned === false) return false;
       const val = t.employeeId || t.assignedTo || t.assigneeId || t.assignedEmployeeId ||
-                  t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
-                  t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
-                  t.assignedToName || t.assignedEmployeeName;
+        t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
+        t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
+        t.assignedToName || t.assignedEmployeeName;
       return val !== undefined && val !== null && val !== '';
     };
 
@@ -1762,6 +1841,8 @@ export class BoardComponent implements OnInit, OnChanges {
       this.toastService.show('Failed to create project.', 'error');
     }
   }
+
+
 
   async completeSprintBtnClicked(): Promise<void> {
     if (this.todo().length > 0 || this.inProgress().length > 0 || this.review().length > 0) {

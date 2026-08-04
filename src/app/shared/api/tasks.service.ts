@@ -69,6 +69,8 @@ export interface SprintTaskDto {
   userStoryTitleEn?: string;
   userStoryTitleAr?: string;
   requiredSkills?: string[];
+  assigneeId?: string;
+  assigneeName?: string;
 }
 
 @Injectable({

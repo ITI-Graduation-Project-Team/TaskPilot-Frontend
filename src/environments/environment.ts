@@ -4,6 +4,8 @@ export const environment = {
   apiUrl: 'https://127.0.0.1:7185/api',
 
   hubUrl: 'https://taskpilotapi.runasp.net/hubs/notifications',
+  // apiUrl: 'https://127.0.0.1:7185/api',
+  // hubUrl: 'https://127.0.0.1:7185/hubs/notifications',
   auth: {
     tokenKey: 'taskpilot_token',
     refreshTokenKey: 'taskpilot_refreshToken',
