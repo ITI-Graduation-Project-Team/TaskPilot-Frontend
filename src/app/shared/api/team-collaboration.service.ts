@@ -49,7 +49,7 @@ export class TeamCollaborationService {
   }
 
   async getCompanyEmployees(companyId?: string): Promise<ApiResponse<CompanyEmployee[]>> {
-    const { data } = await apiClient.get<ApiResponse<CompanyEmployee[]>>('/companies/employees');
+    const { data } = await apiClient.get<ApiResponse<CompanyEmployee[]>>('/companies/employees?pageSize=100');
     return data;
   }
 
@@ -60,6 +60,11 @@ export class TeamCollaborationService {
 
   async getProjectEmployees(projectId: string): Promise<ApiResponse<ProjectEmployee[]>> {
     const { data } = await apiClient.get<ApiResponse<ProjectEmployee[]>>(`/projects/${projectId}/employees`);
+    return data;
+  }
+
+  async removeProjectEmployee(projectId: string, employeeId: string): Promise<ApiResponse<any>> {
+    const { data } = await apiClient.delete<ApiResponse<any>>(`/projects/${projectId}/employees/${employeeId}`);
     return data;
   }
 }

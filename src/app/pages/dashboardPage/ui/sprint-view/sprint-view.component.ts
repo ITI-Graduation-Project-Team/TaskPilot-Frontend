@@ -57,12 +57,13 @@ export class SprintViewComponent {
       }
     });
 
-    const querySprintId = this.route.snapshot.queryParamMap.get('sprintId');
-    const querySprintStatus = this.route.snapshot.queryParamMap.get('sprintStatus');
-    if (querySprintId && querySprintStatus) {
-      this.selectedSprintId.set(querySprintId);
-      this.selectedSprintStatus.set(querySprintStatus);
-    }
+    this.route.queryParams.subscribe(params => {
+      const querySprintId = params['sprintId'];
+      const querySprintStatus = params['sprintStatus'];
+      
+      this.selectedSprintId.set(querySprintId || null);
+      this.selectedSprintStatus.set(querySprintStatus || null);
+    });
   }
 
   async loadSprints(): Promise<void> {
