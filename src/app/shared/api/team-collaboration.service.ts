@@ -4,6 +4,7 @@ import { apiClient } from './axios.instance';
 export interface EmployeeAssignmentDto {
   employeeId: string;
   role: string;
+  allocationPercentage?: number;
 }
 
 export interface CompanyEmployee {
@@ -27,6 +28,7 @@ export interface ProjectEmployee {
   fullName: string;
   email: string;
   role: string;
+  allocationPercentage?: number;
   isDeactivated?: boolean;
   deactivationReason?: string;
   deactivatedAt?: string;

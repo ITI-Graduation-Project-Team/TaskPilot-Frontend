@@ -3,11 +3,12 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { GoogleCalendarService } from '../../shared/api/googleCalendar.service';
 import { finalize } from 'rxjs/operators';
+import { CompanySettingsComponent } from './company-settings.component';
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, CompanySettingsComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="flex h-screen bg-[#F6F6F6] text-[#121338]" [dir]="direction()">
@@ -67,6 +68,9 @@ import { finalize } from 'rxjs/operators';
               </button>
             </div>
           </section>
+
+          <!-- Company Settings Section -->
+          <app-company-settings></app-company-settings>
 
           <!-- Nested Settings Routes -->
           <router-outlet></router-outlet>
