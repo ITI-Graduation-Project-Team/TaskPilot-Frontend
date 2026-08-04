@@ -523,7 +523,8 @@
     "PLANNING": "التخطيط",
     "BACKLOG_SHORT": "المهام",
     "TEAM": "الفريق",
-    "PROFILE": "الملف الشخصي"
+    "PROFILE": "الملف الشخصي",
+    "SETTINGS": "الإعدادات"
   },
   "HEADER": {
     "PROJECTS_HUB": "مركز المشاريع",

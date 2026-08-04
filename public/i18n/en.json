@@ -523,7 +523,8 @@
     "PLANNING": "Planning",
     "BACKLOG_SHORT": "Backlog",
     "TEAM": "Team",
-    "PROFILE": "Profile"
+    "PROFILE": "Profile",
+    "SETTINGS": "Settings"
   },
   "HEADER": {
     "PROJECTS_HUB": "Projects Hub",
