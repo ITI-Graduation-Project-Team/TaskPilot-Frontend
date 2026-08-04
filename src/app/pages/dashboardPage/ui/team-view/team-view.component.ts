@@ -1,10 +1,11 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TeamCollaborationService, EmployeeAssignmentDto, CompanyEmployee, ProjectEmployee } from '../../../../shared/api/team-collaboration.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-team-view',
@@ -254,6 +255,19 @@ import { ToastService } from '../../../../shared/services/toast.service';
                             Deactivated
                           </span>
                         }
+                        
+                        <!-- Only allow remove if the employee is not deactivated or as a general action -->
+                        <button type="button" 
+                                (click)="removeEmployee(member.employeeId)"
+                                [disabled]="isRemoving() === member.employeeId || projectState.selectedProject()?.status === 'Completed' || projectState.selectedProject()?.status === 'Archived'"
+                                class="ml-2 w-7 h-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                [title]="'TEAM.REMOVE_MEMBER' | translate">
+                          @if (isRemoving() === member.employeeId) {
+                            <div class="w-3 h-3 rounded-full border-2 border-red-500 border-t-transparent animate-spin"></div>
+                          } @else {
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                          }
+                        </button>
                       </div>
                     </div>
                   }
@@ -271,6 +285,8 @@ export class TeamViewComponent implements OnInit {
   private teamService = inject(TeamCollaborationService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
+  private confirmDialogService = inject(ConfirmDialogService);
+  private translate = inject(TranslateService);
 
   emailsList = signal<string[]>([]);
   currentEmailInput = signal('');
@@ -283,13 +299,15 @@ export class TeamViewComponent implements OnInit {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
     return this.companyEmployees().filter(emp => {
       const empId = emp.employeeId || emp.id || '';
-      return !emp.isDeactivated && !assignedIds.has(empId);
+      const isAvailable = !emp.availabilityStatus || emp.availabilityStatus === 'Available';
+      return !emp.isDeactivated && !assignedIds.has(empId) && isAvailable;
     });
   });
 
   selectedEmployeeId = '';
   assignedRole = 'Developer';
   isAssigning = signal(false);
+  isRemoving = signal<string | null>(null);
   isLoadingTeam = signal(false);
   isDropdownOpen = signal(false);
 
@@ -388,6 +406,32 @@ export class TeamViewComponent implements OnInit {
       console.warn('Failed to load project team:', e);
     } finally {
       this.isLoadingTeam.set(false);
+    }
+  }
+
+  async removeEmployee(employeeId: string) {
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+
+    const confirmed = await this.confirmDialogService.confirm({
+      title: this.translate.instant('TEAM.REMOVE_MEMBER'),
+      message: this.translate.instant('TEAM.REMOVE_MEMBER_CONFIRM'),
+      confirmLabel: this.translate.instant('TEAM.REMOVE'),
+      type: 'danger'
+    });
+    if (!confirmed) return;
+
+    this.isRemoving.set(employeeId);
+    try {
+      await this.teamService.removeProjectEmployee(projId, employeeId);
+      this.toastService.show(this.translate.instant('TEAM.REMOVED_SUCCESS'), 'success');
+      await this.loadProjectTeam(projId);
+    } catch (e: any) {
+      const errorMsg = e?.response?.data?.errors?.[0]?.message || e?.response?.data?.message || this.translate.instant('TEAM.REMOVE_FAILED');
+      this.toastService.show(errorMsg, 'error');
+      console.warn('Failed to remove employee:', e);
+    } finally {
+      this.isRemoving.set(null);
     }
   }
 

@@ -6,8 +6,6 @@ import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
-import { SettingsViewComponent } from '../settings-view/settings-view.component';
-import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
@@ -24,7 +22,6 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DashboardService } from '../../services/dashboard.service';
-import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -36,8 +33,6 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
     AiChatModalComponent,
     NotificationBellComponent,
     ProjectHistoryModalComponent,
-    SprintListComponent,
-    SettingsViewComponent,
     TranslatePipe
   ],
   template: `
