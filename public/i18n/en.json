@@ -107,6 +107,8 @@
     }
   },
   "PROFILE": {
+    "VALIDATION_WARNING_TITLE": "Attention: Data Validation",
+    "VALIDATION_WARNING_BODY": "Please ensure your manually entered Job Title, Seniority Level, and Years of Experience match the contents of your newly uploaded CV. Your manager will review this data for consistency.",
     "LOADING": "Loading Profile Details...",
     "TEAM_MEMBER": "Team Member",
     "EDIT_PROFILE": "Edit Profile",
@@ -518,6 +520,7 @@
     "COMPANY_POLICIES": "Company Policies",
     "PROJECT_POLICIES": "Project Policies",
     "MY_PROFILE": "My Profile",
+    "SETTINGS": "Settings",
     "PROJECTS": "Projects",
     "SPRINT": "Sprint",
     "PLANNING": "Planning",

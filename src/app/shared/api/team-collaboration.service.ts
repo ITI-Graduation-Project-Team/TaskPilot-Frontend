@@ -14,6 +14,7 @@ export interface CompanyEmployee {
   lastName?: string;
   email: string;
   jobTitle: string;
+  avatarUrl?: string;
   seniorityLevel?: string;
   availabilityStatus?: string;
   skills?: string[];
@@ -27,6 +28,7 @@ export interface ProjectEmployee {
   fullName: string;
   email: string;
   role: string;
+  avatarUrl?: string;
   isDeactivated?: boolean;
   deactivationReason?: string;
   deactivatedAt?: string;
