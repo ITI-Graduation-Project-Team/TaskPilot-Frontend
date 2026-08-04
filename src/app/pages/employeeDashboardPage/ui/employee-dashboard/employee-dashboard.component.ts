@@ -220,7 +220,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span class="text-start">Settings</span>
+            <span class="text-start">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
           </button>
 
 
@@ -405,23 +405,41 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Notification Bell -->
             <app-notification-bell />
 
+            <!-- Language Toggle Button -->
+            <button (click)="toggleLanguage()" 
+                    [disabled]="isSwitchingLanguage()"
+                    class="p-2 text-text-secondary hover:text-text-primary font-bold text-xs rounded-lg hover:bg-border transition-colors uppercase disabled:opacity-50 relative min-w-[36px] flex items-center justify-center"
+                    style="color: var(--text-secondary);">
+              @if (isSwitchingLanguage()) {
+                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              } @else {
+                {{ currentLang() === 'en' ? 'AR' : 'EN' }}
+              }
+            </button>
 
             <!-- Dark / Light Toggle -->
             <button
               (click)="toggleTheme()"
-              class="p-2 rounded-xl transition-all duration-200"
+              [disabled]="isSwitchingTheme()"
+              class="p-2 rounded-xl hover:bg-border transition-all duration-200 disabled:opacity-50 relative flex items-center justify-center"
               style="color: var(--text-secondary);"
               [title]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
             >
-              @if (isDark()) {
-                <!-- Sun icon -->
-                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              @if (isSwitchingTheme()) {
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              } @else if (isDark()) {
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round"
                     d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
               } @else {
-                <!-- Moon icon -->
-                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round"
                     d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                 </svg>
@@ -431,14 +449,15 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Logout -->
             <button
               (click)="logout()"
-              class="p-2 rounded-xl transition-all duration-200"
+              class="hidden sm:flex px-3 py-1.5 hover:bg-error/10 border border-transparent hover:border-error/20 text-xs font-bold rounded-xl shadow-sm transition-all items-center gap-1.5"
               style="color: var(--error);"
               [title]="'employee.header.logout' | translate"
             >
-              <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
+              <span>{{ 'employee.header.logout' | translate }}</span>
             </button>
 
             <!-- Date -->
@@ -642,6 +661,9 @@ export class EmployeeDashboardComponent implements OnInit {
   private router = inject(Router);
   public route = inject(ActivatedRoute);
   private doc = inject(DOCUMENT);
+  
+  isSwitchingLanguage = signal(false);
+  isSwitchingTheme = signal(false);
   private theme = inject(ThemeService);
   private auth = inject(AuthService);
   private tr = inject(TranslateService);
@@ -734,14 +756,19 @@ export class EmployeeDashboardComponent implements OnInit {
   // ── Methods ─────────────────────────────────
 
   setLanguage(lang: 'en' | 'ar') {
-    this.currentLang.set(lang);
     localStorage.setItem('app_lang', lang);
-    this.tr.use(lang);
-    this.applyDirection(lang);
+    window.location.reload();
   }
 
-  toggleLanguage() {
+  async toggleLanguage() {
+    if (this.isSwitchingLanguage()) return;
+    this.isSwitchingLanguage.set(true);
+    
+    // Simulate async switch to feel premium like PM dashboard
+    await new Promise(r => setTimeout(r, 400));
+    
     this.setLanguage(this.currentLang() === 'en' ? 'ar' : 'en');
+    this.isSwitchingLanguage.set(false);
   }
 
   getProjectName(p: any): string {
@@ -755,8 +782,15 @@ export class EmployeeDashboardComponent implements OnInit {
     this.doc.documentElement.setAttribute('lang', lang);
   }
 
-  toggleTheme() {
+  async toggleTheme() {
+    if (this.isSwitchingTheme()) return;
+    this.isSwitchingTheme.set(true);
+    
+    // Simulate async switch to feel premium
+    await new Promise(r => setTimeout(r, 400));
+    
     this.theme.toggle();
+    this.isSwitchingTheme.set(false);
   }
 
   logout() {

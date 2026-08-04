@@ -6,7 +6,6 @@ import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
-import { SettingsViewComponent } from '../settings-view/settings-view.component';
 import { OrganizationViewComponent } from '../../../../features/organization/ui/organization-view/organization-view.component';
 import { ProjectHistoryModalComponent } from '../project-history-modal/project-history-modal.component';
 import { SprintListItem } from '../../../../shared/api/sprint-planning.service';
@@ -24,7 +23,6 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DashboardService } from '../../services/dashboard.service';
-import { SprintListComponent } from '../../../../features/sprintList/sprint-list.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -36,8 +34,6 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
     AiChatModalComponent,
     NotificationBellComponent,
     ProjectHistoryModalComponent,
-    SprintListComponent,
-    SettingsViewComponent,
     TranslatePipe
   ],
   template: `
@@ -62,12 +58,13 @@ import { SprintListComponent } from '../../../../features/sprintList/sprint-list
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
               <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="getSprintName(sp)">
-                  📁 {{ getSprintName(sp) }}
+                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate flex items-center gap-1" [title]="getSprintName(sp)">
+                  <span>📁</span>
+                  <span class="truncate">{{ getSprintName(sp) }}</span>
                 </span>
-                <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
+                <a routerLink="/dashboard/projects" class="text-[10px] text-primary font-bold hover:underline shrink-0 cursor-pointer">
                   {{ 'SIDEBAR.SWITCH' | translate }}
-                </button>
+                </a>
               </div>
             }
           }
