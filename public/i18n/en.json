@@ -502,7 +502,12 @@
     "NO_EMPLOYEES_MODAL_TITLE": "Employees Required for Sprint Planning",
     "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
     "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
-    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
+    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint.",
+    "PLANNED_SPRINT_BANNER_TITLE": "Planned Sprint Exists",
+    "PLANNED_SPRINT_BANNER_DESC": "A sprint has already been planned for this project. You cannot plan or generate AI suggestions for another sprint until the existing planned sprint is started or removed.",
+    "TOOLTIP_PLANNED_SPRINT": "A sprint is already planned for this project. Start or delete the planned sprint before creating a new one.",
+    "VIEW_PLANNED_SPRINT": "View Planned Sprint",
+    "ERROR_ANOTHER_PLANNED": "A planned sprint already exists for this project."
   },
   "REQUIREMENTS": {
     "ALMOST_COMPLETE": "Almost Complete"
