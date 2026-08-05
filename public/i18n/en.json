@@ -297,7 +297,7 @@
       },
       "step5": {
         "title": "Execution & Completion",
-        "desc": "Employee executes tasks, syncs them to the calendar, and marks them as completed or finished.",
+        "desc": "The employee tracks tasks via an interactive board, syncs deadlines with Google Calendar, and can chat with company policies and the Agile Coach for instant support to ensure a smooth workflow.",
         "role": "Employee"
       },
       "step6": {
