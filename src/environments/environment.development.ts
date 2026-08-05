@@ -5,9 +5,9 @@ export const environment = {
   // apiUrl: 'https://127.0.0.1:9443/api',
   //  apiUrl: 'https://taskpilotapi.runasp.net/api',
   // apiUrl: 'https://127.0.0.1:9443/api',
-   apiUrl: 'https://taskpilotapi.runasp.net/api',
+  //  apiUrl: 'https://taskpilotapi.runasp.net/api',
 
-  // apiUrl: 'https://127.0.0.1:7185/api',
+  apiUrl: 'https://127.0.0.1:7185/api',
   // apiUrl: 'https://127.0.0.1:7185/api',
   // apiUrl: 'https://taskpilotapi.runasp.net/api',
   hubUrl: 'https://taskpilotapi.runasp.net/hubs/notifications',
