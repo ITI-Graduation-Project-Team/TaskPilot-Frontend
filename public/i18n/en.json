@@ -15,7 +15,10 @@
     "createOne": "Create one",
     "signedIn": "Signed In!",
     "orContinueWith": "or continue with",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "brandingTitle1": "Manage your work,",
+    "brandingTitle2": "effortlessly.",
+    "brandingSubtitle": "Plan tasks, collaborate with your team, and hit every deadline — all in one place."
   },
   "register": {
     "welcome": "Welcome to TaskPilot",
@@ -39,7 +42,10 @@
     "createAccountBtn": "Create Account",
     "creatingAccount": "Creating Account…",
     "accountCreated": "Account Created!",
-    "redirecting": "Redirecting to email verification…"
+    "redirecting": "Redirecting to email verification…",
+    "brandingTitle1": "Join TaskPilot,",
+    "brandingTitle2": "Start planning today.",
+    "brandingSubtitle": "Create an account to manage your tasks, collaborate with your team, and achieve your goals."
   },
   "COMPANY_SETUP": {
     "DESCRIPTION": "Set up your workspace and bring your team on board to start managing tasks seamlessly.",

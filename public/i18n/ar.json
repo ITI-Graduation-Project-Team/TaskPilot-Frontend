@@ -15,7 +15,10 @@
     "createOne": "أنشئ حساباً",
     "signedIn": "تم تسجيل الدخول!",
     "orContinueWith": "أو تابع عبر",
-    "continueWithGoogle": "المتابعة عبر جوجل"
+    "continueWithGoogle": "المتابعة عبر جوجل",
+    "brandingTitle1": "أدر عملك،",
+    "brandingTitle2": "بكل سهولة.",
+    "brandingSubtitle": "خطط لمهامك، وتعاون مع فريقك، وحقق كل المواعيد النهائية — كل ذلك في مكان واحد."
   },
   "register": {
     "welcome": "مرحباً بك في تاسك بايلوت",
@@ -39,7 +42,10 @@
     "createAccountBtn": "إنشاء الحساب",
     "creatingAccount": "جاري إنشاء الحساب…",
     "accountCreated": "تم إنشاء الحساب!",
-    "redirecting": "جاري التوجيه لتأكيد البريد الإلكتروني…"
+    "redirecting": "جاري التوجيه لتأكيد البريد الإلكتروني…",
+    "brandingTitle1": "انضم إلى تاسك بايلوت،",
+    "brandingTitle2": "ابدأ التخطيط اليوم.",
+    "brandingSubtitle": "أنشئ حساباً لإدارة مهامك، والتعاون مع فريقك، وتحقيق أهدافك."
   },
   "COMPANY_SETUP": {
     "DESCRIPTION": "قم بإعداد مساحة العمل الخاصة بك ودعوة فريقك للبدء في إدارة المهام بسهولة.",
