@@ -1,7 +1,9 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivityFeedItemDto } from '../../data/sprint-health.models';
 import { TranslatePipe } from '@ngx-translate/core';
+import { Dialog } from '@angular/cdk/dialog';
+import { SprintAuditLogModalComponent } from '../sprint-audit-log-modal/sprint-audit-log-modal.component';
 
 @Component({
   selector: 'app-sprint-live-activity-feed',
@@ -76,15 +78,24 @@ import { TranslatePipe } from '@ngx-translate/core';
 
       <!-- Footer Link -->
       <div class="mt-4 pt-4 border-t border-border">
-        <a href="javascript:void(0)" class="text-sm font-semibold text-primary hover:underline flex items-center gap-1 w-max">
+        <button (click)="openFullAuditLog()" class="text-sm font-semibold text-primary hover:underline flex items-center gap-1 w-max">
           View full audit log <span class="text-lg leading-none">&rarr;</span>
-        </a>
+        </button>
       </div>
     </div>
   `
 })
 export class SprintLiveActivityFeedComponent {
+  private dialog = inject(Dialog);
+  
   activities = input.required<ActivityFeedItemDto[]>();
+  sprintId = input.required<string>();
+
+  openFullAuditLog() {
+    this.dialog.open(SprintAuditLogModalComponent, {
+      data: { sprintId: this.sprintId() }
+    });
+  }
 
   getDotBg(type: string): string {
     const t = (type || '').toUpperCase();
