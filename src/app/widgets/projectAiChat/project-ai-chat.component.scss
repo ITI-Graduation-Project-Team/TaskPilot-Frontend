@@ -1,17 +1,16 @@
 .chat-drawer {
   position: fixed;
   top: 0;
-  right: -400px;
+  right: -600px;
   /* Hidden by default */
-  width: 400px;
-  height: 111.111vh;
+  width: 600px;
+  height: 100vh;
   background-color: var(--surface-card, #ffffff);
   box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  zoom: 0.5;
 
   &.open {
     right: 0;
@@ -134,6 +133,9 @@
           font-size: 0.9rem;
           line-height: 1.4;
           white-space: pre-wrap;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          word-break: break-word;
         }
 
         .time {
