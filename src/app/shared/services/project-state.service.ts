@@ -198,9 +198,8 @@ export class ProjectStateService {
   }
 
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
-    const pmId = this._userId();
     const companyId = this._userCompanyId();
-    if (!pmId || !companyId) return false;
+    if (!companyId) return false;
 
     const descAr = descriptionAr || descriptionEn;
     try {
@@ -212,7 +211,6 @@ export class ProjectStateService {
         nameAr,
         descriptionEn,
         descriptionAr: descAr,
-        managerId: pmId,
         companyId: companyId
       });
       await this.loadProjects();

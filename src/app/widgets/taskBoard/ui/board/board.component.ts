@@ -16,9 +16,7 @@ import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
-// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
-// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
@@ -43,6 +41,14 @@ interface Task {
   type: 'Feature' | 'Bug' | 'Refactor';
   assigneeId?: string;
   assigneeName?: string;
+  permissions: {
+    canDrag: boolean;
+    canView: boolean;
+    canSummarize: boolean;
+    canEdit: boolean;
+    canComment: boolean;
+    canDownloadAttachments: boolean;
+  };
 }
 
 type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
@@ -342,7 +348,11 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleTodo(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" 
+                     class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" 
+                     [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" 
+                     [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag"
+                     [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -371,15 +381,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
+                        </button>
+                      }
                     </div>
                   </div>
                 </div>
@@ -413,7 +425,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleInProgress(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -442,15 +454,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
+                        </button>
+                      }
                     </div>
                   </div>
                 </div>
@@ -484,7 +498,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleReview(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -513,15 +527,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
+                        </button>
+                      }
                     </div>
                   </div>
                 </div>
@@ -555,7 +571,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleDone(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -584,15 +600,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
+                        </button>
+                      }
                     </div>
                   </div>
                 </div>
@@ -1099,6 +1117,21 @@ export class BoardComponent implements OnInit, OnChanges {
   // Real active ids
   activeProjectId = '';
   activeUserStoryId = '';
+  currentUserId = signal<string | null>(getUserIdFromToken());
+
+  private buildPermissions(assigneeId: string | undefined, isProjectManager: boolean) {
+    const isAssignee = assigneeId === this.currentUserId();
+    const canInteract = isProjectManager || isAssignee;
+
+    return {
+      canDrag: canInteract,
+      canView: canInteract,
+      canSummarize: isAssignee,
+      canEdit: isProjectManager,
+      canComment: canInteract,
+      canDownloadAttachments: canInteract
+    };
+  }
   activeSprintId = signal<string | null>(null);
   plannedSprintId = signal<string | null>(null);
   completedSprintId = signal<string | null>(null);
@@ -1273,7 +1306,15 @@ export class BoardComponent implements OnInit, OnChanges {
     description: '',
     priority: 'Medium',
     hours: 4,
-    type: 'Feature'
+    type: 'Feature',
+    permissions: {
+      canDrag: true,
+      canView: true,
+      canSummarize: true,
+      canEdit: true,
+      canComment: true,
+      canDownloadAttachments: true
+    }
   });
 
   hasAssignments = signal(false);
@@ -1515,21 +1556,15 @@ export class BoardComponent implements OnInit, OnChanges {
 
     if (!sprintId) {
       tasks = [];
-    } else if (this.projectState.isProjectManager()) {
+    } else {
       try {
         tasks = await this.tasksService.getSprintTasks(this.activeProjectId, sprintId);
-        this.activeUserStoryId = tasks[0]?.userStoryId || '';
+        if (this.projectState.isProjectManager()) {
+          this.activeUserStoryId = tasks[0]?.userStoryId || '';
+        }
       } catch (err) {
         console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
-        tasks = [];
-      }
-    } else {
-      // Load only this employee's assignments for the selected sprint.
-      try {
-        tasks = await this.tasksService.getMySprintTasks(this.activeProjectId, sprintId);
-      } catch (err) {
-        console.error('Error loading employee sprint tasks:', err);
         tasks = [];
       }
     }
@@ -1540,9 +1575,10 @@ export class BoardComponent implements OnInit, OnChanges {
     const reviewList: Task[] = [];
     const doneList: Task[] = [];
 
+    const isPm = this.projectState.isProjectManager();
     for (const t of tasks) {
       const task: Task = {
-        id: t.id || t.taskId,
+        id: t.taskId,
         userStoryId: t.userStoryId || '',
         title: this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn,
         titleEn: t.titleEn,
@@ -1552,11 +1588,12 @@ export class BoardComponent implements OnInit, OnChanges {
         descriptionAr: t.descriptionAr,
         priority: mapPriorityToFrontend(t.priority),
         hours: t.estimatedHours || 0,
+        actualHours: t.actualHours || 0,
         type: mapTypeToFrontend(t.type),
         assigneeId: t.assigneeId,
-        assigneeName: t.assigneeName
+        assigneeName: t.assigneeName,
+        permissions: this.buildPermissions(t.assigneeId, isPm)
       };
-      (task as any).actualHours = t.actualHours || 0;
 
       const col = mapStatusToFrontend(t.status);
       if (col === 'todo') todoList.push(task);
