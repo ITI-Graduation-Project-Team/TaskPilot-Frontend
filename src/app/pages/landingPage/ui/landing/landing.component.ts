@@ -3,6 +3,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../shared/services/theme.service';
+import { AuthService } from '../../../../shared/api/auth.service';
 
 @Component({
   selector: 'app-landing',
@@ -34,6 +35,15 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   private router = inject(Router);
+  private authService = inject(AuthService);
+
+  get buttonTextKey(): string {
+    return this.authService.isLoggedIn() ? 'landing.goToDashboard' : 'landing.getStarted';
+  }
+
+  get buttonLink(): string {
+    return this.authService.isLoggedIn() ? '/dashboard' : '/select-role';
+  }
 
   constructor(
     private translate: TranslateService,

@@ -63,10 +63,19 @@ export class ProjectStateService {
 
   private profilePromise: Promise<any> | null = null;
 
-  async getProfile(): Promise<any> {
+  async getProfile(forceRefresh = false): Promise<any> {
+    if (forceRefresh) {
+      this.profilePromise = null;
+    }
     if (!this.profilePromise) {
       this.profilePromise = apiClient.get<any>('/employees/profile')
-        .then(res => res.data?.data || res.data)
+        .then(res => {
+          const profile = res.data?.data || res.data;
+          // Update signals synchronously
+          const companyId = profile?.companyId || profile?.CompanyId || null;
+          this._userCompanyId.set(companyId);
+          return profile;
+        })
         .catch(err => {
           this.profilePromise = null;
           throw err;
@@ -241,9 +250,8 @@ export class ProjectStateService {
   }
 
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
-    const pmId = this._userId();
     const companyId = this._userCompanyId();
-    if (!pmId || !companyId) return false;
+    if (!companyId) return false;
 
     const descAr = descriptionAr || descriptionEn;
     try {
@@ -255,7 +263,6 @@ export class ProjectStateService {
         nameAr,
         descriptionEn,
         descriptionAr: descAr,
-        managerId: pmId,
         companyId: companyId
       });
       await this.loadProjects();

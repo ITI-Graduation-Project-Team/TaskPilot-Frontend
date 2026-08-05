@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { GoogleCalendarService } from '../../shared/api/googleCalendar.service';
 import { finalize } from 'rxjs/operators';
-import { CompanySettingsComponent } from './company-settings.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AiTelemetryComponent } from './ui/ai-telemetry/ai-telemetry.component';
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, CompanySettingsComponent,TranslatePipe],
+  imports: [CommonModule, RouterOutlet, TranslatePipe, AiTelemetryComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div class="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white min-h-[calc(100vh-4rem)] rounded-tl-3xl relative">
@@ -85,8 +85,10 @@ import { TranslatePipe } from '@ngx-translate/core';
             </div>
           </section>
 
-          <!-- Company Settings Section -->
-          <app-company-settings></app-company-settings>
+          <!-- AI Telemetry Section -->
+          <div class="relative z-10 animate-fade-in" style="animation-delay: 100ms;">
+            <app-ai-telemetry></app-ai-telemetry>
+          </div>
 
           <!-- Nested Settings Routes -->
           <div class="relative z-10">

@@ -1,40 +1,39 @@
-<section class="relative min-h-screen bg-brandLight flex items-center justify-center px-4 py-12 overflow-hidden font-sans">
-  
+<section class="relative h-screen w-full font-sans overflow-hidden"
+  style="background-image: url('/background.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;">
   <!-- Language Toggle -->
   <div class="absolute top-6 right-6 z-50">
     <button (click)="toggleLanguage()"
-            class="flex items-center gap-2 px-3 py-1.5 bg-white text-gray-700 rounded-full border border-gray-300 hover:bg-gray-100 dark:bg-slate-800 dark:text-teal-400 dark:border-teal-400/30 dark:hover:bg-slate-700 transition-colors shadow-sm">
+      class="flex items-center gap-2 px-3 py-1.5 bg-white text-gray-700 rounded-full border border-gray-300 hover:bg-gray-100 dark:bg-slate-800 dark:text-teal-400 dark:border-teal-400/30 dark:hover:bg-slate-700 transition-colors shadow-sm">
       <span class="text-sm font-bold uppercase">{{ currentLang() === 'en' ? 'ar' : 'en' }}</span>
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
       </svg>
     </button>
   </div>
 
-  <!-- Background blobs -->
-  <div class="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-brandPrimary/8 blur-3xl pointer-events-none"></div>
-  <div class="absolute -bottom-24 -right-20 w-80 h-80 rounded-full bg-brandSecondary/8 blur-3xl pointer-events-none"></div>
 
   <!-- ══════════ STEP 1 — ROLE SELECTION ══════════ -->
   <div *ngIf="step() === 'role'"
-       class="relative z-10 w-full max-w-[640px] flex flex-col items-center text-center animate-[fadeUp_0.45s_ease_both]">
+    class="relative z-10 w-full h-full mx-auto max-w-[640px] flex flex-col justify-center items-center text-center animate-[fadeUp_0.45s_ease_both]">
 
     <!-- Logo -->
-    <div class="flex items-center gap-2.5 mb-8">
+    <div class="flex items-center gap-1">
       <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-10" />
     </div>
 
     <!-- Heading -->
-    <h1 class="text-4xl font-extrabold text-brandSecondary tracking-tight mb-2">{{ 'register.welcome' | translate }}</h1>
+    <h1 class="text-4xl font-extrabold text-brandSecondary tracking-tight ">{{ 'register.welcome' | translate }}
+    </h1>
     <p class="text-base text-gray-500 mb-10">{{ 'register.describe' | translate }}</p>
 
     <!-- Role Cards -->
-    <div class="grid grid-cols-2 gap-5 w-full max-w-[540px] mb-10 max-[500px]:grid-cols-1">
+    <div class="grid grid-cols-2 gap-5 w-full max-w-[640px] mb-10 max-[500px]:grid-cols-1">
 
       <!-- Employee -->
-      <button id="role-employee"
-              (click)="selectRole('Employee')"
-              class="group flex flex-col items-center text-center bg-brandWhite border border-brandAccent rounded-2xl overflow-hidden
+      <button id="role-employee" (click)="selectRole('Employee')" class="group flex flex-col items-center text-center bg-brandWhite border border-brandAccent rounded-2xl overflow-hidden
                      cursor-pointer shadow-sm transition-all duration-200
                      hover:-translate-y-1.5 hover:shadow-xl hover:shadow-brandPrimary/10 hover:border-brandPrimary/40
                      animate-[scaleIn_0.4s_ease_both]">
@@ -44,17 +43,19 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-brandSecondary" viewBox="0 0 64 64" fill="none">
             <!-- Glowing background circle -->
             <circle cx="32" cy="32" r="28" fill="url(#employeeGrad)" class="opacity-15" />
-            
+
             <!-- User silhouette -->
-            <path d="M32 38c-8.8 0-16 4.8-16 10.8V52h32v-3.2c0-6-7.2-10.8-16-10.8z" fill="currentColor" opacity="0.85" />
+            <path d="M32 38c-8.8 0-16 4.8-16 10.8V52h32v-3.2c0-6-7.2-10.8-16-10.8z" fill="currentColor"
+              opacity="0.85" />
             <circle cx="32" cy="24" r="8" fill="currentColor" opacity="0.85" />
-            
+
             <!-- Floating checkmark badge -->
             <g transform="translate(36, 32)">
               <rect width="20" height="20" rx="6" fill="#FAFAFA" stroke="#2563EB" stroke-width="1.8" />
-              <path d="M6 10l3 3 5-6" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M6 10l3 3 5-6" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round" />
             </g>
-            
+
             <defs>
               <linearGradient id="employeeGrad" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
                 <stop stop-color="#2563EB" />
@@ -65,18 +66,19 @@
         </div>
         <!-- Label -->
         <div class="px-4 pb-5 pt-3">
-          <p class="text-[1.0625rem] font-bold text-brandSecondary" [class.flex]="currentLang() === 'ar'" [class.items-center]="currentLang() === 'ar'" [class.gap-1]="currentLang() === 'ar'">
+          <p class="text-[1.0625rem] font-bold text-brandSecondary" [class.flex]="currentLang() === 'ar'"
+            [class.items-center]="currentLang() === 'ar'" [class.gap-1]="currentLang() === 'ar'">
             {{ 'register.employee' | translate }}
-            <span class="inline-block transition-transform duration-200" [ngClass]="currentLang() === 'ar' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'">{{ currentLang() === 'ar' ? '←' : '→' }}</span>
+            <span class="inline-block transition-transform duration-200"
+              [ngClass]="currentLang() === 'ar' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'">{{
+              currentLang() === 'ar' ? '←' : '→' }}</span>
           </p>
           <p class="text-[0.8125rem] text-gray-500 mt-0.5">{{ 'register.employeeDesc' | translate }}</p>
         </div>
       </button>
 
       <!-- Project Manager -->
-      <button id="role-project-manager"
-              (click)="selectRole('ProjectManager')"
-              class="group flex flex-col items-center text-center bg-brandWhite border border-brandAccent rounded-2xl overflow-hidden
+      <button id="role-project-manager" (click)="selectRole('ProjectManager')" class="group flex flex-col items-center text-center bg-brandWhite border border-brandAccent rounded-2xl overflow-hidden
                      cursor-pointer shadow-sm transition-all duration-200
                      hover:-translate-y-1.5 hover:shadow-xl hover:shadow-brandPrimary/10 hover:border-brandPrimary/40
                      animate-[scaleIn_0.4s_0.1s_ease_both]">
@@ -86,11 +88,12 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-brandSecondary" viewBox="0 0 64 64" fill="none">
             <!-- Glowing background circle -->
             <circle cx="32" cy="32" r="28" fill="url(#pmGrad)" class="opacity-15" />
-            
+
             <!-- User silhouette -->
-            <path d="M32 38c-8.8 0-16 4.8-16 10.8V52h32v-3.2c0-6-7.2-10.8-16-10.8z" fill="currentColor" opacity="0.85" />
+            <path d="M32 38c-8.8 0-16 4.8-16 10.8V52h32v-3.2c0-6-7.2-10.8-16-10.8z" fill="currentColor"
+              opacity="0.85" />
             <circle cx="32" cy="24" r="8" fill="currentColor" opacity="0.85" />
-            
+
             <!-- Floating Dashboard panel -->
             <g transform="translate(34, 30)">
               <rect width="24" height="20" rx="5" fill="#FAFAFA" stroke="#121338" stroke-width="1.8" />
@@ -99,7 +102,7 @@
               <rect x="13" y="5" width="7" height="3" rx="1" fill="#0EA5E9" />
               <rect x="4" y="11" width="16" height="4" rx="1" fill="#121338" />
             </g>
-            
+
             <defs>
               <linearGradient id="pmGrad" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
                 <stop stop-color="#121338" />
@@ -110,9 +113,12 @@
         </div>
         <!-- Label -->
         <div class="px-4 pb-5 pt-3">
-          <p class="text-[1.0625rem] font-bold text-brandSecondary" [class.flex]="currentLang() === 'ar'" [class.items-center]="currentLang() === 'ar'" [class.gap-1]="currentLang() === 'ar'">
+          <p class="text-[1.0625rem] font-bold text-brandSecondary" [class.flex]="currentLang() === 'ar'"
+            [class.items-center]="currentLang() === 'ar'" [class.gap-1]="currentLang() === 'ar'">
             {{ 'register.projectManager' | translate }}
-            <span class="inline-block transition-transform duration-200" [ngClass]="currentLang() === 'ar' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'">{{ currentLang() === 'ar' ? '←' : '→' }}</span>
+            <span class="inline-block transition-transform duration-200"
+              [ngClass]="currentLang() === 'ar' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'">{{
+              currentLang() === 'ar' ? '←' : '→' }}</span>
           </p>
           <p class="text-[0.8125rem] text-gray-500 mt-0.5">{{ 'register.pmDesc' | translate }}</p>
         </div>
@@ -123,258 +129,307 @@
     <!-- Footer -->
     <p class="text-sm text-gray-500">
       {{ 'register.alreadyHaveAccount' | translate }}
-      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity" [class.ml-1]="currentLang() === 'en'" [class.mr-1]="currentLang() === 'ar'">{{ 'register.signIn' | translate }}</a>
+      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity"
+        [class.ml-1]="currentLang() === 'en'" [class.mr-1]="currentLang() === 'ar'">{{ 'register.signIn' | translate
+        }}</a>
     </p>
   </div>
 
 
   <!-- ══════════ STEP 2 — REGISTER FORM ══════════ -->
   <div *ngIf="step() === 'form'"
-       class="relative z-10 w-full max-w-lg bg-brandWhite border border-brandAccent rounded-2xl p-8 shadow-xl animate-[fadeUp_0.45s_ease_both]">
+    class="flex flex-row justify-center items-center gap-10 lg:gap-28 w-full h-full px-4 lg:px-10">
 
-    <!-- Header: back + brand -->
-    <div class="flex items-center gap-3 mb-5">
-      <button id="back-to-role" (click)="goBackToRole()" aria-label="Go back"
-              class="flex items-center justify-center w-9 h-9 rounded-xl border border-brandAccent
-                     bg-transparent text-brandSecondary cursor-pointer shrink-0
-                     hover:bg-brandPrimary/5 hover:border-brandPrimary hover:text-brandPrimary transition-colors duration-150">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [ngClass]="currentLang() === 'ar' ? 'rotate-180' : ''">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-      </button>
-      <div class="flex items-center gap-2">
-        <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-8" />
+    <!-- Left Branding Column -->
+    <div
+      class="hidden lg:flex flex-col justify-center items-start relative animate-[fadeUp_0.45s_ease_both] max-w-[450px]">
+      <div class="mb-10">
+        <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-14" />
       </div>
-    </div>
-
-    <!-- Role badge -->
-    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.75rem] font-bold uppercase tracking-wider mb-5
-                border"
-         [class.bg-brandPrimary]="false"
-         [ngClass]="selectedRole() === 'ProjectManager'
-           ? 'bg-brandSecondary/10 text-brandSecondary border-brandSecondary/20'
-           : 'bg-brandPrimary/10 text-brandPrimary border-brandPrimary/20'">
-      <svg *ngIf="selectedRole() === 'Employee'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
-        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-      </svg>
-      <svg *ngIf="selectedRole() === 'ProjectManager'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-      </svg>
-      {{ selectedRole() === 'ProjectManager' ? ('register.projectManager' | translate) : ('register.employee' | translate) }}
-    </div>
-
-    <!-- Heading -->
-    <div class="mb-6">
-      <h1 class="text-[1.5rem] font-bold text-brandSecondary tracking-tight mb-1">{{ 'register.createAccount' | translate }}</h1>
-      <p class="text-[0.9375rem] text-gray-500">{{ 'register.fillDetails' | translate }}</p>
-    </div>
-
-    <!-- Success -->
-    <div *ngIf="isSuccess"
-         class="flex items-start gap-3.5 p-4 bg-brandPrimary/5 border border-brandPrimary/25 rounded-xl mb-6 animate-[fadeUp_0.4s_ease_both]">
-      <div class="shrink-0 flex items-center justify-center w-9 h-9 bg-brandPrimary rounded-full text-brandWhite">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </div>
-      <div>
-        <p class="font-bold text-[0.9375rem] text-brandSecondary mb-0.5">{{ 'register.accountCreated' | translate }}</p>
-        <p class="text-sm text-gray-500">{{ 'register.redirecting' | translate }}</p>
-      </div>
-    </div>
-
-    <!-- Form -->
-    <form *ngIf="!isSuccess" class="flex flex-col gap-4" (ngSubmit)="onSubmit()" novalidate>
-
-      <!-- English name row -->
-      <div class="grid grid-cols-2 gap-3" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
-        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
-          <label class="text-sm font-semibold text-brandSecondary" for="firstNameEn">
-            {{ currentLang() === 'ar' ? 'الاسم الأول (إنجليزي)' : 'First Name' }}
-          </label>
-          <input id="firstNameEn" name="firstNameEn" type="text"
-                 [ngModel]="firstNameEn()" (ngModelChange)="firstNameEn.set($event)"
-                 [disabled]="isLoading" placeholder="Yasser"
-                 class="w-full px-3.5 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
-        </div>
-        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
-          <label class="text-sm font-semibold text-brandSecondary" for="lastNameEn">
-            {{ currentLang() === 'ar' ? 'اسم العائلة (إنجليزي)' : 'Last Name' }}
-          </label>
-          <input id="lastNameEn" name="lastNameEn" type="text"
-                 [ngModel]="lastNameEn()" (ngModelChange)="lastNameEn.set($event)"
-                 [disabled]="isLoading" placeholder="Mohamed"
-                 class="w-full px-3.5 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
-        </div>
-      </div>
-
-      <!-- Arabic name row -->
-      <div class="grid grid-cols-2 gap-3" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
-        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
-          <label class="text-sm font-semibold text-brandSecondary" for="firstNameAr">
-            {{ currentLang() === 'ar' ? 'الاسم الأول (عربي)' : 'First Name (ar)' }}
-          </label>
-          <input id="firstNameAr" name="firstNameAr" type="text" dir="rtl"
-                 [ngModel]="firstNameAr()" (ngModelChange)="firstNameAr.set($event)"
-                 [disabled]="isLoading" placeholder="ياسر"
-                 class="w-full px-3.5 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
-        </div>
-        <div class="flex flex-col gap-1.5" [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
-          <label class="text-sm font-semibold text-brandSecondary" for="lastNameAr">
-            {{ currentLang() === 'ar' ? 'اسم العائلة (عربي)' : 'Last Name (ar)' }}
-          </label>
-          <input id="lastNameAr" name="lastNameAr" type="text" dir="rtl"
-                 [ngModel]="lastNameAr()" (ngModelChange)="lastNameAr.set($event)"
-                 [disabled]="isLoading" placeholder="محمد"
-                 class="w-full px-3.5 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
-        </div>
-      </div>
-
-      <!-- Email -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-brandSecondary" for="reg-email">{{ 'register.emailLabel' | translate }}</label>
-        <div class="relative">
-          <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none" [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/>
-            </svg>
-          </span>
-          <input id="reg-email" name="email" type="email"
-                 [ngModel]="email()" (ngModelChange)="email.set($event)"
-                 [disabled]="isLoading" placeholder="you@example.com" autocomplete="email"
-                 class="w-full py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"
-                 [ngClass]="currentLang() === 'ar' ? 'pr-11 pl-4' : 'pl-11 pr-4'"/>
-        </div>
-      </div>
-
-      <!-- Password -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-brandSecondary" for="reg-password">{{ 'register.passwordLabel' | translate }}</label>
-        <div class="relative">
-          <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none" [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </span>
-          <input id="reg-password" name="password"
-                 [type]="showPassword() ? 'text' : 'password'"
-                 [ngModel]="password()" (ngModelChange)="password.set($event)"
-                 [disabled]="isLoading" placeholder="******" autocomplete="new-password"
-                 class="w-full px-11 py-3 bg-brandLight border-[1.5px] border-brandAccent rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"/>
-          <button type="button" (click)="togglePassword()" tabindex="-1"
-                  class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
-                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer"
-                  [class.left-3.5]="currentLang() === 'ar'" [class.right-3.5]="currentLang() === 'en'">
-            <svg *ngIf="!showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg *ngIf="showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </div>
-        <!-- Password strength -->
-        <div *ngIf="password()" class="flex items-center gap-2.5 mt-0.5">
-          <div class="flex-1 h-1 bg-brandAccent/50 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-300"
-                 [class.w-1/3]="passwordStrength === 'weak'"   [class.bg-brandPrimary]="passwordStrength === 'weak'"
-                 [class.w-2/3]="passwordStrength === 'medium'" [class.bg-yellow-400]="passwordStrength === 'medium'"
-                 [class.w-full]="passwordStrength === 'strong'" [class.bg-emerald-500]="passwordStrength === 'strong'"></div>
-          </div>
-          <span class="text-xs font-semibold min-w-[44px]"
-                [class.text-brandPrimary]="passwordStrength === 'weak'"
-                [class.text-yellow-500]="passwordStrength === 'medium'"
-                [class.text-emerald-500]="passwordStrength === 'strong'">
-            {{ passwordStrength | titlecase }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Confirm Password -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-semibold text-brandSecondary" for="reg-confirm">{{ 'register.confirmPassword' | translate }}</label>
-        <div class="relative">
-          <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none" [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </span>
-          <input id="reg-confirm" name="confirmPassword"
-                 [type]="showConfirm() ? 'text' : 'password'"
-                 [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)"
-                 [disabled]="isLoading" placeholder="******" autocomplete="new-password"
-                 class="w-full px-11 py-3 bg-brandLight border-[1.5px] rounded-[10px]
-                        text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
-                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                        focus:bg-brandWhite focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"
-                 [class.border-brandAccent]="!(confirmPassword() && password() !== confirmPassword())"
-                 [class.border-brandPrimary]="confirmPassword() && password() !== confirmPassword()"/>
-          <button type="button" (click)="toggleConfirm()" tabindex="-1"
-                  class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
-                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer"
-                  [class.left-3.5]="currentLang() === 'ar'" [class.right-3.5]="currentLang() === 'en'">
-            <svg *ngIf="!showConfirm()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg *ngIf="showConfirm()" xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </div>
-        <p *ngIf="confirmPassword() && password() !== confirmPassword()"
-           class="text-[0.8125rem] font-medium text-brandPrimary">{{ 'register.passwordsNoMatch' | translate }}</p>
-        <p *ngIf="confirmPassword() && password() === confirmPassword()"
-           class="text-[0.8125rem] font-medium text-emerald-500 flex items-center gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          {{ currentLang() === 'ar' ? 'كلمتا المرور متطابقتان' : 'Passwords match' }}
+      <div [style.word-spacing]="currentLang() === 'ar' ? '-0.15em' : 'normal'">
+        <h2 class="text-4xl font-extrabold text-gray-800 leading-tight mb-2 drop-shadow-sm"
+          [class.tracking-tight]="currentLang() === 'en'">
+          {{ 'register.brandingTitle1' | translate }}<br />
+          <span class="text-brandPrimary">{{ 'register.brandingTitle2' | translate }}</span>
+        </h2>
+        <p class="text-[1.0625rem] text-gray-500 leading-relaxed">
+          {{ 'register.brandingSubtitle' | translate }}
         </p>
       </div>
+    </div>
 
-      <!-- Global error -->
-      <div *ngIf="state() === 'error'"
-           class="text-sm font-medium text-brandPrimary bg-brandPrimary/5 border border-brandPrimary/20 rounded-lg px-3.5 py-2.5">
-        {{ errorMessage() }}
-      </div>
+    <!-- Right Card Column -->
+    <div class="flex items-center justify-center w-full lg:w-auto lg:min-w-[480px]">
+      <div
+        class="relative z-10 w-full max-w-[480px] bg-white border border-brandAccent/30 rounded-3xl p-6 xl:p-8 shadow-2xl flex flex-col animate-[fadeUp_0.45s_ease_both] max-h-[95vh] overflow-y-auto no-scrollbar">
 
-      <!-- Submit -->
-      <button type="submit" [disabled]="isLoading" id="submit-register"
-              class="mt-1 flex items-center justify-center gap-2 w-full py-3.5 bg-brandPrimary text-brandWhite
-                     rounded-[10px] text-base font-semibold transition-all duration-200
-                     hover:opacity-[0.88] hover:-translate-y-px active:translate-y-0
+        <!-- Header: back + brand -->
+        <div class="flex items-center gap-3 mb-3">
+          <button id="back-to-role" (click)="goBackToRole()" aria-label="Go back"
+            class="flex items-center justify-center w-9 h-9 rounded-xl border border-brandAccent
+                     bg-transparent text-brandSecondary cursor-pointer shrink-0
+                     hover:bg-brandPrimary/5 hover:border-brandPrimary hover:text-brandPrimary transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              [ngClass]="currentLang() === 'ar' ? 'rotate-180' : ''">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div class="flex items-center gap-2">
+            <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-8" />
+          </div>
+        </div>
+
+        <!-- Role badge -->
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-wider mb-3
+                border" [class.bg-brandPrimary]="false" [ngClass]="selectedRole() === 'ProjectManager'
+           ? 'bg-brandSecondary/10 text-brandSecondary border-brandSecondary/20'
+           : 'bg-brandPrimary/10 text-brandPrimary border-brandPrimary/20'">
+          <svg *ngIf="selectedRole() === 'Employee'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+          </svg>
+          <svg *ngIf="selectedRole() === 'ProjectManager'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18M9 21V9" />
+          </svg>
+          {{ selectedRole() === 'ProjectManager' ? ('register.projectManager' | translate) : ('register.employee' |
+          translate) }}
+        </div>
+
+        <!-- Heading -->
+        <div class="mb-4">
+          <h1 class="text-[1.35rem] font-bold text-brandSecondary tracking-tight mb-0.5">{{ 'register.createAccount' |
+            translate }}</h1>
+          <p class="text-[0.875rem] text-gray-500">{{ 'register.fillDetails' | translate }}</p>
+        </div>
+
+        <!-- Success -->
+        <div *ngIf="isSuccess"
+          class="flex items-start gap-3 p-3.5 bg-brandPrimary/5 border border-brandPrimary/25 rounded-xl mb-4 animate-[fadeUp_0.4s_ease_both]">
+          <div class="shrink-0 flex items-center justify-center w-9 h-9 bg-brandPrimary rounded-full text-brandWhite">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-bold text-[0.9375rem] text-brandSecondary mb-0.5">{{ 'register.accountCreated' | translate }}
+            </p>
+            <p class="text-sm text-gray-500">{{ 'register.redirecting' | translate }}</p>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form *ngIf="!isSuccess" class="flex flex-col gap-2.5" (ngSubmit)="onSubmit()" novalidate>
+
+          <!-- English name row -->
+          <div class="grid grid-cols-2 gap-2.5" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="flex flex-col gap-1">
+              <label class="text-[0.8rem] font-semibold text-brandSecondary" for="firstNameEn"
+                [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+                {{ currentLang() === 'ar' ? 'الاسم الأول (إنجليزي)' : 'First Name' }}
+              </label>
+              <input id="firstNameEn" name="firstNameEn" type="text" [ngModel]="firstNameEn()"
+                (ngModelChange)="firstNameEn.set($event)" [disabled]="isLoading" placeholder="Yasser" class="w-full px-3.5 py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[0.8rem] font-semibold text-brandSecondary" for="lastNameEn"
+                [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+                {{ currentLang() === 'ar' ? 'اسم العائلة (إنجليزي)' : 'Last Name' }}
+              </label>
+              <input id="lastNameEn" name="lastNameEn" type="text" [ngModel]="lastNameEn()"
+                (ngModelChange)="lastNameEn.set($event)" [disabled]="isLoading" placeholder="Mohamed" class="w-full px-3.5 py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15" />
+            </div>
+          </div>
+
+          <!-- Arabic name row -->
+          <div class="grid grid-cols-2 gap-2.5" [attr.dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="flex flex-col gap-1">
+              <label class="text-[0.8rem] font-semibold text-brandSecondary" for="firstNameAr"
+                [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+                {{ currentLang() === 'ar' ? 'الاسم الأول (عربي)' : 'First Name (ar)' }}
+              </label>
+              <input id="firstNameAr" name="firstNameAr" type="text" dir="rtl" [ngModel]="firstNameAr()"
+                (ngModelChange)="firstNameAr.set($event)" [disabled]="isLoading" placeholder="ياسر" class="w-full px-3.5 py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[0.8rem] font-semibold text-brandSecondary" for="lastNameAr"
+                [ngClass]="currentLang() === 'ar' ? 'text-right' : 'text-left'">
+                {{ currentLang() === 'ar' ? 'اسم العائلة (عربي)' : 'Last Name (ar)' }}
+              </label>
+              <input id="lastNameAr" name="lastNameAr" type="text" dir="rtl" [ngModel]="lastNameAr()"
+                (ngModelChange)="lastNameAr.set($event)" [disabled]="isLoading" placeholder="محمد" class="w-full px-3.5 py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15" />
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[0.8rem] font-semibold text-brandSecondary" for="reg-email">{{ 'register.emailLabel' |
+              translate }}</label>
+            <div class="relative">
+              <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none"
+                [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M22 7l-10 7L2 7" />
+                </svg>
+              </span>
+              <input id="reg-email" name="email" type="email" [ngModel]="email()" (ngModelChange)="email.set($event)"
+                [disabled]="isLoading" placeholder="you@example.com" autocomplete="email" class="w-full py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"
+                [ngClass]="currentLang() === 'ar' ? 'pr-10 pl-3.5' : 'pl-10 pr-3.5'" />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[0.8rem] font-semibold text-brandSecondary" for="reg-password">{{
+              'register.passwordLabel' | translate }}</label>
+            <div class="relative">
+              <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none"
+                [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </span>
+              <input id="reg-password" name="password" [type]="showPassword() ? 'text' : 'password'"
+                [ngModel]="password()" (ngModelChange)="password.set($event)" [disabled]="isLoading"
+                placeholder="******" autocomplete="new-password" class="w-full px-10 py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15" />
+              <button type="button" (click)="togglePassword()" tabindex="-1" class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
+                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer"
+                [class.left-3.5]="currentLang() === 'ar'" [class.right-3.5]="currentLang() === 'en'">
+                <svg *ngIf="!showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg *ngIf="showPassword()" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <!-- Password strength -->
+            <div *ngIf="password()" class="flex items-center gap-2.5 mt-0.5">
+              <div class="flex-1 h-1 bg-brandAccent/50 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-300" [class.w-1/3]="passwordStrength === 'weak'"
+                  [class.bg-brandPrimary]="passwordStrength === 'weak'" [class.w-2/3]="passwordStrength === 'medium'"
+                  [class.bg-yellow-400]="passwordStrength === 'medium'" [class.w-full]="passwordStrength === 'strong'"
+                  [class.bg-emerald-500]="passwordStrength === 'strong'"></div>
+              </div>
+              <span class="text-xs font-semibold min-w-[44px]" [class.text-brandPrimary]="passwordStrength === 'weak'"
+                [class.text-yellow-500]="passwordStrength === 'medium'"
+                [class.text-emerald-500]="passwordStrength === 'strong'">
+                {{ passwordStrength | titlecase }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[0.8rem] font-semibold text-brandSecondary" for="reg-confirm">{{
+              'register.confirmPassword' | translate }}</label>
+            <div class="relative">
+              <span class="absolute top-1/2 -translate-y-1/2 text-brandAccent pointer-events-none"
+                [class.right-3.5]="currentLang() === 'ar'" [class.left-3.5]="currentLang() === 'en'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </span>
+              <input id="reg-confirm" name="confirmPassword" [type]="showConfirm() ? 'text' : 'password'"
+                [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" [disabled]="isLoading"
+                placeholder="******" autocomplete="new-password" class="w-full px-10 py-2.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                        text-[0.875rem] text-brandSecondary outline-none transition-all duration-200
+                        placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
+                        focus:bg-white focus:border-brandPrimary focus:ring-2 focus:ring-brandPrimary/15"
+                [class.border-brandAccent]="!(confirmPassword() && password() !== confirmPassword())"
+                [class.border-brandPrimary]="confirmPassword() && password() !== confirmPassword()" />
+              <button type="button" (click)="toggleConfirm()" tabindex="-1" class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary
+                         transition-colors duration-200 p-0 bg-transparent border-0 cursor-pointer"
+                [class.left-3.5]="currentLang() === 'ar'" [class.right-3.5]="currentLang() === 'en'">
+                <svg *ngIf="!showConfirm()" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg *ngIf="showConfirm()" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                  <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <p *ngIf="confirmPassword() && password() !== confirmPassword()"
+              class="text-[0.8125rem] font-medium text-brandPrimary">{{ 'register.passwordsNoMatch' | translate }}</p>
+            <p *ngIf="confirmPassword() && password() === confirmPassword()"
+              class="text-[0.8125rem] font-medium text-emerald-500 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {{ currentLang() === 'ar' ? 'كلمتا المرور متطابقتان' : 'Passwords match' }}
+            </p>
+          </div>
+
+          <!-- Global error -->
+          <div *ngIf="state() === 'error'"
+            class="text-sm font-medium text-brandPrimary bg-brandPrimary/5 border border-brandPrimary/20 rounded-lg px-3.5 py-2.5">
+            {{ errorMessage() }}
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" [disabled]="isLoading" id="submit-register" class="mt-1 flex items-center justify-center gap-2 w-full py-3 bg-brandPrimary text-white
+                     rounded-xl text-[0.95rem] font-bold shadow-md shadow-brandPrimary/30 transition-all duration-200
+                     hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0
                      disabled:opacity-65 disabled:cursor-not-allowed disabled:transform-none">
-        <span *ngIf="isLoading"
+            <span *ngIf="isLoading"
               class="w-[18px] h-[18px] rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0"></span>
-        <span>{{ isLoading ? ('register.creatingAccount' | translate) : ('register.createAccountBtn' | translate) }}</span>
-      </button>
+            <span>{{ isLoading ? ('register.creatingAccount' | translate) : ('register.createAccountBtn' | translate)
+              }}</span>
+          </button>
 
-    </form>
+        </form>
 
-    <!-- Footer -->
-    <p class="text-center mt-5 text-sm text-gray-500">
-      {{ 'register.alreadyHaveAccount' | translate }}
-      <a routerLink="/login" class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity duration-200" [class.ml-1]="currentLang() === 'en'" [class.mr-1]="currentLang() === 'ar'">
-        {{ 'register.signIn' | translate }}
-      </a>
-    </p>
+        <!-- Footer -->
+        <p class="text-center mt-4 text-[0.875rem] text-gray-500">
+          {{ 'register.alreadyHaveAccount' | translate }}
+          <a routerLink="/login"
+            class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity duration-200"
+            [class.ml-1]="currentLang() === 'en'" [class.mr-1]="currentLang() === 'ar'">
+            {{ 'register.signIn' | translate }}
+          </a>
+        </p>
 
+      </div>
+    </div>
   </div>
 
 </section>
