@@ -110,7 +110,8 @@
       "NEXT": "Next",
       "COMPLETE": "Complete Setup",
       "CONFIGURING": "Configuring..."
-    }
+    },
+    "STEP_CAPACITY": "Capacity Configuration"
   },
   "PROFILE": {
     "LOADING": "Loading Profile Details...",
@@ -535,7 +536,9 @@
     "BACKLOG_SHORT": "Backlog",
     "TEAM": "Team",
     "PROFILE": "Profile",
-    "SETTINGS": "Settings"
+    "SETTINGS": "Settings",
+    "RETROSPECTIVE": "Retrospective",
+    "TASK_ASSIGNMENT": "Task Assignment"
   },
   "HEADER": {
     "PROJECTS_HUB": "Projects Hub",
@@ -899,5 +902,42 @@
     "NOT_FOUND_TITLE": "Employee Not Found",
     "NOT_FOUND_DESC": "The employee you are looking for does not exist or you don't have access.",
     "RETURN_DIR": "Return to Directory"
+  },
+  "COMPANY_CAPACITY": {
+    "TITLE": "Sprint Capacity Configuration",
+    "DESC": "Configure the default working schedule and sprint capacity logic for your company.",
+    "WORKING_HOURS": "Working Hours Per Day",
+    "WORKING_DAYS": "Working Days",
+    "DEFAULT_BUFFER": "Default Capacity Buffer (e.g. 0.8 for 80% focus factor)",
+    "SAVE": "Save Configuration",
+    "SAVING": "Saving...",
+    "SUCCESS": "Configuration saved successfully.",
+    "ERROR": "Failed to save configuration.",
+    "SUN": "Sun",
+    "MON": "Mon",
+    "TUE": "Tue",
+    "WED": "Wed",
+    "THU": "Thu",
+    "FRI": "Fri",
+    "SAT": "Sat"
+  },
+  "TELEMETRY": {
+    "TITLE": "AI Telemetry",
+    "PM_DESC": "Monitor AI usage, token consumption, and costs across this project.",
+    "EMP_DESC": "Monitor your personal AI usage, token consumption, and estimated costs.",
+    "ROLE_PM": "Project Overview",
+    "ROLE_EMP": "My Usage",
+    "LOADING": "Loading telemetry data...",
+    "NO_PROJECT": "No Project Selected",
+    "NO_PROJECT_DESC": "Select a project from the sidebar to view its AI Telemetry.",
+    "METRIC_OPS": "Total Operations",
+    "METRIC_TOKENS": "Total Tokens",
+    "METRIC_COST": "Est. Cost (USD)",
+    "METRIC_LATENCY": "Avg Response Time",
+    "MODEL_USAGE": "Model Usage Breakdown",
+    "TEAM_USAGE": "Team Members Usage",
+    "OPS": "ops",
+    "NO_DATA": "No AI operations logged yet.",
+    "NO_TEAM_DATA": "No team members have used AI in this project yet."
   }
 }
