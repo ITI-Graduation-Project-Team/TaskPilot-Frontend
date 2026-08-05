@@ -15,7 +15,10 @@
     "createOne": "Create one",
     "signedIn": "Signed In!",
     "orContinueWith": "or continue with",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "brandingTitle1": "Manage your work,",
+    "brandingTitle2": "effortlessly.",
+    "brandingSubtitle": "Plan tasks, collaborate with your team, and hit every deadline — all in one place."
   },
   "register": {
     "welcome": "Welcome to TaskPilot",
@@ -39,7 +42,10 @@
     "createAccountBtn": "Create Account",
     "creatingAccount": "Creating Account…",
     "accountCreated": "Account Created!",
-    "redirecting": "Redirecting to email verification…"
+    "redirecting": "Redirecting to email verification…",
+    "brandingTitle1": "Join TaskPilot,",
+    "brandingTitle2": "Start planning today.",
+    "brandingSubtitle": "Create an account to manage your tasks, collaborate with your team, and achieve your goals."
   },
   "COMPANY_SETUP": {
     "DESCRIPTION": "Set up your workspace and bring your team on board to start managing tasks seamlessly.",
@@ -104,9 +110,12 @@
       "NEXT": "Next",
       "COMPLETE": "Complete Setup",
       "CONFIGURING": "Configuring..."
-    }
+    },
+    "STEP_CAPACITY": "Capacity Configuration"
   },
   "PROFILE": {
+    "VALIDATION_WARNING_TITLE": "Attention: Data Validation",
+    "VALIDATION_WARNING_BODY": "Please ensure your manually entered Job Title, Seniority Level, and Years of Experience match the contents of your newly uploaded CV. Your manager will review this data for consistency.",
     "LOADING": "Loading Profile Details...",
     "TEAM_MEMBER": "Team Member",
     "EDIT_PROFILE": "Edit Profile",
@@ -496,7 +505,12 @@
     "NO_EMPLOYEES_MODAL_TITLE": "Employees Required for Sprint Planning",
     "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
     "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
-    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
+    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint.",
+    "PLANNED_SPRINT_BANNER_TITLE": "Planned Sprint Exists",
+    "PLANNED_SPRINT_BANNER_DESC": "A sprint has already been planned for this project. You cannot plan or generate AI suggestions for another sprint until the existing planned sprint is started or removed.",
+    "TOOLTIP_PLANNED_SPRINT": "A sprint is already planned for this project. Start or delete the planned sprint before creating a new one.",
+    "VIEW_PLANNED_SPRINT": "View Planned Sprint",
+    "ERROR_ANOTHER_PLANNED": "A planned sprint already exists for this project."
   },
   "REQUIREMENTS": {
     "ALMOST_COMPLETE": "Almost Complete"
@@ -518,13 +532,16 @@
     "COMPANY_POLICIES": "Company Policies",
     "PROJECT_POLICIES": "Project Policies",
     "MY_PROFILE": "My Profile",
+    "SETTINGS": "Settings",
     "PROJECTS": "Projects",
     "SPRINT": "Sprint",
     "PLANNING": "Planning",
     "BACKLOG_SHORT": "Backlog",
     "TEAM": "Team",
     "PROFILE": "Profile",
-    "SETTINGS": "Settings"
+    "SETTINGS": "Settings",
+    "RETROSPECTIVE": "Retrospective",
+    "TASK_ASSIGNMENT": "Task Assignment"
   },
   "HEADER": {
     "PROJECTS_HUB": "Projects Hub",
@@ -888,5 +905,42 @@
     "NOT_FOUND_TITLE": "Employee Not Found",
     "NOT_FOUND_DESC": "The employee you are looking for does not exist or you don't have access.",
     "RETURN_DIR": "Return to Directory"
+  },
+  "COMPANY_CAPACITY": {
+    "TITLE": "Sprint Capacity Configuration",
+    "DESC": "Configure the default working schedule and sprint capacity logic for your company.",
+    "WORKING_HOURS": "Working Hours Per Day",
+    "WORKING_DAYS": "Working Days",
+    "DEFAULT_BUFFER": "Default Capacity Buffer (e.g. 0.8 for 80% focus factor)",
+    "SAVE": "Save Configuration",
+    "SAVING": "Saving...",
+    "SUCCESS": "Configuration saved successfully.",
+    "ERROR": "Failed to save configuration.",
+    "SUN": "Sun",
+    "MON": "Mon",
+    "TUE": "Tue",
+    "WED": "Wed",
+    "THU": "Thu",
+    "FRI": "Fri",
+    "SAT": "Sat"
+  },
+  "TELEMETRY": {
+    "TITLE": "AI Telemetry",
+    "PM_DESC": "Monitor AI usage, token consumption, and costs across this project.",
+    "EMP_DESC": "Monitor your personal AI usage, token consumption, and estimated costs.",
+    "ROLE_PM": "Project Overview",
+    "ROLE_EMP": "My Usage",
+    "LOADING": "Loading telemetry data...",
+    "NO_PROJECT": "No Project Selected",
+    "NO_PROJECT_DESC": "Select a project from the sidebar to view its AI Telemetry.",
+    "METRIC_OPS": "Total Operations",
+    "METRIC_TOKENS": "Total Tokens",
+    "METRIC_COST": "Est. Cost (USD)",
+    "METRIC_LATENCY": "Avg Response Time",
+    "MODEL_USAGE": "Model Usage Breakdown",
+    "TEAM_USAGE": "Team Members Usage",
+    "OPS": "ops",
+    "NO_DATA": "No AI operations logged yet.",
+    "NO_TEAM_DATA": "No team members have used AI in this project yet."
   }
 }

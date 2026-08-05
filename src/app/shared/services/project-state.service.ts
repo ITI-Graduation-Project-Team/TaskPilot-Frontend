@@ -59,10 +59,19 @@ export class ProjectStateService {
 
   private profilePromise: Promise<any> | null = null;
 
-  async getProfile(): Promise<any> {
+  async getProfile(forceRefresh = false): Promise<any> {
+    if (forceRefresh) {
+      this.profilePromise = null;
+    }
     if (!this.profilePromise) {
       this.profilePromise = apiClient.get<any>('/employees/profile')
-        .then(res => res.data?.data || res.data)
+        .then(res => {
+          const profile = res.data?.data || res.data;
+          // Update signals synchronously
+          const companyId = profile?.companyId || profile?.CompanyId || null;
+          this._userCompanyId.set(companyId);
+          return profile;
+        })
         .catch(err => {
           this.profilePromise = null;
           throw err;

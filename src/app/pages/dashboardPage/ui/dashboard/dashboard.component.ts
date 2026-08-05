@@ -40,35 +40,51 @@ import { DashboardService } from '../../services/dashboard.service';
     <div class="min-h-screen bg-background text-text-primary flex transition-colors duration-200 pb-16 md:pb-0 font-dashboard">
       
       <!-- Desktop Sidebar Navigation -->
-      <aside class="w-64 bg-sidebar border-r border-border hidden md:flex flex-col p-6 transition-colors duration-200 shrink-0">
-        <!-- Logo -->
-        <div class="flex flex-col gap-2 mb-8 bg-white dark:bg-[#020114] p-4 rounded-2xl border border-border/40 shadow-sm transition-all duration-200">
-          <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="h-8 transition-transform hover:scale-105 mx-auto" />
-          
-          <!-- Company Name Badge -->
-          @if (projectState.companyName()) {
-            <div class="text-center mt-0.5">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/15 tracking-wide max-w-full truncate" [title]="projectState.companyName()">
-                🏢 {{ projectState.companyName() }}
-              </span>
-            </div>
-          }
+      <aside class="bg-sidebar border-e border-border hidden md:flex flex-col transition-all duration-300 shrink-0 relative z-50"
+       [class.w-64]="!isSidebarCollapsed()" [class.w-20]="isSidebarCollapsed()">
+       
+  <!-- Collapse Toggle Button -->
+  <button (click)="isSidebarCollapsed.update(v => !v)"
+          class="absolute -end-5 top-8 bg-surface border border-border rounded-full p-1 text-text-secondary hover:text-primary hover:border-primary/40 shadow-sm z-10 transition-transform duration-200 bg-white dark:bg-[#020114]"
+          [class.rotate-180]="isSidebarCollapsed()">
+    <svg class="w-4 h-4 rtl:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+  </button>
 
-          <!-- Selected Project Sidebar Header Context -->
-          @if (projectState.selectedProject(); as sp) {
-            @if (currentTab() !== 'projects') {
-              <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate flex items-center gap-1" [title]="getSprintName(sp)">
-                  <span>📁</span>
-                  <span class="truncate">{{ getSprintName(sp) }}</span>
+        <div class="flex-1 flex flex-col w-full overflow-y-auto pb-4 hide-scrollbar">
+        <!-- Logo -->
+        <div class="pb-3" [class.p-5]="!isSidebarCollapsed()" [class.px-1]="isSidebarCollapsed()" [class.py-5]="isSidebarCollapsed()">
+          <div class="flex flex-col gap-2 rounded-2xl border transition-all duration-200 hover:shadow-md"
+               [class.p-4]="!isSidebarCollapsed()" [class.p-2]="isSidebarCollapsed()"
+               style="background: var(--surface); border-color: var(--border);">
+            <img [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo" class="transition-transform hover:scale-105 mx-auto" [class.h-8]="!isSidebarCollapsed()" [class.h-4]="isSidebarCollapsed()" />
+          
+          @if (!isSidebarCollapsed()) {
+            <!-- Company Name Badge -->
+            @if (projectState.companyName()) {
+              <div class="text-center mt-0.5">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/15 tracking-wide max-w-full truncate" [title]="projectState.companyName()">
+                  🏢 {{ projectState.companyName() }}
                 </span>
-                <a routerLink="/dashboard/projects" class="text-[10px] text-primary font-bold hover:underline shrink-0 cursor-pointer">
-                  {{ 'SIDEBAR.SWITCH' | translate }}
-                </a>
               </div>
+            }
+
+            <!-- Selected Project Sidebar Header Context -->
+            @if (projectState.selectedProject(); as sp) {
+              @if (currentTab() !== 'projects') {
+                <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+                  <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate flex items-center gap-1" [title]="getSprintName(sp)">
+                    <span>📁</span>
+                    <span class="truncate">{{ getSprintName(sp) }}</span>
+                  </span>
+                  <a routerLink="/dashboard/projects" class="text-[10px] text-primary font-bold hover:underline shrink-0 cursor-pointer">
+                    {{ 'SIDEBAR.SWITCH' | translate }}
+                  </a>
+                </div>
+              }
             }
           }
         </div>
+      </div>
 
         <!-- Navigation Links -->
         <nav class="flex-1 space-y-1.5">
@@ -79,11 +95,11 @@ import { DashboardService } from '../../services/dashboard.service';
                [class.hover:text-text-primary]="!rlaProj.isActive"
                [class.hover:bg-primary/5]="!rlaProj.isActive"
                [class.font-medium]="!rlaProj.isActive"
-               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
               </svg>
-              {{ 'SIDEBAR.ALL_PROJECTS' | translate }}
+              <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.ALL_PROJECTS' | translate }}</span>
             </a>
           }
 
@@ -92,22 +108,22 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.hover:text-text-primary]="!rlaSprint.isActive"
              [class.hover:bg-primary/5]="!rlaSprint.isActive"
              [class.font-medium]="!rlaSprint.isActive"
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
-            {{ 'SIDEBAR.SPRINTS' | translate }}
+            <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SPRINTS' | translate }}</span>
           </a>
           <a routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
              [class.text-text-secondary]="!rlaBacklog.isActive"
              [class.hover:text-text-primary]="!rlaBacklog.isActive"
              [class.hover:bg-primary/5]="!rlaBacklog.isActive"
              [class.font-medium]="!rlaBacklog.isActive"
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            {{ 'SIDEBAR.BACKLOG' | translate }}
+            <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.BACKLOG' | translate }}</span>
           </a>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
@@ -116,12 +132,12 @@ import { DashboardService } from '../../services/dashboard.service';
                [class.hover:text-text-primary]="!rlaSprintPlan.isActive"
                [class.hover:bg-primary/5]="!rlaSprintPlan.isActive"
                [class.font-medium]="!rlaSprintPlan.isActive"
-               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
-              {{ 'SIDEBAR.SPRINT_PLANNING' | translate }}
-              <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+              <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SPRINT_PLANNING' | translate }}</span>
+              <span [class.hidden]="isSidebarCollapsed()" class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
             </a>
           }
 
@@ -131,12 +147,12 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.hover:text-text-primary]="!rlaRetro.isActive"
              [class.hover:bg-primary/5]="!rlaRetro.isActive"
              [class.font-medium]="!rlaRetro.isActive"
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
-            <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.RETROSPECTIVE' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
           </a>
 
 
@@ -147,9 +163,9 @@ import { DashboardService } from '../../services/dashboard.service';
                [class.hover:text-text-primary]="!rlaTeam.isActive"
                [class.hover:bg-primary/5]="!rlaTeam.isActive"
                [class.font-medium]="!rlaTeam.isActive"
-               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              {{ 'SIDEBAR.PROJECT_TEAM' | translate }}
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.PROJECT_TEAM' | translate }}</span>
             </a>
 
             <!-- Project Policies Tab -->
@@ -158,12 +174,12 @@ import { DashboardService } from '../../services/dashboard.service';
                [class.hover:text-text-primary]="!rlaProjPol.isActive"
                [class.hover:bg-primary/5]="!rlaProjPol.isActive"
                [class.font-medium]="!rlaProjPol.isActive"
-               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              {{ 'SIDEBAR.PROJECT_POLICIES' | translate }}
-              <span class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
+              <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.PROJECT_POLICIES' | translate }}</span>
+              <span [class.hidden]="isSidebarCollapsed()" class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
             </a>
           } 
           <!-- Employees Tab (PM only) -->
@@ -173,11 +189,11 @@ import { DashboardService } from '../../services/dashboard.service';
                [class.hover:text-text-primary]="!rlaEmp.isActive"
                [class.hover:bg-primary/5]="!rlaEmp.isActive"
                [class.font-medium]="!rlaEmp.isActive"
-               class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-              {{ 'SIDEBAR.EMPLOYEES' | translate }}
+              <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.EMPLOYEES' | translate }}</span>
             </a>
           }
           <!-- Organization Hub / Company Policies Tab -->
@@ -186,13 +202,15 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.hover:text-text-primary]="!rlaOrg.isActive"
              [class.hover:bg-primary/5]="!rlaOrg.isActive"
              [class.font-medium]="!rlaOrg.isActive"
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span [class.hidden]="isSidebarCollapsed()" class="truncate">
             @if (projectState.isProjectManager()) {
-              {{ currentLang() === 'ar' ? 'مركز المؤسسة' : 'Organization Hub' }}
+              {{ 'SIDEBAR.ORGANIZATION_HUB' | translate }}
             } @else {
-              {{ currentLang() === 'ar' ? 'سياسات الشركة' : 'Company Policies' }}
+              {{ 'SIDEBAR.COMPANY_POLICIES' | translate }}
             }
+            </span>
           </a>
 
 
@@ -202,11 +220,11 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.hover:bg-primary/5]="!rlaProfile.isActive"
              [class.font-medium]="!rlaProfile.isActive"
 
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            {{ 'SIDEBAR.MY_PROFILE' | translate }}
+            <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.MY_PROFILE' | translate }}</span>
           </a>
 
           <!-- Settings Tab -->
@@ -215,28 +233,30 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.hover:text-text-primary]="!rlaSettings.isActive"
              [class.hover:bg-primary/5]="!rlaSettings.isActive"
              [class.font-medium]="!rlaSettings.isActive"
-             class="group cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
-            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {{ 'SIDEBAR.SETTINGS' | translate }}
+            <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
           </a>
         </nav>
 
         <!-- Footer / Profile Quick view & Dark mode -->
         <div class="border-t border-border pt-6 mt-6 space-y-4">
-          <div routerLink="/dashboard/profile" class="cursor-pointer flex items-center gap-3 bg-surface border border-border p-3.5 rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm">
+          <div routerLink="/dashboard/profile" class="cursor-pointer flex items-center bg-surface border border-border rounded-xl transition-all duration-250 hover:border-primary/40 hover:shadow-sm"
+               [class.p-3.5]="!isSidebarCollapsed()" [class.p-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()">
             <div class="w-9 h-9 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">
               {{ userInitial() }}
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0" [class.hidden]="isSidebarCollapsed()">
               <h4 class="text-xs font-extrabold text-text-primary truncate">{{ userName() }}</h4>
               <p class="text-[10px] text-text-secondary truncate">{{ userJobTitle() }}</p>
             </div>
           </div>
         </div>
-      </aside>
+      </div>
+    </aside>
 
       <!-- Main Dashboard Panel -->
       <div class="flex-1 flex flex-col min-w-0">
@@ -266,13 +286,13 @@ import { DashboardService } from '../../services/dashboard.service';
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
-                {{ currentLang() === 'ar' ? 'المراجعة الختامية' : 'Retrospective' }}
+                <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.RETROSPECTIVE' | translate }}</span>
               } @else if (currentTab() === 'organization') {
-                @if (projectState.isProjectManager()) { Organization Hub } @else { Company Policies }
+                @if (projectState.isProjectManager()) { {{ 'SIDEBAR.ORGANIZATION_HUB' | translate }} } @else { {{ 'SIDEBAR.COMPANY_POLICIES' | translate }} }
               } @else if (currentTab() === 'employees') {
                 {{ 'EMPLOYEES.TITLE' | translate }}
               } @else if (currentTab() === 'settings') {
-                {{ 'SIDEBAR.SETTINGS' | translate }}
+                <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
             } @else if (currentTab() === 'project-policies') {
                 @if (projectState.isProjectManager()) {
                     <span
@@ -297,7 +317,7 @@ import { DashboardService } from '../../services/dashboard.service';
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
                 <span class="text-text-secondary font-light">/</span>
-                {{ currentLang() === 'ar' ? 'تعيين المهام' : 'Task Assignment' }}
+                {{ 'SIDEBAR.TASK_ASSIGNMENT' | translate }}
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
@@ -515,7 +535,7 @@ import { DashboardService } from '../../services/dashboard.service';
              [class.text-text-secondary]="!rlaEmpM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            <span class="text-[9px] font-bold">{{ 'SIDEBAR.EMPLOYEES' | translate }}</span>
+            <span class="text-[9px] font-bold"><span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.EMPLOYEES' | translate }}</span></span>
           </a>
         }
 
@@ -537,7 +557,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span class="text-[9px] font-bold">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
+          <span class="text-[9px] font-bold"><span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SETTINGS' | translate }}</span></span>
         </a>
       </div>
 
@@ -624,14 +644,15 @@ export class DashboardComponent implements OnInit {
   private doc = inject(DOCUMENT);
   private tr = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
-  
+
   currentLang = signal<'en' | 'ar'>('en');
 
   // Active navigation tab signal
-  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees'| 'project-policies' | 'assignment' | 'settings'>('sprint');
+  currentTab = signal<'projects' | 'create-project' | 'sprint' | 'sprint-planning' | 'retrospective' | 'backlog' | 'team' | 'profile' | 'organization' | 'employees' | 'project-policies' | 'assignment' | 'settings'>('sprint');
 
   // Component state
 
+  isSidebarCollapsed = signal(false);
   isProjectDropdownOpen = signal(false);
 
   // Eager project statistics Map
@@ -668,13 +689,13 @@ export class DashboardComponent implements OnInit {
       const urlWithoutQuery = url.split('?')[0];
       const segments = urlWithoutQuery.split('/');
       let tab = segments.pop() || 'projects';
-      
+
       if (urlWithoutQuery.includes('/dashboard/assignment/')) {
         tab = 'assignment';
       } else if (urlWithoutQuery.includes('/dashboard/employees/')) {
         tab = 'employees';
       }
-      
+
       if (tab === 'dashboard') tab = 'projects';
 
       this.currentTab.set(tab as any);

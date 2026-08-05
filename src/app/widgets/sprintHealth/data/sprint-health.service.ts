@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { TeamPulseDto } from './sprint-health.models';
 export interface CustomResponse<T> {
@@ -18,5 +19,11 @@ export class SprintHealthService {
 
   getTeamPulse(sprintId: string): Observable<CustomResponse<TeamPulseDto>> {
     return this.http.get<CustomResponse<TeamPulseDto>>(`${this.apiUrl}/${sprintId}/team-pulse`);
+  }
+
+  getFullAuditLog(sprintId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${sprintId}/audit-log`).pipe(
+      map(res => res?.value)
+    );
   }
 }

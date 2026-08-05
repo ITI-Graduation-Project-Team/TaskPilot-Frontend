@@ -191,6 +191,11 @@ export class CompanyService {
     return response.data;
   }
 
+  async getWorkingConfig(companyId: string): Promise<{ succeeded: boolean; data?: UpdateWorkingConfigDto; message: string }> {
+    const response = await apiClient.get<{ succeeded: boolean; data?: UpdateWorkingConfigDto; message: string }>(`/companies/${companyId}/working-config`);
+    return response.data;
+  }
+
   async updateWorkingConfig(companyId: string, config: UpdateWorkingConfigDto): Promise<{ succeeded: boolean; message: string }> {
     const response = await apiClient.put<{ succeeded: boolean; message: string }>(`/companies/${companyId}/working-config`, config);
     return response.data;
