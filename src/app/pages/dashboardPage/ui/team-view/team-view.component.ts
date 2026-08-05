@@ -128,9 +128,13 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                   @if (selectedEmployeeId) {
                     @for (emp of companyEmployees(); track emp.employeeId) {
                       @if (emp.employeeId === selectedEmployeeId) {
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                             [style.background]="getAvatarColor(emp.email)">
-                          {{ getInitials(emp.fullName, emp.email) }}
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
+                             [style.background]="emp.avatarUrl ? 'transparent' : getAvatarColor(emp.email)">
+                          @if (emp.avatarUrl) {
+                            <img [src]="emp.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                          } @else {
+                            {{ getInitials(emp.fullName, emp.email) }}
+                          }
                         </div>
                         <div class="flex flex-col leading-tight min-w-0">
                           @if (emp.fullName && emp.fullName !== emp.email) {
@@ -158,9 +162,13 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                       <div (click)="selectEmployee(emp.employeeId)"
                            class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-sidebar transition-colors"
                            [class.bg-primary/10]="emp.employeeId === selectedEmployeeId">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                             [style.background]="getAvatarColor(emp.email)">
-                          {{ getInitials(emp.fullName, emp.email) }}
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
+                             [style.background]="emp.avatarUrl ? 'transparent' : getAvatarColor(emp.email)">
+                          @if (emp.avatarUrl) {
+                            <img [src]="emp.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                          } @else {
+                            {{ getInitials(emp.fullName, emp.email) }}
+                          }
                         </div>
                         <div class="flex flex-col leading-tight min-w-0">
                           @if (emp.fullName && emp.fullName !== emp.email) {
@@ -242,11 +250,21 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                         </div>
                       }
 
-                      <div class="relative z-10">
-                        <h5 class="text-sm font-bold text-text-primary flex items-center gap-2">
-                          {{ member.fullName }}
-                        </h5>
-                        <p class="text-xs text-text-secondary">{{ member.email }}</p>
+                      <div class="relative z-10 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden"
+                             [style.background]="member.avatarUrl ? 'transparent' : getAvatarColor(member.email)">
+                          @if (member.avatarUrl) {
+                            <img [src]="member.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                          } @else {
+                            {{ getInitials(member.fullName, member.email) }}
+                          }
+                        </div>
+                        <div>
+                          <h5 class="text-sm font-bold text-text-primary flex items-center gap-2">
+                            {{ member.fullName }}
+                          </h5>
+                          <p class="text-xs text-text-secondary">{{ member.email }}</p>
+                        </div>
                       </div>
                       
                       <div class="flex items-center gap-2 relative z-10">
