@@ -25,8 +25,9 @@
         <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-14" />
       </div>
       <!-- Tagline -->
-      <div class="animate-[fadeUp_0.5s_ease_both]">
-        <h2 class="text-4xl font-extrabold text-gray-800 leading-snug tracking-tight mb-4 drop-shadow-sm">
+      <div class="animate-[fadeUp_0.5s_ease_both]" [style.word-spacing]="currentLang() === 'ar' ? '-0.15em' : 'normal'">
+        <h2 class="text-4xl font-extrabold text-gray-800 leading-tight mb-2 drop-shadow-sm"
+          [class.tracking-tight]="currentLang() === 'en'">
           {{ 'login.brandingTitle1' | translate }}<br />
           <span class="text-brandPrimary">{{ 'login.brandingTitle2' | translate }}</span>
         </h2>
