@@ -84,7 +84,14 @@ export class AssignmentComponent implements OnInit {
         this.selectedTaskId.set(suggestionsData[0].taskId);
       }
 
-      this.localAssignments.set({});
+      // Initialize local assignments with existing assignments
+      const initialAssignments: { [taskId: string]: string } = {};
+      suggestionsData.forEach(task => {
+        if (task.assigneeId) {
+          initialAssignments[task.taskId] = task.assigneeId;
+        }
+      });
+      this.localAssignments.set(initialAssignments);
 
     } catch (error: any) {
       this.toastService.show(error.message || 'Failed to load assignment data', 'error');

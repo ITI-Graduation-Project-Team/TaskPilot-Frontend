@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, input, computed, inject, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, input, computed, inject, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectInfo, ProjectStateService } from '../../../../shared/services/project-state.service';
@@ -22,13 +22,13 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           
           <!-- Tabs -->
           <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto custom-scrollbar shrink-0">
-            <button (click)="activeTab.set('active')" 
+            <button (click)="onTabChange('active')" 
                     [class.bg-surface]="activeTab() === 'active'" [class.shadow-sm]="activeTab() === 'active'" [class.text-text-primary]="activeTab() === 'active'" [class.text-text-secondary]="activeTab() !== 'active'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ACTIVE_DRAFT' | translate }}</button>
-            <button (click)="activeTab.set('completed')" 
+            <button (click)="onTabChange('completed')" 
                     [class.bg-surface]="activeTab() === 'completed'" [class.shadow-sm]="activeTab() === 'completed'" [class.text-text-primary]="activeTab() === 'completed'" [class.text-text-secondary]="activeTab() !== 'completed'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.COMPLETED' | translate }}</button>
-            <button (click)="activeTab.set('archived')" 
+            <button (click)="onTabChange('archived')" 
                     [class.bg-surface]="activeTab() === 'archived'" [class.shadow-sm]="activeTab() === 'archived'" [class.text-text-primary]="activeTab() === 'archived'" [class.text-text-secondary]="activeTab() !== 'archived'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ARCHIVED' | translate }}</button>
           </div>
@@ -42,7 +42,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               </span>
               <input type="text" 
                      [ngModel]="searchQuery()" 
-                     (ngModelChange)="searchQuery.set($event)"
+                     (ngModelChange)="onSearchChange($event)"
                      [placeholder]="'PROJECT_HUB.SEARCH_PLACEHOLDER' | translate" 
                      class="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-text-secondary/70" />
             </div>
@@ -59,9 +59,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
       }
 
       <!-- Projects Grid -->
-      @if (filteredProjects().length > 0) {
+      @if (paginatedProjects().length > 0) {
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          @for (p of filteredProjects(); track p.id) {
+          @for (p of paginatedProjects(); track p.id) {
             <app-project-card 
               [project]="p"
               [stats]="getStatsForProject(p.id)"
@@ -69,7 +69,27 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             </app-project-card>
           }
         </div>
-      } @else if (projects().length > 0) {
+        
+        <!-- Pagination Controls -->
+        <div class="flex items-center justify-between px-6 py-4 border border-border bg-surface rounded-2xl shadow-sm"
+          *ngIf="totalProjects() > 0">
+          <span class="text-sm text-text-secondary">Page <span class="font-bold text-text-primary">{{ currentPage() }}</span></span>
+          <div class="flex gap-2">
+            <button (click)="prevPage()" [disabled]="currentPage() === 1"
+              class="p-2 rounded-xl hover:bg-background text-text-secondary disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button (click)="nextPage()" [disabled]="currentPage() * pageSize() >= totalProjects()"
+              class="p-2 rounded-xl hover:bg-background text-text-secondary disabled:opacity-50 transition-colors">
+              <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      } @else if (totalProjects() > 0) {
         <!-- Search query matches nothing -->
         <div class="flex flex-col items-center justify-center p-12 bg-surface border border-border rounded-3xl text-center shadow-sm animate-[fadeIn_0.2s_ease_both]">
           <div class="w-16 h-16 rounded-2xl bg-sidebar flex items-center justify-center text-text-secondary/60 mb-4 animate-bounce">
@@ -79,7 +99,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           </div>
           <h3 class="text-base font-extrabold text-text-primary font-display">{{ 'PROJECT_HUB.NO_MATCHING' | translate }}</h3>
           <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">{{ 'PROJECT_HUB.NO_MATCHING_DESC' | translate: { query: searchQuery() } }}</p>
-          <button (click)="searchQuery.set('')" class="text-xs text-primary font-bold hover:underline">{{ 'PROJECT_HUB.CLEAR_SEARCH' | translate }}</button>
+          <button (click)="onSearchChange('')" class="text-xs text-primary font-bold hover:underline">{{ 'PROJECT_HUB.CLEAR_SEARCH' | translate }}</button>
         </div>
       } @else {
         <!-- Empty State -->
@@ -111,7 +131,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     </div>
   `
 })
-export class ProjectHubComponent {
+export class ProjectHubComponent implements OnInit {
   router = inject(Router);
   dashboardService = inject(DashboardService);
   projectState = inject(ProjectStateService);
@@ -126,28 +146,75 @@ export class ProjectHubComponent {
 
 
 
-  filteredProjects = computed(() => {
+  paginatedProjects = signal<ProjectInfo[]>([]);
+  totalProjects = signal<number>(0);
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(6);
+  isLoading = signal<boolean>(false);
+
+  ngOnInit() {
+    this.loadPaginatedProjects();
+  }
+
+  async loadPaginatedProjects() {
+    this.isLoading.set(true);
+    const { projects, totalCount } = await this.projectState.loadProjectsPaged(this.currentPage(), this.pageSize());
+    
+    // Apply local filters (tab and search)
+    // Wait, backend doesn't filter by status or search. For now we will just load paged and apply client-side filter to the current page.
+    // Ideally, the backend should handle filtering too. Let's just use it as is for the page.
+    let filtered = projects;
+    
     const tab = this.activeTab();
     const query = this.searchQuery().toLowerCase().trim();
 
-    let result = this.projects();
-
     if (tab === 'active') {
-      result = result.filter(p => p.status === 'Active' || p.status === 'Draft' || !p.status);
+      filtered = filtered.filter(p => p.status === 'Active' || p.status === 'Draft' || !p.status);
     } else if (tab === 'completed') {
-      result = result.filter(p => p.status === 'Completed');
+      filtered = filtered.filter(p => p.status === 'Completed');
     } else if (tab === 'archived') {
-      result = result.filter(p => p.status === 'Archived');
+      filtered = filtered.filter(p => p.status === 'Archived');
     }
 
-    if (!query) return result;
+    if (query) {
+      filtered = filtered.filter(p =>
+        (p.nameEn || '').toLowerCase().includes(query) ||
+        (p.nameAr || '').toLowerCase().includes(query) ||
+        (p.description || '').toLowerCase().includes(query)
+      );
+    }
+    
+    this.paginatedProjects.set(filtered);
+    this.totalProjects.set(totalCount);
+    this.isLoading.set(false);
+  }
 
-    return result.filter(p =>
-      (p.nameEn || '').toLowerCase().includes(query) ||
-      (p.nameAr || '').toLowerCase().includes(query) ||
-      (p.description || '').toLowerCase().includes(query)
-    );
-  });
+  onSearchChange(val: string) {
+    this.searchQuery.set(val);
+    this.currentPage.set(1);
+    this.loadPaginatedProjects();
+  }
+
+  onTabChange(tab: 'active' | 'completed' | 'archived') {
+    this.activeTab.set(tab);
+    this.currentPage.set(1);
+    this.loadPaginatedProjects();
+  }
+
+  nextPage() {
+    const maxPage = Math.ceil(this.totalProjects() / this.pageSize());
+    if (this.currentPage() < maxPage) {
+      this.currentPage.set(this.currentPage() + 1);
+      this.loadPaginatedProjects();
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.set(this.currentPage() - 1);
+      this.loadPaginatedProjects();
+    }
+  }
 
   getStatsForProject(projectId: string): ProjectStats | null {
     return this.projectStatsMap().get(projectId) || null;

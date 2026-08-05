@@ -57,6 +57,8 @@ export interface DeactivateEmployeeResult {
   code: string;
   message: string;
   data: any;
+  succeeded?: boolean;
+  isSuccess?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -174,6 +176,11 @@ export class CompanyService {
 
   async deactivateEmployee(employeeId: string, request: DeactivateEmployeeRequest): Promise<DeactivateEmployeeResult> {
     const response = await apiClient.post<DeactivateEmployeeResult>(`/employees/${employeeId}/deactivate`, request);
+    return response.data;
+  }
+
+  async reactivateEmployee(employeeId: string): Promise<DeactivateEmployeeResult> {
+    const response = await apiClient.post<DeactivateEmployeeResult>(`/employees/${employeeId}/reactivate`, {});
     return response.data;
   }
 

@@ -17,6 +17,7 @@ import { apiClient } from '../../../../shared/api/axios.instance';
 })
 export class TaskDiscussionComponent implements OnInit {
   taskId = input.required<string>();
+  isReadonly = input<boolean>(false);
   
   private tasksService = inject(TasksService);
   private toastService = inject(ToastService);
