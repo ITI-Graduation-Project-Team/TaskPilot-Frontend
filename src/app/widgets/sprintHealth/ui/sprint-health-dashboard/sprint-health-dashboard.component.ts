@@ -57,7 +57,7 @@ import { SprintChartsPanelComponent } from '../charts-panel/charts-panel.compone
             <app-sprint-team-pulse-grid [members]="data()!.members"></app-sprint-team-pulse-grid>
           </div>
           <div class="col-span-1 lg:col-span-4">
-            <app-sprint-live-activity-feed [activities]="data()!.liveActivity"></app-sprint-live-activity-feed>
+            <app-sprint-live-activity-feed [activities]="data()!.liveActivity" [sprintId]="sprintId()"></app-sprint-live-activity-feed>
           </div>
         </div>
 

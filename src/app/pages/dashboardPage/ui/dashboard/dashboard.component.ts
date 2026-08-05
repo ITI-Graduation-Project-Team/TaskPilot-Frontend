@@ -58,12 +58,13 @@ import { DashboardService } from '../../services/dashboard.service';
           @if (projectState.selectedProject(); as sp) {
             @if (currentTab() !== 'projects') {
               <div class="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate" [title]="getSprintName(sp)">
-                  📁 {{ getSprintName(sp) }}
+                <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider truncate flex items-center gap-1" [title]="getSprintName(sp)">
+                  <span>📁</span>
+                  <span class="truncate">{{ getSprintName(sp) }}</span>
                 </span>
-                <button (click)="currentTab.set('projects')" class="text-[10px] text-primary font-bold hover:underline shrink-0">
+                <a routerLink="/dashboard/projects" class="text-[10px] text-primary font-bold hover:underline shrink-0 cursor-pointer">
                   {{ 'SIDEBAR.SWITCH' | translate }}
-                </button>
+                </a>
               </div>
             }
           }

@@ -89,6 +89,12 @@ export interface PaginatedEmployeeResponse {
   message: string;
 }
 
+export interface UpdateWorkingConfigDto {
+  workingHoursPerDay: number;
+  workingDaysMask: number;
+  defaultCapacityBufferPercentage: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -182,6 +188,11 @@ export class CompanyService {
     const response = await apiClient.delete<{ succeeded: boolean; message: string }>(`/companies/invitations/${invitationId}`, {
       withCredentials: false
     });
+    return response.data;
+  }
+
+  async updateWorkingConfig(companyId: string, config: UpdateWorkingConfigDto): Promise<{ succeeded: boolean; message: string }> {
+    const response = await apiClient.put<{ succeeded: boolean; message: string }>(`/companies/${companyId}/working-config`, config);
     return response.data;
   }
 }

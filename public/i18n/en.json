@@ -15,7 +15,10 @@
     "createOne": "Create one",
     "signedIn": "Signed In!",
     "orContinueWith": "or continue with",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "brandingTitle1": "Manage your work,",
+    "brandingTitle2": "effortlessly.",
+    "brandingSubtitle": "Plan tasks, collaborate with your team, and hit every deadline — all in one place."
   },
   "register": {
     "welcome": "Welcome to TaskPilot",
@@ -39,7 +42,10 @@
     "createAccountBtn": "Create Account",
     "creatingAccount": "Creating Account…",
     "accountCreated": "Account Created!",
-    "redirecting": "Redirecting to email verification…"
+    "redirecting": "Redirecting to email verification…",
+    "brandingTitle1": "Join TaskPilot,",
+    "brandingTitle2": "Start planning today.",
+    "brandingSubtitle": "Create an account to manage your tasks, collaborate with your team, and achieve your goals."
   },
   "COMPANY_SETUP": {
     "DESCRIPTION": "Set up your workspace and bring your team on board to start managing tasks seamlessly.",
@@ -498,7 +504,12 @@
     "NO_EMPLOYEES_MODAL_TITLE": "Employees Required for Sprint Planning",
     "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
     "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
-    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
+    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint.",
+    "PLANNED_SPRINT_BANNER_TITLE": "Planned Sprint Exists",
+    "PLANNED_SPRINT_BANNER_DESC": "A sprint has already been planned for this project. You cannot plan or generate AI suggestions for another sprint until the existing planned sprint is started or removed.",
+    "TOOLTIP_PLANNED_SPRINT": "A sprint is already planned for this project. Start or delete the planned sprint before creating a new one.",
+    "VIEW_PLANNED_SPRINT": "View Planned Sprint",
+    "ERROR_ANOTHER_PLANNED": "A planned sprint already exists for this project."
   },
   "REQUIREMENTS": {
     "ALMOST_COMPLETE": "Almost Complete"
@@ -526,7 +537,8 @@
     "PLANNING": "Planning",
     "BACKLOG_SHORT": "Backlog",
     "TEAM": "Team",
-    "PROFILE": "Profile"
+    "PROFILE": "Profile",
+    "SETTINGS": "Settings"
   },
   "HEADER": {
     "PROJECTS_HUB": "Projects Hub",
@@ -699,7 +711,12 @@
     "ASSIGN_TO_PROJECT": "Assign to Project",
     "ASSIGNED_TEAM": "Assigned Project Team",
     "LOADING_TEAM": "Loading project team assignments...",
-    "NO_EMPLOYEES": "No employees are currently assigned to this project. Use the form above to add members."
+    "NO_EMPLOYEES": "No employees are currently assigned to this project. Use the form above to add members.",
+    "REMOVE_MEMBER": "Remove Employee",
+    "REMOVE_MEMBER_CONFIRM": "Are you sure you want to remove this employee from the project?",
+    "REMOVE": "Remove",
+    "REMOVED_SUCCESS": "Employee removed from project",
+    "REMOVE_FAILED": "Failed to remove employee"
   },
   "BACKLOG": {
     "ADD_USER_STORY": "Add user story",
@@ -801,14 +818,29 @@
     "DEACTIVATED": "Deactivated",
     "AVAILABLE": "Available",
     "IN_PROJECTS": "In Projects",
-    "SEARCH": "Search by name, email or title...",
+    "SEARCH": "Search by name, email or job title...",
     "FILTER_ALL": "All",
     "FILTER_ACTIVE": "Active",
     "FILTER_DEACTIVATED": "Deactivated",
     "NO_RESULTS": "No employees found",
     "VIEW_DETAILS": "View Details",
     "DANGER_ZONE": "Danger Zone",
-    "DEACTIVATE_HINT": "This action can be reversed later."
+    "DEACTIVATE_HINT": "This action can be reversed later.",
+    "STATUS": "Status",
+    "SKILLS": "Skills",
+    "ACTIONS": "Actions",
+    "EMAIL": "Email",
+    "INVITED_AT": "Invited At",
+    "EXPIRES_AT": "Expires At",
+    "PENDING": "Pending",
+    "EXPIRED": "Expired",
+    "ACCEPTED": "Accepted",
+    "STATUS_FILTER": "Status Filter:",
+    "INVITE_VIA_EMAIL": "Invite via Email",
+    "SEND_INVITE": "Send Invite",
+    "ALREADY_IN_COMPANY": "Already in company",
+    "INVITE": "Invite",
+    "SEARCH_USERS": "Search for existing users or invite new ones by email."
   },
   "PROJECT_POLICIES": {
     "PROJECT_POLICIES": "Project Policies",
@@ -839,5 +871,36 @@
     "CLEAR_CONFIRM": "Clear all chat history?",
     "NO_ANSWER": "I couldn't find an answer in the project documents.",
     "CHAT_ERROR": "Error communicating with AI."
+  },
+  "SETTINGS_VIEW": {
+    "TITLE": "Settings & Integrations",
+    "SUBTITLE": "Manage your external accounts and application preferences.",
+    "CONNECTED_ACCOUNTS": "Connected Accounts",
+    "GOOGLE_CALENDAR_TITLE": "Google Calendar",
+    "GOOGLE_CALENDAR_DESC": "Sync your project tasks and deadlines directly to your Google Calendar.",
+    "CONNECT_ACCOUNT": "Connect Account",
+    "CONNECTING": "Connecting..."
+  },
+  "EMPLOYEE_DETAILS": {
+    "TITLE": "Employee Details",
+    "SUBTITLE": "View comprehensive information about this team member.",
+    "LOADING": "Loading employee information...",
+    "ACTIVE": "Active",
+    "DEACTIVATED": "Deactivated",
+    "SKILLS_TITLE": "Skills & Expertise",
+    "NO_SKILLS": "No skills listed.",
+    "PROFESSIONAL_INFO": "Professional Information",
+    "JOB_TITLE": "Job Title",
+    "NOT_SPECIFIED": "Not specified",
+    "SENIORITY_LEVEL": "Seniority Level",
+    "CURRENT_WORKLOAD": "Current Workload",
+    "ACTIVE_PROJECTS": "Active Projects",
+    "ASSIGNED_TASKS": "Assigned Tasks",
+    "DEACTIVATION_INFO": "Deactivation Information",
+    "DEACTIVATED_ON": "Deactivated On",
+    "REASON": "Reason",
+    "NOT_FOUND_TITLE": "Employee Not Found",
+    "NOT_FOUND_DESC": "The employee you are looking for does not exist or you don't have access.",
+    "RETURN_DIR": "Return to Directory"
   }
 }
