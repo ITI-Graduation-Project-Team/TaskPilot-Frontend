@@ -117,7 +117,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </button>
           </form>
         </div>
-      } @else if (!isAssignedToProject() || isBoardReadonly()) {
+      } @else if (!isAssignedToProject() || projectState.selectedProject()?.status === 'Archived' || projectState.selectedProject()?.status === 'Completed') {
         <!-- Warning Panel for unassigned employee or archived project -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
           <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
@@ -233,12 +233,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
                 </button>
               } @else {
-                <button disabled 
-                        class="px-5 py-2.5 bg-surface border border-border text-text-secondary font-semibold rounded-xl shadow-sm flex items-center gap-1.5 text-sm cursor-not-allowed opacity-70">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  {{ 'BOARD.ASSIGNED' | translate }}
+                <button (click)="goToAssignment()"
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                  👥 {{ currentLang === 'ar' ? 'إعادة التعيين' : 'Reassign Tasks' }}
                 </button>
               }
               <button (click)="startSprint()" 
@@ -673,7 +670,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               
               <!-- LEFT COLUMN: Main Task Info & Form -->
               <div class="space-y-6 flex flex-col">
-                @if (projectState.isProjectManager()) {
+                @if (projectState.isProjectManager() && !isBoardReadonly()) {
                   <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'عنوان المهمة' : 'Task Title' }}</label>
                     <input type="text" [(ngModel)]="modalTask().title" 
@@ -782,16 +779,28 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
                   <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الموظف المعين' : 'Assigned Employee' }}</label>
-                    <div class="px-4 py-3.5 border border-border bg-surface text-text-primary rounded-xl flex items-center gap-3 shadow-sm">
-                      <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
-                        {{ modalTask().assigneeName ? modalTask().assigneeName!.charAt(0) : '?' }}
-                      </div>
-                      <div class="flex flex-col">
-                        <span class="font-bold text-[13px]">{{ modalTask().assigneeName || (currentLang === 'ar' ? 'غير معين' : 'Unassigned') }}</span>
-                        @if (modalTask().assigneeId) {
+                    <div [ngClass]="modalTask().assigneeId ? 'border-border bg-surface' : 'border-dashed border-gray-300 bg-gray-50/50'" 
+                         class="px-4 py-3.5 border text-text-primary rounded-xl flex items-center gap-3 shadow-sm transition-all duration-200">
+                      
+                      @if (modalTask().assigneeId) {
+                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase shadow-inner">
+                          {{ modalTask().assigneeName!.charAt(0) }}
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="font-bold text-[13px]">{{ modalTask().assigneeName }}</span>
                           <span class="text-[10px] text-text-secondary">{{ currentLang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
-                        }
-                      </div>
+                        </div>
+                      } @else {
+                        <div class="w-8 h-8 rounded-full bg-gray-100/80 text-gray-400 flex items-center justify-center border border-dashed border-gray-300">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="font-bold text-[13px] text-gray-500">{{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}</span>
+                          <span class="text-[10px] text-gray-400">{{ currentLang === 'ar' ? 'في انتظار التعيين' : 'Awaiting assignment' }}</span>
+                        </div>
+                      }
                     </div>
                   </div>
                 } @else {
@@ -916,7 +925,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 <div class="flex flex-col h-full border-border lg:border-l lg:pl-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
                   <!-- Task Discussion Component -->
                   <div class="flex-1 min-h-[400px] flex flex-col bg-background rounded-2xl border border-border shadow-inner overflow-hidden">
-                    <app-task-discussion [taskId]="modalTask().id" class="flex-1" />
+                    <app-task-discussion [taskId]="modalTask().id" [isReadonly]="isBoardReadonly()" class="flex-1" />
                   </div>
                 </div>
               }
@@ -1105,10 +1114,6 @@ export class BoardComponent implements OnInit, OnChanges {
   private tasksService = inject(TasksService);
   public tr = inject(TranslateService);
 
-  isBoardReadonly = computed(() => {
-    return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
-  });
-
   // Loading and assignment status signals
   isLoading = signal(true);
   isAssignedToProject = signal(false);
@@ -1136,6 +1141,13 @@ export class BoardComponent implements OnInit, OnChanges {
   plannedSprintId = signal<string | null>(null);
   completedSprintId = signal<string | null>(null);
   sprintStatus = signal<string | null>(null);
+
+  isBoardReadonly = computed(() => {
+    return this.projectState.selectedProject()?.status === 'Completed' || 
+           this.projectState.selectedProject()?.status === 'Archived' ||
+           this.sprintStatus() === 'Completed';
+  });
+
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
 
@@ -1624,7 +1636,8 @@ export class BoardComponent implements OnInit, OnChanges {
         const snapRes = await this.sprintService.getAssignmentSnapshot(this.activeProjectId, sprintId);
         const snapData = snapRes?.data ?? snapRes;
         if (snapData && snapData.unassignedTasks) {
-          this.hasUnassignedTasks.set(snapData.unassignedTasks.length > 0);
+          const actualUnassigned = snapData.unassignedTasks.filter((t: any) => !t.assigneeId && !t.employeeId);
+          this.hasUnassignedTasks.set(actualUnassigned.length > 0);
         } else {
           this.hasUnassignedTasks.set(unassignedExist);
         }

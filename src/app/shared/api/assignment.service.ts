@@ -33,6 +33,7 @@ export class AssignmentService {
       estimatedHours: taskScore.task.estimatedHours,
       priority: taskScore.task.priority,
       type: taskScore.task.type,
+      assigneeId: taskScore.task.assigneeId,
       requiredSkills: (taskScore.task.requiredSkills || []).map(s => ({
         skillId: s.skillId,
         skillNameEn: s.skillNameEn,

@@ -181,11 +181,15 @@
               }">
               <!-- Assigned state -->
               <ng-container *ngIf="isAssigned(dev)">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                 </svg>
-                <span>{{ lang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
-                <span class="opacity-60 text-[9px] font-normal">({{ lang === 'ar' ? 'إلغاء' : 'undo' }})</span>
+                <span class="text-white">{{ lang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
+                <div class="ml-0.5 flex items-center justify-center p-0.5 rounded-md hover:bg-error/20 transition-colors" [title]="lang === 'ar' ? 'إلغاء التعيين' : 'Undo assignment'">
+                  <svg class="w-3 h-3 text-error-light hover:text-error transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </div>
               </ng-container>
               <!-- Unassigned state -->
               <ng-container *ngIf="!isAssigned(dev)">

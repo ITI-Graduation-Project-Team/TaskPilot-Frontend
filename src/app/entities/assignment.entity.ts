@@ -15,6 +15,7 @@ export interface AssignmentSuggestion {
   estimatedHours: number;
   priority: string;
   type: string;
+  assigneeId?: string;
   requiredSkills: { skillId: string; skillNameEn: string; skillNameAr: string }[];
   rankedDevelopers: DeveloperSuggestion[];   // top 3, ordered by rank
 }
@@ -34,6 +35,7 @@ export interface TaskSnapshotDto {
   priority: string; // TaskPriority enum string
   effortSize: string; // EffortSize enum string
   type: string; // TaskType enum string
+  assigneeId?: string;
   requiredSkills: TaskRequiredSkillDto[];
 }
 
