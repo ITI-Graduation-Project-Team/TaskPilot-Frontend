@@ -296,15 +296,7 @@ const LOADING_HINTS = [
 
           <!-- Action Buttons -->
           <div class="flex items-center justify-center gap-3 flex-wrap">
-            <button
-              (click)="loadBacklogStories()"
-              [disabled]="isBacklogLoading()"
-              class="inline-flex items-center gap-2 px-5 py-2.5 bg-sidebar hover:bg-border border border-border text-text-primary font-bold rounded-xl shadow-xs transition-all text-xs disabled:opacity-50">
-              <svg class="w-4 h-4 text-text-secondary" [class.animate-spin]="isBacklogLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              {{ currentLang() === 'ar' ? 'تحديث قائمة المهام' : 'Refresh Backlog' }}
-            </button>
+
 
             <button
               (click)="onGenerate()"
@@ -1153,7 +1145,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
         if (story) total += this.storyHours(story);
       }
     }
-    
+
     // If backlog tasks have no estimated hours (0), fall back to the AI API total
     if (total === 0 && this.apiTotalHours() > 0) {
       return this.apiTotalHours();
@@ -1236,8 +1228,8 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       this.showActiveSprintModal.set(true);
       const isAr = this.currentLang() === 'ar';
       this.toastService.show(
-        isAr 
-          ? 'يوجد سبرينت نشط قيد التشغيل لهذا المشروع بالفعل. يرجى إكماله أولاً.' 
+        isAr
+          ? 'يوجد سبرينت نشط قيد التشغيل لهذا المشروع بالفعل. يرجى إكماله أولاً.'
           : 'An active sprint is currently running for this project. Please complete it first.',
         'warning',
         6000,

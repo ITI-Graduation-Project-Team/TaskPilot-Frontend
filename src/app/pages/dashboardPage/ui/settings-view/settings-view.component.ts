@@ -4,14 +4,15 @@ import { GoogleCalendarService } from '../../../../shared/api/googleCalendar.ser
 import { finalize } from 'rxjs/operators';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AiTelemetryComponent } from '../../../settings/ui/ai-telemetry/ai-telemetry.component';
 
 @Component({
   selector: 'app-settings-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, AiTelemetryComponent],
   template: `
-    <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
+    <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fade-in">
       
 
 
@@ -80,6 +81,10 @@ import { TranslatePipe } from '@ngx-translate/core';
         </div>
       </div>
       
+      <!-- AI Telemetry Section -->
+      <div class="relative z-10 animate-fade-in" style="animation-delay: 100ms;">
+        <app-ai-telemetry></app-ai-telemetry>
+      </div>
     </div>
   `
 })

@@ -23,6 +23,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DashboardService } from '../../services/dashboard.service';
+ 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -50,7 +51,7 @@ import { DashboardService } from '../../services/dashboard.service';
     <svg class="w-4 h-4 rtl:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
   </button>
 
-        <div class="flex-1 flex flex-col w-full overflow-y-auto pb-4 hide-scrollbar">
+        <div class="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden pb-4 hide-scrollbar">
         <!-- Logo -->
         <div class="pb-3" [class.p-5]="!isSidebarCollapsed()" [class.px-1]="isSidebarCollapsed()" [class.py-5]="isSidebarCollapsed()">
           <div class="flex flex-col gap-2 rounded-2xl border transition-all duration-200 hover:shadow-md"
@@ -76,9 +77,9 @@ import { DashboardService } from '../../services/dashboard.service';
                     <span>📁</span>
                     <span class="truncate">{{ getSprintName(sp) }}</span>
                   </span>
-                  <a routerLink="/dashboard/projects" class="text-[10px] text-primary font-bold hover:underline shrink-0 cursor-pointer">
+                  <button routerLink="/dashboard/projects" class="text-[10px] text-primary font-bold hover:underline shrink-0 cursor-pointer">
                     {{ 'SIDEBAR.SWITCH' | translate }}
-                  </a>
+                  </button>
                 </div>
               }
             }
@@ -90,119 +91,119 @@ import { DashboardService } from '../../services/dashboard.service';
         <nav class="flex-1 space-y-1.5">
           <!-- All Projects Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <a routerLink="/dashboard/projects" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProj="routerLinkActive"
+            <button routerLink="/dashboard/projects" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProj="routerLinkActive"
                [class.text-text-secondary]="!rlaProj.isActive"
                [class.hover:text-text-primary]="!rlaProj.isActive"
                [class.hover:bg-primary/5]="!rlaProj.isActive"
                [class.font-medium]="!rlaProj.isActive"
-               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
               </svg>
               <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.ALL_PROJECTS' | translate }}</span>
-            </a>
+            </button>
           }
 
-          <a routerLink="/dashboard/sprint" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprint="routerLinkActive"
+          <button routerLink="/dashboard/sprint" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprint="routerLinkActive"
              [class.text-text-secondary]="!rlaSprint.isActive"
              [class.hover:text-text-primary]="!rlaSprint.isActive"
              [class.hover:bg-primary/5]="!rlaSprint.isActive"
              [class.font-medium]="!rlaSprint.isActive"
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
             </svg>
             <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SPRINTS' | translate }}</span>
-          </a>
-          <a routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
+          </button>
+          <button routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
              [class.text-text-secondary]="!rlaBacklog.isActive"
              [class.hover:text-text-primary]="!rlaBacklog.isActive"
              [class.hover:bg-primary/5]="!rlaBacklog.isActive"
              [class.font-medium]="!rlaBacklog.isActive"
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
             <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.BACKLOG' | translate }}</span>
-          </a>
+          </button>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
-            <a routerLink="/dashboard/sprint-planning" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprintPlan="routerLinkActive"
+            <button routerLink="/dashboard/sprint-planning" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprintPlan="routerLinkActive"
                [class.text-text-secondary]="!rlaSprintPlan.isActive"
                [class.hover:text-text-primary]="!rlaSprintPlan.isActive"
                [class.hover:bg-primary/5]="!rlaSprintPlan.isActive"
                [class.font-medium]="!rlaSprintPlan.isActive"
-               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
               <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SPRINT_PLANNING' | translate }}</span>
               <span [class.hidden]="isSidebarCollapsed()" class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
-            </a>
+            </button>
           }
 
           <!-- Retrospective Tab -->
-          <a routerLink="/dashboard/retrospective" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaRetro="routerLinkActive"
+          <button routerLink="/dashboard/retrospective" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaRetro="routerLinkActive"
              [class.text-text-secondary]="!rlaRetro.isActive"
              [class.hover:text-text-primary]="!rlaRetro.isActive"
              [class.hover:bg-primary/5]="!rlaRetro.isActive"
              [class.font-medium]="!rlaRetro.isActive"
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
             <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.RETROSPECTIVE' | translate }}</span>
             <span [class.hidden]="isSidebarCollapsed()" class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
-          </a>
+          </button>
 
 
 
           @if (projectState.isProjectManager()) {
-            <a routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaTeam="routerLinkActive"
+            <button routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaTeam="routerLinkActive"
                [class.text-text-secondary]="!rlaTeam.isActive"
                [class.hover:text-text-primary]="!rlaTeam.isActive"
                [class.hover:bg-primary/5]="!rlaTeam.isActive"
                [class.font-medium]="!rlaTeam.isActive"
-               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
               <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.PROJECT_TEAM' | translate }}</span>
-            </a>
+            </button>
 
             <!-- Project Policies Tab -->
-            <a routerLink="/dashboard/project-policies" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProjPol="routerLinkActive"
+            <button routerLink="/dashboard/project-policies" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProjPol="routerLinkActive"
                [class.text-text-secondary]="!rlaProjPol.isActive"
                [class.hover:text-text-primary]="!rlaProjPol.isActive"
                [class.hover:bg-primary/5]="!rlaProjPol.isActive"
                [class.font-medium]="!rlaProjPol.isActive"
-               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
               <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.PROJECT_POLICIES' | translate }}</span>
               <span [class.hidden]="isSidebarCollapsed()" class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">AI</span>
-            </a>
+            </button>
           } 
           <!-- Employees Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <a routerLink="/dashboard/employees" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaEmp="routerLinkActive"
+            <button routerLink="/dashboard/employees" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaEmp="routerLinkActive"
                [class.text-text-secondary]="!rlaEmp.isActive"
                [class.hover:text-text-primary]="!rlaEmp.isActive"
                [class.hover:bg-primary/5]="!rlaEmp.isActive"
                [class.font-medium]="!rlaEmp.isActive"
-               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+               [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
               <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.EMPLOYEES' | translate }}</span>
-            </a>
+            </button>
           }
           <!-- Organization Hub / Company Policies Tab -->
-          <a routerLink="/dashboard/organization" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaOrg="routerLinkActive"
+          <button routerLink="/dashboard/organization" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaOrg="routerLinkActive"
              [class.text-text-secondary]="!rlaOrg.isActive"
              [class.hover:text-text-primary]="!rlaOrg.isActive"
              [class.hover:bg-primary/5]="!rlaOrg.isActive"
              [class.font-medium]="!rlaOrg.isActive"
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             <span [class.hidden]="isSidebarCollapsed()" class="truncate">
             @if (projectState.isProjectManager()) {
@@ -211,35 +212,35 @@ import { DashboardService } from '../../services/dashboard.service';
               {{ 'SIDEBAR.COMPANY_POLICIES' | translate }}
             }
             </span>
-          </a>
+          </button>
 
 
-          <a routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
+          <button routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
              [class.text-text-secondary]="!rlaProfile.isActive"
              [class.hover:text-text-primary]="!rlaProfile.isActive"
              [class.hover:bg-primary/5]="!rlaProfile.isActive"
              [class.font-medium]="!rlaProfile.isActive"
 
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.MY_PROFILE' | translate }}</span>
-          </a>
+          </button>
 
           <!-- Settings Tab -->
-          <a routerLink="/dashboard/settings" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSettings="routerLinkActive"
+          <button routerLink="/dashboard/settings" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSettings="routerLinkActive"
              [class.text-text-secondary]="!rlaSettings.isActive"
              [class.hover:text-text-primary]="!rlaSettings.isActive"
              [class.hover:bg-primary/5]="!rlaSettings.isActive"
              [class.font-medium]="!rlaSettings.isActive"
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 hover:translate-x-0.5">
+             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
             <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
-          </a>
+          </button>
         </nav>
 
         <!-- Footer / Profile Quick view & Dark mode -->
@@ -405,11 +406,11 @@ import { DashboardService } from '../../services/dashboard.service';
             <app-notification-bell />
 
             <!-- Subscription button -->
-            <a routerLink="/subscription"
+            <button routerLink="/subscription"
                class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
               {{ 'HEADER.SUBSCRIPTION' | translate }}
-            </a>
+            </button>
 
             <!-- Logout button -->
             <button (click)="logout()"
@@ -466,29 +467,29 @@ import { DashboardService } from '../../services/dashboard.service';
         
         <!-- Projects Hub Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {
-          <a routerLink="/dashboard/projects" routerLinkActive="text-primary scale-105" #rlaProjM="routerLinkActive"
+          <button routerLink="/dashboard/projects" routerLinkActive="text-primary scale-105" #rlaProjM="routerLinkActive"
              [class.text-text-secondary]="!rlaProjM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
             </svg>
             <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROJECTS' | translate }}</span>
-          </a>
+          </button>
         }
 
         <!-- Sprint Tab -->
-        <a routerLink="/dashboard/sprint" routerLinkActive="text-primary scale-105" #rlaSprintM="routerLinkActive"
+        <button routerLink="/dashboard/sprint" routerLinkActive="text-primary scale-105" #rlaSprintM="routerLinkActive"
            [class.text-text-secondary]="!rlaSprintM.isActive"
            class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
           </svg>
           <span class="text-[9px] font-bold">{{ 'SIDEBAR.SPRINT' | translate }}</span>
-        </a>
+        </button>
 
         <!-- Sprint Planning (Mobile PM only) -->
         @if (projectState.isProjectManager()) {
-          <a routerLink="/dashboard/sprint-planning" routerLinkActive="text-primary scale-105" #rlaSprintPlanM="routerLinkActive"
+          <button routerLink="/dashboard/sprint-planning" routerLinkActive="text-primary scale-105" #rlaSprintPlanM="routerLinkActive"
              [class.text-text-secondary]="!rlaSprintPlanM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 relative">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -496,61 +497,61 @@ import { DashboardService } from '../../services/dashboard.service';
             </svg>
             <span class="text-[9px] font-bold">{{ 'SIDEBAR.PLANNING' | translate }}</span>
             <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-          </a>
+          </button>
         }
 
         <!-- Backlog Tab -->
-        <a routerLink="/dashboard/backlog" routerLinkActive="text-primary scale-105" #rlaBacklogM="routerLinkActive"
+        <button routerLink="/dashboard/backlog" routerLinkActive="text-primary scale-105" #rlaBacklogM="routerLinkActive"
            [class.text-text-secondary]="!rlaBacklogM.isActive"
            class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
           <span class="text-[9px] font-bold">{{ 'SIDEBAR.BACKLOG_SHORT' | translate }}</span>
-        </a>
+        </button>
 
         <!-- Mobile Team Tab -->
         @if (projectState.isProjectManager()) {
-          <a routerLink="/dashboard/team" routerLinkActive="text-primary scale-105" #rlaTeamM="routerLinkActive"
+          <button routerLink="/dashboard/team" routerLinkActive="text-primary scale-105" #rlaTeamM="routerLinkActive"
              [class.text-text-secondary]="!rlaTeamM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             <span class="text-[9px] font-bold">{{ 'SIDEBAR.TEAM' | translate }}</span>
-          </a>
+          </button>
 
           <!-- Mobile Project Policies Tab -->
-          <a routerLink="/dashboard/project-policies" routerLinkActive="text-primary scale-105" #rlaProjPolM="routerLinkActive"
+          <button routerLink="/dashboard/project-policies" routerLinkActive="text-primary scale-105" #rlaProjPolM="routerLinkActive"
              [class.text-text-secondary]="!rlaProjPolM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 relative">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
             <span class="text-[9px] font-bold">AI Policies</span>
-          </a>
+          </button>
         }
 
         <!-- Mobile Employees Tab -->
         @if (projectState.isProjectManager()) {
-          <a routerLink="/dashboard/employees" routerLinkActive="text-primary scale-105" #rlaEmpM="routerLinkActive"
+          <button routerLink="/dashboard/employees" routerLinkActive="text-primary scale-105" #rlaEmpM="routerLinkActive"
              [class.text-text-secondary]="!rlaEmpM.isActive"
              class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
             <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             <span class="text-[9px] font-bold"><span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.EMPLOYEES' | translate }}</span></span>
-          </a>
+          </button>
         }
 
         <!-- Profile Tab -->
-        <a routerLink="/dashboard/profile" routerLinkActive="text-primary scale-105" #rlaProfileM="routerLinkActive"
+        <button routerLink="/dashboard/profile" routerLinkActive="text-primary scale-105" #rlaProfileM="routerLinkActive"
            [class.text-text-secondary]="!rlaProfileM.isActive"
            class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           <span class="text-[9px] font-bold">{{ 'SIDEBAR.PROFILE' | translate }}</span>
-        </a>
+        </button>
 
         <!-- Settings Tab (Mobile) -->
-        <a routerLink="/dashboard/settings" routerLinkActive="text-primary scale-105" #rlaSettingsM="routerLinkActive"
+        <button routerLink="/dashboard/settings" routerLinkActive="text-primary scale-105" #rlaSettingsM="routerLinkActive"
            [class.text-text-secondary]="!rlaSettingsM.isActive"
            class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200">
           <svg class="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -558,7 +559,7 @@ import { DashboardService } from '../../services/dashboard.service';
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <span class="text-[9px] font-bold"><span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SETTINGS' | translate }}</span></span>
-        </a>
+        </button>
       </div>
 
     </div>

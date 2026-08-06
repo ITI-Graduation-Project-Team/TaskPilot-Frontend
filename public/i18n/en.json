@@ -789,7 +789,7 @@
     "DESC_EMP": "Ask the AI Assistant questions about company policies, leave days, and general guidelines.",
     "TAB_SETTINGS": "General Settings",
     "TAB_KNOWLEDGE": "Knowledge Base",
-    "TAB_CHAT": "Policy Chat (Test)"
+    "TAB_CHAT": "Policy Chat"
   },
   "DEACTIVATION": {
     "TITLE": "Deactivate Employee",

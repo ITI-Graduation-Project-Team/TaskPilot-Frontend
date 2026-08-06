@@ -131,7 +131,7 @@ const LOADING_HINTS = [
               <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
                 {{ currentLang() === 'ar'
                   ? 'تحتاج إلى وجود قصص مستخدمين غير معينة في قائمة المهام (Backlog) ليتمكن الذكاء الاصطناعي من تقسيم السبرينت وتوزيع القدرات.'
-                  : 'You need unassigned user stories in your project backlog to generate an AI sprint schedule. Add stories or refresh backlog data.' }}
+                  : 'You need unassigned user stories in your project backlog to generate an AI sprint schedule. Add stories.' }}
               </p>
 
               <!-- Status Info Cards -->
@@ -180,15 +180,7 @@ const LOADING_HINTS = [
 
               <!-- Action Buttons -->
               <div class="flex items-center justify-center gap-3 flex-wrap">
-                <button
-                  (click)="loadProjectBacklogStories()"
-                  [disabled]="isBacklogLoading()"
-                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-sidebar hover:bg-border border border-border text-text-primary font-bold rounded-xl shadow-xs transition-all text-xs disabled:opacity-50">
-                  <svg class="w-4 h-4 text-text-secondary" [class.animate-spin]="isBacklogLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                  {{ currentLang() === 'ar' ? 'تحديث قائمة المهام' : 'Refresh Backlog' }}
-                </button>
+
 
                 <button
                   (click)="loadSuggestions()"
@@ -480,7 +472,7 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   async viewSnapshot(sprint: SprintSuggestionDto) {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
-    
+
     // Simulate/retrieve active snapshots
     this.activeSnapshotSprintId.set(sprint.titleEn);
     try {
@@ -508,19 +500,19 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
       const first = this.suggestions()[0];
       const payload = this.suggestions().length > 1
         ? this.suggestions().map(s => ({
-            titleEn: s.titleEn || s.sprintTitleEn || '',
-            titleAr: s.titleAr || s.sprintTitleAr || '',
-            sprintGoalEn: s.goalEn || s.sprintGoalEn || '',
-            sprintGoalAr: s.goalAr || s.sprintGoalAr || '',
-            userStoryIds: s.userStoryIds || [],
-          }))
+          titleEn: s.titleEn || s.sprintTitleEn || '',
+          titleAr: s.titleAr || s.sprintTitleAr || '',
+          sprintGoalEn: s.goalEn || s.sprintGoalEn || '',
+          sprintGoalAr: s.goalAr || s.sprintGoalAr || '',
+          userStoryIds: s.userStoryIds || [],
+        }))
         : {
-            titleEn: first.titleEn || first.sprintTitleEn || '',
-            titleAr: first.titleAr || first.sprintTitleAr || '',
-            sprintGoalEn: first.goalEn || first.sprintGoalEn || '',
-            sprintGoalAr: first.goalAr || first.sprintGoalAr || '',
-            userStoryIds: first.userStoryIds || [],
-          };
+          titleEn: first.titleEn || first.sprintTitleEn || '',
+          titleAr: first.titleAr || first.sprintTitleAr || '',
+          sprintGoalEn: first.goalEn || first.sprintGoalEn || '',
+          sprintGoalAr: first.goalAr || first.sprintGoalAr || '',
+          userStoryIds: first.userStoryIds || [],
+        };
 
       await this.sprintService.confirmSprints(projId, payload);
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
