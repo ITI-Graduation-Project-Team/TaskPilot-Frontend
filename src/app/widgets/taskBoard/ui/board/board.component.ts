@@ -617,6 +617,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
       }
+    }
     </div>
 
     <!-- Edit/Add Task Modal Overlay -->
