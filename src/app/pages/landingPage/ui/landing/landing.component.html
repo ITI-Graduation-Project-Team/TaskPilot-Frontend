@@ -1,5 +1,5 @@
 <div
-  class="min-h-screen bg-background text-text-primary flex flex-col font-sans transition-colors duration-300">
+  class="min-h-screen bg-background text-text-primary flex flex-col font-sans transition-colors duration-300 overflow-x-hidden">
 
   <!-- Header / Navbar -->
   <header
@@ -39,9 +39,9 @@
         </button>
 
         <!-- Go To Dashboard Button -->
-        <a routerLink="/dashboard"
+        <a [routerLink]="buttonLink"
           class="px-4 py-2 bg-primary text-white font-bold text-xs md:text-sm rounded-lg hover:bg-primary-hover transition-all duration-200 whitespace-nowrap shadow-sm no-underline hover:scale-[1.02] cursor-pointer">
-          {{ 'landing.goToDashboard' | translate }}
+          {{ buttonTextKey | translate }}
         </a>
       </div>
     </div>
@@ -52,7 +52,7 @@
     <!-- Left Column: Hero Text & Actions -->
     <div class="flex flex-col items-center text-center lg:items-start lg:text-start">
       <!-- Fading Quotes as Main Heading -->
-      <div class="mb-6 min-h-[180px] sm:min-h-[160px] flex items-center justify-center lg:justify-start w-full">
+      <div class="mb-6 min-h-[260px] md:min-h-[200px] flex items-center justify-center lg:justify-start w-full">
         <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-[#121338] dark:text-white transition-opacity duration-500 ease-in-out"
             [class.opacity-0]="isFading()"
             [class.opacity-100]="!isFading()">
@@ -69,9 +69,9 @@
 
       <!-- Hero Actions -->
       <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-        <a routerLink="/register"
+        <a [routerLink]="buttonLink"
           class="w-full sm:w-auto px-6 py-3.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-hover transition-all duration-200 text-center shadow-md hover:scale-[1.02] no-underline cursor-pointer">
-          {{ 'landing.getStarted' | translate }}
+          {{ buttonTextKey | translate }}
         </a>
         <a href="#features"
           class="w-full sm:w-auto px-6 py-3.5 bg-surface text-text-primary border border-border font-bold rounded-lg hover:bg-background transition-all duration-200 text-center hover:scale-[1.02] no-underline">
@@ -127,10 +127,10 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="bg-card border border-border rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col lg:flex-row gap-12 items-center min-h-[500px]">
+    <div class="bg-card border border-border rounded-3xl p-6 md:p-12 shadow-2xl flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-between min-h-[500px]">
       
       <!-- Left Column: Content -->
-      <div class="flex-1 w-full lg:w-1/2 flex flex-col items-start text-start">
+      <div class="w-full lg:w-[50%] flex flex-col items-start text-start">
         <h3 class="text-3xl sm:text-4xl font-extrabold text-text-primary leading-tight mb-8">
           {{ 'landing.tabContent.' + activeTabId() + '.title' | translate }}
         </h3>
@@ -150,18 +150,15 @@
         </a>
       </div>
 
-      <!-- Right Column: Media Placeholder -->
-      <div class="flex-1 w-full lg:w-1/2 h-[400px] bg-surface border border-border/50 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-inner">
-        <!-- Placeholder text telling user to add images -->
-        <div class="text-center p-6 z-10 bg-card/80 backdrop-blur-sm rounded-xl border border-border max-w-sm mx-4">
-          <svg class="w-12 h-12 text-primary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <p class="text-text-primary font-bold mb-2">Image Placeholder for {{ 'landing.tabs.' + activeTabId() | translate }}</p>
-          <p class="text-sm text-text-secondary">Please add the respective image/video in `public/assets/` and update the code.</p>
-        </div>
+      <!-- Right Column: Media Display -->
+      <div class="w-full lg:w-[45%] aspect-square max-w-[450px] bg-white rounded-2xl relative overflow-hidden shadow-lg border border-border/50 flex-shrink-0 mx-auto">
+        <!-- Dynamically loaded image based on active tab -->
+        <img [src]="'/assets/features/' + activeTabId() + '.png'" 
+             [alt]="activeTabId()"
+             class="absolute inset-0 w-full h-full object-contain p-2 z-10 transition-opacity duration-500" />
+        
         <!-- Abstract shape to make it look nice -->
-        <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none z-0"></div>
       </div>
 
     </div>
@@ -204,9 +201,9 @@
         </svg>
 
         <!-- Step 1: PM Setup -->
-        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-16 md:mb-24">
+        <div class="relative w-full flex justify-end md:justify-start mb-16 md:mb-24">
           <!-- Commit Node -->
-          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-background rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
           <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
             <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
               <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step1.role' | translate }}</span>
@@ -217,11 +214,11 @@
         </div>
 
         <!-- Step 2: Employee Onboarding -->
-        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-end md:rtl:justify-start mb-16 md:mb-24 mt-0 md:-mt-12">
+        <div class="relative w-full flex justify-end mb-16 md:mb-24 mt-0 md:-mt-12">
           <!-- Commit Node Mobile -->
-          <div class="md:hidden absolute ltr:left-4 rtl:right-4 w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <div class="md:hidden absolute ltr:left-4 rtl:right-4 w-6 h-6 bg-background rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
           <!-- Commit Node Desktop -->
-          <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] w-6 h-6 bg-background rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
           <div class="w-[85%] md:w-[25%] ltr:md:pl-10 rtl:md:pr-10">
             <div class="bg-card border border-[#0EA5E9]/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start">
               <span class="inline-block px-3 py-1 bg-[#0EA5E9]/10 text-[#0EA5E9] text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step2.role' | translate }}</span>
@@ -232,9 +229,9 @@
         </div>
 
         <!-- Step 3: PM AI Creation -->
-        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-16 md:mb-24">
+        <div class="relative w-full flex justify-end md:justify-start mb-16 md:mb-24">
           <!-- Commit Node -->
-          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-background rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
           <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
             <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
               <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step3.role' | translate }}</span>
@@ -245,9 +242,9 @@
         </div>
 
         <!-- Step 4: PM Task Assignment -->
-        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-16 md:mb-24">
+        <div class="relative w-full flex justify-end md:justify-start mb-16 md:mb-24">
           <!-- Commit Node -->
-          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-background rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
           <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
             <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
               <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step4.role' | translate }}</span>
@@ -258,11 +255,11 @@
         </div>
 
         <!-- Step 5: Employee Execution -->
-        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-end md:rtl:justify-start mb-16 md:mb-24 mt-0 md:-mt-12">
+        <div class="relative w-full flex justify-end mb-16 md:mb-24 mt-0 md:-mt-12">
           <!-- Commit Node Mobile -->
-          <div class="md:hidden absolute ltr:left-4 rtl:right-4 w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <div class="md:hidden absolute ltr:left-4 rtl:right-4 w-6 h-6 bg-background rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
           <!-- Commit Node Desktop -->
-          <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] w-6 h-6 bg-surface rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
+          <div class="hidden md:block absolute ltr:left-[70%] rtl:right-[70%] w-6 h-6 bg-background rounded-full border-[5px] border-[#0EA5E9] ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(14,165,233,0.8)] z-20"></div>
           <div class="w-[85%] md:w-[25%] ltr:md:pl-10 rtl:md:pr-10">
             <div class="bg-card border border-[#0EA5E9]/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start">
               <span class="inline-block px-3 py-1 bg-[#0EA5E9]/10 text-[#0EA5E9] text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step5.role' | translate }}</span>
@@ -273,9 +270,9 @@
         </div>
 
         <!-- Step 6: PM Review & Insights -->
-        <div class="relative w-full flex ltr:justify-end rtl:justify-start md:ltr:justify-start md:rtl:justify-end mb-8 mt-0 md:mt-16">
+        <div class="relative w-full flex justify-end md:justify-start mb-8 mt-0 md:mt-16">
           <!-- Commit Node -->
-          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-surface rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
+          <div class="absolute ltr:left-4 rtl:right-4 md:ltr:left-[30%] md:rtl:right-[30%] w-6 h-6 bg-background rounded-full border-[5px] border-primary ltr:-translate-x-1/2 rtl:translate-x-1/2 shadow-[0_0_15px_rgba(213,28,57,0.8)] z-20"></div>
           <div class="w-[85%] md:w-[25%] ltr:md:pr-10 rtl:md:pl-10 ltr:md:text-right rtl:md:text-left">
             <div class="bg-card border border-primary/20 rounded-2xl p-6 shadow-xl hover:-translate-y-1 transition-transform text-start md:text-end">
               <span class="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">{{ 'landing.journey.step6.role' | translate }}</span>
@@ -323,7 +320,7 @@
               <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <path d="M42 4H6C4.895 4 4 4.895 4 6v36c0 1.105.895 2 2 2h36c1.105 0 2-.895 2-2V6c0-1.105-.895-2-2-2z" fill="#4285F4"/>
                 <path d="M4 14h40v2H4v-2z" fill="#E8EAED"/>
-                <text x="14" y="32" font-size="20" font-weight="bold" font-family="sans-serif" fill="#FFF">31</text>
+                <text x="24" y="32" font-size="20" font-weight="bold" font-family="sans-serif" fill="#FFF" text-anchor="middle" dominant-baseline="central">31</text>
               </svg>
             </div>
             <!-- Gmail Logo -->
@@ -357,7 +354,7 @@
               <svg class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <path d="M42 4H6C4.895 4 4 4.895 4 6v36c0 1.105.895 2 2 2h36c1.105 0 2-.895 2-2V6c0-1.105-.895-2-2-2z" fill="#4285F4"/>
                 <path d="M4 14h40v2H4v-2z" fill="#E8EAED"/>
-                <text x="14" y="32" font-size="20" font-weight="bold" font-family="sans-serif" fill="#FFF">31</text>
+                <text x="24" y="32" font-size="20" font-weight="bold" font-family="sans-serif" fill="#FFF" text-anchor="middle" dominant-baseline="central">31</text>
               </svg>
             </div>
             <!-- Gmail Logo -->

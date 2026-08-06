@@ -16,6 +16,10 @@ export interface ProjectInfo {
   platformTargets?: string[];
   projectType?: string;
   status?: string;
+  teamSize?: number;
+  totalUserStories?: number;
+  completedSprintsCount?: number;
+  activeSprintsCount?: number;
 }
 
 @Injectable({
@@ -141,7 +145,11 @@ export class ProjectStateService {
         techStack: p.techStack || [],
         platformTargets: p.platformTargets || [],
         projectType: p.projectType || '',
-        status: p.status || 'Active'
+        status: p.status || 'Active',
+        teamSize: p.teamSize || 0,
+        totalUserStories: p.totalUserStories || 0,
+        completedSprintsCount: p.completedSprintsCount || 0,
+        activeSprintsCount: p.activeSprintsCount || 0
       }));
 
       this._projects.set(filtered);
@@ -166,6 +174,50 @@ export class ProjectStateService {
       console.error('Failed to load projects in state service:', e);
     }
   }
+
+  async loadProjectsPaged(page: number, pageSize: number): Promise<{ projects: ProjectInfo[], totalCount: number }> {
+    try {
+      const isPM = this._isProjectManager();
+      const userId = this._userId();
+      const companyId = this._userCompanyId();
+      if (!userId) return { projects: [], totalCount: 0 };
+
+      const endpoint = (isPM && companyId) 
+        ? `/Projects/company/${companyId}/paged?page=${page}&pageSize=${pageSize}` 
+        : `/employees/${userId}/projects/paged?page=${page}&pageSize=${pageSize}`;
+        
+      const { data } = await apiClient.get<any>(endpoint);
+      const items: any[] = data.data?.items || [];
+      const totalCount = data.data?.totalItems || 0;
+      
+      const filtered: ProjectInfo[] = items.map(p => ({
+        id: p.id,
+        name: p.name || p.nameEn || '',
+        nameEn: p.nameEn || p.name || '',
+        nameAr: p.nameAr || p.name || '',
+        description: p.description || p.descriptionEn || '',
+        descriptionEn: p.descriptionEn || p.description || '',
+        descriptionAr: p.descriptionAr || p.description || '',
+        companyId: p.companyId,
+        managerId: p.managerId,
+        techStack: p.techStack || [],
+        platformTargets: p.platformTargets || [],
+        projectType: p.projectType || '',
+        status: p.status || 'Active',
+        teamSize: p.teamSize || 0,
+        totalUserStories: p.totalUserStories || 0,
+        completedSprintsCount: p.completedSprintsCount || 0,
+        activeSprintsCount: p.activeSprintsCount || 0
+      }));
+      
+      return { projects: filtered, totalCount };
+    } catch (e) {
+      console.warn('Failed to load paginated projects:', e);
+      return { projects: [], totalCount: 0 };
+    }
+  }
+
+
 
   setSelectedProject(projectId: string | null, force: boolean = false) {
     if (!force && String(this._selectedProjectId()).toLowerCase() === String(projectId).toLowerCase()) {
@@ -198,9 +250,8 @@ export class ProjectStateService {
   }
 
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
-    const pmId = this._userId();
     const companyId = this._userCompanyId();
-    if (!pmId || !companyId) return false;
+    if (!companyId) return false;
 
     const descAr = descriptionAr || descriptionEn;
     try {
@@ -212,7 +263,6 @@ export class ProjectStateService {
         nameAr,
         descriptionEn,
         descriptionAr: descAr,
-        managerId: pmId,
         companyId: companyId
       });
       await this.loadProjects();

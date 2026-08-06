@@ -48,27 +48,20 @@ export interface MyTasksResponseDto {
   tasks: MyTaskDto[];
 }
 
-export interface SprintTaskDto {
-  id?: string;
-  taskId?: string;
-  userStoryId?: string;
+export interface SprintBoardTaskDto {
+  taskId: string;
+  userStoryId: string;
   titleEn: string;
   titleAr?: string;
   descriptionEn?: string;
   descriptionAr?: string;
-  technicalSummaryEn?: string | null;
-  technicalSummaryAr?: string | null;
+  status: string;
+  priority: string;
+  type: string;
+  estimatedHours: number;
+  actualHours: number;
   acceptanceCriteriaEn?: string;
   acceptanceCriteriaAr?: string;
-  estimatedHours: number;
-  actualHours?: number;
-  effortSize: string;
-  type: string;
-  priority: string;
-  status: string;
-  userStoryTitleEn?: string;
-  userStoryTitleAr?: string;
-  requiredSkills?: string[];
   assigneeId?: string;
   assigneeName?: string;
 }
@@ -78,21 +71,24 @@ export interface SprintTaskDto {
 })
 export class TasksService {
 
-  async getSprintTasks(projectId: string, sprintId: string): Promise<SprintTaskDto[]> {
+  async getSprintTasks(projectId: string, sprintId: string): Promise<SprintBoardTaskDto[]> {
     const { data } = await apiClient.get<any>(
       `/projects/${projectId}/sprints/${sprintId}/tasks`
     );
     return this.extractSprintTasks(data);
   }
 
-  async getMySprintTasks(projectId: string, sprintId: string): Promise<SprintTaskDto[]> {
+  /**
+   * @deprecated Do not use. Use getSprintTasks instead to load the shared board DTO.
+   */
+  async getMySprintTasks(projectId: string, sprintId: string): Promise<SprintBoardTaskDto[]> {
     const { data } = await apiClient.get<any>(
       `/projects/${projectId}/sprints/${sprintId}/tasks/my-tasks`
     );
     return this.extractSprintTasks(data);
   }
 
-  private extractSprintTasks(responseBody: any): SprintTaskDto[] {
+  private extractSprintTasks(responseBody: any): SprintBoardTaskDto[] {
     const payload = responseBody?.data ?? responseBody;
     if (Array.isArray(payload)) return payload;
     return Array.isArray(payload?.tasks) ? payload.tasks : [];

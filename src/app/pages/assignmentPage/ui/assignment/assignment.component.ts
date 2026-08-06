@@ -39,6 +39,10 @@ export class AssignmentComponent implements OnInit {
   readonly isConfirming = signal<boolean>(false);
   sprintId: string = '';
 
+  // Confirm Modal state
+  showOverCapacityModal = signal<boolean>(false);
+  overCapacityDevsForModal = signal<{ name: string, assigned: number, capacity: number }[]>([]);
+
   // Derived Metrics & State
   readonly totalTasksCount = computed(() => this.suggestions().length);
   readonly assignedCount = computed(() => Object.keys(this.localAssignments()).length);
@@ -64,6 +68,51 @@ export class AssignmentComponent implements OnInit {
     return this.localAssignments()[taskId] || null;
   });
 
+  // Track each developer's starting capacity from the suggestions
+  readonly developerInitialCapacities = computed(() => {
+    const capacities: { [empId: string]: { name: string, capacity: number } } = {};
+    for (const task of this.suggestions()) {
+      for (const dev of task.rankedDevelopers) {
+        if (!capacities[dev.employeeId]) {
+          capacities[dev.employeeId] = { name: dev.employeeName, capacity: dev.initialRemainingHours };
+        }
+      }
+    }
+    return capacities;
+  });
+
+  // Calculate live assigned hours per developer based on localAssignments
+  readonly developerAssignedHours = computed(() => {
+    const assigned: { [empId: string]: number } = {};
+    const assignments = this.localAssignments();
+    for (const task of this.suggestions()) {
+      const empId = assignments[task.taskId];
+      if (empId) {
+        assigned[empId] = (assigned[empId] || 0) + task.estimatedHours;
+      }
+    }
+    return assigned;
+  });
+
+  // Combine initial capacity with live assigned hours
+  readonly developerRemainingHours = computed(() => {
+    const initial = this.developerInitialCapacities();
+    const assigned = this.developerAssignedHours();
+    const remaining: { [empId: string]: { name: string, assigned: number, capacity: number, remaining: number } } = {};
+    
+    for (const empId in initial) {
+      const cap = initial[empId].capacity;
+      const ass = assigned[empId] || 0;
+      remaining[empId] = {
+        name: initial[empId].name,
+        assigned: ass,
+        capacity: cap,
+        remaining: cap - ass
+      };
+    }
+    return remaining;
+  });
+
   async ngOnInit() {
     this.sprintId = this.route.snapshot.paramMap.get('sprintId') || '';
     if (!this.sprintId) {
@@ -84,7 +133,14 @@ export class AssignmentComponent implements OnInit {
         this.selectedTaskId.set(suggestionsData[0].taskId);
       }
 
-      this.localAssignments.set({});
+      // Initialize local assignments with existing assignments
+      const initialAssignments: { [taskId: string]: string } = {};
+      suggestionsData.forEach(task => {
+        if (task.assigneeId) {
+          initialAssignments[task.taskId] = task.assigneeId;
+        }
+      });
+      this.localAssignments.set(initialAssignments);
 
     } catch (error: any) {
       this.toastService.show(error.message || 'Failed to load assignment data', 'error');
@@ -140,6 +196,30 @@ export class AssignmentComponent implements OnInit {
     });
   }
 
+  onConfirmClick() {
+    if (!this.canConfirm()) return;
+
+    // Check for over-capacity developers
+    const remaining = this.developerRemainingHours();
+    const overCapacity = Object.values(remaining).filter(d => d.remaining < 0);
+
+    if (overCapacity.length > 0) {
+      this.overCapacityDevsForModal.set(overCapacity.map(d => ({ name: d.name, assigned: d.assigned, capacity: d.capacity })));
+      this.showOverCapacityModal.set(true);
+    } else {
+      this.confirmAssignments();
+    }
+  }
+
+  cancelOverCapacityModal() {
+    this.showOverCapacityModal.set(false);
+  }
+
+  proceedWithOverCapacity() {
+    this.showOverCapacityModal.set(false);
+    this.confirmAssignments();
+  }
+
   async confirmAssignments() {
     if (!this.canConfirm()) return;
 
@@ -150,11 +230,16 @@ export class AssignmentComponent implements OnInit {
         ([taskId, employeeId]) => ({ taskId, employeeId })
       );
 
-      await this.assignmentService.confirm(this.sprintId, {
+      const warnings = await this.assignmentService.confirm(this.sprintId, {
         assignments: assignmentsPayload
       });
       
-      this.toastService.show('Assignments confirmed successfully!', 'success');
+      if (warnings && warnings.length > 0) {
+        warnings.forEach((w: string) => this.toastService.show(w, 'warning'));
+        this.toastService.show(this.currentLang === 'ar' ? 'تم الحفظ، لكن مع وجود تحذيرات سعة استيعابية بسبب تحديثات متزامنة.' : 'Assignments saved, but with capacity warnings (likely due to concurrent updates).', 'warning');
+      } else {
+        this.toastService.show(this.currentLang === 'ar' ? 'تم تأكيد التعيينات بنجاح!' : 'Assignments confirmed successfully!', 'success');
+      }
       
       this.goBackToDashboard();
       

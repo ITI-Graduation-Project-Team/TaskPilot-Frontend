@@ -348,5 +348,33 @@ export class EmployeesComponent implements OnInit {
     this.closeDeactivateModal();
     this.loadEmployees();
   }
+
+  isReactivating = signal<string | null>(null);
+
+  async reactivateEmployee(emp: CompanyEmployeeModel) {
+    if (!confirm(`Are you sure you want to reactivate ${emp.fullName || emp.email}?`)) {
+      return;
+    }
+    this.isReactivating.set(emp.employeeId);
+    try {
+      // Assuming we'll add reactivateEmployee to companyService
+      // Wait, let's use apiClient directly if it's not in companyService yet, or better, add it to companyService.
+      // But we can just use apiClient here for simplicity or edit companyService.
+      // Let's call the companyService after we add it.
+      const res = await this.companyService.reactivateEmployee(emp.employeeId);
+      if (res.succeeded) {
+        this.toastService.show('Employee reactivated successfully!', 'success');
+        this.loadEmployees();
+      } else {
+        this.toastService.show(res.message || 'Failed to reactivate employee', 'error');
+      }
+    } catch (e: any) {
+      console.error(e);
+      const msg = e?.response?.data?.message || 'An error occurred while reactivating.';
+      this.toastService.show(msg, 'error');
+    } finally {
+      this.isReactivating.set(null);
+    }
+  }
 }
 

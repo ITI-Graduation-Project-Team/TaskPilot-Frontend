@@ -33,25 +33,30 @@ export class AssignmentService {
       estimatedHours: taskScore.task.estimatedHours,
       priority: taskScore.task.priority,
       type: taskScore.task.type,
+      assigneeId: taskScore.task.assigneeId,
       requiredSkills: (taskScore.task.requiredSkills || []).map(s => ({
         skillId: s.skillId,
         skillNameEn: s.skillNameEn,
         skillNameAr: s.skillNameAr,
       })),
-      rankedDevelopers: (taskScore.rankedDevelopers || []).slice(0, 3).map((dev, index) => ({
+      isUnassignable: taskScore.isUnassignable,
+      rankedDevelopers: (taskScore.rankedDevelopers || []).map((dev, index) => ({
         employeeId: dev.employeeId,
         employeeName: dev.fullName || '', // Enriched from backend if available, or handled in component
         score: Math.round(dev.finalScore),
         reasonEn: dev.reasonEn,
         reasonAr: dev.reasonAr,
         rank: index + 1,
+        initialRemainingHours: dev.remainingHours,
       })),
     }));
   }
 
-  async confirm(sprintId: string, payload: ConfirmAssignmentsRequest): Promise<void> {
+  async confirm(sprintId: string, payload: ConfirmAssignmentsRequest): Promise<string[]> {
     const projectId = this.activeProjectId;
-    await apiClient.post<any>(`/projects/${projectId}/sprints/${sprintId}/assignment/confirm`, payload);
+    const { data } = await apiClient.post<any>(`/projects/${projectId}/sprints/${sprintId}/assignment/confirm`, payload);
+    const result = data.data || data;
+    return result.warnings || [];
   }
 
 }
