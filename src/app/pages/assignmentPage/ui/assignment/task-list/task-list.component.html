@@ -30,14 +30,14 @@
       </svg>
       <input type="text"
         [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
+        (ngModelChange)="onSearchChange($event)"
         [placeholder]="currentLang === 'ar' ? 'ابحث في المهام...' : 'Search tasks...'"
         class="w-full bg-background border border-border/70 rounded-xl pl-8 pr-3 py-2 text-[11px] font-medium text-text-primary placeholder:text-text-secondary/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all">
     </div>
 
     <!-- Filter tabs -->
     <div class="grid grid-cols-3 p-0.5 bg-background rounded-xl border border-border/60 text-[10px] font-bold gap-0.5">
-      <button type="button" (click)="filterTab.set('all')"
+      <button type="button" (click)="onFilterChange('all')"
         class="py-1.5 rounded-lg transition-all text-center"
         [ngClass]="filterTab() === 'all'
           ? 'bg-surface text-primary shadow-sm border border-border/60'
@@ -45,14 +45,14 @@
         {{ currentLang === 'ar' ? 'الكل' : 'All' }}
         <span *ngIf="filterTab() === 'all'" class="inline-block w-1 h-1 rounded-full bg-primary ml-1 align-middle"></span>
       </button>
-      <button type="button" (click)="filterTab.set('unassigned')"
+      <button type="button" (click)="onFilterChange('unassigned')"
         class="py-1.5 rounded-lg transition-all text-center"
         [ngClass]="filterTab() === 'unassigned'
           ? 'bg-surface text-amber-500 shadow-sm border border-amber-500/20'
           : 'text-text-secondary hover:text-amber-500'">
         {{ currentLang === 'ar' ? 'معلق' : 'Pending' }}
       </button>
-      <button type="button" (click)="filterTab.set('assigned')"
+      <button type="button" (click)="onFilterChange('assigned')"
         class="py-1.5 rounded-lg transition-all text-center"
         [ngClass]="filterTab() === 'assigned'
           ? 'bg-surface text-emerald-500 shadow-sm border border-emerald-500/20'
@@ -66,7 +66,7 @@
   <div class="flex-1 overflow-y-auto py-2.5 px-3 space-y-2 scrollbar-thin">
 
     <!-- Task card -->
-    <div *ngFor="let task of filteredTasks()"
+    <div *ngFor="let task of paginatedTasks()"
       (click)="selectTask(task.taskId)"
       class="group relative p-3.5 bg-surface rounded-2xl cursor-pointer border transition-all duration-200 shadow-sm hover:shadow-md overflow-hidden"
       [ngClass]="{
@@ -187,4 +187,24 @@
     </div>
 
   </div>
+
+  <!-- ── Pagination Controls ── -->
+  <div *ngIf="totalPages > 1" class="px-4 py-3 border-t border-border/70 bg-sidebar shrink-0 flex items-center justify-between text-[11px] font-bold">
+    <button (click)="prevPage()" [disabled]="currentPage() === 1"
+      class="px-3 py-1.5 rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary hover:border-border/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+      <svg class="w-3.5 h-3.5" [ngClass]="{'rotate-180': currentLang === 'ar'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      {{ currentLang === 'ar' ? 'السابق' : 'Prev' }}
+    </button>
+    
+    <span class="text-text-secondary">
+      {{ currentLang === 'ar' ? 'صفحة' : 'Page' }} <span class="text-text-primary">{{ currentPage() }}</span> {{ currentLang === 'ar' ? 'من' : 'of' }} <span class="text-text-primary">{{ totalPages }}</span>
+    </span>
+
+    <button (click)="nextPage()" [disabled]="currentPage() === totalPages"
+      class="px-3 py-1.5 rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary hover:border-border/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+      {{ currentLang === 'ar' ? 'التالي' : 'Next' }}
+      <svg class="w-3.5 h-3.5" [ngClass]="{'rotate-180': currentLang === 'ar'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
 </div>

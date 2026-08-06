@@ -1016,13 +1016,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     return total;
   }
 
-  calcCapacity(card: SprintCard): number {
-    // Assume 2-week sprint, 40 h/developer standard capacity = 160 h (4 devs)
-    const sprintCapacity = 160;
-    const hours = this.calcHours(card);
-    if (hours === 0) return 0;
-    return Math.round((hours / sprintCapacity) * 100);
-  }
+
 
   mapPriority(priority: string): string {
     const isAr = this.currentLang() === 'ar';
