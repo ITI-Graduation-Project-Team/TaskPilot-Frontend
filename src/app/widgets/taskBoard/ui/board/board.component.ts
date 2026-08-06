@@ -24,7 +24,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
-import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
 
 interface Task {
   id: string;
@@ -57,7 +56,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       
@@ -142,17 +141,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
             {{ 'BOARD.KANBAN_BOARD' | translate }}
           </button>
-          @if (projectState.isProjectManager() && sprintStatus() !== 'Planned') {
-            <button (click)="activeTab.set('health')"
-                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
-                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
-                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
-              @if (sprintStatus() === 'Active') {
-                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
-              }
-              {{ 'BOARD.HEALTH_PULSE' | translate }}
-            </button>
-          }
         </div>
 
         @if (activeTab() === 'board') {
@@ -628,9 +616,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
         </div>
-        } @else if (activeTab() === 'health' && (activeSprintId() || completedSprintId())) {
-          <app-sprint-health-dashboard [sprintId]="(activeSprintId() || completedSprintId())!"></app-sprint-health-dashboard>
-        }
       }
     </div>
 
