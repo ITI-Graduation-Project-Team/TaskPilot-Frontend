@@ -15,7 +15,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, ProjectCardComponent, TranslatePipe],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-6 flex flex-col h-full min-h-[calc(100vh-12rem)]">
       <!-- Search & Filters -->
       @if (projects().length > 0) {
         <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-surface border border-border p-4 rounded-2xl shadow-sm">
@@ -71,21 +71,45 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         </div>
         
         <!-- Pagination Controls -->
-        <div class="flex items-center justify-between px-6 py-4 border border-border bg-surface rounded-2xl shadow-sm"
+        <div class="flex items-center justify-between px-6 py-4 !mt-auto border border-border bg-surface rounded-2xl shadow-sm"
           *ngIf="totalProjects() > 0">
-          <span class="text-sm text-text-secondary">Page <span class="font-bold text-text-primary">{{ currentPage() }}</span></span>
-          <div class="flex gap-2">
+          <div class="text-sm font-medium text-text-secondary hidden sm:block">
+            Showing <span class="font-bold text-text-primary">{{ (currentPage() - 1) * pageSize() + 1 }}</span> 
+            to <span class="font-bold text-text-primary">{{ Math.min(currentPage() * pageSize(), totalProjects()) }}</span> 
+            of <span class="font-bold text-text-primary">{{ totalProjects() }}</span> results
+          </div>
+          
+          <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
             <button (click)="prevPage()" [disabled]="currentPage() === 1"
-              class="p-2 rounded-xl hover:bg-background text-text-secondary disabled:opacity-50 transition-colors">
-              <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
+              class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all">
+              <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+              <span>Prev</span>
             </button>
-            <button (click)="nextPage()" [disabled]="currentPage() * pageSize() >= totalProjects()"
-              class="p-2 rounded-xl hover:bg-background text-text-secondary disabled:opacity-50 transition-colors">
-              <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
+            
+            <div class="flex items-center gap-1 px-2">
+              @for (page of pageNumbers(); track page) {
+                @if (page === -1) {
+                  <span class="px-2 py-1 text-text-secondary font-medium tracking-widest">...</span>
+                } @else {
+                  <button (click)="goToPage(page)"
+                    [class.bg-primary]="currentPage() === page"
+                    [class.text-white]="currentPage() === page"
+                    [class.shadow-md]="currentPage() === page"
+                    [class.shadow-primary/20]="currentPage() === page"
+                    [class.text-text-secondary]="currentPage() !== page"
+                    [class.hover:bg-background]="currentPage() !== page"
+                    [class.hover:text-text-primary]="currentPage() !== page"
+                    class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all">
+                    {{ page }}
+                  </button>
+                }
+              }
+            </div>
+
+            <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+              class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all">
+              <span>Next</span>
+              <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
         </div>
@@ -152,6 +176,44 @@ export class ProjectHubComponent implements OnInit {
   pageSize = signal<number>(6);
   isLoading = signal<boolean>(false);
 
+  Math = Math;
+  totalPages = computed(() => Math.ceil(this.totalProjects() / this.pageSize()));
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+    
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push(-1);
+        pages.push(current - 1);
+        pages.push(current);
+        pages.push(current + 1);
+        pages.push(-1);
+        pages.push(total);
+      }
+    }
+    return pages;
+  });
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages() && page !== this.currentPage()) {
+      this.currentPage.set(page);
+      this.loadPaginatedProjects();
+    }
+  }
+
   ngOnInit() {
     this.loadPaginatedProjects();
   }
@@ -202,8 +264,7 @@ export class ProjectHubComponent implements OnInit {
   }
 
   nextPage() {
-    const maxPage = Math.ceil(this.totalProjects() / this.pageSize());
-    if (this.currentPage() < maxPage) {
+    if (this.currentPage() < this.totalPages()) {
       this.currentPage.set(this.currentPage() + 1);
       this.loadPaginatedProjects();
     }
