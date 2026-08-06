@@ -3,7 +3,7 @@
 
   <!-- Header / Navbar -->
   <header
-    class="border-b border-border backdrop-blur-md sticky top-0 z-50 bg-background/85 transition-colors duration-300">
+    class="border-b border-border backdrop-blur-md fixed inset-x-0 top-0 z-50 bg-background/85 transition-colors duration-300">
     <div class="flex items-center justify-between px-6 py-4 md:px-12 md:py-5 max-w-7xl mx-auto w-full">
       <!-- Logo -->
       <a routerLink="/" class="flex items-center gap-2">
@@ -48,19 +48,23 @@
   </header>
 
   <!-- Hero Section -->
-  <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center px-6 py-16 md:py-24 max-w-[85rem] mx-auto w-full">
+  <main class="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center lg:items-start px-6 pt-32 pb-16 md:pt-40 md:pb-24 max-w-[85rem] mx-auto w-full">
     <!-- Left Column: Hero Text & Actions -->
     <div class="flex flex-col items-center text-center lg:items-start lg:text-start">
-      <!-- Fading Quotes as Main Heading -->
-      <div class="mb-6 min-h-[260px] md:min-h-[200px] flex items-center justify-center lg:justify-start w-full">
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-[#121338] dark:text-white transition-opacity duration-500 ease-in-out"
-            [class.opacity-0]="isFading()"
-            [class.opacity-100]="!isFading()">
-          "{{ quotes[currentQuoteIndex()].text | translate }}"
-          <span class="block text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-[#0EA5E9] bg-clip-text text-transparent mt-4">
-            — {{ quotes[currentQuoteIndex()].author }}
-          </span>
-        </h1>
+      <!-- Fading Quotes as Main Heading (Stacked with Grid to prevent layout shift) -->
+      <div class="mb-6 grid items-start justify-items-center lg:justify-items-start w-full">
+        @for (quote of quotes; track $index) {
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight text-[#121338] dark:text-white transition-opacity duration-500 ease-in-out col-start-1 row-start-1 w-full"
+              [class.opacity-0]="currentQuoteIndex() !== $index"
+              [class.opacity-100]="currentQuoteIndex() === $index"
+              [class.pointer-events-none]="currentQuoteIndex() !== $index"
+              [class.invisible]="currentQuoteIndex() !== $index && isFading()">
+            "{{ quote.text | translate }}"
+            <span class="block text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-[#0EA5E9] bg-clip-text text-transparent mt-4">
+              — {{ quote.author }}
+            </span>
+          </h1>
+        }
       </div>
 
       <p class="text-base sm:text-lg md:text-xl text-text-secondary max-w-2xl mb-8 leading-relaxed">
