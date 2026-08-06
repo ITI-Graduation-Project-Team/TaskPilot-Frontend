@@ -40,6 +40,7 @@ interface Task {
   type: 'Feature' | 'Bug' | 'Refactor';
   assigneeId?: string;
   assigneeName?: string;
+  isOwnedByCurrentUser: boolean;
   permissions: {
     canDrag: boolean;
     canView: boolean;
@@ -356,6 +357,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -429,6 +439,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -502,6 +521,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -575,6 +603,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1 line-through opacity-75" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3 opacity-75" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -1169,6 +1206,10 @@ export class BoardComponent implements OnInit, OnChanges {
     return this.currentLang === 'ar' ? (task.descriptionAr || task.descriptionEn || task.description) : (task.descriptionEn || task.descriptionAr || task.description);
   }
 
+  private sortTasksOwnedByCurrentUser(a: Task, b: Task): number {
+    return Number(b.isOwnedByCurrentUser) - Number(a.isOwnedByCurrentUser);
+  }
+
   // Task columns
   todo = signal<Task[]>([]);
   inProgress = signal<Task[]>([]);
@@ -1306,6 +1347,9 @@ export class BoardComponent implements OnInit, OnChanges {
     priority: 'Medium',
     hours: 4,
     type: 'Feature',
+    assigneeId: undefined,
+    assigneeName: undefined,
+    isOwnedByCurrentUser: false,
     permissions: {
       canDrag: true,
       canView: true,
@@ -1591,6 +1635,7 @@ export class BoardComponent implements OnInit, OnChanges {
         type: mapTypeToFrontend(t.type),
         assigneeId: t.assigneeId,
         assigneeName: t.assigneeName,
+        isOwnedByCurrentUser: t.assigneeId === this.currentUserId(),
         permissions: this.buildPermissions(t.assigneeId, isPm)
       };
 
@@ -1601,10 +1646,10 @@ export class BoardComponent implements OnInit, OnChanges {
       else if (col === 'done') doneList.push(task);
     }
 
-    this.todo.set(todoList);
-    this.inProgress.set(inProgressList);
-    this.review.set(reviewList);
-    this.done.set(doneList);
+    this.todo.set(todoList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
+    this.inProgress.set(inProgressList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
+    this.review.set(reviewList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
+    this.done.set(doneList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
     const isTaskAssigned = (t: any): boolean => {
       if (t.isAssigned === true) return true;
       if (t.isAssigned === false) return false;

@@ -654,6 +654,7 @@
     "NO_COMPLETED_TASKS": "لا يوجد مهام مكتملة.",
     "NO_TASKS_TODO": "لا يوجد مهام للتنفيذ.",
     "NO_MATCHING_TASKS": "لا يوجد مهام مطابقة.",
+    "MY_TASK": "مهمتي",
     "CREATE_PROJECT_TITLE": "إنشاء مشروع",
     "CREATE_PROJECT_DESC": "تهيئة مشروع جديد",
     "PROJ_NAME_EN": "اسم المشروع (إنجليزي)",
