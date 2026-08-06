@@ -67,7 +67,13 @@
       </div>
     </header>
 
-    <!-- ── Body: two-column split ── -->
+    <!-- Sequential Override Warning Tip -->
+    <div class="px-6 py-2.5 bg-amber-500/10 border-b border-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center gap-2 text-xs font-semibold shrink-0" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span>{{ currentLang === 'ar' ? 'يتم حساب الاقتراحات بشكل تسلسلي. قد يؤدي التعديل اليدوي للتعيينات السابقة إلى توصيات استيعاب غير مثالية للمهام اللاحقة.' : 'Suggestions are calculated sequentially. Manually overriding earlier assignments may result in sub-optimal capacity recommendations for later tasks.' }}</span>
+    </div>
+
+    <!-- Main 2-Column Split Workspace -->
     <div class="flex-1 flex min-h-0 overflow-hidden">
 
       <!-- Left: Task Feed (36%) -->
@@ -86,9 +92,10 @@
         <app-employee-selector
           [selectedTask]="selectedTask()"
           [currentAssigneeId]="currentAssigneeId()"
+          [devCapacities]="developerRemainingHours()"
           (assignEmployee)="onAssignEmployee($event)"
-          class="flex-1 h-full overflow-hidden flex flex-col">
-        </app-employee-selector>
+          class="flex-1 h-full overflow-hidden flex flex-col"
+        ></app-employee-selector>
       </div>
     </div>
 
@@ -120,7 +127,7 @@
         </button>
 
         <button [disabled]="!canConfirm()"
-          (click)="confirmAssignments()"
+          (click)="onConfirmClick()"
           class="relative px-5 py-2 text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px active:translate-y-0 active:scale-95 min-w-[160px] justify-center overflow-hidden"
           [ngClass]="canConfirm() ? 'bg-gradient-to-r from-primary to-violet-600 hover:from-primary-hover hover:to-violet-700 text-white shadow-primary/25' : 'bg-border text-text-secondary'">
 
@@ -143,4 +150,36 @@
     </footer>
 
   </ng-container>
+
+  <!-- Over-Capacity Warning Modal -->
+  <div *ngIf="showOverCapacityModal()" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_out]">
+    <div class="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-[slideUp_0.3s_ease_out]">
+      <div class="p-6">
+        <div class="flex items-center gap-3 text-rose-500 mb-4">
+          <svg class="w-8 h-8 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <h2 class="text-lg font-black text-text-primary">{{ currentLang === 'ar' ? 'تحذير تجاوز القدرة الاستيعابية' : 'Over-Capacity Warning' }}</h2>
+        </div>
+        
+        <p class="text-sm text-text-secondary mb-4">
+          {{ currentLang === 'ar' ? 'تم تجاوز القدرة الاستيعابية للمطورين التاليين. هل ترغب في المتابعة على أي حال؟' : 'The following developers are assigned hours exceeding their sprint capacity. Continue anyway?' }}
+        </p>
+
+        <ul class="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2">
+          <li *ngFor="let dev of overCapacityDevsForModal()" class="flex items-center justify-between text-sm bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg text-rose-700 dark:text-rose-400 font-medium">
+            <span>{{ dev.name }}</span>
+            <span class="font-mono font-bold">{{ dev.assigned }}h / {{ dev.capacity }}h</span>
+          </li>
+        </ul>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-border mt-auto">
+          <button (click)="cancelOverCapacityModal()" class="px-5 py-2 rounded-xl text-sm font-bold text-text-secondary border border-border hover:bg-background hover:text-text-primary transition-all">
+            {{ currentLang === 'ar' ? 'إلغاء المراجعة' : 'Cancel & Review' }}
+          </button>
+          <button (click)="proceedWithOverCapacity()" class="px-5 py-2 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition-all">
+            {{ currentLang === 'ar' ? 'متابعة التعيين' : 'Proceed Anyway' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

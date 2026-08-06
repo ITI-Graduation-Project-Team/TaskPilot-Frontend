@@ -91,6 +91,17 @@
 
     <!-- ── Developer Candidate Cards ── -->
     <div class="space-y-3">
+      
+      <!-- Unassignable Error State -->
+      <div *ngIf="selectedTask.isUnassignable" class="p-4 mb-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 flex items-start gap-3">
+        <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-600 flex items-center justify-center shrink-0 font-bold">
+          ⚠️
+        </div>
+        <div>
+          <h4 class="text-sm font-extrabold">{{ lang === 'ar' ? 'السعة الاستيعابية للفريق غير كافية' : 'Team Capacity Exhausted' }}</h4>
+          <p class="text-[10px] mt-1 leading-relaxed">{{ lang === 'ar' ? 'لا يمكن للذكاء الاصطناعي اقتراح مطورين لهذه المهمة لأن جميع المطورين المؤهلين وصلوا أو تجاوزوا قدرتهم الاستيعابية للسبرينت.' : 'The AI cannot suggest developers for this task because all qualified developers have reached or exceeded their sprint capacity.' }}</p>
+        </div>
+      </div>
       <div *ngFor="let dev of selectedTask.rankedDevelopers; let i = index"
         class="relative overflow-hidden rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md group"
         [ngClass]="{
@@ -128,8 +139,19 @@
 
             <!-- Name + rank -->
             <div class="flex-1 min-w-0 pt-0.5">
-              <h4 class="text-sm font-extrabold text-text-primary leading-tight transition-colors group-hover:text-primary truncate">
+              <h4
+                class="text-base font-extrabold text-text-primary group-hover:text-primary transition-colors flex items-center gap-2">
                 {{ dev.employeeName || 'Developer' }}
+                <!-- Live Capacity Indicator -->
+                <ng-container *ngIf="devCapacities[dev.employeeId] as capData">
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-mono border"
+                        [ngClass]="capData.remaining < 0 ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
+                                   capData.remaining <= (capData.capacity * 0.2) ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                                   'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'"
+                        title="{{ lang === 'ar' ? 'الساعات المعينة / القدرة الاستيعابية للسبرينت' : 'Assigned Hours / Sprint Capacity' }}">
+                    {{ capData.assigned }}h / {{ capData.capacity }}h
+                  </span>
+                </ng-container>
               </h4>
               <p class="text-[10px] text-text-secondary mt-0.5">
                 {{ lang === 'ar' ? 'المرشح رقم ' + dev.rank : 'Rank #' + dev.rank }}
