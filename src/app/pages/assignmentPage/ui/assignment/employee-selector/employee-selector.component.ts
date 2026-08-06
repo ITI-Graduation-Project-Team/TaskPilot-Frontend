@@ -14,6 +14,7 @@ import { AssignmentSuggestion, DeveloperSuggestion } from '../../../../../entiti
 export class EmployeeSelectorComponent {
   @Input() selectedTask: AssignmentSuggestion | null = null;
   @Input() currentAssigneeId: string | null = null;
+  @Input() devCapacities: { [empId: string]: { name: string, assigned: number, capacity: number, remaining: number } } = {};
 
   @Output() assignEmployee = new EventEmitter<{taskId: string, employeeId: string}>();
 

@@ -6,6 +6,7 @@ export interface DeveloperSuggestion {
   reasonEn: string;
   reasonAr: string;
   rank: number;           // 1, 2, or 3 — position in rankedDevelopers
+  initialRemainingHours: number;
 }
 
 export interface AssignmentSuggestion {
@@ -18,6 +19,7 @@ export interface AssignmentSuggestion {
   assigneeId?: string;
   requiredSkills: { skillId: string; skillNameEn: string; skillNameAr: string }[];
   rankedDevelopers: DeveloperSuggestion[];   // top 3, ordered by rank
+  isUnassignable?: boolean;
 }
 
 // Raw Backend DTOs
@@ -48,11 +50,13 @@ export interface ExplainedDeveloperDto extends DeveloperScoreDto {
   reasonEn: string;
   reasonAr: string;
   fullName?: string; // Embedded from backend if available
+  remainingHours: number;
 }
 
 export interface ExplainedTaskScoringResultDto {
   task: TaskSnapshotDto;
   rankedDevelopers: ExplainedDeveloperDto[];
+  isUnassignable?: boolean;
 }
 
 export interface ExplainedAssignmentDto {
