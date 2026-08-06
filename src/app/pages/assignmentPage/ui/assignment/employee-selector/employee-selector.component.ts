@@ -59,4 +59,27 @@ export class EmployeeSelectorComponent {
     if (!reason) return '';
     return reason.replace(/\uFFFD/g, '');
   }
+
+  getCloseMatchText(dev: DeveloperSuggestion): string | null {
+    if (!this.selectedTask || !this.selectedTask.rankedDevelopers || this.selectedTask.rankedDevelopers.length === 0) {
+      return null;
+    }
+    
+    // Ranked list is ordered by score descending. So index 0 is rank #1
+    const topDev = this.selectedTask.rankedDevelopers[0];
+    
+    // Don't show this badge for the #1 developer themselves
+    if (dev.employeeId === topDev.employeeId) {
+      return null;
+    }
+    
+    const scoreDiff = Math.abs(topDev.score - dev.score);
+    if (scoreDiff <= 2.0) {
+      return this.lang === 'ar' 
+        ? `تطابق متقارب (يتعادل مع ${topDev.employeeName})`
+        : `Close Match (tied with ${topDev.employeeName})`;
+    }
+    
+    return null;
+  }
 }

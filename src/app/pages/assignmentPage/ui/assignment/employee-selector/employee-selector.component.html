@@ -153,8 +153,18 @@
                   </span>
                 </ng-container>
               </h4>
-              <p class="text-[10px] text-text-secondary mt-0.5">
-                {{ lang === 'ar' ? 'المرشح رقم ' + dev.rank : 'Rank #' + dev.rank }}
+              <p class="text-[10px] text-text-secondary mt-0.5 font-medium">
+                {{ dev.jobTitle || 'ID: ' + dev.employeeId.substring(0, 8) }}
+              </p>
+              <p class="text-[10px] text-text-secondary mt-1">
+                <ng-container *ngIf="getCloseMatchText(dev) as tieText; else rankText">
+                  <span class="text-amber-700 dark:text-amber-400 font-bold bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-amber-500/30 inline-flex items-center gap-1">
+                    💡 {{ tieText }}
+                  </span>
+                </ng-container>
+                <ng-template #rankText>
+                  {{ lang === 'ar' ? 'المرشح رقم ' + dev.rank : 'Rank #' + dev.rank }}
+                </ng-template>
               </p>
             </div>
 

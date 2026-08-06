@@ -2,6 +2,7 @@
 export interface DeveloperSuggestion {
   employeeId: string;
   employeeName: string;
+  jobTitle?: string;
   score: number;          // finalScore mapped directly (0–100)
   reasonEn: string;
   reasonAr: string;
@@ -50,6 +51,7 @@ export interface ExplainedDeveloperDto extends DeveloperScoreDto {
   reasonEn: string;
   reasonAr: string;
   fullName?: string; // Embedded from backend if available
+  jobTitle?: string;
   remainingHours: number;
 }
 

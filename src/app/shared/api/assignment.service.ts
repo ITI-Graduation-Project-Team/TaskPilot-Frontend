@@ -43,7 +43,8 @@ export class AssignmentService {
       rankedDevelopers: (taskScore.rankedDevelopers || []).map((dev, index) => ({
         employeeId: dev.employeeId,
         employeeName: dev.fullName || '', // Enriched from backend if available, or handled in component
-        score: Math.round(dev.finalScore),
+        jobTitle: dev.jobTitle,
+        score: Number(dev.finalScore.toFixed(1)),
         reasonEn: dev.reasonEn,
         reasonAr: dev.reasonAr,
         rank: index + 1,
