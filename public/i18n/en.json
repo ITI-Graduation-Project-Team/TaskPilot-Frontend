@@ -664,7 +664,8 @@
     "NO_TASKS_TODO": "No tasks to do.",
     "DROP_TASKS_HERE": "Drop tasks here.",
     "DROP_TASKS_VALIDATION": "Drop tasks for validation.",
-    "NO_COMPLETED_TASKS": "No completed tasks."
+    "NO_COMPLETED_TASKS": "No completed tasks.",
+    "MY_TASK": "My Task"
   },
   "MODALS": {
     "EDIT_PROJECT_TITLE": "Edit Project Details",
