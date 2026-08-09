@@ -15,6 +15,7 @@ import {
   UserStoryPayload,
   mapPriorityToFrontend,
 } from '../../../../shared/api/backlog.service';
+import { parseApiError } from '../../../../shared/api/api-error';
 
 interface StoryEditorModel {
   titleEn: string;
@@ -407,13 +408,13 @@ export class SprintStoryEditorComponent {
         );
         this.storyForm().reset();
         this.saved.emit(updated);
-      } catch (error: any) {
-        const message =
-          error?.response?.data?.error?.description ||
-          error?.response?.data?.message ||
-          (this.lang() === 'ar'
+      } catch (error: unknown) {
+        const message = parseApiError(
+          error,
+          this.lang() === 'ar'
             ? 'تحقق من اتصالك وحاول مرة أخرى.'
-            : 'Check your connection and try again.');
+            : 'Check your connection and try again.',
+        ).message;
         this.saveError.set(message);
         await this.liveAnnouncer.announce(message, 'assertive');
       } finally {

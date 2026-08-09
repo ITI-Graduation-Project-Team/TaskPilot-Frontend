@@ -201,7 +201,12 @@ export class SprintPlanningService {
     return this.activeSprintPromises.get(projectId);
   }
 
-  async getPlannedSprint(projectId: string): Promise<{ sprintId: string; status: string } | null> {
+  async getPlannedSprint(projectId: string): Promise<{
+    sprintId: string;
+    status?: string;
+    titleEn?: string;
+    titleAr?: string;
+  } | null> {
     try {
       const { data } = await apiClient.get(`/projects/${projectId}/sprints/planned`);
       return data?.data || data || null;

@@ -6,6 +6,7 @@ import { SprintPlanningService, SprintSuggestionDto } from '../../../../shared/a
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { BacklogService } from '../../../../shared/api/backlog.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { parseApiError } from '../../../../shared/api/api-error';
 
 const LOADING_HINTS = [
   { en: 'Analyzing your backlog...', ar: 'جاري تحليل قائمة المهام...' },
@@ -452,13 +453,8 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
         ];
       }
       this.suggestions.set(mapped);
-    } catch (e: any) {
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
-      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
-        this.showNoEmployeesModal.set(true);
-      } else {
-        console.warn('Failed to load suggested sprints from AI:', e);
-      }
+    } catch (e: unknown) {
+      this.handleSprintError(e, 'Failed to load suggested sprints from AI.');
     } finally {
       this.isLoadingSuggestions.set(false);
       this.clearHintTimer();
@@ -510,14 +506,9 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
-      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
-        this.showNoEmployeesModal.set(true);
-      } else {
-        this.toastService.show('Failed to save sprints configuration. Please try again.', 'error');
-      }
+      this.handleSprintError(e, 'Failed to save sprints configuration. Please try again.');
     } finally {
       this.isSaving.set(false);
     }
@@ -525,5 +516,43 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
 
   goToTeam(): void {
     this.router.navigate(['/dashboard', 'team']);
+  }
+
+  private handleSprintError(error: unknown, fallbackMessage: string): void {
+    const parsed = parseApiError(error, fallbackMessage);
+    const isAr = this.currentLang() === 'ar';
+
+    if (parsed.code === 'NO_EMPLOYEES_ASSIGNED') {
+      this.showNoEmployeesModal.set(true);
+      return;
+    }
+
+    if (parsed.code === 'ANOTHER_SPRINT_ALREADY_PLANNED') {
+      this.toastService.show(
+        isAr ? 'يوجد سبرينت مخطط له بالفعل.' : 'A planned sprint already exists for this project.',
+        'warning',
+        6000,
+        {
+          label: isAr ? 'عرض السبرينت المخطط' : 'View planned sprint',
+          onClick: () => this.router.navigate(['/dashboard', 'sprint'], { queryParams: { sprintStatus: 'Planned' } }),
+        },
+      );
+      return;
+    }
+
+    if (parsed.code === 'ANOTHER_SPRINT_ALREADY_ACTIVE') {
+      this.toastService.show(
+        isAr ? 'يوجد سبرينت نشط بالفعل.' : 'An active sprint is already running for this project.',
+        'warning',
+        6000,
+        {
+          label: isAr ? 'عرض السبرينت النشط' : 'View active sprint',
+          onClick: () => this.router.navigate(['/dashboard', 'sprint'], { queryParams: { sprintStatus: 'Active' } }),
+        },
+      );
+      return;
+    }
+
+    this.toastService.show(parsed.message, parsed.status === 409 ? 'warning' : 'error');
   }
 }

@@ -20,6 +20,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 import { ToastService } from '../../../../shared/services/toast.service';
 import { SprintStoryEditorComponent } from './sprint-story-editor.component';
 import { SprintStoryPickerComponent } from './sprint-story-picker.component';
+import { parseApiError } from '../../../../shared/api/api-error';
 
 type PageState = 'empty' | 'loading' | 'suggestion' | 'confirming' | 'no-sprints';
 
@@ -90,7 +91,31 @@ const LOADING_HINTS = [
       }
 
       <!-- ─── NO EMPLOYEES WARNING BANNER ─── -->
-      @if (projectState.selectedProjectId() && !hasActiveSprint() && projectState.projectEmployeeCount() === 0) {
+      @if (projectState.selectedProjectId() && !hasActiveSprint() && hasPlannedSprint()) {
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-4" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+          <div class="flex min-w-0 items-start gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-extrabold text-text-primary">
+                {{ currentLang() === 'ar' ? 'يوجد سبرينت مخطط له بالفعل' : 'Planned sprint exists' }}
+                @if (plannedSprintTitle()) { <span class="text-primary">· {{ plannedSprintTitle() }}</span> }
+              </h4>
+              <p class="mt-1 text-sm leading-5 text-text-secondary">
+                {{ currentLang() === 'ar' ? 'ابدأ السبرينت المخطط له أو احذفه قبل إنشاء تخطيط جديد.' : 'Start or remove the planned sprint before creating another sprint plan.' }}
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="navigateToPlannedSprint()" class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-sm hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+            {{ currentLang() === 'ar' ? 'عرض السبرينت المخطط' : 'View planned sprint' }}
+          </button>
+        </div>
+      }
+
+      @if (projectState.selectedProjectId() && !hasActiveSprint() && !hasPlannedSprint() && projectState.projectEmployeeCount() === 0) {
         <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 flex-wrap" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
           <div class="flex items-start gap-3 min-w-0">
             <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-lg">
@@ -139,7 +164,7 @@ const LOADING_HINTS = [
           <div class="flex items-center gap-2 shrink-0">
             <button
               (click)="onRegenerate()"
-              [disabled]="pageState() === 'confirming' || projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [disabled]="pageState() === 'confirming' || projectState.projectEmployeeCount() === 0 || hasActiveSprint() || hasPlannedSprint()"
               [title]="getGenerationDisabledTooltip()"
               class="flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +194,7 @@ const LOADING_HINTS = [
           <div class="flex items-center gap-2 shrink-0">
             <button
               (click)="onGenerate()"
-              [disabled]="projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [disabled]="projectState.projectEmployeeCount() === 0 || hasActiveSprint() || hasPlannedSprint()"
               [title]="getGenerationDisabledTooltip()"
               class="flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-bold text-text-secondary hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
               <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,7 +285,7 @@ const LOADING_HINTS = [
 
             <button
               (click)="onGenerate()"
-              [disabled]="hasActiveSprint()"
+              [disabled]="hasActiveSprint() || hasPlannedSprint()"
               [title]="getGenerationDisabledTooltip()"
               class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,7 +363,7 @@ const LOADING_HINTS = [
             <button
               id="generate-sprint-btn"
               (click)="onGenerate()"
-              [disabled]="projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [disabled]="projectState.projectEmployeeCount() === 0 || hasActiveSprint() || hasPlannedSprint()"
               [title]="getGenerationDisabledTooltip()"
               class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -665,6 +690,27 @@ const LOADING_HINTS = [
         </div>
       }
 
+      @if (showPlannedSprintModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+          <div class="w-full max-w-md space-y-5 rounded-3xl border border-border bg-surface p-6 text-center shadow-2xl" role="dialog" aria-modal="true" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" /></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-extrabold text-text-primary">{{ currentLang() === 'ar' ? 'يوجد سبرينت مخطط له بالفعل' : 'Planned Sprint Already Exists' }}</h3>
+              <p class="mt-2 text-sm leading-6 text-text-secondary">{{ currentLang() === 'ar' ? 'لا يمكن إنشاء اقتراح جديد حتى تبدأ السبرينت المخطط له أو تحذفه.' : 'A new suggestion cannot be generated until the planned sprint is started or removed.' }}</p>
+              @if (plannedSprintTitle()) {
+                <p class="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary">{{ plannedSprintTitle() }}</p>
+              }
+            </div>
+            <div class="flex items-center justify-center gap-3">
+              <button type="button" (click)="showPlannedSprintModal.set(false)" class="min-h-11 rounded-xl border border-border px-4 text-sm font-bold text-text-secondary hover:bg-sidebar">{{ currentLang() === 'ar' ? 'إغلاق' : 'Close' }}</button>
+              <button type="button" (click)="showPlannedSprintModal.set(false); navigateToPlannedSprint()" class="min-h-11 rounded-xl bg-primary px-5 text-sm font-bold text-white hover:bg-primary-hover">{{ currentLang() === 'ar' ? 'عرض السبرينت المخطط' : 'View planned sprint' }}</button>
+            </div>
+          </div>
+        </div>
+      }
+
       @if (showActiveSprintModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
           <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 text-center animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
@@ -765,9 +811,13 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
   showNoEmployeesModal = signal<boolean>(false);
   showActiveSprintModal = signal<boolean>(false);
+  showPlannedSprintModal = signal<boolean>(false);
   hasActiveSprint = signal<boolean>(false);
+  hasPlannedSprint = signal<boolean>(false);
   activeSprintId = signal<string | null>(null);
   activeSprintTitle = signal<string>('');
+  plannedSprintId = signal<string | null>(null);
+  plannedSprintTitle = signal<string>('');
   pageState = signal<PageState>('empty');
   isBacklogLoading = signal<boolean>(false);
   suggestions = signal<SprintSuggestionDto[]>([]);
@@ -809,6 +859,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     && this.totalVisibleStories() > 0
     && this.projectState.projectEmployeeCount() > 0
     && !this.hasActiveSprint()
+    && !this.hasPlannedSprint()
     && !this.editingStory()
     && !this.storyPickerOpen()
   );
@@ -826,7 +877,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     if (projId) {
       this.projectState.loadProjectEmployeeCount(projId);
     }
-    await this.checkActiveSprint();
+    await Promise.all([this.checkActiveSprint(), this.checkPlannedSprint()]);
     await this.loadBacklogStories();
   }
 
@@ -877,6 +928,29 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     }
   }
 
+  async checkPlannedSprint(): Promise<boolean> {
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) {
+      this.clearPlannedSprintState();
+      return false;
+    }
+
+    const planned = await this.sprintService.getPlannedSprint(projId);
+    if (!planned?.sprintId) {
+      this.clearPlannedSprintState();
+      return false;
+    }
+
+    this.hasPlannedSprint.set(true);
+    this.plannedSprintId.set(planned.sprintId);
+    this.plannedSprintTitle.set(
+      this.currentLang() === 'ar'
+        ? planned.titleAr || planned.titleEn || ''
+        : planned.titleEn || planned.titleAr || '',
+    );
+    return true;
+  }
+
   navigateToActiveSprint(): void {
     const activeId = this.activeSprintId();
     if (activeId) {
@@ -894,6 +968,11 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       return isAr
         ? 'قم بإكمال السبرينت النشط الحالي قبل تخطيط سبرينت جديد.'
         : 'Complete the current active sprint before planning a new one.';
+    }
+    if (this.hasPlannedSprint()) {
+      return isAr
+        ? 'ابدأ السبرينت المخطط له أو احذفه قبل التخطيط لسبرينت جديد.'
+        : 'Start or remove the existing planned sprint before planning a new one.';
     }
     if (this.projectState.projectEmployeeCount() === 0) {
       return isAr
@@ -940,6 +1019,12 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     const isAlreadyActive = await this.checkActiveSprint();
     if (isAlreadyActive) {
       this.showActiveSprintModal.set(true);
+      return;
+    }
+
+    const isAlreadyPlanned = await this.checkPlannedSprint();
+    if (isAlreadyPlanned) {
+      this.showPlannedSprintModal.set(true);
       return;
     }
 
@@ -1101,6 +1186,19 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     );
   }
 
+  navigateToPlannedSprint(): void {
+    const plannedId = this.plannedSprintId();
+    this.router.navigate(['/dashboard', 'sprint'], {
+      queryParams: plannedId ? { sprintId: plannedId, sprintStatus: 'Planned' } : undefined,
+    });
+  }
+
+  private clearPlannedSprintState(): void {
+    this.hasPlannedSprint.set(false);
+    this.plannedSprintId.set(null);
+    this.plannedSprintTitle.set('');
+  }
+
   restoreStory(cardIndex: number, storyId: string): void {
     this.sprintCards.update(cards => cards.map((item, index) => {
       if (index !== cardIndex) return item;
@@ -1253,10 +1351,33 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   }
 
   private handleApiError(err: any, context: 'generate' | 'confirm') {
-    const errorCode = err?.response?.data?.error?.code || err?.response?.data?.code || err?.error?.code || err?.code;
-    const errorDesc = err?.response?.data?.error?.description || err?.response?.data?.message || err?.message;
+    const parsed = parseApiError(
+      err,
+      context === 'confirm'
+        ? 'Failed to confirm sprint. Please try again.'
+        : 'Sprint generation failed. Please try again.',
+    );
+    const errorCode = parsed.code;
 
-    if (errorCode === 'ANOTHER_SPRINT_ALREADY_ACTIVE' || errorCode === 'Sprint.AnotherAlreadyActive' || errorDesc === 'Sprint.AnotherAlreadyActive') {
+    if (errorCode === 'ANOTHER_SPRINT_ALREADY_PLANNED') {
+      this.hasPlannedSprint.set(true);
+      this.showPlannedSprintModal.set(true);
+      this.toastService.show(
+        this.currentLang() === 'ar'
+          ? 'يوجد سبرينت مخطط له بالفعل. ابدأه أو احذفه قبل إنشاء تخطيط جديد.'
+          : 'A planned sprint already exists. Start or remove it before creating another plan.',
+        'warning',
+        6000,
+        {
+          label: this.currentLang() === 'ar' ? 'عرض السبرينت المخطط' : 'View planned sprint',
+          onClick: () => this.navigateToPlannedSprint(),
+        },
+      );
+      void this.checkPlannedSprint();
+      return;
+    }
+
+    if (errorCode === 'ANOTHER_SPRINT_ALREADY_ACTIVE') {
       this.hasActiveSprint.set(true);
       this.showActiveSprintModal.set(true);
       const isAr = this.currentLang() === 'ar';
@@ -1279,61 +1400,25 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const status = err?.response?.status ?? err?.status;
-    let serverMsg = err?.response?.data?.message || err?.response?.data?.error?.description;
-
-    // ASP.NET Core Problem Details puts field errors in an "errors" object
-    const errorsObj = err?.response?.data?.errors;
-    if (!serverMsg && errorsObj) {
-      if (Array.isArray(errorsObj) && errorsObj.length > 0) {
-        serverMsg = errorsObj[0];
-      } else if (typeof errorsObj === 'object') {
-        // Extract the first error message from the dictionary
-        const firstKey = Object.keys(errorsObj)[0];
-        if (firstKey && Array.isArray(errorsObj[firstKey]) && errorsObj[firstKey].length > 0) {
-          serverMsg = `${firstKey}: ${errorsObj[firstKey][0]}`;
-        } else if (firstKey) {
-          serverMsg = `${firstKey}: ${errorsObj[firstKey]}`;
-        }
-      }
-    }
-
-    if (status === 409) {
-      this.hasActiveSprint.set(true);
-      this.showActiveSprintModal.set(true);
-      const isAr = this.currentLang() === 'ar';
-      this.toastService.show(
-        isAr
-          ? 'يوجد تعارض: هناك سبرينت نشط بالفعل.'
-          : 'Conflict: An active sprint is already running for this project.',
-        'warning',
-        6000,
-        {
-          label: isAr ? 'عرض السبرينت' : 'View Active Sprint',
-          onClick: () => this.navigateToActiveSprint()
-        }
-      );
-      return;
-    }
+    const { status, message: serverMsg } = parsed;
 
     if (status === 403) {
       this.toastService.show('You do not have permission to manage sprints for this project.', 'error');
     } else if (status === 404) {
-      this.toastService.show('Project not found. Please refresh and try again.', 'error');
+      this.toastService.show(serverMsg || 'The requested sprint resource was not found.', 'error');
     } else if (status === 400) {
       this.toastService.show(
-        serverMsg ?? (context === 'confirm'
+        serverMsg || (context === 'confirm'
           ? 'Sprint validation failed. Check your sprint data and try again.'
           : 'Could not generate sprint. Ensure your backlog has valid user stories.'),
         'error'
       );
+    } else if (status === 409) {
+      // 409 means a domain conflict, not necessarily an active sprint.
+      // Only the explicit active/planned codes above may change sprint state.
+      this.toastService.show(serverMsg, 'warning');
     } else {
-      this.toastService.show(
-        context === 'confirm'
-          ? (serverMsg || 'Failed to confirm sprint. Please try again.')
-          : (serverMsg || 'Sprint generation failed. Please try again.'),
-        'error'
-      );
+      this.toastService.show(serverMsg, 'error');
     }
 
     console.error(`[SprintPlanningView] ${context} error:`, err);
