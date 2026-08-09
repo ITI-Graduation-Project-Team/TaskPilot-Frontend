@@ -498,21 +498,13 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
     this.isSaving.set(true);
     try {
       const first = this.suggestions()[0];
-      const payload = this.suggestions().length > 1
-        ? this.suggestions().map(s => ({
-          titleEn: s.titleEn || s.sprintTitleEn || '',
-          titleAr: s.titleAr || s.sprintTitleAr || '',
-          sprintGoalEn: s.goalEn || s.sprintGoalEn || '',
-          sprintGoalAr: s.goalAr || s.sprintGoalAr || '',
-          userStoryIds: s.userStoryIds || [],
-        }))
-        : {
-          titleEn: first.titleEn || first.sprintTitleEn || '',
-          titleAr: first.titleAr || first.sprintTitleAr || '',
-          sprintGoalEn: first.goalEn || first.sprintGoalEn || '',
-          sprintGoalAr: first.goalAr || first.sprintGoalAr || '',
-          userStoryIds: first.userStoryIds || [],
-        };
+      const payload = {
+        titleEn: first.titleEn || first.sprintTitleEn || '',
+        titleAr: first.titleAr || first.sprintTitleAr || '',
+        sprintGoalEn: first.goalEn || first.sprintGoalEn || '',
+        sprintGoalAr: first.goalAr || first.sprintGoalAr || '',
+        userStoryIds: first.userStoryIds || [],
+      };
 
       await this.sprintService.confirmSprints(projId, payload);
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');

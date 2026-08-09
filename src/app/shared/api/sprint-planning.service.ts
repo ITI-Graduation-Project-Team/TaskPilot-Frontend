@@ -145,6 +145,16 @@ export interface ConfirmSprintRequest {
   userStoryIds: string[];
 }
 
+export interface ConfirmSprintResult {
+  sprintId: string;
+  projectId: string;
+  titleEn: string;
+  startDate: string;
+  endDate: string;
+  userStoriesAssigned: number;
+  tasksAssigned: number;
+}
+
 export interface SprintListItem {
   sprintId: string;
   titleEn: string;
@@ -167,9 +177,9 @@ export class SprintPlanningService {
     return data;
   }
 
-  async confirmSprints(projectId: string, request: any): Promise<any> {
+  async confirmSprints(projectId: string, request: ConfirmSprintRequest): Promise<ConfirmSprintResult> {
     const { data } = await apiClient.post(`/projects/${projectId}/sprints/confirm`, request);
-    return data;
+    return data?.data || data;
   }
 
   private activeSprintPromises = new Map<string, Promise<any>>();

@@ -5,9 +5,7 @@ import {
   inject,
   computed,
   OnInit,
-  OnDestroy,
-  Output,
-  EventEmitter
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,10 +13,13 @@ import { Router } from '@angular/router';
 import {
   SprintPlanningService,
   SprintSuggestionDto,
+  ConfirmSprintRequest,
 } from '../../../../shared/api/sprint-planning.service';
 import { BacklogService, UserStoryDto } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { SprintStoryEditorComponent } from './sprint-story-editor.component';
+import { SprintStoryPickerComponent } from './sprint-story-picker.component';
 
 type PageState = 'empty' | 'loading' | 'suggestion' | 'confirming' | 'no-sprints';
 
@@ -49,7 +50,7 @@ const LOADING_HINTS = [
   selector: 'app-sprint-planning-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SprintStoryEditorComponent, SprintStoryPickerComponent],
   template: `
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
@@ -150,7 +151,7 @@ const LOADING_HINTS = [
 
             <button
               (click)="onConfirmSprint()"
-              [disabled]="pageState() === 'confirming' || totalVisibleStories() === 0 || projectState.projectEmployeeCount() === 0 || hasActiveSprint()"
+              [disabled]="!canConfirm()"
               [title]="getGenerationDisabledTooltip()"
               class="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               @if (pageState() === 'confirming') {
@@ -488,14 +489,33 @@ const LOADING_HINTS = [
 
               <!-- User Story list -->
               <div class="px-5 pb-5 space-y-2" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
-                <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">
-                  {{ currentLang() === 'ar' ? 'قصص المستخدم' : 'User Stories' }}
-                </p>
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-extrabold uppercase tracking-wider text-text-secondary">
+                      {{ currentLang() === 'ar' ? 'قصص المستخدم' : 'User Stories' }}
+                    </p>
+                    <p class="mt-1 text-sm text-text-secondary">
+                      {{ currentLang() === 'ar' ? 'راجع التفاصيل وعدّل نطاق السبرينت قبل التأكيد.' : 'Review details and adjust sprint scope before confirming.' }}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="openStoryPicker(idx, $event)"
+                    [disabled]="availableStoryCount(card) === 0 || pageState() === 'confirming'"
+                    class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3.5 text-sm font-bold text-primary transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    {{ currentLang() === 'ar' ? 'إضافة من قائمة المهام' : 'Add from backlog' }}
+                  </button>
+                </div>
 
                 @for (storyId of card.sprint.userStoryIds; track storyId) {
                   @if (!card.removedStoryIds.has(storyId)) {
                     @if (getStory(storyId); as story) {
-                      <div class="group flex items-start gap-3 p-3 rounded-xl border border-border bg-sidebar hover:border-primary/30 hover:bg-primary/[0.03] transition-all duration-150 cursor-default">
+                      <div class="group flex items-start gap-3 p-3 rounded-xl border border-border bg-sidebar hover:border-primary/30 hover:bg-primary/[0.03] transition-all duration-150 cursor-default"
+                        [class.border-primary]="editingStory()?.id === story.id"
+                        [class.bg-primary/5]="editingStory()?.id === story.id">
 
                         <!-- Priority dot -->
                         <div class="shrink-0 mt-0.5">
@@ -508,7 +528,7 @@ const LOADING_HINTS = [
 
                         <!-- Story info -->
                         <div class="flex-1 min-w-0">
-                          <p class="text-sm font-semibold text-text-primary truncate">{{ currentLang() === 'ar' ? story.titleAr : story.titleEn }}</p>
+                          <p class="text-sm font-semibold leading-5 text-text-primary">{{ currentLang() === 'ar' ? (story.titleAr || story.titleEn) : story.titleEn }}</p>
                           @if (story.tasks && story.tasks.length > 0) {
                             <p class="text-xs text-text-secondary mt-0.5">
                               {{ story.tasks.length }} {{ currentLang() === 'ar' ? 'مهمة' : (story.tasks.length !== 1 ? 'tasks' : 'task') }}
@@ -536,13 +556,27 @@ const LOADING_HINTS = [
                           {{ mapPriority(story.priority) }}
                         </span>
 
-                        <!-- Remove button -->
                         <button
+                          type="button"
+                          (click)="openStoryEditor(story, $event)"
+                          [disabled]="pageState() === 'confirming'"
+                          class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-bold text-primary transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+                          [attr.aria-label]="currentLang() === 'ar' ? 'تعديل ' + (story.titleAr || story.titleEn) : 'Edit ' + story.titleEn">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L8.25 18.463 3 21l2.537-5.25L16.862 3.487z" />
+                          </svg>
+                          <span class="hidden sm:inline">{{ currentLang() === 'ar' ? 'تعديل' : 'Edit' }}</span>
+                        </button>
+
+                        <!-- Remove from scope button -->
+                        <button
+                          type="button"
                           (click)="removeStory(card, storyId)"
                           [id]="'remove-story-' + storyId"
-                          class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-lg text-text-secondary hover:text-error hover:bg-error/10 transition-all duration-150"
-                          [title]="currentLang() === 'ar' ? 'إزالة من السبرينت' : 'Remove from sprint'">
-                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          [disabled]="pageState() === 'confirming'"
+                          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-text-secondary transition-all duration-150 hover:bg-error/10 hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error disabled:opacity-50"
+                          [attr.aria-label]="currentLang() === 'ar' ? 'إزالة القصة من السبرينت' : 'Remove story from sprint'">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                           </svg>
                         </button>
@@ -573,22 +607,64 @@ const LOADING_HINTS = [
             </div>
           }
 
-          <!-- Bottom action bar -->
-          <div class="flex items-center justify-between gap-3 pt-2 pb-4 flex-wrap" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
-            <p class="text-xs text-text-secondary">
-              @if (currentLang() === 'ar') {
-                إجمالي <span class="font-bold text-text-primary">{{ totalVisibleStories() }}</span> قصة في
-                <span class="font-bold text-text-primary">{{ suggestions().length }}</span> سبرينت
-              } @else {
-                <span class="font-bold text-text-primary">{{ totalVisibleStories() }}</span> total stories across
-                <span class="font-bold text-text-primary">{{ suggestions().length }}</span> sprint{{ suggestions().length !== 1 ? 's' : '' }}
-              }
-            </p>
+          <!-- Live scope impact rail -->
+          <div class="sticky bottom-3 z-10 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/20 bg-surface/95 p-3 shadow-xl shadow-black/5 backdrop-blur-md" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-2">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-text-secondary">{{ currentLang() === 'ar' ? 'نطاق السبرينت' : 'Sprint scope' }}</p>
+                <p class="mt-0.5 text-sm font-extrabold text-text-primary">{{ totalVisibleStories() }} {{ currentLang() === 'ar' ? 'قصة' : (totalVisibleStories() === 1 ? 'story' : 'stories') }}</p>
+              </div>
+              <div class="h-9 w-px bg-border" aria-hidden="true"></div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-text-secondary">{{ currentLang() === 'ar' ? 'الساعات' : 'Estimated' }}</p>
+                <p class="mt-0.5 text-sm font-extrabold text-text-primary">{{ primaryCardHours() }}h</p>
+              </div>
+              <div class="h-9 w-px bg-border" aria-hidden="true"></div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-text-secondary">{{ currentLang() === 'ar' ? 'التعديلات المحفوظة' : 'Saved edits' }}</p>
+                <p class="mt-0.5 text-sm font-extrabold" [class.text-primary]="changedStoryIds().size > 0" [class.text-text-primary]="changedStoryIds().size === 0">{{ changedStoryIds().size }}</p>
+              </div>
+            </div>
+            @if (primaryCapacity() > 100) {
+              <div class="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-sm font-bold text-warning" role="status">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                {{ currentLang() === 'ar' ? 'النطاق يتجاوز السعة' : 'Scope exceeds capacity' }}
+              </div>
+            }
           </div>
         </div>
       }
 
       <!-- ─── ACTIVE SPRINT ALREADY RUNNING MODAL ─── -->
+      @if (editingStory(); as story) {
+        <div class="fixed inset-0 z-[70]" aria-live="polite">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true"></div>
+          <div class="absolute inset-y-0 w-full max-w-xl animate-[sheetIn_0.24s_ease-out_both] sm:w-[min(520px,92vw)]"
+            [class.right-0]="currentLang() !== 'ar'" [class.left-0]="currentLang() === 'ar'">
+            <app-sprint-story-editor
+              [story]="story"
+              [lang]="currentLang()"
+              (saved)="onStorySaved($event)"
+              (cancelled)="closeStoryEditor()" />
+          </div>
+        </div>
+      }
+
+      @if (storyPickerOpen()) {
+        <div class="fixed inset-0 z-[70]">
+          <button type="button" class="absolute inset-0 h-full w-full cursor-default bg-black/60 backdrop-blur-sm" (click)="closeStoryPicker()" [attr.aria-label]="currentLang() === 'ar' ? 'إغلاق قائمة القصص' : 'Close story picker'"></button>
+          <div class="absolute inset-y-0 w-full max-w-xl animate-[sheetIn_0.24s_ease-out_both] sm:w-[min(520px,92vw)]"
+            [class.right-0]="currentLang() !== 'ar'" [class.left-0]="currentLang() === 'ar'">
+            <app-sprint-story-picker
+              [stories]="allBacklogStories()"
+              [selectedStoryIds]="pickerSelectedStoryIds()"
+              [lang]="currentLang()"
+              (storiesAdded)="addStoriesToSprint($event)"
+              (cancelled)="closeStoryPicker()" />
+          </div>
+        </div>
+      }
+
       @if (showActiveSprintModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
           <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 text-center animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
@@ -668,6 +744,10 @@ const LOADING_HINTS = [
   `,
   styles: `
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes sheetIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      :host * { animation-duration: 1ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
   `
 })
 export class SprintPlanningViewComponent implements OnInit, OnDestroy {
@@ -704,10 +784,33 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
   // Sprint cards — built from suggestions, each tracks removed story IDs
   sprintCards = signal<SprintCard[]>([]);
+  editingStory = signal<UserStoryDto | null>(null);
+  storyPickerOpen = signal(false);
+  pickerCardIndex = signal(0);
+  changedStoryIds = signal<Set<string>>(new Set());
+  private overlayTrigger: HTMLElement | null = null;
 
   // ── Computed values ────────────────────────────────────────────
   totalVisibleStories = computed(() =>
     this.sprintCards().reduce((acc, c) => acc + this.visibleStoryCount(c), 0)
+  );
+  allBacklogStories = computed(() => [...this.storiesMap().values()]);
+  pickerSelectedStoryIds = computed(() => {
+    const card = this.sprintCards()[this.pickerCardIndex()];
+    return card ? card.sprint.userStoryIds.filter(id => !card.removedStoryIds.has(id)) : [];
+  });
+  primaryCardHours = computed(() => {
+    const card = this.sprintCards()[0];
+    return card ? this.calcHours(card) : 0;
+  });
+  primaryCapacity = computed(() => Math.round((this.primaryCardHours() / 160) * 100));
+  canConfirm = computed(() =>
+    this.pageState() !== 'confirming'
+    && this.totalVisibleStories() > 0
+    && this.projectState.projectEmployeeCount() > 0
+    && !this.hasActiveSprint()
+    && !this.editingStory()
+    && !this.storyPickerOpen()
   );
 
   // ── Empty state steps ──────────────────────────────────────────
@@ -957,17 +1060,16 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = {
+    const payload: ConfirmSprintRequest = {
       titleEn: card.sprint.titleEn,
       titleAr: card.sprint.titleAr,
-      sprintGoalEn: card.sprint.goalEn,
-      sprintGoalAr: card.sprint.goalAr,
+      sprintGoalEn: card.sprint.goalEn || '',
+      sprintGoalAr: card.sprint.goalAr || '',
       userStoryIds: card.sprint.userStoryIds.filter(id => !card.removedStoryIds.has(id)),
     };
 
     try {
-      // The backend expects a single ConfirmSprintRequest object
-      await this.sprintService.confirmSprints(projId, payload as any);
+      await this.sprintService.confirmSprints(projId, payload);
       this.toastService.show('Sprint confirmed successfully.', 'success');
       this.router.navigate(['/dashboard', 'sprint']);
     } catch (err: any) {
@@ -978,9 +1080,106 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
 
   // ── Remove story (client-side) ─────────────────────────────────
   removeStory(card: SprintCard, storyId: string) {
-    card.removedStoryIds.add(storyId);
-    // Trigger signal re-evaluation by reassigning the array
-    this.sprintCards.set([...this.sprintCards()]);
+    const cardIndex = this.sprintCards().indexOf(card);
+    if (cardIndex < 0) return;
+
+    this.sprintCards.update(cards => cards.map((item, index) => {
+      if (index !== cardIndex) return item;
+      const removedStoryIds = new Set(item.removedStoryIds);
+      removedStoryIds.add(storyId);
+      return { ...item, removedStoryIds };
+    }));
+
+    this.toastService.show(
+      this.currentLang() === 'ar' ? 'تمت إزالة القصة من نطاق السبرينت.' : 'Story removed from sprint scope.',
+      'info',
+      5000,
+      {
+        label: this.currentLang() === 'ar' ? 'تراجع' : 'Undo',
+        onClick: () => this.restoreStory(cardIndex, storyId),
+      }
+    );
+  }
+
+  restoreStory(cardIndex: number, storyId: string): void {
+    this.sprintCards.update(cards => cards.map((item, index) => {
+      if (index !== cardIndex) return item;
+      const removedStoryIds = new Set(item.removedStoryIds);
+      removedStoryIds.delete(storyId);
+      return { ...item, removedStoryIds };
+    }));
+  }
+
+  openStoryEditor(story: UserStoryDto, event: Event): void {
+    this.overlayTrigger = event.currentTarget as HTMLElement;
+    this.editingStory.set(story);
+  }
+
+  closeStoryEditor(): void {
+    if (!this.editingStory()) return;
+    this.editingStory.set(null);
+    this.restoreOverlayFocus();
+  }
+
+  onStorySaved(updatedStory: UserStoryDto): void {
+    this.storiesMap.update(current => {
+      const next = new Map(current);
+      next.set(updatedStory.id, updatedStory);
+      return next;
+    });
+    this.changedStoryIds.update(current => new Set(current).add(updatedStory.id));
+    this.toastService.show(
+      this.currentLang() === 'ar' ? 'تم حفظ قصة المستخدم.' : 'User story saved.',
+      'success'
+    );
+    this.editingStory.set(null);
+    this.restoreOverlayFocus();
+  }
+
+  openStoryPicker(cardIndex: number, event: Event): void {
+    this.overlayTrigger = event.currentTarget as HTMLElement;
+    this.pickerCardIndex.set(cardIndex);
+    this.storyPickerOpen.set(true);
+  }
+
+  closeStoryPicker(): void {
+    if (!this.storyPickerOpen()) return;
+    this.storyPickerOpen.set(false);
+    this.restoreOverlayFocus();
+  }
+
+  addStoriesToSprint(storyIds: string[]): void {
+    const cardIndex = this.pickerCardIndex();
+    this.sprintCards.update(cards => cards.map((item, index) => {
+      if (index !== cardIndex) return item;
+      const userStoryIds = [...new Set([...item.sprint.userStoryIds, ...storyIds])];
+      const removedStoryIds = new Set(item.removedStoryIds);
+      storyIds.forEach(id => removedStoryIds.delete(id));
+      return {
+        ...item,
+        sprint: { ...item.sprint, userStoryIds },
+        removedStoryIds,
+      };
+    }));
+    this.storyPickerOpen.set(false);
+    this.toastService.show(
+      this.currentLang() === 'ar'
+        ? `تمت إضافة ${storyIds.length} قصة إلى السبرينت.`
+        : `${storyIds.length} ${storyIds.length === 1 ? 'story' : 'stories'} added to the sprint.`,
+      'success'
+    );
+    this.restoreOverlayFocus();
+  }
+
+  availableStoryCount(card: SprintCard): number {
+    const selected = new Set(card.sprint.userStoryIds.filter(id => !card.removedStoryIds.has(id)));
+    return this.allBacklogStories().filter(story => !selected.has(story.id)).length;
+  }
+
+  private restoreOverlayFocus(): void {
+    const trigger = this.overlayTrigger;
+    this.overlayTrigger = null;
+    queueMicrotask(() => trigger?.focus());
   }
 
   // ── Template helpers ───────────────────────────────────────────

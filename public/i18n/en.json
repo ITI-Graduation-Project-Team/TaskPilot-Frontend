@@ -930,6 +930,22 @@
     "FRI": "Fri",
     "SAT": "Sat"
   },
+  "SPRINT_EDITOR": {
+    "REVIEW_BEFORE_CONFIRMING": "Review before confirming",
+    "EDIT_STORY": "Edit user story",
+    "EDIT_STORY_HELP": "Changes are saved to the backlog even if you do not confirm this sprint.",
+    "ADD_FROM_BACKLOG": "Add from backlog",
+    "ADJUST_SCOPE": "Adjust sprint scope",
+    "REMOVE_FROM_SPRINT": "Remove from sprint",
+    "SAVE_STORY": "Save story",
+    "SAVING": "Saving...",
+    "DISCARD_CHANGES": "Discard unsaved changes?",
+    "KEEP_EDITING": "Keep editing",
+    "UNDO": "Undo",
+    "SCOPE_EXCEEDS_CAPACITY": "Scope exceeds capacity",
+    "STORY_SAVED": "User story saved.",
+    "SAVE_FAILED": "Story could not be saved"
+  },
   "TELEMETRY": {
     "TITLE": "AI Telemetry",
     "PM_DESC": "Monitor AI usage, token consumption, and costs across this project.",
