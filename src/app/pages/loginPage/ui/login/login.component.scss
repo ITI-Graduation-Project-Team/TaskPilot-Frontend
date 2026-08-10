@@ -20,13 +20,13 @@ section > :not(.language-toggle) { z-index: 1; }
   position: absolute;
   z-index: 50;
   inset-block-start: max(1rem, env(safe-area-inset-top));
-  inset-inline-end: max(1rem, env(safe-area-inset-right));
+  inset-inline-start: 1rem;
 }
 
 @media (min-width: 640px) {
   .language-toggle {
     inset-block-start: 1.5rem;
-    inset-inline-end: 1.5rem;
+    inset-inline-start: 1.5rem;
   }
 }
 
