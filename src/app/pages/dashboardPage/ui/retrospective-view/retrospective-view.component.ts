@@ -24,12 +24,13 @@ import {
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { extractApiError } from '../../../../shared/api/auth.api';
+import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activity.component';
 
 @Component({
   selector: 'app-retrospective-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiActivityComponent],
   template: `
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
@@ -104,7 +105,14 @@ import { extractApiError } from '../../../../shared/api/auth.api';
       </div>
 
       <!-- ─── LOADING STATE ─── -->
-      @if (isLoading()) {
+      @if (isGenerating()) {
+        <div class="mx-auto my-8 max-w-3xl">
+          <app-ai-activity
+            [title]="currentLang() === 'ar' ? 'بنحلل أداء السبرينت' : 'Analyzing sprint performance'"
+            [description]="currentLang() === 'ar' ? 'بنراجع معدل الإنجاز ودقة التقديرات والمهام المرحلة لاستخراج توصيات عملية.' : 'Reviewing completion, estimation accuracy, velocity, and carry-over work to produce practical recommendations.'"
+          />
+        </div>
+      } @else if (isLoading()) {
         <div class="flex flex-col items-center justify-center text-center rounded-3xl border border-border bg-surface px-6 py-20 shadow-sm max-w-3xl mx-auto my-8 animate-[fadeIn_0.3s_ease_both]">
           <div class="relative mb-6">
             <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto animate-pulse">
@@ -532,6 +540,7 @@ export class RetrospectiveViewComponent implements OnInit {
   sprints = signal<SprintListItem[]>([]);
   selectedSprintId = signal<string>('');
   isLoading = signal<boolean>(false);
+  isGenerating = signal(false);
   selectedEmployeeId = signal<string | null>(null);
 
   activeRetro = computed(() => {
@@ -663,6 +672,7 @@ export class RetrospectiveViewComponent implements OnInit {
       return;
     }
 
+    this.isGenerating.set(true);
     this.isLoading.set(true);
     try {
       const res = await this.sprintService.generateRetrospective(sId, pId || undefined);
@@ -677,6 +687,7 @@ export class RetrospectiveViewComponent implements OnInit {
       const fallbackMsg = this.currentLang() === 'ar' ? 'فشل إنشاء تقرير التحليل الختامي.' : 'Failed to generate retrospective analysis.';
       this.toastService.show(apiError || fallbackMsg, 'error');
     } finally {
+      this.isGenerating.set(false);
       this.isLoading.set(false);
     }
   }

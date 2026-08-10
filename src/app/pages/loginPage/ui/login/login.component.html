@@ -14,8 +14,8 @@
       </svg>
     </button>
   </div>
-  <div class="flex flex-row justify-between  ">
-    <div class="w-[200px]">
+  <div class="mx-auto flex w-full max-w-7xl flex-1 flex-row justify-between">
+    <div class="hidden">
 
     </div>
     <!-- Left Branding Column -->
@@ -42,13 +42,13 @@
         <span class="w-2 h-2 rounded-full bg-brandPrimary"></span>
       </div>
     </div>
-    <div class="w-[200px]">
+    <div class="hidden">
 
     </div>
     <!-- Right Card Column -->
     <div class="flex items-center justify-center w-full lg:w-auto lg:min-w-[480px] lg:max-w-[520px] px-6 py-12 lg:py-0">
       <div
-        class="w-full max-w-md bg-white border border-brandAccent/30 rounded-3xl p-10 shadow-2xl shadow-brandPrimary/10 animate-[fadeUp_0.45s_ease_both]">
+        class="w-full max-w-md bg-surface border border-border rounded-3xl p-7 sm:p-10 shadow-2xl shadow-brandPrimary/10 animate-[fadeUp_0.45s_ease_both]">
 
         <!-- Brand (visible only on mobile) -->
         <div class="flex items-center gap-2.5 mb-8 lg:hidden">
@@ -95,10 +95,10 @@
                 </svg>
               </span>
               <input id="login-email" name="email" type="email" [ngModel]="email()" (ngModelChange)="email.set($event)"
-                [disabled]="isLoading" placeholder="you@example.com" autocomplete="email" class="w-full py-3.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                [disabled]="isLoading" placeholder="you@example.com" autocomplete="email" class="w-full py-3.5 bg-background border border-border rounded-xl
                           text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                           placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                          focus:bg-white focus:border-brandPrimary focus:ring-4 focus:ring-brandPrimary/10"
+                          focus:bg-surface focus:border-brandPrimary focus:ring-4 focus:ring-brandPrimary/10"
                 [ngClass]="currentLang() === 'ar' ? 'pr-11 pl-4' : 'pl-11 pr-4'"
                 [class.border-brandPrimary]="state() === 'error'" [class.ring-2]="state() === 'error'"
                 [class.ring-brandPrimary]="state() === 'error'" />
@@ -125,10 +125,10 @@
               </span>
               <input id="login-password" name="password" [type]="showPassword() ? 'text' : 'password'"
                 [ngModel]="password()" (ngModelChange)="password.set($event)" [disabled]="isLoading"
-                placeholder="******" autocomplete="current-password" class="w-full px-11 py-3.5 bg-[#F5F7FB] border border-transparent rounded-xl
+                placeholder="******" autocomplete="current-password" class="w-full px-11 py-3.5 bg-background border border-border rounded-xl
                           text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                           placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
-                          focus:bg-white focus:border-brandPrimary focus:ring-4 focus:ring-brandPrimary/10"
+                          focus:bg-surface focus:border-brandPrimary focus:ring-4 focus:ring-brandPrimary/10"
                 [class.border-brandPrimary]="state() === 'error'" [class.ring-2]="state() === 'error'"
                 [class.ring-brandPrimary]="state() === 'error'" />
               <button type="button" (click)="togglePassword()" tabindex="-1" class="absolute top-1/2 -translate-y-1/2 text-brandAccent hover:text-brandPrimary

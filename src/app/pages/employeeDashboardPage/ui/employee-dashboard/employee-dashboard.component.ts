@@ -183,7 +183,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Policies Chat -->
           <button
-            (click)="activeTab.set('policies-chat')"
+            [routerLink]="['/employee-dashboard', 'policies-chat']"
             class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
             [class.nav-item-active]="activeTab() === 'policies-chat'"
             [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
@@ -196,7 +196,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Project Policies -->
           <button
-            (click)="activeTab.set('project-policies')"
+            [routerLink]="['/employee-dashboard', 'project-policies']"
             class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
             [class.nav-item-active]="activeTab() === 'project-policies'"
             [style.color]="activeTab() !== 'project-policies' ? 'var(--text-secondary)' : ''"
@@ -224,7 +224,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Settings -->
           <button
-            (click)="activeTab.set('settings')"
+            [routerLink]="['/employee-dashboard', 'settings']"
             class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
             [class.nav-item-active]="activeTab() === 'settings'"
             [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
@@ -545,7 +545,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
             } @else if (activeTab() === 'current-projects') {
               <div class="animate-[fadeUp_0.3s_ease_both]">
-                <app-current-projects (viewBoard)="activeTab.set('sprint')"></app-current-projects>
+                <app-current-projects (viewBoard)="navigateToTab('sprint')"></app-current-projects>
               </div>
 
             } @else if (activeTab() === 'project-history') {
@@ -626,7 +626,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Policies -->
           <button
-            (click)="activeTab.set('policies-chat')"
+            [routerLink]="['/employee-dashboard', 'policies-chat']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'policies-chat'"
             [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
@@ -639,7 +639,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Project Policies Chat Mobile -->
           <button
-            (click)="activeTab.set('project-policies')"
+            [routerLink]="['/employee-dashboard', 'project-policies']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'project-policies'"
             [style.color]="activeTab() !== 'project-policies' ? 'var(--text-secondary)' : ''"
@@ -666,7 +666,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Settings -->
           <button
-            (click)="activeTab.set('settings')"
+            [routerLink]="['/employee-dashboard', 'settings']"
             class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'settings'"
             [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
@@ -745,8 +745,12 @@ export class EmployeeDashboardComponent implements OnInit {
   constructor() {
     this.route.paramMap.subscribe(params => {
       const tab = params.get('tab');
-      if (tab) {
-        this.activeTab.set(tab as any);
+      const validTabs: EmployeeTab[] = ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'settings', 'policies-chat', 'project-policies'];
+      if (tab && validTabs.includes(tab as EmployeeTab)) {
+        this.activeTab.set(tab as EmployeeTab);
+        localStorage.setItem('employee_tab', tab);
+      } else if (tab) {
+        this.router.navigate(['/employee-dashboard', 'sprint'], { replaceUrl: true });
       }
     });
     // Reload sprint info when selected project changes
@@ -772,16 +776,14 @@ export class EmployeeDashboardComponent implements OnInit {
     this.tr.use(saved);
     this.applyDirection(saved);
 
-    // Restore persisted tab
-    const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'settings', 'policies-chat', 'project-policies'].includes(savedTab)) {
-      this.router.navigate(['/employee-dashboard', savedTab]);
-    }
-
     this.loadUserProfile();
   }
 
   // ── Methods ─────────────────────────────────
+
+  navigateToTab(tab: EmployeeTab): void {
+    this.router.navigate(['/employee-dashboard', tab]);
+  }
 
   setLanguage(lang: 'en' | 'ar') {
     localStorage.setItem('app_lang', lang);

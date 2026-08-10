@@ -10,6 +10,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { AiActivityComponent, AiActivityPhase } from '../../../../shared/ui/ai-activity/ai-activity.component';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -50,10 +51,16 @@ const EMPTY_TASK: TaskFormModel = {
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent, AiActivityComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
-      @if (projectState.loading() || isLoading()) {
+      @if (isGeneratingWbs()) {
+        <app-ai-activity
+          [title]="isArabic() ? 'بنجهز خطة عمل المشروع' : 'Building your project work plan'"
+          [description]="isArabic() ? 'بنحوّل نطاق المشروع إلى قصص مستخدم ومهام عملية، ثم بنراجع المهارات المطلوبة.' : 'Turning the project scope into actionable stories and tasks, then validating the skills required.'"
+          [phases]="wbsPhases()"
+        />
+      } @else if (projectState.loading() || isLoading()) {
         <div class="flex items-center justify-center rounded-2xl border border-border bg-surface p-12 shadow-sm">
           <div class="flex flex-col items-center gap-3">
             <div class="h-8 w-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
@@ -432,6 +439,7 @@ export class BacklogViewComponent implements OnInit {
   isSprintPlanningModalOpen = signal(false);
   isTechStackAdvisorOpen = signal(false);
   isGeneratingWbs = signal(false);
+  wbsPhases = signal<AiActivityPhase[]>([]);
   isChatOpen = signal(false);
   expandedStoryIds = signal<string[]>([]);
   storyForm = signal<StoryFormModel>({ ...EMPTY_STORY });
@@ -589,12 +597,18 @@ export class BacklogViewComponent implements OnInit {
       return;
     }
 
+    this.wbsPhases.set(this.createWbsPhases('generating'));
     this.isGeneratingWbs.set(true);
     try {
-      await this.aiRequirementsService.generateWbs(projId);
+      await this.aiRequirementsService.generateWbs(projId, phase => {
+        this.wbsPhases.set(this.createWbsPhases(phase));
+      });
+      this.wbsPhases.set(this.createWbsPhases('loading'));
       this.toastService.show('AI WBS user stories and task items generated successfully.', 'success');
       await this.fetchBacklog(projId);
+      this.wbsPhases.set(this.createWbsPhases('complete'));
     } catch (e: any) {
+      this.wbsPhases.update(phases => phases.map(phase => phase.status === 'active' ? { ...phase, status: 'error' } : phase));
       if (e.message === 'Network Error' || e.code === 'ECONNABORTED' || e.code === 'ERR_NETWORK' || e.status === 504 || e.status === 0) {
         this.toastService.show('The AI is taking longer than expected. Generation is continuing in the background. Please refresh in a minute.', 'info');
       } else {
@@ -604,6 +618,20 @@ export class BacklogViewComponent implements OnInit {
     } finally {
       this.isGeneratingWbs.set(false);
     }
+  }
+
+  private createWbsPhases(active: 'generating' | 'enriching' | 'loading' | 'complete'): AiActivityPhase[] {
+    const labels = this.isArabic()
+      ? ['تحليل نطاق المشروع', 'إنشاء القصص والمهام', 'مراجعة المهارات', 'تحميل خطة العمل']
+      : ['Analyze project scope', 'Create stories & tasks', 'Validate required skills', 'Load your work plan'];
+    const ids = ['scope', 'generating', 'enriching', 'loading'];
+    const activeIndex = active === 'complete' ? ids.length : ids.indexOf(active);
+
+    return ids.map((id, index) => ({
+      id,
+      label: labels[index],
+      status: index < activeIndex ? 'complete' : index === activeIndex ? 'active' : 'pending'
+    }));
   }
 
   async onAdvisorCompleted(projectId: string) {
