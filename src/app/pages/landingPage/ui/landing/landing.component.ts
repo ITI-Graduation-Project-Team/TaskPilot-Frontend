@@ -4,6 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../shared/services/theme.service';
 import { AuthService } from '../../../../shared/api/auth.service';
+import { isProfileCompleted } from '../../../../shared/lib/auth/cookie.helper';
+import { getRedirectForRole } from '../../../../shared/lib/auth/role-redirect';
 
 @Component({
   selector: 'app-landing',
@@ -42,7 +44,9 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   get buttonLink(): string {
-    return this.authService.isLoggedIn() ? '/dashboard' : '/select-role';
+    return this.authService.isLoggedIn()
+      ? getRedirectForRole(this.authService.getUserRole(), isProfileCompleted())
+      : '/select-role';
   }
 
   constructor(

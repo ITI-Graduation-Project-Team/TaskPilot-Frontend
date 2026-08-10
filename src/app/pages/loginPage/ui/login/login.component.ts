@@ -241,6 +241,11 @@ export class LoginComponent implements AfterViewInit, OnInit {
   }
 
   getRouteForRole(role: string | null, isProfileCompleted: boolean): string[] {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
+      return [returnUrl];
+    }
+
     let route = ['/dashboard'];
     if (role === 'Employee') {
       route = isProfileCompleted ? ['/employee-dashboard'] : ['/complete-profile'];

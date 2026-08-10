@@ -5,6 +5,7 @@ import { AiRequirementsService } from '../../../../shared/api/ai-requirements.se
 import { RecommendedStackDto, TechStackService, TechStackSuggestionDto } from '../../../../shared/api/tech-stack.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { AiActivityComponent, AiActivityPhase } from '../../../../shared/ui/ai-activity/ai-activity.component';
 
 const PLATFORM_OPTIONS = ['Web', 'Mobile', 'Desktop', 'API'];
 const PROJECT_TYPE_OPTIONS = ['ERP', 'SaaS', 'MobileApp', 'API', 'Portal', 'Other'];
@@ -15,7 +16,7 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
   selector: 'app-tech-stack-advisor-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiActivityComponent],
   template: `
     <div class="flex" [class.h-full]="embedded" [class.w-full]="embedded" [class.flex-col]="embedded" [class.fixed]="!embedded" [class.inset-0]="!embedded" [class.z-50]="!embedded" [class.items-center]="!embedded" [class.justify-center]="!embedded" [class.bg-black/65]="!embedded" [class.p-4]="!embedded" [class.backdrop-blur-sm]="!embedded" [class.animate-[fadeIn_0.18s_ease_both]]="!embedded">
       <section class="flex w-full flex-col overflow-hidden bg-surface" [class.flex-1]="embedded" [class.rounded-3xl]="!embedded" [class.border]="!embedded" [class.border-border]="!embedded" [class.shadow-2xl]="!embedded" [class.max-h-[90vh]]="!embedded" [class.max-w-6xl]="!embedded" [class.animate-[scaleUp_0.22s_ease_both]]="!embedded" role="dialog" aria-modal="true" aria-labelledby="tech-stack-title">
@@ -46,8 +47,22 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
         </header>
 
         <main class="flex-1 overflow-y-auto p-6">
-          @if (isLoading()) {
-            <div class="flex min-h-[420px] flex-col items-center justify-center gap-3 text-center">
+          @if (isConfirming()) {
+            <div class="flex min-h-[420px] items-center justify-center">
+              <app-ai-activity
+                title="Turning the approved architecture into a backlog"
+                description="The selected stack is being saved and applied to every generated story and task."
+                [phases]="generationPhases()"
+              />
+            </div>
+          } @else if (isLoading()) {
+            <div class="mb-5">
+              <app-ai-activity
+                title="Comparing architecture options"
+                description="Reviewing requirements, delivery targets, and available team skills to recommend a practical stack."
+              />
+            </div>
+            <div class="hidden" aria-hidden="true">
               <div class="h-10 w-10 rounded-full border-4 border-primary/15 border-t-primary animate-spin"></div>
               <p class="text-sm font-bold text-text-primary">Analyzing requirements and team skills...</p>
               <p class="max-w-sm text-xs text-text-secondary">The advisor is comparing the practical team-ready stack with the ideal architecture target.</p>
@@ -217,6 +232,7 @@ export class TechStackAdvisorModalComponent implements OnInit {
   newTechInput = signal('');
   isLoading = signal(false);
   isConfirming = signal(false);
+  generationPhases = signal<AiActivityPhase[]>([]);
   errorMessage = signal('');
 
   isConfirmDisabled = computed(() =>
@@ -289,6 +305,7 @@ export class TechStackAdvisorModalComponent implements OnInit {
   async confirmAndGenerate() {
     if (this.isConfirmDisabled()) return;
 
+    this.generationPhases.set(this.createGenerationPhases('saving'));
     this.isConfirming.set(true);
     try {
       // 1. Confirm approved tech stack and platforms
@@ -299,7 +316,10 @@ export class TechStackAdvisorModalComponent implements OnInit {
       });
 
       // 2. Generate WBS backlog items
-      await this.aiRequirements.generateWbs(this.projectId);
+      await this.aiRequirements.generateWbs(this.projectId, phase => {
+        this.generationPhases.set(this.createGenerationPhases(phase));
+      });
+      this.generationPhases.set(this.createGenerationPhases('complete'));
       
       this.toastService.show('Tech stack confirmed and backlog generated successfully.', 'success');
       this.completed.emit(this.projectId);
@@ -309,5 +329,18 @@ export class TechStackAdvisorModalComponent implements OnInit {
     } finally {
       this.isConfirming.set(false);
     }
+  }
+
+  private createGenerationPhases(active: 'saving' | 'generating' | 'enriching' | 'complete'): AiActivityPhase[] {
+    const phases = [
+      { id: 'saving', label: 'Save approved stack' },
+      { id: 'generating', label: 'Create stories & tasks' },
+      { id: 'enriching', label: 'Map required skills' }
+    ];
+    const activeIndex = active === 'complete' ? phases.length : phases.findIndex(phase => phase.id === active);
+    return phases.map((phase, index) => ({
+      ...phase,
+      status: index < activeIndex ? 'complete' : index === activeIndex ? 'active' : 'pending'
+    }));
   }
 }

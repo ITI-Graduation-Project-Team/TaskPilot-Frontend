@@ -23,6 +23,8 @@ export interface GeneratedProjectDTO {
   }>;
 }
 
+export type WbsGenerationPhase = 'generating' | 'enriching';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -64,8 +66,10 @@ export class AiRequirementsService {
 
 
 
-  async generateWbs(projectId: string): Promise<any> {
+  async generateWbs(projectId: string, onPhase?: (phase: WbsGenerationPhase) => void): Promise<any> {
+    onPhase?.('generating');
     const { data } = await apiClient.post(`/projects/${projectId}/wbs/generate`);
+    onPhase?.('enriching');
     await apiClient.post(`/projects/${projectId}/wbs/enrich-skills`);
     return data;
   }

@@ -1,12 +1,80 @@
-@keyframes spin-reverse {
-  from {
-    transform: rotate(360deg);
-  }
-  to {
-    transform: rotate(0deg);
-  }
+.loader-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, #051b62 58%, transparent);
+  backdrop-filter: blur(12px) saturate(115%);
+  animation: backdrop-in var(--motion-fast) ease-out both;
 }
 
-.animate-spin-reverse {
-  animation: spin-reverse 8s linear infinite;
+.loader-panel {
+  display: flex;
+  width: min(100%, 22rem);
+  align-items: center;
+  gap: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: var(--shadow-md);
+  animation: panel-in var(--motion-dialog) var(--ease-emphasized) both;
+}
+
+.loader-mark {
+  position: relative;
+  display: grid;
+  flex: 0 0 4.25rem;
+  width: 4.25rem;
+  height: 4.25rem;
+  place-items: center;
+}
+
+.loader-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.loader-ring-outer {
+  inset: 0;
+  border-top-color: var(--accent);
+  animation: spin 2.4s linear infinite;
+}
+
+.loader-ring-inner {
+  inset: .4rem;
+  border-right-color: var(--primary);
+  animation: spin 1.7s linear infinite reverse;
+}
+
+.loader-logo {
+  z-index: 1;
+  display: grid;
+  width: 2.85rem;
+  height: 2.85rem;
+  place-items: center;
+  border-radius: .9rem;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(5, 27, 98, .14);
+}
+
+.loader-logo img { width: 2.25rem; height: 2.25rem; object-fit: contain; }
+.loader-copy { display: grid; min-width: 0; }
+.loader-eyebrow { color: var(--primary); font-size: .65rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.loader-title { margin-top: .2rem; color: var(--text-primary); font-size: .9rem; font-weight: 750; }
+.loader-dots { display: flex; gap: .3rem; margin-top: .55rem; }
+.loader-dots i { width: .32rem; height: .32rem; border-radius: 50%; background: var(--accent); animation: dot 1.25s ease-in-out infinite; }
+.loader-dots i:nth-child(2) { animation-delay: 140ms; }
+.loader-dots i:nth-child(3) { animation-delay: 280ms; }
+
+@keyframes backdrop-in { from { opacity: 0; } }
+@keyframes panel-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes dot { 50% { opacity: .3; transform: translateY(-2px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-backdrop, .loader-panel, .loader-ring, .loader-dots i { animation: none; }
 }

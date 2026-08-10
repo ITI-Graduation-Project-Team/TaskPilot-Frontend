@@ -21,6 +21,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { SprintStoryEditorComponent } from './sprint-story-editor.component';
 import { SprintStoryPickerComponent } from './sprint-story-picker.component';
 import { parseApiError } from '../../../../shared/api/api-error';
+import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activity.component';
 
 type PageState = 'empty' | 'loading' | 'suggestion' | 'confirming' | 'no-sprints';
 
@@ -51,7 +52,7 @@ const LOADING_HINTS = [
   selector: 'app-sprint-planning-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintStoryEditorComponent, SprintStoryPickerComponent],
+  imports: [CommonModule, FormsModule, SprintStoryEditorComponent, SprintStoryPickerComponent, AiActivityComponent],
   template: `
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
@@ -377,7 +378,13 @@ const LOADING_HINTS = [
 
       <!-- ─── LOADING STATE — AI Generation Screen ─── -->
       @if (pageState() === 'loading') {
-        <div class="flex flex-col items-center justify-center text-center rounded-2xl border border-border bg-surface px-6 py-16 shadow-sm max-w-3xl mx-auto mt-8 animate-[fadeIn_0.3s_ease_both]" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+        <div class="mx-auto mt-8 max-w-3xl" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+          <app-ai-activity
+            [title]="currentLang() === 'ar' ? 'بنجهز اقتراح السبرينت' : 'Designing the strongest sprint proposal'"
+            [description]="currentLang() === 'ar' ? loadingHint().ar : loadingHint().en"
+          />
+        </div>
+        <div class="hidden" aria-hidden="true" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
 
           <!-- Glowing orb -->
           <div class="relative mb-8 mt-4">
