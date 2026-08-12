@@ -74,9 +74,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         <div class="flex items-center justify-between px-6 py-4 !mt-auto border border-border bg-surface rounded-2xl shadow-sm"
           *ngIf="totalProjects() > 0">
           <div class="text-sm font-medium text-text-secondary hidden sm:block">
-            Showing <span class="font-bold text-text-primary">{{ (currentPage() - 1) * pageSize() + 1 }}</span> 
-            to <span class="font-bold text-text-primary">{{ Math.min(currentPage() * pageSize(), totalProjects()) }}</span> 
-            of <span class="font-bold text-text-primary">{{ totalProjects() }}</span> results
+            Page <span class="font-bold text-text-primary">{{ currentPage() }}</span> of <span class="font-bold text-text-primary">{{ totalPages() }}</span>
           </div>
           
           <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
@@ -182,7 +180,7 @@ export class ProjectHubComponent implements OnInit {
     const total = this.totalPages();
     const current = this.currentPage();
     const pages: number[] = [];
-    
+
     if (total <= 7) {
       for (let i = 1; i <= total; i++) pages.push(i);
     } else {
@@ -221,12 +219,12 @@ export class ProjectHubComponent implements OnInit {
   async loadPaginatedProjects() {
     this.isLoading.set(true);
     const { projects, totalCount } = await this.projectState.loadProjectsPaged(this.currentPage(), this.pageSize());
-    
+
     // Apply local filters (tab and search)
     // Wait, backend doesn't filter by status or search. For now we will just load paged and apply client-side filter to the current page.
     // Ideally, the backend should handle filtering too. Let's just use it as is for the page.
     let filtered = projects;
-    
+
     const tab = this.activeTab();
     const query = this.searchQuery().toLowerCase().trim();
 
@@ -245,7 +243,7 @@ export class ProjectHubComponent implements OnInit {
         (p.description || '').toLowerCase().includes(query)
       );
     }
-    
+
     this.paginatedProjects.set(filtered);
     this.totalProjects.set(totalCount);
     this.isLoading.set(false);
