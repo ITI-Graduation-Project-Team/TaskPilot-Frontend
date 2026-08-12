@@ -31,7 +31,12 @@ export class EmployeesComponent implements OnInit {
   totalDeactivatedEmployees = signal<number>(0);
 
   localSearchQuery = signal<string>(''); // Kept for local filter if needed, though usually server-side search is preferred. We will just use it on the current page for now.
-  isLoadingEmployees = signal<boolean>(false);
+  isLoadingActive = signal<boolean>(false);
+  isLoadingDeactivated = signal<boolean>(false);
+
+  activeEmployeesCache = new Map<number, { items: CompanyEmployeeModel[], total: number }>();
+  deactivatedEmployeesCache = new Map<number, { items: CompanyEmployeeModel[], total: number }>();
+  invitationsCache = new Map<string, { items: InvitationModel[], total: number }>();
 
   paginatedActiveEmployees = computed(() => {
     const q = this.localSearchQuery().toLowerCase().trim();
@@ -79,52 +84,101 @@ export class EmployeesComponent implements OnInit {
 
 
   ngOnInit() {
-    this.loadEmployees();
-    this.loadInvitations();
+    this.switchTab('active');
   }
 
-  async loadEmployees() {
+  switchTab(tab: 'active' | 'deactivated' | 'invitations') {
+    this.activeTab.set(tab);
+    if (tab === 'active') {
+      this.loadActiveEmployees();
+    } else if (tab === 'deactivated') {
+      this.loadDeactivatedEmployees();
+    } else if (tab === 'invitations') {
+      this.loadInvitations();
+    }
+  }
+
+  async loadActiveEmployees() {
+    const page = this.activeEmployeesPage();
+    if (this.activeEmployeesCache.has(page)) {
+      const cached = this.activeEmployeesCache.get(page)!;
+      this.activeEmployees.set(cached.items);
+      this.totalActiveEmployees.set(cached.total);
+      return;
+    }
+    
     try {
-      this.isLoadingEmployees.set(true);
-      // Load Active Employees
-      const activeRes = await this.companyService.getCompanyEmployees(this.activeEmployeesPage(), this.pageSize(), false);
-      if (activeRes.succeeded && activeRes.data) {
-        this.activeEmployees.set(activeRes.data.items);
-        this.totalActiveEmployees.set(activeRes.data.totalItems);
+      this.isLoadingActive.set(true);
+      const res = await this.companyService.getCompanyEmployees(page, this.pageSize(), false);
+      if (res.succeeded && res.data) {
+        this.activeEmployees.set(res.data.items);
+        this.totalActiveEmployees.set(res.data.totalItems);
+        this.activeEmployeesCache.set(page, { items: res.data.items, total: res.data.totalItems });
       } else {
         this.activeEmployees.set([]);
         this.totalActiveEmployees.set(0);
       }
+    } catch (e) {
+      console.error(e);
+      this.activeEmployees.set([]);
+      this.totalActiveEmployees.set(0);
+    } finally {
+      this.isLoadingActive.set(false);
+    }
+  }
 
-      // Load Deactivated Employees
-      const deactivatedRes = await this.companyService.getCompanyEmployees(this.deactivatedEmployeesPage(), this.pageSize(), true);
-      if (deactivatedRes.succeeded && deactivatedRes.data) {
-        this.deactivatedEmployees.set(deactivatedRes.data.items);
-        this.totalDeactivatedEmployees.set(deactivatedRes.data.totalItems);
+  async loadDeactivatedEmployees() {
+    const page = this.deactivatedEmployeesPage();
+    if (this.deactivatedEmployeesCache.has(page)) {
+      const cached = this.deactivatedEmployeesCache.get(page)!;
+      this.deactivatedEmployees.set(cached.items);
+      this.totalDeactivatedEmployees.set(cached.total);
+      return;
+    }
+    
+    try {
+      this.isLoadingDeactivated.set(true);
+      const res = await this.companyService.getCompanyEmployees(page, this.pageSize(), true);
+      if (res.succeeded && res.data) {
+        this.deactivatedEmployees.set(res.data.items);
+        this.totalDeactivatedEmployees.set(res.data.totalItems);
+        this.deactivatedEmployeesCache.set(page, { items: res.data.items, total: res.data.totalItems });
       } else {
         this.deactivatedEmployees.set([]);
         this.totalDeactivatedEmployees.set(0);
       }
     } catch (e) {
       console.error(e);
-      this.activeEmployees.set([]);
       this.deactivatedEmployees.set([]);
+      this.totalDeactivatedEmployees.set(0);
     } finally {
-      this.isLoadingEmployees.set(false);
+      this.isLoadingDeactivated.set(false);
     }
   }
 
   async loadInvitations() {
+    const page = this.currentPage();
+    const status = this.invitationStatus();
+    const cacheKey = `${status}_${page}`;
+    
+    if (this.invitationsCache.has(cacheKey)) {
+      const cached = this.invitationsCache.get(cacheKey)!;
+      this.invitations.set(cached.items);
+      this.totalInvitations.set(cached.total);
+      return;
+    }
+
     try {
       this.isLoadingInvitations.set(true);
       const res = await this.companyService.getInvitations(
-        this.invitationStatus() || undefined,
-        this.currentPage(),
+        status || undefined,
+        page,
         this.pageSize()
       );
       if (res.succeeded && res.data) {
         this.invitations.set(res.data.items);
         this.totalInvitations.set(res.data.totalCount);
+        this.invitationsCache.set(cacheKey, { items: res.data.items, total: res.data.totalCount });
       }
     } catch (e) {
       console.error(e);
@@ -142,7 +196,7 @@ export class EmployeesComponent implements OnInit {
   prevActivePage() {
     if (this.activeEmployeesPage() > 1) {
       this.activeEmployeesPage.set(this.activeEmployeesPage() - 1);
-      this.loadEmployees();
+      this.loadActiveEmployees();
     }
   }
 
@@ -150,14 +204,14 @@ export class EmployeesComponent implements OnInit {
     const maxPage = Math.ceil(this.totalActiveEmployees() / this.pageSize());
     if (this.activeEmployeesPage() < maxPage) {
       this.activeEmployeesPage.set(this.activeEmployeesPage() + 1);
-      this.loadEmployees();
+      this.loadActiveEmployees();
     }
   }
 
   prevDeactivatedPage() {
     if (this.deactivatedEmployeesPage() > 1) {
       this.deactivatedEmployeesPage.set(this.deactivatedEmployeesPage() - 1);
-      this.loadEmployees();
+      this.loadDeactivatedEmployees();
     }
   }
 
@@ -165,7 +219,7 @@ export class EmployeesComponent implements OnInit {
     const maxPage = Math.ceil(this.totalDeactivatedEmployees() / this.pageSize());
     if (this.deactivatedEmployeesPage() < maxPage) {
       this.deactivatedEmployeesPage.set(this.deactivatedEmployeesPage() + 1);
-      this.loadEmployees();
+      this.loadDeactivatedEmployees();
     }
   }
 
@@ -182,6 +236,7 @@ export class EmployeesComponent implements OnInit {
       const res = await this.companyService.resendInvitation(id);
       if (res.succeeded) {
         this.toastService.show('Invitation resent successfully!', 'success');
+        this.invitationsCache.clear();
         this.loadInvitations();
       } else {
         this.toastService.show(res.message || 'Failed to resend invitation', 'error');
@@ -197,6 +252,7 @@ export class EmployeesComponent implements OnInit {
       const res = await this.companyService.cancelInvitation(id);
       if (res.succeeded) {
         this.toastService.show('Invitation deleted successfully!', 'success');
+        this.invitationsCache.clear();
         this.loadInvitations();
       } else {
         this.toastService.show(res.message || 'Failed to delete invitation', 'error');
@@ -292,6 +348,7 @@ export class EmployeesComponent implements OnInit {
       const res = await this.companyService.inviteEmployees([email.trim()]);
       if (res.succeeded && (!res.data?.skippedEmployees || res.data.skippedEmployees.length === 0)) {
         this.toastService.show('🎉 Invitation sent successfully!', 'success');
+        this.invitationsCache.clear();
         this.loadInvitations();
         this.closeInviteModal();
       } else {
@@ -346,7 +403,10 @@ export class EmployeesComponent implements OnInit {
 
   onDeactivated() {
     this.closeDeactivateModal();
-    this.loadEmployees();
+    this.activeEmployeesCache.clear();
+    this.deactivatedEmployeesCache.clear();
+    if (this.activeTab() === 'active') this.loadActiveEmployees();
+    if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
   }
 
   isReactivating = signal<string | null>(null);
@@ -364,7 +424,10 @@ export class EmployeesComponent implements OnInit {
       const res = await this.companyService.reactivateEmployee(emp.employeeId);
       if (res.succeeded) {
         this.toastService.show('Employee reactivated successfully!', 'success');
-        this.loadEmployees();
+        this.activeEmployeesCache.clear();
+        this.deactivatedEmployeesCache.clear();
+        if (this.activeTab() === 'active') this.loadActiveEmployees();
+        if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
       } else {
         this.toastService.show(res.message || 'Failed to reactivate employee', 'error');
       }
