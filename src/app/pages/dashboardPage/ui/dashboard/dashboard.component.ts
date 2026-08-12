@@ -346,7 +346,7 @@ import { DashboardService } from '../../services/dashboard.service';
               <div class="flex items-center gap-2">
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
-                  <button (click)="isProjectDropdownOpen.update(v => !v)"
+                  <button (click)="toggleProjectDropdown()"
                           class="flex items-center gap-2 px-3 py-1.5 bg-background border border-border hover:border-primary/40 rounded-xl text-xs font-bold text-text-primary transition-all duration-200 hover:bg-sidebar focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] group">
                     <svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
@@ -898,6 +898,13 @@ export class DashboardComponent implements OnInit {
   goToProject(projectId: string, tab: 'sprint' | 'backlog') {
     this.projectState.setSelectedProject(projectId);
     this.currentTab.set(tab);
+  }
+
+  toggleProjectDropdown() {
+    this.isProjectDropdownOpen.update(v => !v);
+    if (this.isProjectDropdownOpen() && this.projectState.projects().length <= 1) {
+      this.projectState.loadProjects();
+    }
   }
 
   selectProject(id: string) {
