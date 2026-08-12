@@ -243,6 +243,13 @@ export class SprintPlanningService {
     );
   }
 
+  async cancelSprint(projectId: string, sprintId: string): Promise<void> {
+    await apiClient.post(
+      `/projects/${projectId}/sprints/${sprintId}/cancel`,
+      {}
+    );
+  }
+
   async getAllSprints(projectId: string): Promise<SprintListItem[]> {
     try {
       const { data } = await apiClient.get(

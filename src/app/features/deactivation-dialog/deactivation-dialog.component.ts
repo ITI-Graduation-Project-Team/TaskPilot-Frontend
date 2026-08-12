@@ -2,8 +2,10 @@ import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyService, AnalysisResultDto, DeactivateEmployeeRequest } from '../../shared/api/Company-api/company';
+import { SprintPlanningService } from '../../shared/api/sprint-planning.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-deactivation-dialog',
@@ -38,13 +40,40 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
         </div>
 
         <div *ngIf="!isLoading() && analysisResult()" class="flex flex-col gap-4">
-          <div *ngIf="analysisResult()?.isAllowed" class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+          <div *ngIf="analysisResult()?.isAllowed && !analysisResult()?.hasPlannedSprintTasks" class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
             <svg class="w-6 h-6 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
               <h4 class="text-sm font-bold text-emerald-800">{{ 'DEACTIVATION.READY_TITLE' | translate }}</h4>
               <p class="text-xs text-emerald-600 mt-1">{{ 'DEACTIVATION.READY_DESC' | translate }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="analysisResult()?.isAllowed && analysisResult()?.hasPlannedSprintTasks" class="flex flex-col gap-3">
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+              <svg class="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div class="flex-1">
+                <h4 class="text-sm font-bold text-amber-800">{{ 'DEACTIVATION.PLANNED_SPRINT_WARNING' | translate }}</h4>
+                <p class="text-xs text-amber-600 mt-1 mb-2">{{ 'DEACTIVATION.PLANNED_SPRINT_DESC' | translate }}</p>
+                <ul class="list-disc list-inside text-xs text-amber-700 mb-3 bg-amber-100/50 p-2 rounded">
+                  <li *ngFor="let s of analysisResult()?.affectedSprints">
+                    {{ s.projectName }}: {{ s.sprintTitle }} ({{ s.taskCount }} {{ 'DEACTIVATION.TASKS_COUNT' | translate }})
+                  </li>
+                </ul>
+                <div class="flex flex-col gap-2">
+                  <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" name="action" value="replan" [(ngModel)]="selectedAction" class="text-brandPrimary focus:ring-brandPrimary">
+                    <span class="font-medium text-amber-900">{{ 'DEACTIVATION.ACTION_REPLAN' | translate }}</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" name="action" value="ignore" [(ngModel)]="selectedAction" class="text-brandPrimary focus:ring-brandPrimary">
+                    <span class="text-amber-700">{{ 'DEACTIVATION.ACTION_IGNORE' | translate }}</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -119,13 +148,16 @@ export class DeactivationDialogComponent implements OnInit {
   @Output() deactivated = new EventEmitter<void>();
 
   companyService = inject(CompanyService);
+  sprintPlanningService = inject(SprintPlanningService);
   toastService = inject(ToastService);
   translateService = inject(TranslateService);
+  router = inject(Router);
 
   isLoading = signal<boolean>(false);
   isExecuting = signal<boolean>(false);
   analysisResult = signal<any>(null);
   reason = '';
+  selectedAction: 'replan' | 'ignore' = 'replan';
 
   ngOnInit() {
     if (this.isOpen && this.employeeId) {
@@ -163,8 +195,26 @@ export class DeactivationDialogComponent implements OnInit {
       const req: DeactivateEmployeeRequest = { reason: this.reason.trim() || undefined };
       const res = await this.companyService.deactivateEmployee(this.employeeId, req);
       
-      this.toastService.show(this.translateService.instant('DEACTIVATION.SUCCESS'), 'success');
-      this.deactivated.emit();
+      if (this.analysisResult()?.hasPlannedSprintTasks && this.selectedAction === 'replan') {
+        const sprints = this.analysisResult()?.affectedSprints || [];
+        for (const s of sprints) {
+          try {
+            await this.sprintPlanningService.cancelSprint(s.projectId, s.sprintId);
+          } catch (err) {
+            console.error('Failed to cancel sprint', s.sprintId, err);
+          }
+        }
+        
+        this.toastService.show(this.translateService.instant('DEACTIVATION.SUCCESS'), 'success');
+        this.deactivated.emit();
+        
+        if (sprints.length > 0) {
+          this.router.navigate([`/projects/${sprints[0].projectId}/sprints`]);
+        }
+      } else {
+        this.toastService.show(this.translateService.instant('DEACTIVATION.SUCCESS'), 'success');
+        this.deactivated.emit();
+      }
     } catch (e: any) {
       console.error(e);
       const msg = e?.response?.data?.message || this.translateService.instant('DEACTIVATION.ERROR_DEACTIVATE');

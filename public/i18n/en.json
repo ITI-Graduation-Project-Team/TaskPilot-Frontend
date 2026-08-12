@@ -617,6 +617,7 @@
     "UNDER_REVIEW": "Under Review",
     "COMPLETED": "Completed",
     "BACK_TO_SPRINTS": "Back to Sprints",
+    "CANCEL_SPRINT": "Cancel Sprint",
     "WORKSPACE": "Workspace",
     "MANAGE_MONITOR": "Manage and monitor",
     "ASSIGN_TASKS": "Assign Tasks",
@@ -815,7 +816,12 @@
     "ERROR_DEACTIVATE": "Failed to deactivate employee.",
     "DEACTIVATED": "Deactivated",
     "ACTIONS": "Actions",
-    "TOOLTIP": "Deactivate"
+    "TOOLTIP": "Deactivate",
+    "PLANNED_SPRINT_WARNING": "Employee has tasks in planned sprints",
+    "PLANNED_SPRINT_DESC": "The following sprints will be affected:",
+    "ACTION_REPLAN": "Cancel & Replan affected sprints (Recommended)",
+    "ACTION_IGNORE": "Proceed (Tasks will be unassigned)",
+    "TASKS_COUNT": "Tasks"
   },
   "EMPLOYEES": {
     "TITLE": "Employees Directory",

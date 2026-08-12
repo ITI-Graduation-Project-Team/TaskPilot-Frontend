@@ -815,7 +815,12 @@
     "ERROR_DEACTIVATE": "فشل في تجميد حساب الموظف.",
     "DEACTIVATED": "مجمد",
     "ACTIONS": "إجراءات",
-    "TOOLTIP": "تجميد"
+    "TOOLTIP": "تجميد",
+    "PLANNED_SPRINT_WARNING": "هذا الموظف لديه مهام في سبرينت مخطط",
+    "PLANNED_SPRINT_DESC": "السبرينتات التالية ستتأثر:",
+    "ACTION_REPLAN": "إلغاء وإعادة التخطيط (موصى به)",
+    "ACTION_IGNORE": "الاستمرار (المهام ستصبح بدون تعيين)",
+    "TASKS_COUNT": "مهام"
   },
   "EMPLOYEES": {
     "TITLE": "دليل الموظفين",

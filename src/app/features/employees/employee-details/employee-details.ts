@@ -24,6 +24,10 @@ export class EmployeeDetailsComponent implements OnInit {
 
   // Deactivation Dialog State
   isDeactivateModalOpen = signal(false);
+  
+  // Termination Modal State
+  isTerminateModalOpen = signal(false);
+  isTerminating = signal(false);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -89,5 +93,29 @@ export class EmployeeDetailsComponent implements OnInit {
   onDeactivated() {
     this.closeDeactivateModal();
     this.loadEmployeeDetails(this.employeeId()); // Reload to show deactivated status
+  }
+
+  openTerminateModal() {
+    this.isTerminateModalOpen.set(true);
+  }
+
+  closeTerminateModal() {
+    this.isTerminateModalOpen.set(false);
+  }
+
+  async confirmTermination() {
+    this.isTerminating.set(true);
+    try {
+      await this.companyService.terminateEmployee(this.employeeId(), { reason: 'Terminated by admin' });
+      this.toastService.show('Employee terminated successfully.', 'success');
+      this.closeTerminateModal();
+      this.router.navigate(['/employees']);
+    } catch (e: any) {
+      console.error(e);
+      const msg = e?.response?.data?.message || 'Failed to terminate employee.';
+      this.toastService.show(msg, 'error');
+    } finally {
+      this.isTerminating.set(false);
+    }
   }
 }
