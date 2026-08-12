@@ -84,6 +84,41 @@ export class ProjectStateService {
     return this.profilePromise;
   }
 
+  async loadProjectById(projectId: string) {
+    try {
+      const { data } = await apiClient.get<any>('/Projects/' + projectId);
+      const p = data.data || data;
+      if (p) {
+        const projectInfo: ProjectInfo = {
+          id: p.id,
+          name: p.name || p.nameEn || '',
+          nameEn: p.nameEn || p.name || '',
+          nameAr: p.nameAr || p.name || '',
+          description: p.description || p.descriptionEn || '',
+          descriptionEn: p.descriptionEn || p.description || '',
+          descriptionAr: p.descriptionAr || p.description || '',
+          companyId: p.companyId,
+          managerId: p.managerId,
+          techStack: p.techStack || [],
+          platformTargets: p.platformTargets || [],
+          projectType: p.projectType || '',
+          status: p.status || 'Active',
+          teamSize: p.teamSize || 0,
+          totalUserStories: p.totalUserStories || 0,
+          completedSprintsCount: p.completedSprintsCount || 0,
+          activeSprintsCount: p.activeSprintsCount || 0
+        };
+        
+        this._projects.update(projects => {
+          if (projects.find(x => String(x.id).toLowerCase() === String(projectInfo.id).toLowerCase())) return projects;
+          return [...projects, projectInfo];
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to load single project:', e);
+    }
+  }
+
   async initializeState() {
     this._loading.set(true);
     try {
@@ -103,7 +138,17 @@ export class ProjectStateService {
         const companyName = profile.companyName || profile.CompanyName || '';
         this._companyName.set(companyName);
 
-        await this.loadProjects();
+        let savedId = null;
+        if (typeof localStorage !== 'undefined') {
+          savedId = localStorage.getItem('selectedProjectId');
+        }
+
+        if (savedId && isPM) {
+          this._selectedProjectId.set(savedId);
+          await this.loadProjectById(savedId);
+        } else {
+          await this.loadProjects();
+        }
       }
     } catch (e) {
       console.warn('Failed to initialize ProjectStateService:', e);
