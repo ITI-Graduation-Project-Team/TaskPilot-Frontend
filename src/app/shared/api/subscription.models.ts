@@ -21,6 +21,38 @@ export interface SubscriptionPlanDto {
   hasAdvancedAnalytics: boolean;
   hasTrial: boolean;
   trialDays: number;
+  maxStorageMb: number;
+  maxTokensPerMonth: number;
+}
+
+export interface CreateSubscriptionPlanDto {
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  currency: string;
+  maxProjects: number;
+  maxUsersPerProject: number;
+  maxStorageMb: number;
+  hasAi: boolean;
+  hasAdvancedAnalytics: boolean;
+  hasTrial: boolean;
+  trialDays: number;
+  maxTokensPerMonth: number;
+}
+
+export interface UpdateSubscriptionPlanDto {
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  currency: string;
+  maxProjects: number;
+  maxUsersPerProject: number;
+  maxStorageMb: number;
+  hasAi: boolean;
+  hasAdvancedAnalytics: boolean;
+  hasTrial: boolean;
+  trialDays: number;
+  maxTokensPerMonth: number;
 }
 
 /** Matches the backend `UserSubscriptionDto`. */
