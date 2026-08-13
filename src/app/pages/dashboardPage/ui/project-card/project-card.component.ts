@@ -83,7 +83,18 @@ export interface ProjectStats {
       <div class="space-y-4">
         <!-- Status / Active Sprint pill -->
         <div class="flex items-center">
-          @if (project().status === 'Completed') {
+          @if (!isSetupReady()) {
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border"
+                 [class.bg-primary-foreground]="project().setupStatus !== 'Failed'"
+                 [class.text-primary]="project().setupStatus !== 'Failed'"
+                 [class.border-primary]="project().setupStatus !== 'Failed'"
+                 [class.bg-error]="project().setupStatus === 'Failed'"
+                 [class.text-white]="project().setupStatus === 'Failed'"
+                 [class.border-error]="project().setupStatus === 'Failed'">
+              <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+              {{ setupLabel() }}
+            </div>
+          } @else if (project().status === 'Completed') {
             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
               {{ 'PROJECT_CARD.COMPLETED' | translate }}
             </div>
@@ -124,7 +135,7 @@ export interface ProjectStats {
               <!-- Tasks Count -->
               <div class="flex items-center gap-1 text-text-secondary hover:text-text-primary transition-colors" [title]="'PROJECT_CARD.TASKS' | translate">
                 <svg class="w-4 h-4 text-text-secondary/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 <span class="text-xs font-bold font-mono">{{ project().totalUserStories ?? 0 }}</span>
               </div>
@@ -144,7 +155,7 @@ export interface ProjectStats {
       <!-- Actions -->
       <div class="grid grid-cols-2 gap-2 mt-5">
         <button (click)="onSprintClick($event)" class="py-2 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 group/btn">
-          <span>{{ 'PROJECT_CARD.SPRINT_BOARD' | translate }}</span>
+          <span>{{ isSetupReady() ? ('PROJECT_CARD.SPRINT_BOARD' | translate) : 'Resume setup' }}</span>
           <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
         <button (click)="onBacklogClick($event)" class="py-2 px-3 bg-sidebar hover:bg-primary/10 border border-border hover:border-primary/20 text-text-primary text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5">
@@ -167,6 +178,12 @@ export class ProjectCardComponent {
   isMenuOpen = signal(false);
 
   deleteProject = output<string>();
+
+  isSetupReady = computed(() => ['Ready', 'ReadyWithWarnings'].includes(this.project().setupStatus || ''));
+  setupLabel = computed(() => ({
+    WbsQueued: 'Generation queued', WbsGenerating: 'Generating', EnrichingSkills: 'Mapping skills',
+    Failed: 'Needs attention', ReadyForWbs: 'Ready for WBS', NeedsTechStack: 'Setup required'
+  }[this.project().setupStatus || 'NeedsTechStack'] || 'Resume setup'));
 
   get currentLang() {
     return this.translate.currentLang() || 'en';
@@ -247,12 +264,16 @@ export class ProjectCardComponent {
   onSprintClick(event: Event) {
     event.stopPropagation();
     this.projectState.setSelectedProject(this.project().id);
-    this.router.navigate(['/dashboard', 'sprint']);
+    this.router.navigate(this.isSetupReady()
+      ? ['/dashboard', 'sprint']
+      : ['/dashboard', 'projects', this.project().id, 'setup']);
   }
 
   onBacklogClick(event: Event) {
     event.stopPropagation();
     this.projectState.setSelectedProject(this.project().id);
-    this.router.navigate(['/dashboard', 'backlog']);
+    this.router.navigate(this.isSetupReady()
+      ? ['/dashboard', 'backlog']
+      : ['/dashboard', 'projects', this.project().id, 'setup']);
   }
 }

@@ -1,12 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DashboardService } from '../../services/dashboard.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
-import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { TranslatePipe } from '@ngx-translate/core';
-import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AiChatStateService } from '../../services/ai-chat-state.service';
 
@@ -17,7 +15,6 @@ import { AiChatStateService } from '../../services/ai-chat-state.service';
   imports: [
     CommonModule,
     AiChatModalComponent,
-    TechStackAdvisorModalComponent,
     TranslatePipe
   ],
   styles: [`
@@ -127,18 +124,6 @@ import { AiChatStateService } from '../../services/ai-chat-state.service';
     }
 
     <!-- ─── FULL-PAGE TECH STACK ADVISOR ─── -->
-    @if (isTechStackAdvisorOpen() && advisorProjectId()) {
-      <div class="absolute -inset-6 md:-inset-8 z-10 bg-background flex flex-col overflow-hidden" style="animation: fadeIn 0.2s ease both;">
-        <app-tech-stack-advisor-modal
-          class="flex-1 overflow-hidden"
-          [embedded]="true"
-          [projectId]="advisorProjectId()!"
-          (close)="onTechStackAdvisorClose()"
-          (completed)="onTechStackAdvisorCompleted($event)">
-        </app-tech-stack-advisor-modal>
-      </div>
-    }
-
   `
 })
 export class CreateProjectComponent {
@@ -146,16 +131,10 @@ export class CreateProjectComponent {
   private aiChatState = inject(AiChatStateService);
   private projectState = inject(ProjectStateService);
   private router = inject(Router);
-  private aiRequirements = inject(AiRequirementsService);
   private toastService = inject(ToastService);
 
   get isLocalAiChatOpen() { return this.aiChatState.isLocalAiChatOpen; }
   
-  isTechStackAdvisorOpen = signal(false);
-  advisorProjectId = signal<string | null>(null);
-  aiDraft = signal<any>(null);
-  chatId = signal<string>('');
-
   readonly featureChips = [
     'CREATE_PROJECT.REQ_INTERVIEW',
     'CREATE_PROJECT.PROJ_SAVED',
@@ -183,51 +162,15 @@ export class CreateProjectComponent {
 
   async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
     this.aiChatState.clearChat();
-    this.aiDraft.set(event.draft);
-    this.chatId.set(event.chatId);
-    this.advisorProjectId.set(event.projectId);
-    this.isTechStackAdvisorOpen.set(true);
-  }
-
-  async onTechStackAdvisorClose() {
-    this.isTechStackAdvisorOpen.set(false);
-    await this.confirmAndSaveProject();
-  }
-
-  async onTechStackAdvisorCompleted(projectId: string) {
-    this.isTechStackAdvisorOpen.set(false);
-    await this.confirmAndSaveProject(projectId);
-  }
-
-  async confirmAndSaveProject(explicitProjectId?: string) {
-    const draft = this.aiDraft();
-    if (!draft && !explicitProjectId) {
-      this.projectState.loadProjects();
-      this.router.navigate(['/dashboard', 'backlog']);
-      return;
-    }
-
     try {
-      const newProjectId = explicitProjectId || this.advisorProjectId();
-      const existingIds = this.projectState.projects().map(p => p.id);
-
       await this.projectState.loadProjects();
-
-      if (newProjectId) {
-        this.projectState.setSelectedProject(newProjectId);
-      } else {
-        const newProject = this.projectState.projects().find(p => !existingIds.includes(p.id));
-        if (newProject) {
-          this.projectState.setSelectedProject(newProject.id);
-        }
-      }
-
-      this.router.navigate(['/dashboard', 'backlog']);
+      this.projectState.setSelectedProject(event.projectId);
+      this.toastService.show('Project created. Continue with the architecture setup.', 'success');
+      await this.router.navigate(['/dashboard', 'projects', event.projectId, 'setup']);
     } catch (e) {
       console.error(e);
-      this.toastService.show('Failed to save project details. Redirecting...', 'error');
-      this.projectState.loadProjects();
-      this.router.navigate(['/dashboard', 'backlog']);
+      this.toastService.show('Project was created, but setup could not be opened.', 'error');
+      await this.router.navigate(['/dashboard', 'projects']);
     }
   }
 }

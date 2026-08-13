@@ -20,6 +20,7 @@ export interface ProjectInfo {
   totalUserStories?: number;
   completedSprintsCount?: number;
   activeSprintsCount?: number;
+  setupStatus?: string;
 }
 
 @Injectable({
@@ -106,7 +107,8 @@ export class ProjectStateService {
           teamSize: p.teamSize || 0,
           totalUserStories: p.totalUserStories || 0,
           completedSprintsCount: p.completedSprintsCount || 0,
-          activeSprintsCount: p.activeSprintsCount || 0
+          activeSprintsCount: p.activeSprintsCount || 0,
+          setupStatus: p.setupStatus || 'NeedsTechStack'
         };
         
         this._projects.update(projects => {
@@ -138,17 +140,10 @@ export class ProjectStateService {
         const companyName = profile.companyName || profile.CompanyName || '';
         this._companyName.set(companyName);
 
-        let savedId = null;
-        if (typeof localStorage !== 'undefined') {
-          savedId = localStorage.getItem('selectedProjectId');
-        }
-
-        if (savedId && isPM) {
-          this._selectedProjectId.set(savedId);
-          await this.loadProjectById(savedId);
-        } else {
-          await this.loadProjects();
-        }
+        // Always load the complete accessible list. loadProjects() restores the
+        // saved selection after fetching, so a saved project must not short-circuit
+        // the dropdown to a single item.
+        await this.loadProjects();
       }
     } catch (e) {
       console.warn('Failed to initialize ProjectStateService:', e);
@@ -172,12 +167,9 @@ export class ProjectStateService {
       const { data } = await apiClient.get<any>(endpoint);
       const projects: any[] = data.data || [];
       
-      // Filter to ensure the PM only sees projects they actually manage
-      const accessibleProjects = isPM
-        ? projects.filter(p => p.managerId === userId)
-        : projects;
-
-      const filtered: ProjectInfo[] = accessibleProjects.map(p => ({
+      // The API enforces project access. Avoid filtering GUIDs again in the client,
+      // where casing differences could incorrectly hide valid PM projects.
+      const filtered: ProjectInfo[] = projects.map(p => ({
         id: p.id,
         name: p.name || p.nameEn || '',
         nameEn: p.nameEn || p.name || '',
@@ -194,7 +186,8 @@ export class ProjectStateService {
         teamSize: p.teamSize || 0,
         totalUserStories: p.totalUserStories || 0,
         completedSprintsCount: p.completedSprintsCount || 0,
-        activeSprintsCount: p.activeSprintsCount || 0
+        activeSprintsCount: p.activeSprintsCount || 0,
+        setupStatus: p.setupStatus || 'NeedsTechStack'
       }));
 
       this._projects.set(filtered);
@@ -227,13 +220,24 @@ export class ProjectStateService {
       const companyId = this._userCompanyId();
       if (!userId) return { projects: [], totalCount: 0 };
 
-      const endpoint = (isPM && companyId) 
-        ? `/Projects/company/${companyId}/paged?page=${page}&pageSize=${pageSize}` 
+      // The deployed company/paged endpoint can include projects managed by other
+      // PMs. Use the ownership-filtered company endpoint as the source of truth and
+      // paginate its result locally until every environment runs the fixed backend.
+      const isProjectManagerRequest = isPM && !!companyId;
+      const endpoint = isProjectManagerRequest
+        ? `/Projects/company/${companyId}`
         : `/employees/${userId}/projects/paged?page=${page}&pageSize=${pageSize}`;
-        
+
       const { data } = await apiClient.get<any>(endpoint);
-      const items: any[] = data.data?.items || [];
-      const totalCount = data.data?.totalItems || 0;
+      const allItems: any[] = isProjectManagerRequest
+        ? (data.data || [])
+        : (data.data?.items || []);
+      const totalCount = isProjectManagerRequest
+        ? allItems.length
+        : (data.data?.totalItems || 0);
+      const items = isProjectManagerRequest
+        ? allItems.slice((page - 1) * pageSize, page * pageSize)
+        : allItems;
       
       const filtered: ProjectInfo[] = items.map(p => ({
         id: p.id,
@@ -252,7 +256,8 @@ export class ProjectStateService {
         teamSize: p.teamSize || 0,
         totalUserStories: p.totalUserStories || 0,
         completedSprintsCount: p.completedSprintsCount || 0,
-        activeSprintsCount: p.activeSprintsCount || 0
+        activeSprintsCount: p.activeSprintsCount || 0,
+        setupStatus: p.setupStatus || 'NeedsTechStack'
       }));
       
       return { projects: filtered, totalCount };

@@ -20,6 +20,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 import { ToastService } from '../../../../shared/services/toast.service';
 
 import { AiChatStateService } from '../../services/ai-chat-state.service';
+import { getRequirementSessionUiState } from './requirement-session-state';
 
 @Component({
   selector: 'app-ai-chat-modal',
@@ -630,26 +631,18 @@ export class AiChatModalComponent implements AfterViewChecked {
     this.selectedFileName.set('');
   }
 
-  async pollStatus(chatId: string) {
+  async pollStatus(chatId: string): Promise<boolean> {
     try {
       const res = await this.aiRequirements.getSessionStatus(chatId);
       const data = res.data || res;
       if (data) {
-        const scorePercentage = Math.round(
-          (data.completenessReport?.score || data.CompletenessReport?.Score || 0) * 100,
-        );
+        const sessionState = getRequirementSessionUiState(data);
+        const scorePercentage = sessionState.completenessScore;
         this.completenessScore.set(scorePercentage);
 
-        const pool = data.questionPool || data.QuestionPool || [];
-        const unanswered = pool.filter((q: any) => !q.isAnswered && !q.IsAnswered);
-        const questionsList = unanswered.map((q: any) => q.question || q.Question);
+        const questionsList = sessionState.pendingQuestions;
         this.clarifyingQuestions.set(questionsList);
-
-        const isReady =
-          data.status === 'Planning' || data.Status === 'Planning' ||
-          unanswered.length === 0 || scorePercentage >= 85 ||
-          data.completenessReport?.readyForFinalization === true;
-        this.isReadyForFinalization.set(isReady);
+        this.isReadyForFinalization.set(sessionState.readyForFinalization);
 
         const sprintDays = data.suggestedSprintDurationInDays || data.sprintDurationInDays || data.SprintDurationInDays || null;
         const sprintHours = data.suggestedTargetSprintHours || data.targetSprintHours || data.TargetSprintHours || null;
@@ -685,10 +678,13 @@ export class AiChatModalComponent implements AfterViewChecked {
           }
         }
         this._shouldScroll = true;
+        return sessionState.readyForFinalization;
       }
     } catch (err) {
       console.warn('Failed to fetch session completeness status:', err);
     }
+    this.isReadyForFinalization.set(false);
+    return false;
   }
 
   get suggestedSprintDuration() { return this.aiChatState.suggestedSprintDuration; }
@@ -740,6 +736,19 @@ export class AiChatModalComponent implements AfterViewChecked {
 
     this.isGeneratingDraft.set(true);
     try {
+      // Re-read the authoritative session immediately before finalization. This
+      // prevents a stale 85%/no-visible-questions UI state from calling finalize
+      // before the backend has built FinalRequirements.
+      const isPrepared = await this.pollStatus(activeChatId);
+      if (!isPrepared) {
+        this.showNamePrompt.set(false);
+        this.toastService.show(
+          'Requirements are not ready yet. Please complete the remaining requirements questions and try again.',
+          'error',
+        );
+        return;
+      }
+
       const res = await this.aiRequirements.finalizeSession(activeChatId, {
         projectNameEn: nameEn, projectNameAr: nameAr,
         companyId: companyId,
