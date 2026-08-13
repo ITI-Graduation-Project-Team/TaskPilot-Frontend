@@ -20,6 +20,7 @@ export interface ProjectInfo {
   totalUserStories?: number;
   completedSprintsCount?: number;
   activeSprintsCount?: number;
+  setupStatus?: string;
 }
 
 @Injectable({
@@ -106,7 +107,8 @@ export class ProjectStateService {
           teamSize: p.teamSize || 0,
           totalUserStories: p.totalUserStories || 0,
           completedSprintsCount: p.completedSprintsCount || 0,
-          activeSprintsCount: p.activeSprintsCount || 0
+          activeSprintsCount: p.activeSprintsCount || 0,
+          setupStatus: p.setupStatus || 'NeedsTechStack'
         };
         
         this._projects.update(projects => {
@@ -194,7 +196,8 @@ export class ProjectStateService {
         teamSize: p.teamSize || 0,
         totalUserStories: p.totalUserStories || 0,
         completedSprintsCount: p.completedSprintsCount || 0,
-        activeSprintsCount: p.activeSprintsCount || 0
+        activeSprintsCount: p.activeSprintsCount || 0,
+        setupStatus: p.setupStatus || 'NeedsTechStack'
       }));
 
       this._projects.set(filtered);
@@ -252,7 +255,8 @@ export class ProjectStateService {
         teamSize: p.teamSize || 0,
         totalUserStories: p.totalUserStories || 0,
         completedSprintsCount: p.completedSprintsCount || 0,
-        activeSprintsCount: p.activeSprintsCount || 0
+        activeSprintsCount: p.activeSprintsCount || 0,
+        setupStatus: p.setupStatus || 'NeedsTechStack'
       }));
       
       return { projects: filtered, totalCount };

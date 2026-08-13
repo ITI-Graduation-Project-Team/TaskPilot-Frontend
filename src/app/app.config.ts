@@ -8,7 +8,7 @@ import {
   withInterceptors
 } from '@angular/common/http';
 
-import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { loadingInterceptor } from '../app/shared/api/interceptors/loading-interceptor';
@@ -25,6 +25,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(
       routes,
+      withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
       withViewTransitions({ skipInitialTransition: true })
     ),

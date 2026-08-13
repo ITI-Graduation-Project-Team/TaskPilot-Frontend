@@ -5,12 +5,12 @@ import { BacklogService, BacklogDto, TaskItemDto, TaskPayload, UserStoryDto, Use
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-planning-modal.component';
-import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AiActivityComponent, AiActivityPhase } from '../../../../shared/ui/ai-activity/ai-activity.component';
+import { Router } from '@angular/router';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -51,7 +51,7 @@ const EMPTY_TASK: TaskFormModel = {
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent, AiActivityComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, ProjectAiChatComponent, AiActivityComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       @if (isGeneratingWbs()) {
@@ -226,8 +226,8 @@ const EMPTY_TASK: TaskFormModel = {
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               <div class="mt-5 flex flex-wrap justify-center gap-3">
                 <button type="button" (click)="openStoryModal()" class="rounded-xl border border-border px-4 py-2.5 text-xs font-bold hover:bg-sidebar">Add story manually</button>
-                <button type="button" (click)="generateWbs()" [disabled]="isGeneratingWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover disabled:opacity-50">
-                  {{ isGeneratingWbs() ? 'Generating backlog...' : 'Generate WBS with AI' }}
+                <button type="button" (click)="generateWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">
+                  Open project setup
                 </button>
               </div>
             }
@@ -410,10 +410,6 @@ const EMPTY_TASK: TaskFormModel = {
       <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
     }
 
-    @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {
-      <app-tech-stack-advisor-modal [projectId]="projectState.selectedProjectId()!" (close)="isTechStackAdvisorOpen.set(false)" (completed)="onAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
-    }
-
     <app-project-ai-chat 
         *ngIf="projectState.selectedProjectId()" 
         [projectId]="projectState.selectedProjectId()!" 
@@ -426,6 +422,7 @@ const EMPTY_TASK: TaskFormModel = {
 export class BacklogViewComponent implements OnInit {
   @Output() navigateToTeam = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
+  private router = inject(Router);
   private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
@@ -437,7 +434,6 @@ export class BacklogViewComponent implements OnInit {
   isStoryModalOpen = signal(false);
   isTaskModalOpen = signal(false);
   isSprintPlanningModalOpen = signal(false);
-  isTechStackAdvisorOpen = signal(false);
   isGeneratingWbs = signal(false);
   wbsPhases = signal<AiActivityPhase[]>([]);
   isChatOpen = signal(false);
@@ -591,33 +587,7 @@ export class BacklogViewComponent implements OnInit {
   async generateWbs() {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
-
-    if (!this.selectedProjectHasStack()) {
-      this.isTechStackAdvisorOpen.set(true);
-      return;
-    }
-
-    this.wbsPhases.set(this.createWbsPhases('generating'));
-    this.isGeneratingWbs.set(true);
-    try {
-      await this.aiRequirementsService.generateWbs(projId, phase => {
-        this.wbsPhases.set(this.createWbsPhases(phase));
-      });
-      this.wbsPhases.set(this.createWbsPhases('loading'));
-      this.toastService.show('AI WBS user stories and task items generated successfully.', 'success');
-      await this.fetchBacklog(projId);
-      this.wbsPhases.set(this.createWbsPhases('complete'));
-    } catch (e: any) {
-      this.wbsPhases.update(phases => phases.map(phase => phase.status === 'active' ? { ...phase, status: 'error' } : phase));
-      if (e.message === 'Network Error' || e.code === 'ECONNABORTED' || e.code === 'ERR_NETWORK' || e.status === 504 || e.status === 0) {
-        this.toastService.show('The AI is taking longer than expected. Generation is continuing in the background. Please refresh in a minute.', 'info');
-      } else {
-        const message = e?.response?.data?.message || e?.response?.data?.error?.message || e?.message || 'Check backend API logs.';
-        this.toastService.show(`Failed to generate WBS: ${message}`, 'error');
-      }
-    } finally {
-      this.isGeneratingWbs.set(false);
-    }
+    await this.router.navigate(['/dashboard', 'projects', projId, 'setup']);
   }
 
   private createWbsPhases(active: 'generating' | 'enriching' | 'loading' | 'complete'): AiActivityPhase[] {
@@ -632,13 +602,6 @@ export class BacklogViewComponent implements OnInit {
       label: labels[index],
       status: index < activeIndex ? 'complete' : index === activeIndex ? 'active' : 'pending'
     }));
-  }
-
-  async onAdvisorCompleted(projectId: string) {
-    this.isTechStackAdvisorOpen.set(false);
-    await this.projectState.loadProjects();
-    this.projectState.setSelectedProject(projectId);
-    await this.fetchBacklog(projectId);
   }
 
   toggleStory(storyId: string) {

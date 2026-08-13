@@ -14,7 +14,10 @@ export type NotificationType =
   | 'PaymentSuccess'
   | 'PaymentFailed'
   | 'BugReported'
-  | 'SprintRiskDetected';
+  | 'SprintRiskDetected'
+  | 'BacklogGenerated'
+  | 'ProjectSetupCompleted'
+  | 'ProjectSetupFailed';
 
 export interface NotificationDto {
   id: string;
