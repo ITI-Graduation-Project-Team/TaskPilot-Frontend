@@ -24,6 +24,7 @@ describe('normalizeProjectSetup', () => {
     expect(setup.techStack.suggestion?.primaryStack.reasoning).toBe('Matches the team');
     expect(setup.techStack.suggestion?.idealStack.reasoning).toBe('Best fit');
     expect(setup.techStack.suggestion?.platformTargets).toEqual(['Web']);
+    expect(setup.techStack.suggestion?.gapAnalysis).toEqual(['Redis']);
   });
 
   it('drops an incomplete suggestion instead of exposing unsafe nested values', () => {

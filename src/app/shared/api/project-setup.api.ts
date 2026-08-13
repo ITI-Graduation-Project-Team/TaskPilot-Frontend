@@ -62,12 +62,17 @@ interface ApiResponse<T> { data: T; succeeded: boolean; message?: string; }
 const value = (source: any, camelCase: string, pascalCase: string): any =>
   source?.[camelCase] ?? source?.[pascalCase];
 
+const stringList = (source: unknown): string[] =>
+  Array.isArray(source)
+    ? source.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : [];
+
 function normalizeRecommendedStack(source: any): RecommendedStackDto | undefined {
   if (!source || typeof source !== 'object') return undefined;
   const techStack = value(source, 'techStack', 'TechStack');
   return {
     description: value(source, 'description', 'Description') ?? '',
-    techStack: Array.isArray(techStack) ? techStack.filter((item): item is string => typeof item === 'string') : [],
+    techStack: stringList(techStack),
     reasoning: value(source, 'reasoning', 'Reasoning') ?? '',
   };
 }
@@ -84,8 +89,8 @@ export function normalizeProjectSetup(source: any): ProjectSetupDto {
   const suggestion = primaryStack && idealStack ? {
     primaryStack,
     idealStack,
-    gapAnalysis: value(suggestionSource, 'gapAnalysis', 'GapAnalysis') ?? [],
-    platformTargets: value(suggestionSource, 'platformTargets', 'PlatformTargets') ?? [],
+    gapAnalysis: stringList(value(suggestionSource, 'gapAnalysis', 'GapAnalysis')),
+    platformTargets: stringList(value(suggestionSource, 'platformTargets', 'PlatformTargets')),
     projectType: value(suggestionSource, 'projectType', 'ProjectType') ?? 'Other',
   } : undefined;
 
@@ -108,8 +113,8 @@ export function normalizeProjectSetup(source: any): ProjectSetupDto {
     techStack: {
       status: value(techStackSource, 'status', 'Status') ?? 'NotStarted',
       suggestion,
-      confirmedStack: Array.isArray(confirmedStack) ? confirmedStack : [],
-      platforms: Array.isArray(platforms) ? platforms : [],
+      confirmedStack: stringList(confirmedStack),
+      platforms: stringList(platforms),
       projectType: value(techStackSource, 'projectType', 'ProjectType') ?? '',
       error: value(techStackSource, 'error', 'Error'),
     },

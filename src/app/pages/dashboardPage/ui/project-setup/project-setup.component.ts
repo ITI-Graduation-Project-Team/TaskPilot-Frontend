@@ -128,6 +128,33 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
               </button>
             </div>
 
+            @if (suggestion.gapAnalysis.length > 0) {
+              <aside class="mt-5 overflow-hidden rounded-2xl border border-warning/30 bg-warning/10" aria-labelledby="gap-analysis-heading">
+                <div class="flex flex-col gap-2 border-b border-warning/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-warning">Team readiness</p>
+                    <h3 id="gap-analysis-heading" class="mt-1 text-base font-extrabold text-text-primary">Capability gaps to plan for</h3>
+                  </div>
+                  <span class="inline-flex min-h-8 w-fit items-center rounded-full border border-warning/30 bg-surface px-3 text-xs font-extrabold text-text-primary">
+                    {{ suggestion.gapAnalysis.length }} {{ suggestion.gapAnalysis.length === 1 ? 'gap' : 'gaps' }}
+                  </span>
+                </div>
+                <ul class="grid gap-px bg-warning/15 sm:grid-cols-2" aria-label="Skills and technologies missing from the current team">
+                  @for (gap of suggestion.gapAnalysis; track gap) {
+                    <li class="flex min-h-14 items-start gap-3 bg-surface/95 px-5 py-4 text-sm leading-5 text-text-primary">
+                      <svg class="mt-0.5 h-4 w-4 shrink-0 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+                      </svg>
+                      <span>{{ gap }}</span>
+                    </li>
+                  }
+                </ul>
+                <p class="px-5 py-3 text-xs leading-5 text-text-secondary">
+                  These gaps compare the ideal architecture with current team capabilities. You can still confirm a different stack below.
+                </p>
+              </aside>
+            }
+
             <div class="mt-5 rounded-2xl border border-border bg-sidebar p-5">
               <h3 class="text-sm font-extrabold text-text-primary">Stack to confirm</h3>
               <div class="mt-3 flex flex-wrap gap-2">
