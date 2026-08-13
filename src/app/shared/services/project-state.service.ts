@@ -140,17 +140,10 @@ export class ProjectStateService {
         const companyName = profile.companyName || profile.CompanyName || '';
         this._companyName.set(companyName);
 
-        let savedId = null;
-        if (typeof localStorage !== 'undefined') {
-          savedId = localStorage.getItem('selectedProjectId');
-        }
-
-        if (savedId && isPM) {
-          this._selectedProjectId.set(savedId);
-          await this.loadProjectById(savedId);
-        } else {
-          await this.loadProjects();
-        }
+        // Always load the complete accessible list. loadProjects() restores the
+        // saved selection after fetching, so a saved project must not short-circuit
+        // the dropdown to a single item.
+        await this.loadProjects();
       }
     } catch (e) {
       console.warn('Failed to initialize ProjectStateService:', e);
