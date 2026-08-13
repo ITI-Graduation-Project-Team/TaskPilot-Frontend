@@ -749,7 +749,6 @@ export class AiChatModalComponent implements AfterViewChecked {
       });
       const finalizeResult = res.data || res;
       if (finalizeResult && finalizeResult.projectId) {
-        await this.projectState.loadProjects();
         this.showNamePrompt.set(false);
         this.draftGenerated.emit({ projectId: finalizeResult.projectId, draft: finalizeResult, chatId: activeChatId });
       }

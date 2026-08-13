@@ -74,16 +74,14 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         <div class="flex items-center justify-between px-6 py-4 !mt-auto border border-border bg-surface rounded-2xl shadow-sm"
           *ngIf="totalProjects() > 0">
           <div class="text-sm font-medium text-text-secondary hidden sm:block">
-            Showing <span class="font-bold text-text-primary">{{ (currentPage() - 1) * pageSize() + 1 }}</span> 
-            to <span class="font-bold text-text-primary">{{ Math.min(currentPage() * pageSize(), totalProjects()) }}</span> 
-            of <span class="font-bold text-text-primary">{{ totalProjects() }}</span> results
+            {{ 'PAGINATION.PAGE' | translate }} <span class="font-bold text-text-primary">{{ currentPage() }}</span> {{ 'PAGINATION.OF' | translate }} <span class="font-bold text-text-primary">{{ totalPages() }}</span>
           </div>
           
           <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
             <button (click)="prevPage()" [disabled]="currentPage() === 1"
               class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all">
               <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-              <span>Prev</span>
+              <span>{{ 'PAGINATION.PREV' | translate }}</span>
             </button>
             
             <div class="flex items-center gap-1 px-2">
@@ -108,7 +106,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
             <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
               class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all">
-              <span>Next</span>
+              <span>{{ 'PAGINATION.NEXT' | translate }}</span>
               <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
@@ -182,7 +180,7 @@ export class ProjectHubComponent implements OnInit {
     const total = this.totalPages();
     const current = this.currentPage();
     const pages: number[] = [];
-    
+
     if (total <= 7) {
       for (let i = 1; i <= total; i++) pages.push(i);
     } else {
@@ -221,12 +219,12 @@ export class ProjectHubComponent implements OnInit {
   async loadPaginatedProjects() {
     this.isLoading.set(true);
     const { projects, totalCount } = await this.projectState.loadProjectsPaged(this.currentPage(), this.pageSize());
-    
+
     // Apply local filters (tab and search)
     // Wait, backend doesn't filter by status or search. For now we will just load paged and apply client-side filter to the current page.
     // Ideally, the backend should handle filtering too. Let's just use it as is for the page.
     let filtered = projects;
-    
+
     const tab = this.activeTab();
     const query = this.searchQuery().toLowerCase().trim();
 
@@ -245,7 +243,7 @@ export class ProjectHubComponent implements OnInit {
         (p.description || '').toLowerCase().includes(query)
       );
     }
-    
+
     this.paginatedProjects.set(filtered);
     this.totalProjects.set(totalCount);
     this.isLoading.set(false);

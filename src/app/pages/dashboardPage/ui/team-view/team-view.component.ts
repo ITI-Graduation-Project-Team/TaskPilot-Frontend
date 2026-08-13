@@ -25,70 +25,10 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
       </div>
 
       <!-- Main Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="gap-6">
         
-        <!-- Left Side: Invitations -->
-        <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4">
-          <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">{{ 'TEAM.INVITE_MEMBERS' | translate }}</h3>
-          <p class="text-xs text-text-secondary">{{ 'TEAM.INVITE_MEMBERS_DESC' | translate }}</p>
-          
-          <form (submit)="onSendInvitations($event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">{{ 'TEAM.EMAILS' | translate }}</label>
-              
-              <!-- Chips Container simulating a textarea/input box -->
-              <div class="flex flex-wrap gap-2 w-full bg-background border border-border rounded-xl p-3 min-h-[110px] items-start align-content-start focus-within:ring-2 focus-within:ring-primary/20 transition-all cursor-text"
-                   (click)="emailField.focus()">
-                
-                @for (email of emailsList(); track email; let idx = $index) {
-                  <span [class.bg-red-500/10]="invalidEmailsMap()[email.toLowerCase()]"
-                        [class.border-red-500/20]="invalidEmailsMap()[email.toLowerCase()]"
-                        [class.text-red-500]="invalidEmailsMap()[email.toLowerCase()]"
-                        [class.bg-primary/10]="!invalidEmailsMap()[email.toLowerCase()]"
-                        [class.border-primary/25]="!invalidEmailsMap()[email.toLowerCase()]"
-                        [class.text-primary]="!invalidEmailsMap()[email.toLowerCase()]"
-                        class="inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-xs font-semibold animate-[scaleUp_0.15s_ease_both]">
-                    <span>{{ email }}</span>
-                    <button type="button" (click)="removeEmail(idx); $event.stopPropagation()"
-                            class="hover:bg-primary/20 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold transition-all">
-                      ✕
-                    </button>
-                  </span>
-                }
-                
-                <input type="email" [value]="currentEmailInput()" (input)="currentEmailInput.set(emailField.value)" #emailField
-                       (keydown)="onEmailInputKeydown($event)" (blur)="addEmail(emailField.value)"
-                       [placeholder]="'TEAM.EMAIL_PLACEHOLDER' | translate"
-                       class="flex-1 min-w-[180px] bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-text-secondary/50 py-1"
-                       autocomplete="off">
-              </div>
-              @for (email of emailsList(); track email) {
-                @if (invalidEmailsMap()[email.toLowerCase()]) {
-                  <p class="text-[11px] text-red-500 font-semibold mt-1 flex items-center gap-1 animate-[fadeIn_0.2s_ease_both]">
-                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    {{ email }}: {{ invalidEmailsMap()[email.toLowerCase()] }}
-                  </p>
-                }
-              }
-              <p class="text-[10px] text-text-secondary mt-1.5" [innerHTML]="'TEAM.EMAIL_HINT' | translate"></p>
-            </div>
-            
-            <button type="submit" 
-                    [disabled]="isInviting() || (emailsList().length === 0 && !currentEmailInput().trim())"
-                    class="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50">
-              @if (isInviting()) {
-                {{ 'TEAM.SENDING_INVITES' | translate }}
-              } @else {
-                {{ 'TEAM.SEND_INVITATIONS' | translate }}
-              }
-            </button>
-          </form>
-        </div>
-
         <!-- Center: Assign Employees to Project -->
-        <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4 lg:col-span-2">
+        <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-2 border-b border-border flex-wrap gap-2">
             <h3 class="font-bold text-text-primary text-base">{{ 'TEAM.ACTIVE_ASSIGNMENT' | translate }}</h3>
             @if (projectState.selectedProjectId()) {
@@ -355,7 +295,7 @@ export class TeamViewComponent implements OnInit {
 
   companyEmployees = signal<CompanyEmployee[]>([]);
   projectTeam = signal<ProjectEmployee[]>([]);
-  
+
   readonly unassignedCompanyEmployees = computed(() => {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
     return this.companyEmployees().filter(emp => {
@@ -431,7 +371,7 @@ export class TeamViewComponent implements OnInit {
     });
   }
 
-  async ngOnInit() {}
+  async ngOnInit() { }
 
   async loadCompanyEmployees(companyId: string) {
     try {
@@ -521,7 +461,7 @@ export class TeamViewComponent implements OnInit {
   addEmail(email: string) {
     const cleanEmail = email.trim().replace(/,$/, '');
     if (!cleanEmail) return;
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(cleanEmail)) {
       const lowerEmail = cleanEmail.toLowerCase();
@@ -549,7 +489,7 @@ export class TeamViewComponent implements OnInit {
 
   async onSendInvitations(event: Event) {
     event.preventDefault();
-    
+
     // Add any remaining text in the input field as an email if valid
     const remaining = this.currentEmailInput().trim();
     if (remaining) {
@@ -574,7 +514,7 @@ export class TeamViewComponent implements OnInit {
       this.toastService.show('🎉 Invitations sent successfully to invited members!', 'success');
       this.emailsList.set([]);
       this.currentEmailInput.set('');
-      
+
       const compId = this.projectState.userCompanyId();
       if (compId) {
         await this.loadCompanyEmployees(compId);
@@ -593,14 +533,14 @@ export class TeamViewComponent implements OnInit {
     const skipped = data?.skippedEmployees || errResponse?.skippedEmployees || [];
     const errors = errResponse?.errors || [];
     const code = errResponse?.code;
-    
+
     const hasSkippedBelongs = skipped.some((s: any) => s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY');
     const isAlreadyBelongsError = hasSkippedBelongs || (code === 'USER_ALREADY_BELONGS_TO_COMPANY') ||
       errors.some((err: any) => err.code === 'USER_ALREADY_BELONGS_TO_COMPANY');
 
     if (isAlreadyBelongsError) {
       const failedEmails: string[] = [];
-      
+
       skipped.forEach((s: any) => {
         if (s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY' && s.email) {
           failedEmails.push(s.email.toLowerCase().trim());
@@ -620,7 +560,7 @@ export class TeamViewComponent implements OnInit {
           }
         }
       });
-      
+
       if (failedEmails.length === 0 && emails.length === 1) {
         failedEmails.push(emails[0].toLowerCase().trim());
       }
@@ -693,14 +633,14 @@ export class TeamViewComponent implements OnInit {
     if (isAlreadyAssignedError) {
       this.assignError.set('One or more selected employees are already assigned to another active project.');
       this.toastService.show('One or more selected employees are already assigned to another active project.', 'error');
-      
+
       const failedIds: string[] = [];
       errors.forEach((err: any) => {
         if (err.code === 'EmployeeAlreadyAssignedToAnotherProject') {
           if (err.employeeId) {
             failedIds.push(err.employeeId);
           } else if (err.description) {
-            const found = this.companyEmployees().find(emp => 
+            const found = this.companyEmployees().find(emp =>
               (emp.employeeId && err.description.includes(emp.employeeId)) ||
               (emp.email && err.description.includes(emp.email)) ||
               (emp.fullName && err.description.includes(emp.fullName))

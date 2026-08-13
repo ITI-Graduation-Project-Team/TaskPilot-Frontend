@@ -539,7 +539,6 @@
     "BACKLOG_SHORT": "Backlog",
     "TEAM": "Team",
     "PROFILE": "Profile",
-    "SETTINGS": "Settings",
     "RETROSPECTIVE": "Retrospective",
     "TASK_ASSIGNMENT": "Task Assignment"
   },
@@ -995,5 +994,11 @@
     "OPS": "ops",
     "NO_DATA": "No AI operations logged yet.",
     "NO_TEAM_DATA": "No team members have used AI in this project yet."
+  },
+  "PAGINATION": {
+    "PAGE": "Page",
+    "OF": "of",
+    "PREV": "Prev",
+    "NEXT": "Next"
   }
 }

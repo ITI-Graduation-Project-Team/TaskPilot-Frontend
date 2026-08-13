@@ -49,7 +49,7 @@
 
     <!-- Custom Tabs -->
     <div class="flex gap-6 border-b border-slate-200 dark:border-slate-800">
-      <button (click)="activeTab.set('active')" 
+      <button (click)="switchTab('active')" 
         [class.border-blue-600]="activeTab() === 'active'"
         [class.text-blue-600]="activeTab() === 'active'" 
         [class.dark:border-blue-400]="activeTab() === 'active'"
@@ -59,7 +59,7 @@
         class="pb-4 px-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400">
         {{ 'EMPLOYEES.FILTER_ACTIVE' | translate }}
       </button>
-      <button (click)="activeTab.set('deactivated')" 
+      <button (click)="switchTab('deactivated')" 
         [class.border-blue-600]="activeTab() === 'deactivated'"
         [class.text-blue-600]="activeTab() === 'deactivated'" 
         [class.dark:border-blue-400]="activeTab() === 'deactivated'"
@@ -69,7 +69,7 @@
         class="pb-4 px-2 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400">
         {{ 'EMPLOYEES.FILTER_DEACTIVATED' | translate }}
       </button>
-      <button (click)="activeTab.set('invitations')" 
+      <button (click)="switchTab('invitations')" 
         [class.border-blue-600]="activeTab() === 'invitations'"
         [class.text-blue-600]="activeTab() === 'invitations'"
         [class.dark:border-blue-400]="activeTab() === 'invitations'"
@@ -95,7 +95,7 @@
     </div>
 
     <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-1 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-800 relative min-h-[300px] overflow-hidden group/table">
-      <div *ngIf="isLoadingEmployees()" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+      <div *ngIf="isLoadingActive()" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
         <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -183,7 +183,7 @@
                 </div>
               </td>
             </tr>
-            <tr *ngIf="!isLoadingEmployees() && totalActiveEmployees() === 0">
+            <tr *ngIf="!isLoadingActive() && totalActiveEmployees() === 0">
               <td colspan="5" class="py-16 text-center text-slate-400">
                 <div class="flex flex-col items-center gap-3">
                   <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center">
@@ -233,7 +233,7 @@
     </div>
 
     <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-1 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-800 relative min-h-[300px] overflow-hidden">
-      <div *ngIf="isLoadingEmployees()" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
+      <div *ngIf="isLoadingDeactivated()" class="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
         <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -295,7 +295,7 @@
                 </div>
               </td>
             </tr>
-            <tr *ngIf="!isLoadingEmployees() && totalDeactivatedEmployees() === 0">
+            <tr *ngIf="!isLoadingDeactivated() && totalDeactivatedEmployees() === 0">
               <td colspan="4" class="py-16 text-center text-slate-400">
                 <div class="flex flex-col items-center gap-3">
                   <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center">

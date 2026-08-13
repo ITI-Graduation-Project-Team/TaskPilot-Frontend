@@ -8,7 +8,8 @@ import {
   OnDestroy,
   Input,
   Output,
-  EventEmitter
+  EventEmitter,
+  effect
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,10 +36,12 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
       <!-- ─── HEADER BANNER ─── -->
-      <div class="rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-sm relative overflow-hidden" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
+      <div class="rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-sm relative" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
         <!-- Ambient background glow -->
-        <div class="absolute -top-24 -right-24 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+          <div class="absolute -top-24 -right-24 w-72 h-72 bg-primary/10 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        </div>
 
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div class="space-y-2 max-w-xl">
@@ -69,18 +72,58 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
           <!-- Sprint Selector Dropdown & Actions -->
           <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap shrink-0">
             @if (sprints().length > 0) {
-              <div class="relative min-w-[160px] max-w-[220px]">
-                <select
-                  [ngModel]="selectedSprintId()"
-                  (ngModelChange)="onSprintSelected($event)"
-                  class="w-full bg-sidebar border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl px-3.5 py-2.5 outline-none transition-all cursor-pointer shadow-xs focus:ring-2 focus:ring-primary/20 truncate">
-                  <option value="" disabled>{{ currentLang() === 'ar' ? 'اختر السبرينت' : 'Select Sprint' }}</option>
-                  @for (sp of sprints(); track sp.sprintId) {
-                    <option [value]="sp.sprintId">
-                      {{ currentLang() === 'ar' ? (sp.titleAr || sp.titleEn) : sp.titleEn }} ({{ sp.status }})
-                    </option>
-                  }
-                </select>
+              <!-- Dropdown Backdrop -->
+              @if (isDropdownOpen()) {
+                <div class="fixed inset-0 z-40" (click)="isDropdownOpen.set(false)"></div>
+              }
+              <div class="relative min-w-[220px] max-w-[280px] z-50">
+                <button
+                  type="button"
+                  (click)="isDropdownOpen.set(!isDropdownOpen())"
+                  class="w-full flex items-center justify-between gap-3 bg-sidebar border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl px-4 py-2.5 outline-none transition-all cursor-pointer shadow-xs focus:ring-2 focus:ring-primary/20 text-left">
+                  <span class="truncate flex-1">
+                    @if (selectedSprint()) {
+                      {{ currentLang() === 'ar' ? (selectedSprint()!.titleAr || selectedSprint()!.titleEn) : selectedSprint()!.titleEn }}
+                    } @else {
+                      {{ currentLang() === 'ar' ? 'اختر السبرينت' : 'Select Sprint' }}
+                    }
+                  </span>
+                  <svg class="w-4 h-4 text-text-tertiary transition-transform duration-200 shrink-0" 
+                       [class.rotate-180]="isDropdownOpen()" 
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                
+                @if (isDropdownOpen()) {
+                  <div class="absolute top-full mt-2 w-full min-w-[260px] end-0 sm:end-auto bg-surface border border-border rounded-xl shadow-lg overflow-hidden flex flex-col max-h-[300px] animate-[fadeIn_0.15s_ease_out]">
+                    <div class="overflow-y-auto overscroll-contain py-1.5 custom-scrollbar">
+                      @for (sp of sprints(); track sp.sprintId) {
+                        <button
+                          type="button"
+                          (click)="onSprintSelected(sp.sprintId); isDropdownOpen.set(false)"
+                          class="w-full text-left flex items-center justify-between px-4 py-2.5 text-xs transition-colors hover:bg-primary/5 hover:text-primary group"
+                          [class.bg-primary/10]="selectedSprintId() === sp.sprintId"
+                          [class.text-primary]="selectedSprintId() === sp.sprintId"
+                          [class.font-extrabold]="selectedSprintId() === sp.sprintId"
+                          [class.text-text-primary]="selectedSprintId() !== sp.sprintId"
+                          [class.font-semibold]="selectedSprintId() !== sp.sprintId">
+                          <span class="truncate pr-3">
+                            {{ currentLang() === 'ar' ? (sp.titleAr || sp.titleEn) : sp.titleEn }}
+                          </span>
+                          @if (sp.status === 'Completed') {
+                            <span class="shrink-0 flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                              Done
+                            </span>
+                          } @else {
+                            <span class="shrink-0 text-[10px] uppercase font-bold text-text-tertiary">{{ sp.status }}</span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
             }
 
@@ -543,6 +586,12 @@ export class RetrospectiveViewComponent implements OnInit {
   isGenerating = signal(false);
   selectedEmployeeId = signal<string | null>(null);
 
+  isDropdownOpen = signal(false);
+
+  selectedSprint = computed(() => {
+    return this.sprints().find(s => s.sprintId === this.selectedSprintId()) || null;
+  });
+
   activeRetro = computed(() => {
     const raw: any = this.retro();
     if (!raw) return null;
@@ -613,9 +662,16 @@ export class RetrospectiveViewComponent implements OnInit {
     };
   });
 
-  async ngOnInit() {
-    await this.loadSprintsList();
+  constructor() {
+    effect(() => {
+      const pId = this.projectState.selectedProjectId();
+      if (pId) {
+        this.loadSprintsList();
+      }
+    });
   }
+
+  ngOnInit() {}
 
   async loadSprintsList() {
     const projId = this.projectState.selectedProjectId();
