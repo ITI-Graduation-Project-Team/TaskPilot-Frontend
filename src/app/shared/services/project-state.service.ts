@@ -220,13 +220,24 @@ export class ProjectStateService {
       const companyId = this._userCompanyId();
       if (!userId) return { projects: [], totalCount: 0 };
 
-      const endpoint = (isPM && companyId) 
-        ? `/Projects/company/${companyId}/paged?page=${page}&pageSize=${pageSize}` 
+      // The deployed company/paged endpoint can include projects managed by other
+      // PMs. Use the ownership-filtered company endpoint as the source of truth and
+      // paginate its result locally until every environment runs the fixed backend.
+      const isProjectManagerRequest = isPM && !!companyId;
+      const endpoint = isProjectManagerRequest
+        ? `/Projects/company/${companyId}`
         : `/employees/${userId}/projects/paged?page=${page}&pageSize=${pageSize}`;
-        
+
       const { data } = await apiClient.get<any>(endpoint);
-      const items: any[] = data.data?.items || [];
-      const totalCount = data.data?.totalItems || 0;
+      const allItems: any[] = isProjectManagerRequest
+        ? (data.data || [])
+        : (data.data?.items || []);
+      const totalCount = isProjectManagerRequest
+        ? allItems.length
+        : (data.data?.totalItems || 0);
+      const items = isProjectManagerRequest
+        ? allItems.slice((page - 1) * pageSize, page * pageSize)
+        : allItems;
       
       const filtered: ProjectInfo[] = items.map(p => ({
         id: p.id,

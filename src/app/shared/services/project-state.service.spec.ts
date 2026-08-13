@@ -42,4 +42,30 @@ describe('ProjectStateService', () => {
     expect(getSpy).toHaveBeenCalledWith(`/Projects/company/${companyId}`);
     expect(getSpy).not.toHaveBeenCalledWith(`/Projects/${savedProjectId}`);
   });
+
+  it('paginates the ownership-filtered PM list instead of the company-wide paged endpoint', async () => {
+    const projects = Array.from({ length: 12 }, (_, index) => ({
+      id: `project-${index + 1}`,
+      name: `Project ${index + 1}`,
+      companyId,
+      managerId
+    }));
+    const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: { data: projects }
+    } as any);
+
+    const service = new ProjectStateService();
+    (service as any)._userId.set(managerId);
+    (service as any)._userCompanyId.set(companyId);
+    (service as any)._isProjectManager.set(true);
+
+    const result = await service.loadProjectsPaged(2, 5);
+
+    expect(result.totalCount).toBe(12);
+    expect(result.projects.map(project => project.id)).toEqual([
+      'project-6', 'project-7', 'project-8', 'project-9', 'project-10'
+    ]);
+    expect(getSpy).toHaveBeenCalledWith(`/Projects/company/${companyId}`);
+    expect(getSpy).not.toHaveBeenCalledWith(expect.stringContaining('/paged'));
+  });
 });
