@@ -174,12 +174,9 @@ export class ProjectStateService {
       const { data } = await apiClient.get<any>(endpoint);
       const projects: any[] = data.data || [];
       
-      // Filter to ensure the PM only sees projects they actually manage
-      const accessibleProjects = isPM
-        ? projects.filter(p => p.managerId === userId)
-        : projects;
-
-      const filtered: ProjectInfo[] = accessibleProjects.map(p => ({
+      // The API enforces project access. Avoid filtering GUIDs again in the client,
+      // where casing differences could incorrectly hide valid PM projects.
+      const filtered: ProjectInfo[] = projects.map(p => ({
         id: p.id,
         name: p.name || p.nameEn || '',
         nameEn: p.nameEn || p.name || '',
