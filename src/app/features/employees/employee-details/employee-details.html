@@ -120,16 +120,35 @@
         </div>
 
         <!-- Danger Zone -->
-        <div class="bg-surface border border-error/20 rounded-2xl p-6 shadow-sm relative overflow-hidden" *ngIf="!employee()!.isDeactivated">
+        <div class="bg-surface border border-error/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
           <div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
           <h3 class="text-sm font-black text-error uppercase tracking-widest mb-2">{{ 'EMPLOYEES.DANGER_ZONE' | translate }}</h3>
-          <p class="text-sm text-text-secondary mb-6">Deactivating this employee will prevent them from logging in and suspend their active assignments. {{ 'EMPLOYEES.DEACTIVATE_HINT' | translate }}</p>
           
-          <button (click)="openDeactivateModal()" 
-                  class="px-5 py-2.5 bg-error/10 hover:bg-error text-error hover:text-white border border-error/30 hover:border-error font-bold rounded-xl transition-all flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-            Deactivate Employee
-          </button>
+          <div class="flex flex-col gap-4 mt-4">
+            <!-- Deactivate Section -->
+            <div *ngIf="!employee()!.isDeactivated" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-error/10 bg-error/5">
+              <div>
+                <h4 class="font-bold text-error text-sm">Deactivate Employee</h4>
+                <p class="text-xs text-text-secondary mt-1">Suspend login access and active assignments. Can be reversed later.</p>
+              </div>
+              <button (click)="openDeactivateModal()" 
+                      class="shrink-0 px-4 py-2 bg-white hover:bg-error text-error hover:text-white border border-error/30 font-bold rounded-lg transition-all text-sm">
+                Deactivate
+              </button>
+            </div>
+
+            <!-- Terminate Section -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-error/20 bg-error/10">
+              <div>
+                <h4 class="font-bold text-error text-sm">Terminate Employee</h4>
+                <p class="text-xs text-text-secondary mt-1">Permanently remove employee from the company. This action is irreversible.</p>
+              </div>
+              <button (click)="openTerminateModal()" 
+                      class="shrink-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md shadow-red-500/20 transition-all text-sm">
+                Terminate
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Placeholders -->
@@ -158,4 +177,15 @@
   [employeeName]="employee()!.fullName || employee()!.email"
   (closed)="closeDeactivateModal()"
   (deactivated)="onDeactivated()">
+</app-deactivation-dialog>
+
+<!-- Termination Modal -->
+<app-deactivation-dialog
+  *ngIf="isTerminateModalOpen()"
+  [isOpen]="true"
+  mode="terminate"
+  [employeeId]="employee()!.employeeId"
+  [employeeName]="employee()!.fullName || employee()!.email"
+  (closed)="closeTerminateModal()"
+  (deactivated)="onTerminated()">
 </app-deactivation-dialog>

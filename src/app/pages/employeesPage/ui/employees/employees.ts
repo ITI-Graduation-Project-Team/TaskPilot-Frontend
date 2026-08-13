@@ -5,12 +5,14 @@ import { RouterLink } from '@angular/router';
 import { CompanyService, CompanyEmployeeModel, EmployeeSuggestionModel, InvitationModel } from '../../../../shared/api/Company-api/company';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { DeactivationDialogComponent } from '../../../../features/deactivation-dialog/deactivation-dialog.component';
+import { ReactivationDialogComponent } from '../../../../features/reactivation-dialog/reactivation-dialog.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
 
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DeactivationDialogComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, DeactivationDialogComponent, ReactivationDialogComponent, TranslatePipe, PlannedSprintAssignmentDialogComponent],
   templateUrl: './employees.html',
   styleUrls: ['./employees.scss']
 })
@@ -30,7 +32,7 @@ export class EmployeesComponent implements OnInit {
   deactivatedEmployeesPage = signal<number>(1);
   totalDeactivatedEmployees = signal<number>(0);
 
-  localSearchQuery = signal<string>(''); // Kept for local filter if needed, though usually server-side search is preferred. We will just use it on the current page for now.
+  localSearchQuery = signal<string>('');
   isLoadingActive = signal<boolean>(false);
   isLoadingDeactivated = signal<boolean>(false);
 
@@ -67,21 +69,25 @@ export class EmployeesComponent implements OnInit {
   inviteEmailError = signal<string | null>(null);
   inviteEmailFailedAddress = signal<string | null>(null);
 
-  // Deactivation State
+  // Deactivation/Reactivation Modal State
   isDeactivateModalOpen = signal<boolean>(false);
+  isReactivateModalOpen = signal<boolean>(false);
   selectedEmployeeId = signal<string | null>(null);
   selectedEmployeeName = signal<string>('');
+
+  // Capacity Alert State
+  showSprintAdditionDialog = signal(false);
+  detectedSprintNames = signal<string[]>([]);
+  detectedSprintIds = signal<string[]>([]);
+  detectedSprintProjectIds = signal<string[]>([]);
 
   // Summary Cards Data
   activeCount = computed(() => this.totalActiveEmployees());
   deactivatedCount = computed(() => this.totalDeactivatedEmployees());
   totalCount = computed(() => this.activeCount() + this.deactivatedCount());
   
-  // Computed on current visible page since full dataset is not loaded
   availableCount = computed(() => this.activeEmployees().filter(e => (!e.availabilityStatus || e.availabilityStatus.toLowerCase() === 'available')).length);
   assignedCount = computed(() => this.activeEmployees().filter(e => (e.activeProjectsCount > 0 || e.currentAssignedTasksCount > 0)).length);
-
-
 
   ngOnInit() {
     this.switchTab('active');
@@ -284,16 +290,6 @@ export class EmployeesComponent implements OnInit {
     this.inviteEmailError.set(null);
     this.inviteEmailFailedAddress.set(null);
     this.isInviteModalOpen.set(true);
-
-    try {
-      // For invite modal, fetch up to 500 employees to check for existing users
-      const res = await this.companyService.getCompanyEmployees(1, 500);
-      if (res.succeeded && res.data) {
-        // We just keep this local to the modal or we could just skip local validation and rely on backend validation
-      }
-    } catch (e) {
-      console.error('Failed to load company employees', e);
-    }
   }
 
   closeInviteModal() {
@@ -302,7 +298,6 @@ export class EmployeesComponent implements OnInit {
     this.isInviteModalOpen.set(false);
   }
 
-  // Timer for debounce
   private searchTimeout: any;
 
   onSystemSearchChange() {
@@ -334,7 +329,7 @@ export class EmployeesComponent implements OnInit {
       } finally {
         this.isSearchingSystem.set(false);
       }
-    }, 400); // 400ms debounce
+    }, 400);
   }
 
   async inviteEmail(email: string) {
@@ -409,35 +404,40 @@ export class EmployeesComponent implements OnInit {
     if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
   }
 
-  isReactivating = signal<string | null>(null);
+  openReactivateModal(emp: CompanyEmployeeModel) {
+    this.selectedEmployeeId.set(emp.employeeId);
+    this.isReactivateModalOpen.set(true);
+  }
 
-  async reactivateEmployee(emp: CompanyEmployeeModel) {
-    if (!confirm(`Are you sure you want to reactivate ${emp.fullName || emp.email}?`)) {
-      return;
-    }
-    this.isReactivating.set(emp.employeeId);
-    try {
-      // Assuming we'll add reactivateEmployee to companyService
-      // Wait, let's use apiClient directly if it's not in companyService yet, or better, add it to companyService.
-      // But we can just use apiClient here for simplicity or edit companyService.
-      // Let's call the companyService after we add it.
-      const res = await this.companyService.reactivateEmployee(emp.employeeId);
-      if (res.succeeded) {
-        this.toastService.show('Employee reactivated successfully!', 'success');
-        this.activeEmployeesCache.clear();
-        this.deactivatedEmployeesCache.clear();
-        if (this.activeTab() === 'active') this.loadActiveEmployees();
-        if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
-      } else {
-        this.toastService.show(res.message || 'Failed to reactivate employee', 'error');
-      }
-    } catch (e: any) {
-      console.error(e);
-      const msg = e?.response?.data?.message || 'An error occurred while reactivating.';
-      this.toastService.show(msg, 'error');
-    } finally {
-      this.isReactivating.set(null);
-    }
+  closeReactivateModal() {
+    this.isReactivateModalOpen.set(false);
+    this.selectedEmployeeId.set(null);
+  }
+
+  onReactivated() {
+    this.closeReactivateModal();
+    this.activeEmployeesCache.clear();
+    this.deactivatedEmployeesCache.clear();
+    if (this.activeTab() === 'active') this.loadActiveEmployees();
+    if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
+  }
+
+  onReactivatedWithSprints(data: any) {
+    this.closeReactivateModal();
+    this.detectedSprintNames.set(data.plannedSprintNames || []);
+    this.detectedSprintIds.set(data.plannedSprintIds || []);
+    this.detectedSprintProjectIds.set(data.sprintProjectIds || []);
+    this.showSprintAdditionDialog.set(true);
+  }
+
+  onSprintAdditionResolved() {
+    this.showSprintAdditionDialog.set(false);
+    this.detectedSprintNames.set([]);
+    this.detectedSprintIds.set([]);
+    this.detectedSprintProjectIds.set([]);
+    this.activeEmployeesCache.clear();
+    this.deactivatedEmployeesCache.clear();
+    if (this.activeTab() === 'active') this.loadActiveEmployees();
+    if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
   }
 }
-

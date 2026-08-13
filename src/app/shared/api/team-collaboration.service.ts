@@ -43,6 +43,12 @@ export interface ApiResponse<T> {
   errors?: any[];
 }
 
+export interface AssignEmployeesResultDto {
+  hasPlannedSprints: boolean;
+  plannedSprintNames: string[];
+  plannedSprintIds: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -57,8 +63,8 @@ export class TeamCollaborationService {
     return data;
   }
 
-  async assignEmployees(projectId: string, assignments: EmployeeAssignmentDto[]): Promise<ApiResponse<any>> {
-    const { data } = await apiClient.post<ApiResponse<any>>(`/projects/${projectId}/employees`, { assignments });
+  async assignEmployees(projectId: string, assignments: EmployeeAssignmentDto[]): Promise<ApiResponse<AssignEmployeesResultDto>> {
+    const { data } = await apiClient.post<ApiResponse<AssignEmployeesResultDto>>(`/projects/${projectId}/employees`, { assignments });
     return data;
   }
 
@@ -67,8 +73,8 @@ export class TeamCollaborationService {
     return data;
   }
 
-  async removeProjectEmployee(projectId: string, employeeId: string): Promise<ApiResponse<any>> {
-    const { data } = await apiClient.delete<ApiResponse<any>>(`/projects/${projectId}/employees/${employeeId}`);
+  async removeProjectEmployee(projectId: string, employeeId: string): Promise<ApiResponse<AssignEmployeesResultDto>> {
+    const { data } = await apiClient.delete<ApiResponse<AssignEmployeesResultDto>>(`/projects/${projectId}/employees/${employeeId}`);
     return data;
   }
 }

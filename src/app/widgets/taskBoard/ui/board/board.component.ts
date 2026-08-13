@@ -227,6 +227,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   👥 {{ currentLang === 'ar' ? 'إعادة التعيين' : 'Reassign Tasks' }}
                 </button>
               }
+              <button (click)="cancelSprintClicked()" 
+                      class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                ❌ {{ 'BOARD.CANCEL_SPRINT' | translate }}
+              </button>
               <button (click)="startSprint()" 
                       [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
                       [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
@@ -1489,6 +1493,37 @@ export class BoardComponent implements OnInit, OnChanges {
         this.toastService.show(e?.response?.data?.message || (this.currentLang === 'ar' ? 'فشل بدء السبرنت' : 'Failed to start sprint'), 'error');
       }
     }
+  }
+
+  cancelSprintClicked() {
+    const projectId = this.projectState.selectedProjectId();
+    const sprintId = this.plannedSprintId();
+    if (!projectId || !sprintId) return;
+
+    this.confirmDialog.confirm({
+      title: this.currentLang === 'ar' ? 'إلغاء السبرينت' : 'Cancel Sprint',
+      message: this.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا السبرينت؟ ستعود جميع المهام إلى الـ Backlog.' : 'Are you sure you want to cancel this planned sprint? All tasks will be returned to the backlog.',
+      confirmLabel: this.currentLang === 'ar' ? 'إلغاء السبرينت' : 'Cancel Sprint',
+      cancelLabel: this.currentLang === 'ar' ? 'تراجع' : 'Keep Sprint',
+      type: 'danger'
+    }).then(async (confirmed) => {
+      if (confirmed) {
+        try {
+          await this.sprintService.cancelSprint(projectId, sprintId);
+          this.toastService.show(
+            this.currentLang === 'ar' ? 'تم إلغاء السبرينت بنجاح' : 'Sprint cancelled successfully',
+            'success'
+          );
+          // Go to Sprints tab
+          this.backToSprints.emit();
+        } catch (e: any) {
+          this.toastService.show(
+            e?.response?.data?.message || (this.currentLang === 'ar' ? 'فشل إلغاء السبرينت' : 'Failed to cancel sprint'),
+            'error'
+          );
+        }
+      }
+    });
   }
 
   public async loadWorkspaceData() {

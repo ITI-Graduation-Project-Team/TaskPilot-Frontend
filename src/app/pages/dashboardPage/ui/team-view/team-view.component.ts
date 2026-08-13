@@ -6,12 +6,15 @@ import { TeamCollaborationService, EmployeeAssignmentDto, CompanyEmployee, Proje
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { Router } from '@angular/router';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
+import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
 
 @Component({
   selector: 'app-team-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, PlannedSprintAssignmentDialogComponent],
   template: `
     <div class="space-y-6">
       
@@ -248,14 +251,43 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 
       </div>
     </div>
+    
+    <app-planned-sprint-assignment-dialog
+      [isOpen]="showSprintAssignmentDialog()"
+      [projectId]="projectState.selectedProjectId()"
+      [sprintNames]="detectedSprintNames()"
+      [sprintIds]="detectedSprintIds()"
+      mode="assign"
+      (close)="showSprintAssignmentDialog.set(false)"
+      (actionCompleted)="showSprintAssignmentDialog.set(false)">
+    </app-planned-sprint-assignment-dialog>
+
+    <app-planned-sprint-assignment-dialog
+      [isOpen]="showSprintRemovalDialog()"
+      [projectId]="projectState.selectedProjectId()"
+      [sprintNames]="detectedSprintNames()"
+      [sprintIds]="detectedSprintIds()"
+      mode="remove"
+      [employeeName]="removedEmployeeName()"
+      (close)="showSprintRemovalDialog.set(false)"
+      (actionCompleted)="showSprintRemovalDialog.set(false)">
+    </app-planned-sprint-assignment-dialog>
   `
 })
 export class TeamViewComponent implements OnInit {
   private teamService = inject(TeamCollaborationService);
-  public projectState = inject(ProjectStateService);
+  projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private confirmDialogService = inject(ConfirmDialogService);
   private translate = inject(TranslateService);
+  private router = inject(Router);
+
+  // Feature 3: Smart Suggestion for Planned Sprints
+  showSprintAssignmentDialog = signal<boolean>(false);
+  showSprintRemovalDialog = signal<boolean>(false);
+  removedEmployeeName = signal<string>('');
+  detectedSprintNames = signal<string[]>([]);
+  detectedSprintIds = signal<string[]>([]);
 
   emailsList = signal<string[]>([]);
   currentEmailInput = signal('');
@@ -384,6 +416,9 @@ export class TeamViewComponent implements OnInit {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
 
+    const emp = this.projectTeam().find(e => e.employeeId === employeeId);
+    if (!emp) return;
+
     const confirmed = await this.confirmDialogService.confirm({
       title: this.translate.instant('TEAM.REMOVE_MEMBER'),
       message: this.translate.instant('TEAM.REMOVE_MEMBER_CONFIRM'),
@@ -394,13 +429,20 @@ export class TeamViewComponent implements OnInit {
 
     this.isRemoving.set(employeeId);
     try {
-      await this.teamService.removeProjectEmployee(projId, employeeId);
-      this.toastService.show(this.translate.instant('TEAM.REMOVED_SUCCESS'), 'success');
+      const res = await this.teamService.removeProjectEmployee(projId, employeeId);
       await this.loadProjectTeam(projId);
+
+      if (res && res.data && res.data.hasPlannedSprints) {
+        this.detectedSprintNames.set(res.data.plannedSprintNames || []);
+        this.detectedSprintIds.set(res.data.plannedSprintIds || []);
+        this.removedEmployeeName.set(emp.fullName || emp.email);
+        this.showSprintRemovalDialog.set(true);
+      } else {
+        this.toastService.show(this.translate.instant('TEAM.REMOVED_SUCCESS'), 'success');
+      }
     } catch (e: any) {
       const errorMsg = e?.response?.data?.errors?.[0]?.message || e?.response?.data?.message || this.translate.instant('TEAM.REMOVE_FAILED');
       this.toastService.show(errorMsg, 'error');
-      console.warn('Failed to remove employee:', e);
     } finally {
       this.isRemoving.set(null);
     }
@@ -566,6 +608,13 @@ export class TeamViewComponent implements OnInit {
       this.toastService.show('🎉 Member assigned successfully to the project!', 'success');
       this.selectedEmployeeId = '';
       await this.loadProjectTeam(projId);
+      
+      // Feature 3: Smart Suggestion for Planned Sprints
+      if (res.data && res.data.hasPlannedSprints) {
+        this.detectedSprintNames.set(res.data.plannedSprintNames || []);
+        this.detectedSprintIds.set(res.data.plannedSprintIds || []);
+        this.showSprintAssignmentDialog.set(true);
+      }
     } catch (e: any) {
       console.error(e);
       const errResponse = e?.response?.data || e;

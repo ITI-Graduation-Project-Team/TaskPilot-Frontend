@@ -44,9 +44,24 @@ export interface DeactivationBlock {
   severity: 'Warning' | 'High' | 'Critical';
 }
 
+export interface AffectedSprintDto {
+  projectId: string;
+  projectName: string;
+  sprintId: string;
+  sprintTitle: string;
+  taskCount: number;
+}
+
 export interface AnalysisResultDto {
   isAllowed: boolean;
   blocks: DeactivationBlock[];
+  hasPlannedSprintTasks?: boolean;
+  affectedSprints?: AffectedSprintDto[];
+}
+
+export interface ReactivationAnalysisResultDto {
+  hasRestorableProjects: boolean;
+  restorableProjectNames: string[];
 }
 
 export interface DeactivateEmployeeRequest {
@@ -59,6 +74,10 @@ export interface DeactivateEmployeeResult {
   data: any;
   succeeded?: boolean;
   isSuccess?: boolean;
+}
+
+export interface TerminateEmployeeRequest {
+  reason?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -179,8 +198,18 @@ export class CompanyService {
     return response.data;
   }
 
-  async reactivateEmployee(employeeId: string): Promise<DeactivateEmployeeResult> {
-    const response = await apiClient.post<DeactivateEmployeeResult>(`/employees/${employeeId}/reactivate`, {});
+  async analyzeReactivation(employeeId: string): Promise<{ data: ReactivationAnalysisResultDto }> {
+    const response = await apiClient.get<{ data: ReactivationAnalysisResultDto }>(`/employees/${employeeId}/reactivation-analysis`);
+    return response.data;
+  }
+
+  async reactivateEmployee(employeeId: string, request: { restorePreviousProjects: boolean }): Promise<{ succeeded: boolean; data?: any; message: string }> {
+    const response = await apiClient.post<{ succeeded: boolean; data?: any; message: string }>(`/employees/${employeeId}/reactivate`, request);
+    return response.data;
+  }
+
+  async terminateEmployee(employeeId: string, request: TerminateEmployeeRequest): Promise<any> {
+    const response = await apiClient.post(`/employees/${employeeId}/terminate`, request);
     return response.data;
   }
 
