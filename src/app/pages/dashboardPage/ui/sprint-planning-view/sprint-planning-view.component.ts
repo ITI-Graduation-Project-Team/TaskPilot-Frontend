@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   SprintPlanningService,
   SprintSuggestionDto,
@@ -813,6 +813,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // ── State signals ──────────────────────────────────────────────
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
@@ -882,10 +883,29 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     const projId = this.projectState.selectedProjectId();
     if (projId) {
-      this.projectState.loadProjectEmployeeCount(projId);
+      await this.projectState.loadProjectEmployeeCount(projId);
     }
     await Promise.all([this.checkActiveSprint(), this.checkPlannedSprint()]);
     await this.loadBacklogStories();
+
+    // Check if autoReplan was requested
+    this.route.queryParams.subscribe(params => {
+      if (params['autoReplan'] === 'true') {
+        // Clear the param so it doesn't re-trigger on refresh
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { autoReplan: null },
+          queryParamsHandling: 'merge'
+        });
+        
+        // If we can generate, do it automatically
+        if (this.projectState.projectEmployeeCount() > 0 && !this.hasActiveSprint() && !this.hasPlannedSprint()) {
+          this.onGenerate();
+        } else if (this.projectState.projectEmployeeCount() === 0) {
+           this.showNoEmployeesModal.set(true);
+        }
+      }
+    });
   }
 
   ngOnDestroy() {

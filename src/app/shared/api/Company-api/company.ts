@@ -59,6 +59,11 @@ export interface AnalysisResultDto {
   affectedSprints?: AffectedSprintDto[];
 }
 
+export interface ReactivationAnalysisResultDto {
+  hasRestorableProjects: boolean;
+  restorableProjectNames: string[];
+}
+
 export interface DeactivateEmployeeRequest {
   reason?: string;
 }
@@ -193,8 +198,13 @@ export class CompanyService {
     return response.data;
   }
 
-  async reactivateEmployee(employeeId: string): Promise<DeactivateEmployeeResult> {
-    const response = await apiClient.post<DeactivateEmployeeResult>(`/employees/${employeeId}/reactivate`, {});
+  async analyzeReactivation(employeeId: string): Promise<{ data: ReactivationAnalysisResultDto }> {
+    const response = await apiClient.get<{ data: ReactivationAnalysisResultDto }>(`/employees/${employeeId}/reactivation-analysis`);
+    return response.data;
+  }
+
+  async reactivateEmployee(employeeId: string, request: { restorePreviousProjects: boolean }): Promise<{ succeeded: boolean; data?: any; message: string }> {
+    const response = await apiClient.post<{ succeeded: boolean; data?: any; message: string }>(`/employees/${employeeId}/reactivate`, request);
     return response.data;
   }
 

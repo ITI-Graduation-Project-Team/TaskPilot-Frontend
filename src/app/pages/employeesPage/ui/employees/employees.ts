@@ -5,12 +5,14 @@ import { RouterLink } from '@angular/router';
 import { CompanyService, CompanyEmployeeModel, EmployeeSuggestionModel, InvitationModel } from '../../../../shared/api/Company-api/company';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { DeactivationDialogComponent } from '../../../../features/deactivation-dialog/deactivation-dialog.component';
+import { ReactivationDialogComponent } from '../../../../features/reactivation-dialog/reactivation-dialog.component';
 import { TranslatePipe } from '@ngx-translate/core';
+import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
 
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DeactivationDialogComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, DeactivationDialogComponent, ReactivationDialogComponent, TranslatePipe, PlannedSprintAssignmentDialogComponent],
   templateUrl: './employees.html',
   styleUrls: ['./employees.scss']
 })
@@ -62,10 +64,17 @@ export class EmployeesComponent implements OnInit {
   inviteEmailError = signal<string | null>(null);
   inviteEmailFailedAddress = signal<string | null>(null);
 
-  // Deactivation State
+  // Deactivation/Reactivation Modal State
   isDeactivateModalOpen = signal<boolean>(false);
+  isReactivateModalOpen = signal<boolean>(false);
   selectedEmployeeId = signal<string | null>(null);
   selectedEmployeeName = signal<string>('');
+
+  // Capacity Alert State
+  showSprintAdditionDialog = signal(false);
+  detectedSprintNames = signal<string[]>([]);
+  detectedSprintIds = signal<string[]>([]);
+  detectedSprintProjectIds = signal<string[]>([]);
 
   // Summary Cards Data
   activeCount = computed(() => this.totalActiveEmployees());
@@ -349,32 +358,31 @@ export class EmployeesComponent implements OnInit {
     this.loadEmployees();
   }
 
-  isReactivating = signal<string | null>(null);
+  openReactivateModal(emp: CompanyEmployeeModel) {
+    this.selectedEmployeeId.set(emp.employeeId);
+    this.isReactivateModalOpen.set(true);
+  }
+  closeReactivateModal() {
+    this.isReactivateModalOpen.set(false);
+    this.selectedEmployeeId.set(null);
+  }
 
-  async reactivateEmployee(emp: CompanyEmployeeModel) {
-    if (!confirm(`Are you sure you want to reactivate ${emp.fullName || emp.email}?`)) {
-      return;
-    }
-    this.isReactivating.set(emp.employeeId);
-    try {
-      // Assuming we'll add reactivateEmployee to companyService
-      // Wait, let's use apiClient directly if it's not in companyService yet, or better, add it to companyService.
-      // But we can just use apiClient here for simplicity or edit companyService.
-      // Let's call the companyService after we add it.
-      const res = await this.companyService.reactivateEmployee(emp.employeeId);
-      if (res.succeeded) {
-        this.toastService.show('Employee reactivated successfully!', 'success');
-        this.loadEmployees();
-      } else {
-        this.toastService.show(res.message || 'Failed to reactivate employee', 'error');
-      }
-    } catch (e: any) {
-      console.error(e);
-      const msg = e?.response?.data?.message || 'An error occurred while reactivating.';
-      this.toastService.show(msg, 'error');
-    } finally {
-      this.isReactivating.set(null);
-    }
+  onReactivated() {
+    this.closeReactivateModal();
+    this.loadEmployees();
+  }
+  onReactivatedWithSprints(data: any) {
+    this.closeReactivateModal();
+    this.detectedSprintNames.set(data.plannedSprintNames || []);
+    this.detectedSprintIds.set(data.plannedSprintIds || []);
+    this.detectedSprintProjectIds.set(data.sprintProjectIds || []);
+    this.showSprintAdditionDialog.set(true);
+  }
+
+  onSprintAdditionResolved() {
+    this.showSprintAdditionDialog.set(false);
+    this.detectedSprintNames.set([]);
+    this.detectedSprintIds.set([]);
+    this.loadEmployees();
   }
 }
-
