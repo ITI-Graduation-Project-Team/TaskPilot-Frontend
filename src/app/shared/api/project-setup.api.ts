@@ -59,6 +59,65 @@ export interface ConfirmTechStackRequest {
 
 interface ApiResponse<T> { data: T; succeeded: boolean; message?: string; }
 
+const value = (source: any, camelCase: string, pascalCase: string): any =>
+  source?.[camelCase] ?? source?.[pascalCase];
+
+function normalizeRecommendedStack(source: any): RecommendedStackDto | undefined {
+  if (!source || typeof source !== 'object') return undefined;
+  const techStack = value(source, 'techStack', 'TechStack');
+  return {
+    description: value(source, 'description', 'Description') ?? '',
+    techStack: Array.isArray(techStack) ? techStack.filter((item): item is string => typeof item === 'string') : [],
+    reasoning: value(source, 'reasoning', 'Reasoning') ?? '',
+  };
+}
+
+/** Supports both current camelCase responses and legacy suggestions stored as PascalCase JsonElement. */
+export function normalizeProjectSetup(source: any): ProjectSetupDto {
+  const techStackSource = value(source, 'techStack', 'TechStack') ?? {};
+  const suggestionSource = value(techStackSource, 'suggestion', 'Suggestion');
+  const primaryStack = normalizeRecommendedStack(value(suggestionSource, 'primaryStack', 'PrimaryStack'));
+  const idealStack = normalizeRecommendedStack(value(suggestionSource, 'idealStack', 'IdealStack'));
+  const confirmedStack = value(techStackSource, 'confirmedStack', 'ConfirmedStack');
+  const platforms = value(techStackSource, 'platforms', 'Platforms');
+
+  const suggestion = primaryStack && idealStack ? {
+    primaryStack,
+    idealStack,
+    gapAnalysis: value(suggestionSource, 'gapAnalysis', 'GapAnalysis') ?? [],
+    platformTargets: value(suggestionSource, 'platformTargets', 'PlatformTargets') ?? [],
+    projectType: value(suggestionSource, 'projectType', 'ProjectType') ?? 'Other',
+  } : undefined;
+
+  const normalizeJob = (jobSource: any): SetupJobDto => ({
+    status: value(jobSource, 'status', 'Status') ?? 'NotStarted',
+    jobId: value(jobSource, 'jobId', 'JobId'),
+    attemptCount: value(jobSource, 'attemptCount', 'AttemptCount') ?? 0,
+    itemsCreated: value(jobSource, 'itemsCreated', 'ItemsCreated') ?? 0,
+    secondaryItemsCreated: value(jobSource, 'secondaryItemsCreated', 'SecondaryItemsCreated') ?? 0,
+    itemsSkipped: value(jobSource, 'itemsSkipped', 'ItemsSkipped') ?? 0,
+    startedAt: value(jobSource, 'startedAt', 'StartedAt'),
+    completedAt: value(jobSource, 'completedAt', 'CompletedAt'),
+    error: value(jobSource, 'error', 'Error'),
+  });
+
+  return {
+    projectId: value(source, 'projectId', 'ProjectId') ?? '',
+    projectName: value(source, 'projectName', 'ProjectName') ?? '',
+    overallStatus: value(source, 'overallStatus', 'OverallStatus') ?? 'NeedsTechStack',
+    techStack: {
+      status: value(techStackSource, 'status', 'Status') ?? 'NotStarted',
+      suggestion,
+      confirmedStack: Array.isArray(confirmedStack) ? confirmedStack : [],
+      platforms: Array.isArray(platforms) ? platforms : [],
+      projectType: value(techStackSource, 'projectType', 'ProjectType') ?? '',
+      error: value(techStackSource, 'error', 'Error'),
+    },
+    wbs: normalizeJob(value(source, 'wbs', 'Wbs')),
+    skills: normalizeJob(value(source, 'skills', 'Skills')),
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProjectSetupApi {
   private http = inject(HttpClient);

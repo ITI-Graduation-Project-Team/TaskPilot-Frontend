@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
-import { ConfirmTechStackRequest, ProjectSetupApi, ProjectSetupDto } from '../api/project-setup.api';
+import { ConfirmTechStackRequest, normalizeProjectSetup, ProjectSetupApi, ProjectSetupDto } from '../api/project-setup.api';
 
 interface ApiEnvelope { data: ProjectSetupDto; }
 
@@ -32,8 +32,9 @@ export class ProjectSetupStore {
     this._loading.set(true);
     try {
       await this.refresh();
-      if (this._setup()?.techStack.status === 'NotStarted') {
-        await this.generateSuggestion(false);
+      const techStack = this._setup()?.techStack;
+      if (techStack?.status === 'NotStarted' || (techStack?.status === 'Suggested' && !techStack.suggestion)) {
+        await this.generateSuggestion(techStack.status === 'Suggested');
       }
       this.syncPolling();
     } finally {
@@ -51,7 +52,7 @@ export class ProjectSetupStore {
     if (!this.projectId) return;
     try {
       const response = await firstValueFrom(this.api.get(this.projectId));
-      this._setup.set(response.data);
+      this._setup.set(normalizeProjectSetup(response.data));
       this._error.set(null);
       this.syncPolling();
     } catch (error) {
@@ -80,7 +81,7 @@ export class ProjectSetupStore {
     this._error.set(null);
     try {
       const response = await firstValueFrom(request());
-      this._setup.set(response.data);
+      this._setup.set(normalizeProjectSetup(response.data));
       this.syncPolling();
     } catch (error) {
       this._error.set(this.errorMessage(error));

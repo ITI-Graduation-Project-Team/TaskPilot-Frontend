@@ -173,6 +173,11 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
                 </button>
               </div>
             </div>
+          } @else {
+            <div class="mt-6 rounded-2xl border border-warning/30 bg-warning/10 p-5" role="alert">
+              <p class="font-extrabold text-text-primary">The architecture suggestion is incomplete</p>
+              <p class="mt-1 text-sm text-text-secondary">Regenerate the recommendation to continue project setup.</p>
+            </div>
           }
         </section>
 
@@ -297,7 +302,8 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
   refresh(): void { void this.store.refresh(); }
 
   selectStack(choice: StackChoice, stack: RecommendedStackDto): void { this.applyStack(stack, choice); }
-  private applyStack(stack: RecommendedStackDto, choice: StackChoice): void {
+  private applyStack(stack: RecommendedStackDto | undefined, choice: StackChoice): void {
+    if (!stack) return;
     this.selectedChoice.set(choice);
     this.selectedTechStack.set([...new Set(stack.techStack || [])]);
   }
