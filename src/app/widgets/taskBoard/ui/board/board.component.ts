@@ -49,6 +49,7 @@ interface Task {
     canComment: boolean;
     canDownloadAttachments: boolean;
   };
+  searchString?: string;
 }
 
 type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
@@ -1667,6 +1668,10 @@ export class BoardComponent implements OnInit, OnChanges {
         permissions: this.buildPermissions(t.assigneeId, isPm)
       };
 
+      const title = this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn;
+      const desc = this.currentLang === 'ar' ? (t.descriptionAr || t.descriptionEn || '') : (t.descriptionEn || '');
+      task.searchString = `${title} ${desc}`.toLowerCase();
+
       const col = mapStatusToFrontend(t.status);
       if (col === 'todo') todoList.push(task);
       else if (col === 'inProgress') inProgressList.push(task);
@@ -1699,7 +1704,7 @@ export class BoardComponent implements OnInit, OnChanges {
     const type = this.typeFilter();
 
     return tasks.filter(task => {
-      const matchesSearch = !query || `${this.getTaskTitle(task)} ${this.getTaskDescription(task)}`.toLowerCase().includes(query);
+      const matchesSearch = !query || (task.searchString && task.searchString.includes(query));
       const matchesPriority = priority === 'All' || task.priority === priority;
       const matchesType = type === 'All' || task.type === type;
       return matchesSearch && matchesPriority && matchesType;
@@ -1799,18 +1804,44 @@ export class BoardComponent implements OnInit, OnChanges {
         event.currentIndex
       );
 
+      // Notify signals IMMEDIATELY so the UI updates instantly without waiting for backend
+      this.todo.update(v => [...v]);
+      this.inProgress.update(v => [...v]);
+      this.review.update(v => [...v]);
+      this.done.update(v => [...v]);
+
       try {
         const statusEnum = this.mapColumnToEnum(newStatus);
-        await this.tasksService.updateTaskStatus(task.id, statusEnum);
+        const updatedTask = await this.tasksService.updateTaskStatus(task.id, statusEnum);
         this.toastService.show('Task status updated successfully.', 'success');
-        // Fetch updated data from backend to get the automatically calculated actualHours
-        await this.loadWorkspaceData();
+        
+        // Update actualHours if provided by backend
+        if (updatedTask && typeof updatedTask.actualHours === 'number') {
+          task.actualHours = updatedTask.actualHours;
+          // Update signals again only if hours changed
+          this.todo.update(v => [...v]);
+          this.inProgress.update(v => [...v]);
+          this.review.update(v => [...v]);
+          this.done.update(v => [...v]);
+        }
       } catch (err: any) {
         console.error('Failed to update task status in backend:', err);
         const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to update task status.';
         this.toastService.show(errorMsg, 'error');
-        // Rollback status visually by reloading
-        await this.loadWorkspaceData();
+        
+        // Rollback visually by moving item back
+        transferArrayItem(
+          event.container.data,
+          event.previousContainer.data,
+          event.currentIndex,
+          event.previousIndex
+        );
+        
+        // Notify signals of rollback
+        this.todo.update(v => [...v]);
+        this.inProgress.update(v => [...v]);
+        this.review.update(v => [...v]);
+        this.done.update(v => [...v]);
       }
     }
   }
