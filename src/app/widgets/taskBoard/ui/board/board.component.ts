@@ -1548,18 +1548,31 @@ export class BoardComponent implements OnInit, OnChanges {
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
 
-    // Fetch active sprint to enable retrospectives
-    // Step 1: Try to get active sprint — treat 404 as null, not an error
+    // Fetch sprints to determine board context
     let activeSprint: { sprintId: string } | null = null;
-    try {
-      const activeSprintRes = await this.sprintService.getActiveSprint(projectId);
-      const resolved = activeSprintRes?.data || activeSprintRes;
-      if (resolved && resolved.sprintId) {
-        activeSprint = resolved;
+    let plannedSprint: { sprintId: string } | null = null;
+    let completedSprint: { sprintId: string } | null = null;
+
+    if (!this.overrideSprintId || !this.overrideSprintStatus) {
+      // Step 1: Fire all sprint queries in parallel to avoid waterfall wait times
+      const [activeRes, plannedRes, completedRes] = await Promise.allSettled([
+        this.sprintService.getActiveSprint(projectId),
+        this.sprintService.getPlannedSprint(projectId),
+        this.sprintService.getLatestCompletedSprint(projectId)
+      ]);
+
+      if (activeRes.status === 'fulfilled') {
+        const resolved = (activeRes.value as any)?.data || activeRes.value;
+        if (resolved && resolved.sprintId) activeSprint = resolved;
       }
-    } catch {
-      // 404 or any error = no active sprint. Continue to planned check.
-      activeSprint = null;
+      if (plannedRes.status === 'fulfilled') {
+        const resolved = (plannedRes.value as any)?.data || plannedRes.value;
+        if (resolved && resolved.sprintId) plannedSprint = resolved;
+      }
+      if (completedRes.status === 'fulfilled') {
+        const resolved = (completedRes.value as any)?.data || completedRes.value;
+        if (resolved && resolved.sprintId) completedSprint = resolved;
+      }
     }
 
     // Step 2: Branch based on result
@@ -1588,41 +1601,21 @@ export class BoardComponent implements OnInit, OnChanges {
       this.plannedSprintId.set(null);
       this.completedSprintId.set(null);
       this.sprintStatus.set('Active');
+    } else if (plannedSprint && plannedSprint.sprintId) {
+      this.activeSprintId.set(null);
+      this.plannedSprintId.set(plannedSprint.sprintId);
+      this.completedSprintId.set(null);
+      this.sprintStatus.set('Planned');
+    } else if (completedSprint && completedSprint.sprintId) {
+      this.activeSprintId.set(null);
+      this.plannedSprintId.set(null);
+      this.completedSprintId.set(completedSprint.sprintId);
+      this.sprintStatus.set('Completed');
     } else {
       this.activeSprintId.set(null);
-
-      // Step 3: Try to get planned sprint — isolated try/catch
-      try {
-        const plannedSprint = await this.sprintService.getPlannedSprint(projectId);
-        if (plannedSprint && plannedSprint.sprintId) {
-          this.plannedSprintId.set(plannedSprint.sprintId);
-          this.sprintStatus.set('Planned');
-        } else {
-          this.plannedSprintId.set(null);
-          this.sprintStatus.set(null);
-        }
-      } catch {
-        this.plannedSprintId.set(null);
-        this.sprintStatus.set(null);
-      }
-
-      if (!this.plannedSprintId()) {
-        try {
-          const completedSprint = await this.sprintService.getLatestCompletedSprint(projectId);
-          if (completedSprint && completedSprint.sprintId) {
-            this.activeSprintId.set(null);
-            this.plannedSprintId.set(null);
-            this.completedSprintId.set(completedSprint.sprintId);
-            this.sprintStatus.set('Completed');
-          } else {
-            this.completedSprintId.set(null);
-            this.sprintStatus.set(null);
-          }
-        } catch {
-          this.completedSprintId.set(null);
-          this.sprintStatus.set(null);
-        }
-      }
+      this.plannedSprintId.set(null);
+      this.completedSprintId.set(null);
+      this.sprintStatus.set(null);
     }
 
     // 4. Load only the tasks that belong to the sprint being viewed.
