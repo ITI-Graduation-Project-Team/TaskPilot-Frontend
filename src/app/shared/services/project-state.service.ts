@@ -58,6 +58,10 @@ export class ProjectStateService {
       if (stored) {
         try { this._localCompletedIds.set(JSON.parse(stored)); } catch (e) { }
       }
+      const savedProjectId = localStorage.getItem('selectedProjectId');
+      if (savedProjectId) {
+        this._selectedProjectId.set(savedProjectId);
+      }
     }
     this.initializeState();
   }
@@ -284,9 +288,8 @@ export class ProjectStateService {
 
   async loadProjectEmployeeCount(projectId: string): Promise<number> {
     try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees`);
-      const list = data.data || data || [];
-      const count = Array.isArray(list) ? list.length : 0;
+      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees/count`);
+      const count = typeof data.data === 'number' ? data.data : (typeof data === 'number' ? data : 0);
       this._projectEmployeeCount.set(count);
       return count;
     } catch (e) {
