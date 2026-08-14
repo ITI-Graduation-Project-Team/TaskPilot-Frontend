@@ -1697,23 +1697,7 @@ export class BoardComponent implements OnInit, OnChanges {
 
     this.hasAssignments.set(tasks.some((t: any) => isTaskAssigned(t)));
     const unassignedExist = tasks.length > 0 && tasks.some((t: any) => !isTaskAssigned(t));
-
-    try {
-      if (sprintId && this.activeProjectId && this.projectState.isProjectManager()) {
-        const snapRes = await this.sprintService.getAssignmentSnapshot(this.activeProjectId, sprintId);
-        const snapData = snapRes?.data ?? snapRes;
-        if (snapData && snapData.unassignedTasks) {
-          const actualUnassigned = snapData.unassignedTasks.filter((t: any) => !t.assigneeId && !t.employeeId);
-          this.hasUnassignedTasks.set(actualUnassigned.length > 0);
-        } else {
-          this.hasUnassignedTasks.set(unassignedExist);
-        }
-      } else {
-        this.hasUnassignedTasks.set(unassignedExist);
-      }
-    } catch (e) {
-      this.hasUnassignedTasks.set(unassignedExist);
-    }
+    this.hasUnassignedTasks.set(unassignedExist);
   }
 
   private filterTasks(tasks: Task[]): Task[] {
