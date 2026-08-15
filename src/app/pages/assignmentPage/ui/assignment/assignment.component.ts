@@ -70,11 +70,15 @@ export class AssignmentComponent implements OnInit {
 
   // Track each developer's starting capacity from the suggestions
   readonly developerInitialCapacities = computed(() => {
-    const capacities: { [empId: string]: { name: string, capacity: number } } = {};
+    const capacities: { [empId: string]: { name: string, capacity: number, baseAssigned: number } } = {};
     for (const task of this.suggestions()) {
       for (const dev of task.rankedDevelopers) {
         if (!capacities[dev.employeeId]) {
-          capacities[dev.employeeId] = { name: dev.employeeName, capacity: dev.initialRemainingHours };
+          capacities[dev.employeeId] = { 
+            name: dev.employeeName, 
+            capacity: dev.maxSprintHours || dev.initialRemainingHours, // fallback if backend not updated
+            baseAssigned: dev.currentAssignedHours || 0
+          };
         }
       }
     }
@@ -102,12 +106,15 @@ export class AssignmentComponent implements OnInit {
     
     for (const empId in initial) {
       const cap = initial[empId].capacity;
-      const ass = assigned[empId] || 0;
+      const baseAssigned = initial[empId].baseAssigned;
+      const localAss = assigned[empId] || 0;
+      const totalAssigned = baseAssigned + localAss;
+      
       remaining[empId] = {
         name: initial[empId].name,
-        assigned: ass,
+        assigned: totalAssigned,
         capacity: cap,
-        remaining: cap - ass
+        remaining: cap - totalAssigned
       };
     }
     return remaining;

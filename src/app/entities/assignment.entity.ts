@@ -8,6 +8,8 @@ export interface DeveloperSuggestion {
   reasonAr: string;
   rank: number;           // 1, 2, or 3 — position in rankedDevelopers
   initialRemainingHours: number;
+  maxSprintHours: number;
+  currentAssignedHours: number;
 }
 
 export interface AssignmentSuggestion {
@@ -53,6 +55,8 @@ export interface ExplainedDeveloperDto extends DeveloperScoreDto {
   fullName?: string; // Embedded from backend if available
   jobTitle?: string;
   remainingHours: number;
+  maxSprintHours?: number;
+  currentAssignedHours?: number;
 }
 
 export interface ExplainedTaskScoringResultDto {

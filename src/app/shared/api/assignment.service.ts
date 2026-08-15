@@ -49,6 +49,8 @@ export class AssignmentService {
         reasonAr: dev.reasonAr,
         rank: index + 1,
         initialRemainingHours: dev.remainingHours,
+        maxSprintHours: dev.maxSprintHours || dev.remainingHours,
+        currentAssignedHours: dev.currentAssignedHours || 0,
       })),
     }));
   }
