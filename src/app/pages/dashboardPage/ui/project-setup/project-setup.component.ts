@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BackgroundSetupStatus, RecommendedStackDto } from '../../../../shared/api/project-setup.api';
 import { NotificationHubService } from '../../../../shared/services/notification-hub.service';
 import { ProjectSetupStore } from '../../../../shared/services/project-setup.store';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
-type StackChoice = 'primary' | 'ideal' | 'custom';
+type StackChoice = 'primary' | 'ideal';
 
 @Component({
   selector: 'app-project-setup',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   host: { class: 'block min-h-full' },
   template: `
     <main class="mx-auto w-full max-w-6xl pb-12" aria-labelledby="setup-title">
@@ -100,7 +101,7 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
           @if (store.action() === 'suggesting' || store.action() === 'regenerating') {
             <div class="mt-6 flex min-h-32 items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5" role="status">
               <span class="h-9 w-9 shrink-0 animate-spin rounded-full border-4 border-primary/15 border-t-primary"></span>
-              <div><p class="font-extrabold text-text-primary">Comparing architecture options</p><p class="mt-1 text-sm text-text-secondary">Requirements and available company skills are being evaluated.</p></div>
+              <div><p class="font-extrabold text-text-primary">Comparing architecture options</p><p class="mt-1 text-sm text-text-secondary">Requirements and skills from the assigned project team are being evaluated.</p></div>
             </div>
           } @else if (setup.techStack.status === 'Confirmed') {
             <div class="mt-6 rounded-2xl border border-success/25 bg-success/5 p-5">
@@ -110,88 +111,130 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
                   <span class="rounded-full border border-success/25 bg-surface px-3 py-1.5 text-xs font-bold text-text-primary">{{ tech }}</span>
                 }
               </div>
-              <p class="mt-3 text-xs text-text-secondary">{{ setup.techStack.projectType }} · {{ setup.techStack.platforms.join(' · ') }}</p>
             </div>
           } @else if (setup.techStack.suggestion; as suggestion) {
             <div class="mt-6 grid gap-4 lg:grid-cols-2">
-              <button type="button" (click)="selectStack('primary', suggestion.primaryStack)" class="stack-option"
-                      [class.stack-option--selected]="selectedChoice() === 'primary'" [attr.aria-pressed]="selectedChoice() === 'primary'">
-                <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-success">Team ready</span>
-                <strong class="mt-2 block text-base text-text-primary">Primary stack</strong>
-                <span class="mt-2 block text-sm leading-6 text-text-secondary">{{ suggestion.primaryStack.reasoning }}</span>
-              </button>
+              @if (setup.teamContext.teamStackAvailable) {
+                <button type="button" (click)="selectStack('primary', suggestion.primaryStack)" class="stack-option"
+                        [class.stack-option--selected]="selectedChoice() === 'primary'" [attr.aria-pressed]="selectedChoice() === 'primary'">
+                  <span class="flex items-center justify-between gap-3">
+                    <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-success">{{ 'PROJECT_SETUP.TEAM_STACK' | translate }}</span>
+                    @if (selectedChoice() === 'primary') { <span class="selection-badge">{{ 'PROJECT_SETUP.SELECTED' | translate }}</span> }
+                  </span>
+                  <strong class="mt-2 block text-lg text-text-primary">{{ 'PROJECT_SETUP.TEAM_READY' | translate }}</strong>
+                  <span class="mt-2 block text-sm leading-6 text-text-secondary">{{ suggestion.primaryStack.reasoning }}</span>
+                  <span class="mt-4 flex flex-wrap gap-2">
+                    @for (tech of suggestion.primaryStack.techStack; track tech) { <span class="tech-chip tech-chip--team">{{ tech }}</span> }
+                  </span>
+                </button>
+              } @else {
+                <article class="stack-option stack-option--unavailable" aria-labelledby="team-stack-unavailable-title">
+                  <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-text-secondary">{{ 'PROJECT_SETUP.TEAM_STACK' | translate }}</span>
+                  <strong id="team-stack-unavailable-title" class="mt-2 block text-lg text-text-primary">{{ 'PROJECT_SETUP.ADD_TEAM_TO_UNLOCK' | translate }}</strong>
+                  <p class="mt-2 text-sm leading-6 text-text-secondary">
+                    @if (setup.teamContext.activeMemberCount === 0) {
+                      {{ 'PROJECT_SETUP.NO_TEAM_DESC' | translate }}
+                    } @else {
+                      {{ 'PROJECT_SETUP.NO_SKILLS_DESC' | translate }}
+                    }
+                  </p>
+                  <button type="button" (click)="openTeamSetup()" class="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/30 bg-surface px-4 text-sm font-extrabold text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                    {{ (setup.teamContext.activeMemberCount === 0 ? 'PROJECT_SETUP.ADD_EMPLOYEES' : 'PROJECT_SETUP.REVIEW_PROFILES') | translate }}
+                    <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/></svg>
+                  </button>
+                </article>
+              }
               <button type="button" (click)="selectStack('ideal', suggestion.idealStack)" class="stack-option"
                       [class.stack-option--selected]="selectedChoice() === 'ideal'" [attr.aria-pressed]="selectedChoice() === 'ideal'">
-                <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">Architecture target</span>
-                <strong class="mt-2 block text-base text-text-primary">Ideal stack</strong>
+                <span class="flex items-center justify-between gap-3">
+                  <span class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-primary">{{ 'PROJECT_SETUP.IDEAL_STACK' | translate }}</span>
+                  @if (selectedChoice() === 'ideal') { <span class="selection-badge">{{ 'PROJECT_SETUP.SELECTED' | translate }}</span> }
+                </span>
+                <strong class="mt-2 block text-lg text-text-primary">{{ 'PROJECT_SETUP.IDEAL_FIT' | translate }}</strong>
                 <span class="mt-2 block text-sm leading-6 text-text-secondary">{{ suggestion.idealStack.reasoning }}</span>
+                <span class="mt-4 flex flex-wrap gap-2">
+                  @for (tech of suggestion.idealStack.techStack; track tech) { <span class="tech-chip tech-chip--ideal">{{ tech }}</span> }
+                </span>
               </button>
             </div>
 
-            @if (suggestion.gapAnalysis.length > 0) {
+            @if (setup.teamContext.teamStackAvailable && suggestion.gapAnalysis.length > 0) {
               <aside class="mt-5 overflow-hidden rounded-2xl border border-warning/30 bg-warning/10" aria-labelledby="gap-analysis-heading">
                 <div class="flex flex-col gap-2 border-b border-warning/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-warning">Team readiness</p>
-                    <h3 id="gap-analysis-heading" class="mt-1 text-base font-extrabold text-text-primary">Capability gaps to plan for</h3>
+                    <h3 id="gap-analysis-heading" class="mt-1 text-base font-extrabold text-text-primary">{{ 'PROJECT_SETUP.GAP_TITLE' | translate }}</h3>
                   </div>
                   <span class="inline-flex min-h-8 w-fit items-center rounded-full border border-warning/30 bg-surface px-3 text-xs font-extrabold text-text-primary">
                     {{ suggestion.gapAnalysis.length }} {{ suggestion.gapAnalysis.length === 1 ? 'gap' : 'gaps' }}
                   </span>
                 </div>
-                <ul class="grid gap-px bg-warning/15 sm:grid-cols-2" aria-label="Skills and technologies missing from the current team">
+                <ul class="grid gap-px bg-warning/15 lg:grid-cols-2" aria-label="Skills and technologies missing from the current team">
                   @for (gap of suggestion.gapAnalysis; track gap) {
-                    <li class="flex min-h-14 items-start gap-3 bg-surface/95 px-5 py-4 text-sm leading-5 text-text-primary">
-                      <svg class="mt-0.5 h-4 w-4 shrink-0 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
-                      </svg>
-                      <span>{{ gap }}</span>
+                    <li class="bg-surface/95 px-5 py-4 text-sm leading-5 text-text-primary">
+                      <div class="flex items-start gap-3">
+                        <svg class="mt-0.5 h-4 w-4 shrink-0 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.9 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+                        </svg>
+                        <div class="min-w-0 flex-1">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <strong>{{ gap.skill || gap.technology || 'Capability gap' }}</strong>
+                            <span class="gap-badge" [class.gap-badge--high]="gap.severity === 'High'">{{ gap.severity }}</span>
+                            <span class="gap-badge">{{ gap.gapType }}</span>
+                          </div>
+                          <p class="mt-2 text-text-secondary">{{ gap.summary }}</p>
+                          @if (gap.requiredLevel || gap.availableLevel || gap.requiredCount) {
+                            <p class="mt-2 text-xs font-bold text-text-secondary">
+                              Required: {{ gap.requiredLevel || 'Not specified' }}{{ gap.requiredCount ? ' × ' + gap.requiredCount : '' }}
+                              · Available: {{ gap.availableLevel || 'None' }} × {{ gap.availableCount }} ({{ gap.availableFte }} FTE)
+                            </p>
+                          }
+                          <p class="mt-2 text-xs font-bold text-text-primary">{{ gap.recommendation }}</p>
+                        </div>
+                      </div>
                     </li>
                   }
                 </ul>
                 <p class="px-5 py-3 text-xs leading-5 text-text-secondary">
-                  These gaps compare the ideal architecture with current team capabilities. You can still confirm a different stack below.
+                  {{ 'PROJECT_SETUP.GAP_HELP' | translate }}
                 </p>
               </aside>
             }
 
+            @if (setup.teamContext.teamStackAvailable && suggestion.gapAnalysis.length === 0) {
+              <div class="mt-5 flex items-start gap-3 rounded-2xl border border-success/25 bg-success/5 p-4 text-sm text-text-primary" role="status">
+                <svg class="mt-0.5 h-5 w-5 shrink-0 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m5 13 4 4L19 7"/></svg>
+                <div><p class="font-extrabold">{{ 'PROJECT_SETUP.NO_GAPS_TITLE' | translate }}</p><p class="mt-1 text-text-secondary">{{ 'PROJECT_SETUP.NO_GAPS_DESC' | translate }}</p></div>
+              </div>
+            }
+
             <div class="mt-5 rounded-2xl border border-border bg-sidebar p-5">
-              <h3 class="text-sm font-extrabold text-text-primary">Stack to confirm</h3>
-              <div class="mt-3 flex flex-wrap gap-2">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div><h3 class="text-sm font-extrabold text-text-primary">Stack to confirm</h3><p class="mt-1 text-xs text-text-secondary">Confirm the recommendation as-is, or customize it for a known delivery constraint.</p></div>
+                <button type="button" (click)="toggleCustomization()" class="min-h-11 rounded-xl border border-border bg-surface px-4 text-sm font-bold text-text-secondary hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                  {{ (isCustomizing() ? 'PROJECT_SETUP.CLOSE_CUSTOMIZE' : 'PROJECT_SETUP.CUSTOMIZE') | translate }}
+                </button>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-2">
                 @for (tech of selectedTechStack(); track tech) {
                   <span class="inline-flex min-h-9 items-center gap-2 rounded-full border border-primary/25 bg-surface px-3 text-xs font-bold text-text-primary">
                     {{ tech }}
-                    <button type="button" (click)="removeTech(tech)" class="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-error/10 hover:text-error" [attr.aria-label]="'Remove ' + tech">×</button>
+                    @if (isCustomizing()) {
+                      <button type="button" (click)="removeTech(tech)" class="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-error/10 hover:text-error" [attr.aria-label]="'Remove ' + tech">×</button>
+                    }
                   </span>
                 }
               </div>
-              <form class="mt-4 flex flex-col gap-2 sm:flex-row" (submit)="addTech($event)">
-                <label class="sr-only" for="new-tech">Add technology</label>
-                <input id="new-tech" [value]="newTech()" (input)="newTech.set(asInput($event).value)" placeholder="Add technology, e.g. Redis 7"
-                       class="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-4 text-base text-text-primary outline-none focus:ring-2 focus:ring-primary/30">
-                <button type="submit" class="min-h-11 rounded-xl bg-text-primary px-5 text-sm font-extrabold text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Add technology</button>
-              </form>
-
-              <div class="mt-5 grid gap-5 lg:grid-cols-2">
-                <fieldset>
-                  <legend class="text-xs font-extrabold uppercase tracking-wider text-text-secondary">Platform targets</legend>
-                  <div class="mt-2 flex flex-wrap gap-2">
-                    @for (platform of platformOptions; track platform) {
-                      <button type="button" (click)="togglePlatform(platform)" class="min-h-11 rounded-xl border px-4 text-sm font-bold"
-                              [class.border-primary]="selectedPlatforms().includes(platform)" [class.bg-primary]="selectedPlatforms().includes(platform)" [class.text-white]="selectedPlatforms().includes(platform)"
-                              [class.border-border]="!selectedPlatforms().includes(platform)" [class.text-text-secondary]="!selectedPlatforms().includes(platform)"
-                              [attr.aria-pressed]="selectedPlatforms().includes(platform)">{{ platform }}</button>
-                    }
-                  </div>
-                </fieldset>
-                <div>
-                  <label for="project-type" class="text-xs font-extrabold uppercase tracking-wider text-text-secondary">Project type</label>
-                  <select id="project-type" [value]="selectedProjectType()" (change)="selectedProjectType.set(asSelect($event).value)"
-                          class="mt-2 min-h-11 w-full rounded-xl border border-border bg-background px-4 text-base text-text-primary outline-none focus:ring-2 focus:ring-primary/30">
-                    @for (type of projectTypeOptions; track type) { <option [value]="type">{{ type }}</option> }
-                  </select>
-                </div>
-              </div>
+              @if (isCustomizing()) {
+                <form class="mt-4 flex flex-col gap-2 sm:flex-row" (submit)="addTech($event)">
+                  <label class="sr-only" for="new-tech">Add technology</label>
+                  <input id="new-tech" [value]="newTech()" (input)="newTech.set(asInput($event).value)" placeholder="Add technology, e.g. Redis 7"
+                         class="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-4 text-base text-text-primary outline-none focus:ring-2 focus:ring-primary/30">
+                  <button type="submit" class="min-h-11 rounded-xl bg-text-primary px-5 text-sm font-extrabold text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Add technology</button>
+                  <button type="button" (click)="resetCustomization()" class="min-h-11 rounded-xl border border-border bg-surface px-4 text-sm font-bold text-text-secondary">Reset</button>
+                </form>
+                <p class="mt-3 text-xs text-text-secondary">Gap analysis continues to compare your team with the AI ideal stack and is not recalculated for manual changes.</p>
+              }
 
               <div class="mt-6 flex justify-end">
                 <button type="button" (click)="confirmStack()" [disabled]="confirmDisabled()"
@@ -256,7 +299,14 @@ type StackChoice = 'primary' | 'ideal' | 'custom';
     .stack-option { min-height: 11rem; border: 1px solid var(--border); border-radius: 1rem; padding: 1.25rem; text-align: left; transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
     .stack-option:hover { border-color: color-mix(in srgb, var(--primary) 55%, transparent); }
     .stack-option--selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 7%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 12%, transparent); }
+    .stack-option--unavailable { border-style: dashed; background: color-mix(in srgb, var(--border) 20%, transparent); }
     .stack-option:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent); outline-offset: 3px; }
+    .selection-badge { border-radius: 999px; background: var(--primary); color: white; padding: .25rem .65rem; font-size: .65rem; font-weight: 800; }
+    .tech-chip { display: inline-flex; min-height: 1.75rem; align-items: center; border-radius: 999px; border: 1px solid var(--border); padding: 0 .65rem; font-size: .7rem; font-weight: 800; color: var(--text-primary); }
+    .tech-chip--team { border-color: color-mix(in srgb, var(--success) 30%, transparent); background: color-mix(in srgb, var(--success) 8%, transparent); }
+    .tech-chip--ideal { border-color: color-mix(in srgb, var(--primary) 30%, transparent); background: color-mix(in srgb, var(--primary) 8%, transparent); }
+    .gap-badge { display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); padding: .1rem .5rem; font-size: .62rem; font-weight: 800; color: var(--text-secondary); }
+    .gap-badge--high { border-color: color-mix(in srgb, var(--error) 40%, transparent); color: var(--error); }
     .setup-pulse { animation: setupPulse 1.6s ease-in-out infinite; }
     .progress-sweep { animation: progressSweep 1.8s ease-in-out infinite; }
     @keyframes setupPulse { 50% { opacity: .35; transform: scale(.75); } }
@@ -273,14 +323,12 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private initializedProject: string | null = null;
 
-  readonly platformOptions = ['Web', 'Mobile', 'Desktop', 'API'];
-  readonly projectTypeOptions = ['ERP', 'SaaS', 'MobileApp', 'API', 'Portal', 'Other'];
-  readonly selectedChoice = signal<StackChoice>('primary');
+  readonly selectedChoice = signal<StackChoice>('ideal');
   readonly selectedTechStack = signal<string[]>([]);
-  readonly selectedPlatforms = signal<string[]>([]);
-  readonly selectedProjectType = signal('Other');
+  readonly selectedBaseStack = signal<string[]>([]);
+  readonly isCustomizing = signal(false);
   readonly newTech = signal('');
-  readonly confirmDisabled = computed(() => this.store.isBusy() || this.selectedTechStack().length === 0 || this.selectedPlatforms().length === 0 || !this.selectedProjectType());
+  readonly confirmDisabled = computed(() => this.store.isBusy() || this.selectedTechStack().length === 0);
 
   constructor() {
     effect(() => {
@@ -289,9 +337,9 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
       const suggestion = setup.techStack.suggestion;
       if (!suggestion) return;
       this.initializedProject = setup.projectId;
-      this.applyStack(suggestion.primaryStack, 'primary');
-      this.selectedPlatforms.set(suggestion.platformTargets?.length ? [...suggestion.platformTargets] : ['Web']);
-      this.selectedProjectType.set(suggestion.projectType || 'Other');
+      this.applyStack(
+        setup.teamContext.teamStackAvailable ? suggestion.primaryStack : suggestion.idealStack,
+        setup.teamContext.teamStackAvailable ? 'primary' : 'ideal');
     });
 
     effect(() => {
@@ -325,27 +373,46 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
   }[this.store.setup()?.overallStatus || 'NeedsTechStack']));
 
   asInput(event: Event): HTMLInputElement { return event.target as HTMLInputElement; }
-  asSelect(event: Event): HTMLSelectElement { return event.target as HTMLSelectElement; }
   refresh(): void { void this.store.refresh(); }
 
-  selectStack(choice: StackChoice, stack: RecommendedStackDto): void { this.applyStack(stack, choice); }
+  selectStack(choice: StackChoice, stack: RecommendedStackDto): void {
+    this.isCustomizing.set(false);
+    this.applyStack(stack, choice);
+  }
   private applyStack(stack: RecommendedStackDto | undefined, choice: StackChoice): void {
     if (!stack) return;
+    const technologies = [...new Set(stack.techStack || [])];
     this.selectedChoice.set(choice);
-    this.selectedTechStack.set([...new Set(stack.techStack || [])]);
+    this.selectedBaseStack.set(technologies);
+    this.selectedTechStack.set(technologies);
   }
+
+  toggleCustomization(): void { this.isCustomizing.update(value => !value); }
+  resetCustomization(): void { this.selectedTechStack.set([...this.selectedBaseStack()]); this.newTech.set(''); }
 
   addTech(event: Event): void {
     event.preventDefault();
     const value = this.newTech().trim();
     if (!value) return;
-    this.selectedChoice.set('custom');
     this.selectedTechStack.update(items => items.some(item => item.toLowerCase() === value.toLowerCase()) ? items : [...items, value]);
     this.newTech.set('');
   }
 
-  removeTech(tech: string): void { this.selectedChoice.set('custom'); this.selectedTechStack.update(items => items.filter(item => item !== tech)); }
-  togglePlatform(platform: string): void { this.selectedPlatforms.update(items => items.includes(platform) ? items.filter(item => item !== platform) : [...items, platform]); }
+  removeTech(tech: string): void { this.selectedTechStack.update(items => items.filter(item => item !== tech)); }
+
+  openTeamSetup(): void {
+    const setup = this.store.setup();
+    if (setup && setup.teamContext.activeMemberCount > 0) {
+      void this.router.navigate(['/dashboard', 'employees']);
+      return;
+    }
+    void this.router.navigate(['/dashboard', 'team'], {
+      queryParams: {
+        setupProjectId: this.projectId(),
+        returnUrl: `/dashboard/projects/${this.projectId()}/setup`,
+      }
+    });
+  }
 
   async regenerate(): Promise<void> {
     this.initializedProject = null;
@@ -355,7 +422,7 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
   async confirmStack(): Promise<void> {
     if (this.confirmDisabled()) return;
     try {
-      await this.store.confirmTechStack({ techStack: this.selectedTechStack(), platformTargets: this.selectedPlatforms(), projectType: this.selectedProjectType() });
+      await this.store.confirmTechStack({ techStack: this.selectedTechStack() });
       this.toast.show('Architecture confirmed. WBS generation is ready to launch.', 'success');
     } catch { this.toast.show('Could not confirm the architecture.', 'error'); }
   }

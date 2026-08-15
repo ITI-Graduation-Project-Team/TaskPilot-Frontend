@@ -6,7 +6,7 @@ import { TeamCollaborationService, EmployeeAssignmentDto, CompanyEmployee, Proje
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
 
@@ -23,6 +23,29 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
         <h2 class="text-2xl font-bold text-text-primary">{{ 'TEAM.MANAGEMENT' | translate }}</h2>
         <p class="text-text-secondary text-sm">{{ 'TEAM.MANAGEMENT_DESC' | translate }}</p>
       </div>
+
+      @if (isSetupFlow()) {
+        <section class="overflow-hidden rounded-2xl border border-primary/25 bg-primary/5" aria-labelledby="setup-team-title">
+          <div class="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-start gap-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <div>
+                <h3 id="setup-team-title" class="font-extrabold text-text-primary">{{ 'TEAM.SETUP_STACK_TITLE' | translate }}</h3>
+                <p class="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{{ 'TEAM.SETUP_STACK_DESC' | translate }}</p>
+                @if (projectTeam().length > 0 && membersWithSkillsCount() === 0) {
+                  <p class="mt-2 text-xs font-bold text-warning">{{ 'TEAM.SETUP_NO_SKILLS' | translate }}</p>
+                }
+              </div>
+            </div>
+            <button type="button" (click)="continueToSetup()" [disabled]="projectTeam().length === 0"
+                    class="min-h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-extrabold text-white shadow-sm hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+              {{ 'TEAM.CONTINUE_TO_STACK' | translate }}
+            </button>
+          </div>
+        </section>
+      }
 
       <!-- Main Layout -->
       <div class="gap-6">
@@ -281,6 +304,7 @@ export class TeamViewComponent implements OnInit {
   private confirmDialogService = inject(ConfirmDialogService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // Feature 3: Smart Suggestion for Planned Sprints
   showSprintAssignmentDialog = signal<boolean>(false);
@@ -295,6 +319,9 @@ export class TeamViewComponent implements OnInit {
 
   companyEmployees = signal<CompanyEmployee[]>([]);
   projectTeam = signal<ProjectEmployee[]>([]);
+  setupReturnUrl = signal<string | null>(null);
+  isSetupFlow = computed(() => !!this.setupReturnUrl());
+  membersWithSkillsCount = computed(() => this.projectTeam().filter(member => (member.skills?.length ?? 0) > 0 && !member.isDeactivated).length);
 
   readonly unassignedCompanyEmployees = computed(() => {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
@@ -371,7 +398,19 @@ export class TeamViewComponent implements OnInit {
     });
   }
 
-  async ngOnInit() { }
+  async ngOnInit() {
+    const setupProjectId = this.route.snapshot.queryParamMap.get('setupProjectId');
+    const requestedReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (setupProjectId) this.projectState.setSelectedProject(setupProjectId);
+    if (requestedReturnUrl?.startsWith('/dashboard/projects/') && requestedReturnUrl.endsWith('/setup')) {
+      this.setupReturnUrl.set(requestedReturnUrl);
+    }
+  }
+
+  continueToSetup(): void {
+    const returnUrl = this.setupReturnUrl();
+    if (returnUrl && this.projectTeam().length > 0) void this.router.navigateByUrl(returnUrl);
+  }
 
   async loadCompanyEmployees(companyId: string) {
     try {
@@ -401,7 +440,8 @@ export class TeamViewComponent implements OnInit {
         allocationPercentage: e.allocationPercentage,
         isDeactivated: e.isDeactivated,
         deactivationReason: e.deactivationReason,
-        deactivatedAt: e.deactivatedAt
+        deactivatedAt: e.deactivatedAt,
+        skills: e.skills || []
       }));
       this.projectTeam.set(mapped);
       this.projectState.setProjectEmployeeCount(mapped.length);
