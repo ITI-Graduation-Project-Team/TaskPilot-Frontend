@@ -32,6 +32,13 @@ export class EmployeesComponent implements OnInit {
   deactivatedEmployeesPage = signal<number>(1);
   totalDeactivatedEmployees = signal<number>(0);
 
+  // Statistics State
+  totalEmployeesStat = signal<number>(0);
+  activeEmployeesStat = signal<number>(0);
+  deactivatedEmployeesStat = signal<number>(0);
+  availableEmployeesStat = signal<number>(0);
+  employeesInProjectsStat = signal<number>(0);
+
   localSearchQuery = signal<string>('');
   isLoadingActive = signal<boolean>(false);
   isLoadingDeactivated = signal<boolean>(false);
@@ -82,15 +89,31 @@ export class EmployeesComponent implements OnInit {
   detectedSprintProjectIds = signal<string[]>([]);
 
   // Summary Cards Data
-  activeCount = computed(() => this.totalActiveEmployees());
-  deactivatedCount = computed(() => this.totalDeactivatedEmployees());
-  totalCount = computed(() => this.activeCount() + this.deactivatedCount());
+  activeCount = computed(() => this.activeEmployeesStat());
+  deactivatedCount = computed(() => this.deactivatedEmployeesStat());
+  totalCount = computed(() => this.totalEmployeesStat());
   
-  availableCount = computed(() => this.activeEmployees().filter(e => (!e.availabilityStatus || e.availabilityStatus.toLowerCase() === 'available')).length);
-  assignedCount = computed(() => this.activeEmployees().filter(e => (e.activeProjectsCount > 0 || e.currentAssignedTasksCount > 0)).length);
+  availableCount = computed(() => this.availableEmployeesStat());
+  assignedCount = computed(() => this.employeesInProjectsStat());
 
   ngOnInit() {
+    this.loadStatistics();
     this.switchTab('active');
+  }
+
+  async loadStatistics() {
+    try {
+      const res = await this.companyService.getEmployeeStatistics();
+      if (res.succeeded && res.data) {
+        this.totalEmployeesStat.set(res.data.totalEmployees);
+        this.activeEmployeesStat.set(res.data.activeEmployees);
+        this.deactivatedEmployeesStat.set(res.data.deactivatedEmployees);
+        this.availableEmployeesStat.set(res.data.availableEmployees);
+        this.employeesInProjectsStat.set(res.data.employeesInProjects);
+      }
+    } catch (e) {
+      console.error('Failed to load employee statistics:', e);
+    }
   }
 
   switchTab(tab: 'active' | 'deactivated' | 'invitations') {
@@ -400,6 +423,7 @@ export class EmployeesComponent implements OnInit {
     this.closeDeactivateModal();
     this.activeEmployeesCache.clear();
     this.deactivatedEmployeesCache.clear();
+    this.loadStatistics();
     if (this.activeTab() === 'active') this.loadActiveEmployees();
     if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
   }
@@ -418,6 +442,7 @@ export class EmployeesComponent implements OnInit {
     this.closeReactivateModal();
     this.activeEmployeesCache.clear();
     this.deactivatedEmployeesCache.clear();
+    this.loadStatistics();
     if (this.activeTab() === 'active') this.loadActiveEmployees();
     if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
   }
@@ -437,6 +462,7 @@ export class EmployeesComponent implements OnInit {
     this.detectedSprintProjectIds.set([]);
     this.activeEmployeesCache.clear();
     this.deactivatedEmployeesCache.clear();
+    this.loadStatistics();
     if (this.activeTab() === 'active') this.loadActiveEmployees();
     if (this.activeTab() === 'deactivated') this.loadDeactivatedEmployees();
   }
