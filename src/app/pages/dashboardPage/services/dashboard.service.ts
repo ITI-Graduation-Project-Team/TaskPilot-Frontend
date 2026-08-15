@@ -13,9 +13,6 @@ export class DashboardService {
   isHistoryModalOpen = signal(false);
   selectedHistoryProject = signal<{ id: string, nameEn: string, nameAr?: string, status: string } | null>(null);
 
-  isTechStackAdvisorOpen = signal(false);
-  advisorProjectId = signal<string | null>(null);
-  
   isDraftReviewOpen = signal(false);
 
   projectStatsMap = signal<Map<string, ProjectStats>>(new Map());

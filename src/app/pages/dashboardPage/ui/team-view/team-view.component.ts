@@ -6,9 +6,34 @@ import { TeamCollaborationService, EmployeeAssignmentDto, CompanyEmployee, Proje
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
+
+export type EmployeePickerEmptyState = 'loading' | 'error' | 'noEmployees' | 'noActiveEmployees' | 'allAssigned' | 'noneAvailable' | null;
+
+export function resolveEmployeePickerEmptyState(
+  companyEmployees: CompanyEmployee[],
+  projectTeam: ProjectEmployee[],
+  loading: boolean,
+  loadError: boolean
+): EmployeePickerEmptyState {
+  if (loading) return 'loading';
+  if (loadError) return 'error';
+  if (companyEmployees.length === 0) return 'noEmployees';
+
+  const activeEmployees = companyEmployees.filter(employee => !employee.isDeactivated);
+  if (activeEmployees.length === 0) return 'noActiveEmployees';
+
+  const assignedIds = new Set(projectTeam.map(employee => employee.employeeId));
+  const unassignedEmployees = activeEmployees.filter(employee =>
+    !assignedIds.has(employee.employeeId || employee.id || ''));
+  if (unassignedEmployees.length === 0) return 'allAssigned';
+
+  const assignableEmployees = unassignedEmployees.filter(employee =>
+    !employee.availabilityStatus || employee.availabilityStatus === 'Available');
+  return assignableEmployees.length === 0 ? 'noneAvailable' : null;
+}
 
 @Component({
   selector: 'app-team-view',
@@ -23,6 +48,29 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
         <h2 class="text-2xl font-bold text-text-primary">{{ 'TEAM.MANAGEMENT' | translate }}</h2>
         <p class="text-text-secondary text-sm">{{ 'TEAM.MANAGEMENT_DESC' | translate }}</p>
       </div>
+
+      @if (isSetupFlow()) {
+        <section class="overflow-hidden rounded-2xl border border-primary/25 bg-primary/5" aria-labelledby="setup-team-title">
+          <div class="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-start gap-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <div>
+                <h3 id="setup-team-title" class="font-extrabold text-text-primary">{{ 'TEAM.SETUP_STACK_TITLE' | translate }}</h3>
+                <p class="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{{ 'TEAM.SETUP_STACK_DESC' | translate }}</p>
+                @if (projectTeam().length > 0 && membersWithSkillsCount() === 0) {
+                  <p class="mt-2 text-xs font-bold text-warning">{{ 'TEAM.SETUP_NO_SKILLS' | translate }}</p>
+                }
+              </div>
+            </div>
+            <button type="button" (click)="continueToSetup()" [disabled]="projectTeam().length === 0"
+                    class="min-h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-extrabold text-white shadow-sm hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+              {{ 'TEAM.CONTINUE_TO_STACK' | translate }}
+            </button>
+          </div>
+        </section>
+      }
 
       <!-- Main Layout -->
       <div class="gap-6">
@@ -66,8 +114,9 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
               <div class="relative">
                 <label class="block text-xs font-bold text-text-secondary mb-1.5">{{ 'TEAM.SELECT_MEMBER' | translate }}</label>
                 <!-- Custom Dropdown Trigger -->
-                <div (click)="isDropdownOpen.set(!isDropdownOpen())"
-                     class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all">
+                <button type="button" (click)="isDropdownOpen.set(!isDropdownOpen())"
+                     class="min-h-11 w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                     [attr.aria-expanded]="isDropdownOpen()" aria-haspopup="listbox">
                   @if (selectedEmployeeId) {
                     @for (emp of companyEmployees(); track emp.employeeId) {
                       @if (emp.employeeId === selectedEmployeeId) {
@@ -97,7 +146,7 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                   </svg>
-                </div>
+                </button>
                 <!-- Dropdown List -->
                 @if (isDropdownOpen()) {
                   <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto animate-[fadeDown_0.15s_ease_both]">
@@ -132,8 +181,20 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
                         }
                       </div>
                     } @empty {
-                      <div class="p-4 text-center text-xs text-text-secondary">
-                        {{ 'TEAM.ALL_ASSIGNED' | translate }}
+                      <div class="p-4 text-center text-xs leading-5 text-text-secondary" [attr.role]="employeePickerEmptyState() === 'error' ? 'alert' : 'status'">
+                        @switch (employeePickerEmptyState()) {
+                          @case ('loading') {
+                            <span class="inline-flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" aria-hidden="true"></span>{{ 'TEAM.LOADING_COMPANY_EMPLOYEES' | translate }}</span>
+                          }
+                          @case ('error') {
+                            <p>{{ 'TEAM.LOAD_EMPLOYEES_FAILED' | translate }}</p>
+                            <button type="button" (click)="retryCompanyEmployeesLoad()" class="mt-2 min-h-11 rounded-lg border border-error/30 px-4 font-bold text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40">{{ 'TEAM.RETRY' | translate }}</button>
+                          }
+                          @case ('noEmployees') { {{ 'TEAM.NO_COMPANY_EMPLOYEES' | translate }} }
+                          @case ('noActiveEmployees') { {{ 'TEAM.NO_ACTIVE_COMPANY_EMPLOYEES' | translate }} }
+                          @case ('allAssigned') { {{ 'TEAM.ALL_ASSIGNED' | translate }} }
+                          @case ('noneAvailable') { {{ 'TEAM.NO_AVAILABLE_EMPLOYEES' | translate }} }
+                        }
                       </div>
                     }
                   </div>
@@ -281,6 +342,7 @@ export class TeamViewComponent implements OnInit {
   private confirmDialogService = inject(ConfirmDialogService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // Feature 3: Smart Suggestion for Planned Sprints
   showSprintAssignmentDialog = signal<boolean>(false);
@@ -295,6 +357,11 @@ export class TeamViewComponent implements OnInit {
 
   companyEmployees = signal<CompanyEmployee[]>([]);
   projectTeam = signal<ProjectEmployee[]>([]);
+  isLoadingCompanyEmployees = signal(false);
+  companyEmployeesLoadError = signal(false);
+  setupReturnUrl = signal<string | null>(null);
+  isSetupFlow = computed(() => !!this.setupReturnUrl());
+  membersWithSkillsCount = computed(() => this.projectTeam().filter(member => (member.skills?.length ?? 0) > 0 && !member.isDeactivated).length);
 
   readonly unassignedCompanyEmployees = computed(() => {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
@@ -304,6 +371,8 @@ export class TeamViewComponent implements OnInit {
       return !emp.isDeactivated && !assignedIds.has(empId) && isAvailable;
     });
   });
+  readonly employeePickerEmptyState = computed(() => resolveEmployeePickerEmptyState(
+    this.companyEmployees(), this.projectTeam(), this.isLoadingCompanyEmployees(), this.companyEmployeesLoadError()));
 
   selectedEmployeeId = '';
   assignedRole = 'Developer';
@@ -371,9 +440,23 @@ export class TeamViewComponent implements OnInit {
     });
   }
 
-  async ngOnInit() { }
+  async ngOnInit() {
+    const setupProjectId = this.route.snapshot.queryParamMap.get('setupProjectId');
+    const requestedReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (setupProjectId) this.projectState.setSelectedProject(setupProjectId);
+    if (requestedReturnUrl?.startsWith('/dashboard/projects/') && requestedReturnUrl.endsWith('/setup')) {
+      this.setupReturnUrl.set(requestedReturnUrl);
+    }
+  }
+
+  continueToSetup(): void {
+    const returnUrl = this.setupReturnUrl();
+    if (returnUrl && this.projectTeam().length > 0) void this.router.navigateByUrl(returnUrl);
+  }
 
   async loadCompanyEmployees(companyId: string) {
+    this.isLoadingCompanyEmployees.set(true);
+    this.companyEmployeesLoadError.set(false);
     try {
       const res: any = await this.teamService.getCompanyEmployees(companyId);
       const rawList = res?.data?.items || res?.data || res?.items || res || [];
@@ -384,8 +467,17 @@ export class TeamViewComponent implements OnInit {
       }));
       this.companyEmployees.set(list);
     } catch (e) {
+      this.companyEmployees.set([]);
+      this.companyEmployeesLoadError.set(true);
       console.warn('Failed to load company employees:', e);
+    } finally {
+      this.isLoadingCompanyEmployees.set(false);
     }
+  }
+
+  retryCompanyEmployeesLoad(): void {
+    const companyId = this.projectState.userCompanyId();
+    if (companyId) void this.loadCompanyEmployees(companyId);
   }
 
   async loadProjectTeam(projectId: string) {
@@ -401,7 +493,8 @@ export class TeamViewComponent implements OnInit {
         allocationPercentage: e.allocationPercentage,
         isDeactivated: e.isDeactivated,
         deactivationReason: e.deactivationReason,
-        deactivatedAt: e.deactivatedAt
+        deactivatedAt: e.deactivatedAt,
+        skills: e.skills || []
       }));
       this.projectTeam.set(mapped);
       this.projectState.setProjectEmployeeCount(mapped.length);

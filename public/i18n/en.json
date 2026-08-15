@@ -706,7 +706,13 @@
     "SELECT_MEMBER": "Select Member",
     "CHOOSE_MEMBER": "-- Choose Member --",
     "ALREADY_ASSIGNED": "Already in another project",
-    "ALL_ASSIGNED": "All company members are already assigned to this project.",
+    "ALL_ASSIGNED": "All active company employees are already assigned to this project.",
+    "LOADING_COMPANY_EMPLOYEES": "Loading company employees...",
+    "LOAD_EMPLOYEES_FAILED": "Employees could not be loaded. Check your connection and try again.",
+    "RETRY": "Retry",
+    "NO_COMPANY_EMPLOYEES": "No employees have joined the company yet. Invite employees first.",
+    "NO_ACTIVE_COMPANY_EMPLOYEES": "The company has no active employees available for assignment.",
+    "NO_AVAILABLE_EMPLOYEES": "No employees are currently available. They may be assigned to other active projects.",
     "ROLE": "Role",
     "ROLES": {
       "DEVELOPER": "Developer",
@@ -735,7 +741,11 @@
     "ACTION_REMOVE_IGNORE": "Remove only (Leave sprint as-is)",
     "ACTION_REACTIVATE_IGNORE": "Reactivate only (Leave sprint as-is)",
     "CONFIRM_BTN": "Confirm",
-    "CANCEL_BTN": "Cancel"
+    "CANCEL_BTN": "Cancel",
+    "SETUP_STACK_TITLE": "Build the team-ready stack",
+    "SETUP_STACK_DESC": "Assign the employees who will deliver this project. TaskPilot will use only their recorded skills for the Team Skills Stack.",
+    "SETUP_NO_SKILLS": "The assigned team has no recorded skills. You can continue, but the Team Skills Stack will remain unavailable.",
+    "CONTINUE_TO_STACK": "Continue to stack setup"
   },
   "BACKLOG": {
     "ADD_USER_STORY": "Add user story",
@@ -994,6 +1004,24 @@
     "OPS": "ops",
     "NO_DATA": "No AI operations logged yet.",
     "NO_TEAM_DATA": "No team members have used AI in this project yet."
+  },
+  "PROJECT_SETUP": {
+    "TEAM_STACK": "Team Skills Stack",
+    "IDEAL_STACK": "AI Ideal Stack",
+    "SELECTED": "Selected",
+    "TEAM_READY": "Ready for this team",
+    "IDEAL_FIT": "Best fit for the project",
+    "ADD_TEAM_TO_UNLOCK": "Add team skills to unlock",
+    "NO_TEAM_DESC": "Assign employees to this project so the recommendation reflects their real skills.",
+    "NO_SKILLS_DESC": "The assigned employees do not have recorded skills yet. Update their profiles to create a team-ready stack.",
+    "ADD_EMPLOYEES": "Add project employees",
+    "REVIEW_PROFILES": "Review employee profiles",
+    "GAP_TITLE": "Capability gaps to plan for",
+    "GAP_HELP": "These gaps compare the ideal architecture with current team capabilities. You can still confirm a different stack below.",
+    "NO_GAPS_TITLE": "The project team covers the ideal stack",
+    "NO_GAPS_DESC": "No capability gaps were identified from the recorded team skills.",
+    "CUSTOMIZE": "Customize stack",
+    "CLOSE_CUSTOMIZE": "Close customization"
   },
   "PAGINATION": {
     "PAGE": "Page",

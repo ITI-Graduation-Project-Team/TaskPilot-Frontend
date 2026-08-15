@@ -2,7 +2,6 @@ import { Component, ChangeDetectionStrategy, signal, OnInit, computed, inject, e
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { AiChatModalComponent } from '../ai-chat-modal/ai-chat-modal.component';
 import { DraftReviewModalComponent } from '../draft-review-modal/draft-review-modal.component';
-import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ProjectHubComponent } from '../project-hub/project-hub.component';
 import { ProjectStats } from '../project-card/project-card.component';
 import { SprintPlanningViewComponent } from '../sprint-planning-view/sprint-planning-view.component';
@@ -802,25 +801,6 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.isAiChatOpen.set(false);
     await this.projectState.loadProjects();
     this.projectState.setSelectedProject(event.projectId);
-  }
-
-  onTechStackAdvisorClose() {
-    this.dashboardService.advisorProjectId.set(null);
-  }
-
-  async onTechStackAdvisorCompleted(projectId: string) {
-    try {
-      this.dashboardService.isTechStackAdvisorOpen.set(false);
-      this.dashboardService.advisorProjectId.set(null);
-      await this.projectState.loadProjects();
-      this.projectState.setSelectedProject(projectId);
-      this.toastService.show('Project created successfully', 'success');
-    } catch (e) {
-      console.warn('Error during tech stack completion:', e);
-      this.toastService.show('Error finalizing project setup', 'error');
-    } finally {
-      this.currentTab.set('projects');
-    }
   }
 
   onProjectSaved() {
