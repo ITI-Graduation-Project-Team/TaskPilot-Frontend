@@ -407,16 +407,16 @@ import { DashboardService } from '../../services/dashboard.service';
 
             <!-- Subscription button -->
             <button routerLink="/subscription"
-               class="px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-              {{ 'HEADER.SUBSCRIPTION' | translate }}
+               class="px-2 sm:px-4 py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              <span class="hidden sm:inline">{{ 'HEADER.SUBSCRIPTION' | translate }}</span>
             </button>
 
             <!-- Logout button -->
             <button (click)="logout()"
-                    class="px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-              {{ 'HEADER.LOGOUT' | translate }}
+                    class="px-2 sm:px-4 py-2 bg-surface hover:bg-error/10 border border-border text-error text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              <span class="hidden sm:inline">{{ 'HEADER.LOGOUT' | translate }}</span>
             </button>
 
             <!-- Language Toggle Button -->
@@ -463,7 +463,7 @@ import { DashboardService } from '../../services/dashboard.service';
       </div>
 
       <!-- Mobile Bottom Navigation Bar -->
-      <div class="fixed bottom-4 left-4 right-4 z-40 bg-surface/75 backdrop-blur-xl border border-border flex items-center justify-around py-2.5 md:hidden rounded-2xl shadow-xl transition-all duration-300">
+      <div class="fixed bottom-4 left-4 right-4 z-40 bg-surface/75 backdrop-blur-xl border border-border flex items-center justify-start overflow-x-auto flex-nowrap gap-2 px-4 py-2.5 md:hidden rounded-2xl shadow-xl transition-all duration-300 [&>button]:shrink-0 [&>button]:min-w-[4rem]" style="scrollbar-width: none;">
         
         <!-- Projects Hub Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {

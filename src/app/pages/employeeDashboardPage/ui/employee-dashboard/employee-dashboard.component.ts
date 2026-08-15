@@ -120,7 +120,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Active Sprint -->
             <button
               [routerLink]="['/employee-dashboard', 'sprint']"
-              class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+              class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.sprint' | translate) : ''"
               [class.nav-item-active]="activeTab() === 'sprint'"
               [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
             >
@@ -141,7 +141,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Current Projects -->
           <button
             [routerLink]="['/employee-dashboard', 'current-projects']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.currentProjects' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'current-projects'"
             [style.color]="activeTab() !== 'current-projects' ? 'var(--text-secondary)' : ''"
           >
@@ -156,7 +156,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Project History -->
           <button
             [routerLink]="['/employee-dashboard', 'project-history']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.projectHistory' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'project-history'"
             [style.color]="activeTab() !== 'project-history' ? 'var(--text-secondary)' : ''"
           >
@@ -170,7 +170,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Calendar -->
           <button
             [routerLink]="['/employee-dashboard', 'calendar']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('calendar.title' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'calendar'"
             [style.color]="activeTab() !== 'calendar' ? 'var(--text-secondary)' : ''"
           >
@@ -184,7 +184,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Policies Chat -->
           <button
             [routerLink]="['/employee-dashboard', 'policies-chat']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.policies' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'policies-chat'"
             [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
           >
@@ -197,7 +197,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Project Policies -->
           <button
             [routerLink]="['/employee-dashboard', 'project-policies']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('PROJECT_POLICIES.PROJECT_POLICIES' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'project-policies'"
             [style.color]="activeTab() !== 'project-policies' ? 'var(--text-secondary)' : ''"
           >
@@ -210,7 +210,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- My Profile -->
           <button
             [routerLink]="['/employee-dashboard', 'profile']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.myProfile' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'profile'"
             [style.color]="activeTab() !== 'profile' ? 'var(--text-secondary)' : ''"
           >
@@ -225,7 +225,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Settings -->
           <button
             [routerLink]="['/employee-dashboard', 'settings']"
-            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? pageTitle() : ''"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('SIDEBAR.SETTINGS' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'settings'"
             [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
           >
@@ -476,15 +476,15 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Logout -->
             <button
               (click)="logout()"
-              class="hidden sm:flex px-3 py-1.5 hover:bg-error/10 border border-transparent hover:border-error/20 text-xs font-bold rounded-xl shadow-sm transition-all items-center gap-1.5"
+              class="flex px-2 sm:px-3 py-1.5 hover:bg-error/10 border border-transparent hover:border-error/20 text-xs font-bold rounded-xl shadow-sm transition-all items-center gap-1.5"
               style="color: var(--error);"
               [title]="'employee.header.logout' | translate"
             >
-              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
-              <span>{{ 'employee.header.logout' | translate }}</span>
+              <span class="hidden sm:inline">{{ 'employee.header.logout' | translate }}</span>
             </button>
 
             <!-- Date -->
@@ -566,8 +566,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 <app-my-profile></app-my-profile>
               </div>
             } @else if (activeTab() === 'settings') {
-              <div class="animate-[fadeUp_0.3s_ease_both]">
-                <app-settings-view></app-settings-view>
+              <div class="animate-[fadeUp_0.3s_ease_both] h-full w-full">
+                <app-settings-view class="block w-full h-full"></app-settings-view>
               </div>
             }
           }
@@ -578,10 +578,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
            MOBILE BOTTOM NAVIGATION
       ══════════════════════════════════════════ -->
       <div class="fixed bottom-3 start-3 end-3 z-40 md:hidden">
-        <div class="border rounded-2xl shadow-2xl flex items-center justify-around py-2 px-1
-                    backdrop-blur-xl"
-             style="background: color-mix(in srgb, var(--surface) 80%, transparent);
-                    border-color: var(--border);">
+        <div class="border rounded-2xl shadow-2xl flex items-center justify-start overflow-x-auto flex-nowrap gap-2 py-2 px-3 backdrop-blur-xl hide-scrollbar [&>button]:shrink-0 [&>button]:min-w-[4.5rem]"
+             style="background: color-mix(in srgb, var(--surface) 80%, transparent); border-color: var(--border); scrollbar-width: none;">
 
           <!-- Sprint Board -->
           <button
