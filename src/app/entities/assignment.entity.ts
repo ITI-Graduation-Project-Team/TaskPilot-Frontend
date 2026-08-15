@@ -72,5 +72,5 @@ export interface ExplainedAssignmentDto {
 }
 
 export interface ConfirmAssignmentsRequest {
-  assignments: { taskId: string; employeeId: string }[];
+  assignments: { taskId: string; employeeId: string | null }[];
 }

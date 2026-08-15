@@ -74,10 +74,18 @@ export class AssignmentComponent implements OnInit {
     for (const task of this.suggestions()) {
       for (const dev of task.rankedDevelopers) {
         if (!capacities[dev.employeeId]) {
+          // Calculate how much of currentAssignedHours comes from tasks we are currently displaying
+          let currentlyAssignedInThisView = 0;
+          for(const t of this.suggestions()) {
+            if (t.assigneeId === dev.employeeId) {
+                currentlyAssignedInThisView += t.estimatedHours;
+            }
+          }
+
           capacities[dev.employeeId] = { 
             name: dev.employeeName, 
             capacity: dev.maxSprintHours || dev.initialRemainingHours, // fallback if backend not updated
-            baseAssigned: dev.currentAssignedHours || 0
+            baseAssigned: Math.max(0, (dev.currentAssignedHours || 0) - currentlyAssignedInThisView)
           };
         }
       }
@@ -233,9 +241,10 @@ export class AssignmentComponent implements OnInit {
     try {
       this.isConfirming.set(true);
       
-      const assignmentsPayload = Object.entries(this.localAssignments()).map(
-        ([taskId, employeeId]) => ({ taskId, employeeId })
-      );
+      const assignmentsPayload = this.suggestions().map(task => ({
+        taskId: task.taskId,
+        employeeId: this.localAssignments()[task.taskId] || null
+      }));
 
       const warnings = await this.assignmentService.confirm(this.sprintId, {
         assignments: assignmentsPayload
