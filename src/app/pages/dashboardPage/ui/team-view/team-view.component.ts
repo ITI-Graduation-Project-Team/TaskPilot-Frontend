@@ -10,6 +10,31 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
 
+export type EmployeePickerEmptyState = 'loading' | 'error' | 'noEmployees' | 'noActiveEmployees' | 'allAssigned' | 'noneAvailable' | null;
+
+export function resolveEmployeePickerEmptyState(
+  companyEmployees: CompanyEmployee[],
+  projectTeam: ProjectEmployee[],
+  loading: boolean,
+  loadError: boolean
+): EmployeePickerEmptyState {
+  if (loading) return 'loading';
+  if (loadError) return 'error';
+  if (companyEmployees.length === 0) return 'noEmployees';
+
+  const activeEmployees = companyEmployees.filter(employee => !employee.isDeactivated);
+  if (activeEmployees.length === 0) return 'noActiveEmployees';
+
+  const assignedIds = new Set(projectTeam.map(employee => employee.employeeId));
+  const unassignedEmployees = activeEmployees.filter(employee =>
+    !assignedIds.has(employee.employeeId || employee.id || ''));
+  if (unassignedEmployees.length === 0) return 'allAssigned';
+
+  const assignableEmployees = unassignedEmployees.filter(employee =>
+    !employee.availabilityStatus || employee.availabilityStatus === 'Available');
+  return assignableEmployees.length === 0 ? 'noneAvailable' : null;
+}
+
 @Component({
   selector: 'app-team-view',
   standalone: true,
@@ -89,8 +114,9 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
               <div class="relative">
                 <label class="block text-xs font-bold text-text-secondary mb-1.5">{{ 'TEAM.SELECT_MEMBER' | translate }}</label>
                 <!-- Custom Dropdown Trigger -->
-                <div (click)="isDropdownOpen.set(!isDropdownOpen())"
-                     class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all">
+                <button type="button" (click)="isDropdownOpen.set(!isDropdownOpen())"
+                     class="min-h-11 w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                     [attr.aria-expanded]="isDropdownOpen()" aria-haspopup="listbox">
                   @if (selectedEmployeeId) {
                     @for (emp of companyEmployees(); track emp.employeeId) {
                       @if (emp.employeeId === selectedEmployeeId) {
@@ -120,7 +146,7 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                   </svg>
-                </div>
+                </button>
                 <!-- Dropdown List -->
                 @if (isDropdownOpen()) {
                   <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto animate-[fadeDown_0.15s_ease_both]">
@@ -155,8 +181,20 @@ import { PlannedSprintAssignmentDialogComponent } from '../../../../features/pla
                         }
                       </div>
                     } @empty {
-                      <div class="p-4 text-center text-xs text-text-secondary">
-                        {{ 'TEAM.ALL_ASSIGNED' | translate }}
+                      <div class="p-4 text-center text-xs leading-5 text-text-secondary" [attr.role]="employeePickerEmptyState() === 'error' ? 'alert' : 'status'">
+                        @switch (employeePickerEmptyState()) {
+                          @case ('loading') {
+                            <span class="inline-flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" aria-hidden="true"></span>{{ 'TEAM.LOADING_COMPANY_EMPLOYEES' | translate }}</span>
+                          }
+                          @case ('error') {
+                            <p>{{ 'TEAM.LOAD_EMPLOYEES_FAILED' | translate }}</p>
+                            <button type="button" (click)="retryCompanyEmployeesLoad()" class="mt-2 min-h-11 rounded-lg border border-error/30 px-4 font-bold text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40">{{ 'TEAM.RETRY' | translate }}</button>
+                          }
+                          @case ('noEmployees') { {{ 'TEAM.NO_COMPANY_EMPLOYEES' | translate }} }
+                          @case ('noActiveEmployees') { {{ 'TEAM.NO_ACTIVE_COMPANY_EMPLOYEES' | translate }} }
+                          @case ('allAssigned') { {{ 'TEAM.ALL_ASSIGNED' | translate }} }
+                          @case ('noneAvailable') { {{ 'TEAM.NO_AVAILABLE_EMPLOYEES' | translate }} }
+                        }
                       </div>
                     }
                   </div>
@@ -319,6 +357,8 @@ export class TeamViewComponent implements OnInit {
 
   companyEmployees = signal<CompanyEmployee[]>([]);
   projectTeam = signal<ProjectEmployee[]>([]);
+  isLoadingCompanyEmployees = signal(false);
+  companyEmployeesLoadError = signal(false);
   setupReturnUrl = signal<string | null>(null);
   isSetupFlow = computed(() => !!this.setupReturnUrl());
   membersWithSkillsCount = computed(() => this.projectTeam().filter(member => (member.skills?.length ?? 0) > 0 && !member.isDeactivated).length);
@@ -331,6 +371,8 @@ export class TeamViewComponent implements OnInit {
       return !emp.isDeactivated && !assignedIds.has(empId) && isAvailable;
     });
   });
+  readonly employeePickerEmptyState = computed(() => resolveEmployeePickerEmptyState(
+    this.companyEmployees(), this.projectTeam(), this.isLoadingCompanyEmployees(), this.companyEmployeesLoadError()));
 
   selectedEmployeeId = '';
   assignedRole = 'Developer';
@@ -413,6 +455,8 @@ export class TeamViewComponent implements OnInit {
   }
 
   async loadCompanyEmployees(companyId: string) {
+    this.isLoadingCompanyEmployees.set(true);
+    this.companyEmployeesLoadError.set(false);
     try {
       const res: any = await this.teamService.getCompanyEmployees(companyId);
       const rawList = res?.data?.items || res?.data || res?.items || res || [];
@@ -423,8 +467,17 @@ export class TeamViewComponent implements OnInit {
       }));
       this.companyEmployees.set(list);
     } catch (e) {
+      this.companyEmployees.set([]);
+      this.companyEmployeesLoadError.set(true);
       console.warn('Failed to load company employees:', e);
+    } finally {
+      this.isLoadingCompanyEmployees.set(false);
     }
+  }
+
+  retryCompanyEmployeesLoad(): void {
+    const companyId = this.projectState.userCompanyId();
+    if (companyId) void this.loadCompanyEmployees(companyId);
   }
 
   async loadProjectTeam(projectId: string) {
