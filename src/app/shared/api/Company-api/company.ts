@@ -15,6 +15,14 @@ export interface EmployeeSuggestionModel {
   statusMessage: string;
 }
 
+export interface EmployeeStatisticsModel {
+  totalEmployees: number;
+  activeEmployees: number;
+  deactivatedEmployees: number;
+  availableEmployees: number;
+  employeesInProjects: number;
+}
+
 export interface CompanyEmployeeModel {
   employeeId: string;
   fullName: string;
@@ -140,6 +148,13 @@ export class CompanyService {
 
   async searchEmployees(query: string): Promise<{ succeeded: boolean; data?: EmployeeSuggestionModel[]; message: string }> {
     const response = await apiClient.get<{ succeeded: boolean; data?: EmployeeSuggestionModel[]; message: string }>(`/companies/employees/search?query=${encodeURIComponent(query)}`, {
+      withCredentials: false
+    });
+    return response.data;
+  }
+
+  async getEmployeeStatistics(): Promise<{ succeeded: boolean; data?: EmployeeStatisticsModel; message: string }> {
+    const response = await apiClient.get<{ succeeded: boolean; data?: EmployeeStatisticsModel; message: string }>('/companies/employees/statistics', {
       withCredentials: false
     });
     return response.data;
