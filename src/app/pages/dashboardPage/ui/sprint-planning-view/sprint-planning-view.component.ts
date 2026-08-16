@@ -560,7 +560,7 @@ const LOADING_HINTS = [
 
                         <!-- Story info -->
                         <div class="flex-1 min-w-0">
-                          <p class="text-sm font-semibold leading-5 text-text-primary">{{ currentLang() === 'ar' ? (story.titleAr || story.titleEn) : story.titleEn }}</p>
+                          <p class="text-sm font-semibold leading-5 text-text-primary">{{ story.title }}</p>
                           @if (story.tasks && story.tasks.length > 0) {
                             <p class="text-xs text-text-secondary mt-0.5">
                               {{ story.tasks.length }} {{ currentLang() === 'ar' ? 'مهمة' : (story.tasks.length !== 1 ? 'tasks' : 'task') }}
@@ -593,7 +593,7 @@ const LOADING_HINTS = [
                           (click)="openStoryEditor(story, $event)"
                           [disabled]="pageState() === 'confirming'"
                           class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-bold text-primary transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-                          [attr.aria-label]="currentLang() === 'ar' ? 'تعديل ' + (story.titleAr || story.titleEn) : 'Edit ' + story.titleEn">
+                          [attr.aria-label]="currentLang() === 'ar' ? 'تعديل ' + story.title : 'Edit ' + story.title">
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L8.25 18.463 3 21l2.537-5.25L16.862 3.487z" />
                           </svg>

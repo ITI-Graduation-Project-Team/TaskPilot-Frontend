@@ -515,35 +515,28 @@ export class BacklogViewComponent implements OnInit {
   localizedProjectName(): string {
     const data = this.backlog();
     const project = this.projectState.selectedProject();
-    return this.isArabic()
-      ? (data?.projectNameAr || project?.nameAr || 'Backlog')
-      : (data?.projectNameEn || project?.nameEn || 'Backlog');
+    return data?.projectName || 
+           (this.isArabic() ? (project?.nameAr || 'Backlog') : (project?.nameEn || 'Backlog'));
   }
 
   storyTitle(story: UserStoryDto): string {
-    return this.isArabic() ? (story.titleAr || '') : (story.titleEn || '');
+    return story.title || '';
   }
 
   storyDescription(story: UserStoryDto): string {
-    return this.isArabic()
-      ? (story.descriptionAr || this.label('noDescription'))
-      : (story.descriptionEn || this.label('noDescription'));
+    return story.description || this.label('noDescription');
   }
-
 
   storyAcceptanceCriteria(story: UserStoryDto): string {
-    return this.isArabic()
-      ? (story.acceptanceCriteriaAr || this.label('notProvidedAr'))
-      : (story.acceptanceCriteriaEn || this.label('notProvided'));
+    return story.acceptanceCriteria || (this.isArabic() ? this.label('notProvidedAr') : this.label('notProvided'));
   }
+
   taskTitle(task: TaskItemDto): string {
-    return this.isArabic() ? (task.titleAr || '') : (task.titleEn || '');
+    return task.title || '';
   }
 
   taskDescription(task: TaskItemDto): string {
-    return this.isArabic()
-      ? (task.descriptionAr || task.technicalSummaryAr || this.label('noDescription'))
-      : (task.descriptionEn || task.technicalSummaryEn || this.label('noDescription'));
+    return task.description || task.technicalSummary || this.label('noDescription');
   }
   selectedProjectHasStack = computed(() => {
     const project = this.projectState.selectedProject();
@@ -611,12 +604,12 @@ export class BacklogViewComponent implements OnInit {
   openStoryModal(story?: UserStoryDto) {
     this.storyForm.set(story ? {
       id: story.id,
-      titleEn: story.titleEn || '',
-      titleAr: story.titleAr || '',
-      descriptionEn: story.descriptionEn || '',
-      descriptionAr: story.descriptionAr || '',
-      acceptanceCriteriaEn: story.acceptanceCriteriaEn || '',
-      acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
+      titleEn: story.title || '',
+      titleAr: '',
+      descriptionEn: story.description || '',
+      descriptionAr: '',
+      acceptanceCriteriaEn: story.acceptanceCriteria || '',
+      acceptanceCriteriaAr: '',
       priority: story.priority || 'Medium',
     } : { ...EMPTY_STORY });
     this.isStoryModalOpen.set(true);
@@ -650,7 +643,7 @@ export class BacklogViewComponent implements OnInit {
   async deleteStory(story: UserStoryDto) {
     const confirmed = await this.confirmDialog.confirm({
       title: 'Delete user story',
-      message: `Delete "${story.titleEn}" and all of its tasks?`,
+      message: `Delete "${story.title}" and all of its tasks?`,
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
       type: 'danger',
@@ -672,14 +665,14 @@ export class BacklogViewComponent implements OnInit {
     this.taskForm.set(task ? {
       id: task.id,
       userStoryId: story.id,
-      titleEn: task.titleEn || '',
-      titleAr: task.titleAr || '',
-      descriptionEn: task.descriptionEn || '',
-      descriptionAr: task.descriptionAr || '',
-      technicalSummaryEn: task.technicalSummaryEn || '',
-      technicalSummaryAr: task.technicalSummaryAr || '',
-      acceptanceCriteriaEn: task.acceptanceCriteriaEn || '',
-      acceptanceCriteriaAr: task.acceptanceCriteriaAr || '',
+      titleEn: task.title || '',
+      titleAr: '',
+      descriptionEn: task.description || '',
+      descriptionAr: '',
+      technicalSummaryEn: task.technicalSummary || '',
+      technicalSummaryAr: '',
+      acceptanceCriteriaEn: task.acceptanceCriteria || '',
+      acceptanceCriteriaAr: '',
       estimatedHours: Number(task.estimatedHours || 1),
       effortSize: task.effortSize || 'Medium',
       priority: task.priority || 'Medium',
@@ -717,7 +710,7 @@ export class BacklogViewComponent implements OnInit {
   async deleteTask(task: TaskItemDto) {
     const confirmed = await this.confirmDialog.confirm({
       title: 'Delete task',
-      message: `Delete "${task.titleEn}"?`,
+      message: `Delete "${task.title}"?`,
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
       type: 'danger',
