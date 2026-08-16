@@ -9,6 +9,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AiChatStateService } from '../../services/ai-chat-state.service';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 @Component({
   selector: 'app-create-project',
@@ -225,7 +226,7 @@ export class CreateProjectComponent {
       this.router.navigate(['/dashboard', 'backlog']);
     } catch (e) {
       console.error(e);
-      this.toastService.show('Failed to save project details. Redirecting...', 'error');
+      this.toastService.show(extractApiError(e) || 'Failed to save project details. Redirecting...', 'error');
       this.projectState.loadProjects();
       this.router.navigate(['/dashboard', 'backlog']);
     }

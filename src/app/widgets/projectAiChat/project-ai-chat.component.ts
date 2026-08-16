@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiProjectService } from '../../shared/api/ai-project.service';
 import { ProjectChatApi } from '../../shared/api/projectChat.api';
+import { ToastService } from '../../shared/services/toast.service';
+import { extractApiError } from '../../shared/api/auth.api';
 import { AiChatMessageDto, SendAiMessageDto } from '../../shared/models/ai-chat.models';
 import { detectTextDir } from '../../shared/utils/text-direction.util';
 
@@ -22,6 +24,7 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
 
   private aiService = inject(AiProjectService);
   private projectChatApi = inject(ProjectChatApi);
+  private toastService = inject(ToastService);
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
@@ -166,6 +169,8 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
           this.messages.update(m => [...m, aiMessage]);
           setTimeout(() => this.scrollToBottom(), 0);
         }
+      } catch (error: any) {
+        this.toastService.show(extractApiError(error) || 'Failed to get AI response.', 'error');
       } finally {
         this.isTyping.set(false);
         this.isLoading.set(false);
@@ -196,7 +201,8 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
           this.isTyping.set(false);
           this.isLoading.set(false);
         },
-        error: () => {
+        error: (error: any) => {
+          this.toastService.show(extractApiError(error) || 'Failed to get AI response.', 'error');
           this.isTyping.set(false);
           this.isLoading.set(false);
         }
@@ -217,6 +223,8 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
           this.backlogUpdated.emit();
           this.close();
         }
+      } catch (error: any) {
+        this.toastService.show(extractApiError(error) || 'Failed to generate backlog.', 'error');
       } finally {
         this.isLoading.set(false);
       }
@@ -235,7 +243,10 @@ export class ProjectAiChatComponent implements OnInit, OnChanges {
         }
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false)
+      error: (error: any) => {
+        this.toastService.show(extractApiError(error) || 'Failed to generate backlog.', 'error');
+        this.isLoading.set(false);
+      }
     });
   }
 }

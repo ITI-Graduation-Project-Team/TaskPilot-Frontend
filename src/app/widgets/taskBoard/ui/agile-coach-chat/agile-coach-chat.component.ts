@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgileCoachService } from '../../../../shared/api/agile-coach.service';
 import { ChatMessage, AgileCoachChatRequest } from '../../../../shared/models/agile-coach.models';
+import { LimitReachedModalService } from '../../../../shared/services/limit-reached-modal.service';
 
 @Component({
   selector: 'app-agile-coach-chat',
@@ -22,6 +23,7 @@ export class AgileCoachChatComponent implements OnDestroy {
   closed = output<void>();
 
   private agileCoachService = inject(AgileCoachService);
+  private limitReachedModalService = inject(LimitReachedModalService);
 
   messages = signal<ChatMessage[]>([]);
   streamingContent = signal<string>('');
@@ -147,12 +149,21 @@ export class AgileCoachChatComponent implements OnDestroy {
         this.isStreaming.set(false);
         this.scrollToBottom();
       },
-      () => {
-        // Show inline error in the message thread
-        this.messages.update(msgs => [
-          ...msgs,
-          { role: 'assistant', content: '__error__' }
-        ]);
+      (errorCode) => {
+        if (errorCode === 'TOKEN_LIMIT_REACHED') {
+          this.limitReachedModalService.openModal({
+            limitType: 'tokens',
+            limit: 0,
+            currentCount: 0,
+            message: 'AI token limit reached for this billing period.'
+          });
+        } else {
+          // Show inline error in the message thread
+          this.messages.update(msgs => [
+            ...msgs,
+            { role: 'assistant', content: '__error__' }
+          ]);
+        }
         this.isStreaming.set(false);
         this.streamingContent.set('');
       }

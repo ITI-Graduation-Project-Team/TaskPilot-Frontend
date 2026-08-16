@@ -18,6 +18,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 import { AiChatStateService } from '../../services/ai-chat-state.service';
 
@@ -755,7 +756,7 @@ export class AiChatModalComponent implements AfterViewChecked {
       }
     } catch (err: any) {
       console.error(err);
-      const msg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Please check and try again.';
+      const msg = extractApiError(err) || 'Please check and try again.';
       this.toastService.show(`Failed to finalize requirements: ${msg}`, 'error');
     } finally {
       this.isGeneratingDraft.set(false);

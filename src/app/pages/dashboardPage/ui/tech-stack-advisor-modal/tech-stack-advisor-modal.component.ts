@@ -5,6 +5,7 @@ import { AiRequirementsService } from '../../../../shared/api/ai-requirements.se
 import { RecommendedStackDto, TechStackService, TechStackSuggestionDto } from '../../../../shared/api/tech-stack.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 const PLATFORM_OPTIONS = ['Web', 'Mobile', 'Desktop', 'API'];
 const PROJECT_TYPE_OPTIONS = ['ERP', 'SaaS', 'MobileApp', 'API', 'Portal', 'Other'];
@@ -304,7 +305,7 @@ export class TechStackAdvisorModalComponent implements OnInit {
       this.toastService.show('Tech stack confirmed and backlog generated successfully.', 'success');
       this.completed.emit(this.projectId);
     } catch (error: any) {
-      const message = error?.response?.data?.message || error?.response?.data?.error?.message || error?.message || 'Please check the backend logs and try again.';
+      const message = extractApiError(error) || 'Please check the backend logs and try again.';
       this.toastService.show(`Backlog generation failed: ${message}`, 'error');
     } finally {
       this.isConfirming.set(false);

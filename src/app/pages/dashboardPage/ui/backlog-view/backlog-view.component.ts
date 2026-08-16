@@ -10,6 +10,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -598,7 +599,7 @@ export class BacklogViewComponent implements OnInit {
       if (e.message === 'Network Error' || e.code === 'ECONNABORTED' || e.code === 'ERR_NETWORK' || e.status === 504 || e.status === 0) {
         this.toastService.show('The AI is taking longer than expected. Generation is continuing in the background. Please refresh in a minute.', 'info');
       } else {
-        const message = e?.response?.data?.message || e?.response?.data?.error?.message || e?.message || 'Check backend API logs.';
+        const message = extractApiError(e) || 'Check backend API logs.';
         this.toastService.show(`Failed to generate WBS: ${message}`, 'error');
       }
     } finally {

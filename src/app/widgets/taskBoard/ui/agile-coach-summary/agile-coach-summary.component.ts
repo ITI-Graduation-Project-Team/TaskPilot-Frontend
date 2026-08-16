@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, signal, inject, input, output, OnIn
 import { AgileCoachService } from '../../../../shared/api/agile-coach.service';
 import { AgileCoachSummaryResponse } from '../../../../shared/models/agile-coach.models';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { extractApiError } from '../../../../shared/api/auth.api';
 @Component({
   selector: 'app-agile-coach-summary',
   standalone: true,
@@ -51,11 +52,12 @@ export class AgileCoachSummaryComponent implements OnInit {
       const result = await this.agileCoachService.regenerateSummary(this.taskItemId());
       this.summary.set(result);
       this.isCollapsed.set(false);
-    } catch {
+    } catch (err: any) {
       this.error.set('REGENERATE_FAILED');
-      this.toastService.show('Failed to regenerate summary', 'error');
+      this.toastService.show(extractApiError(err) || 'Failed to regenerate summary', 'error');
     } finally {
       this.isLoading.set(false);
     }
   }
 }
+

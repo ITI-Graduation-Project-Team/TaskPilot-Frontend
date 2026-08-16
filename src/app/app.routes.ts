@@ -150,4 +150,19 @@ export const routes: Routes = [
         (m) => m.CalendarCallbackPageComponent
       ),
   },
+  {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Admin'] },
+    children: [
+      { path: '', redirectTo: 'subscription-plans', pathMatch: 'full' },
+      {
+        path: 'subscription-plans',
+        loadComponent: () =>
+          import('./pages/adminSubscriptionPlansPage/ui/admin-subscription-plans/admin-subscription-plans.component').then(
+            (m) => m.AdminSubscriptionPlansComponent
+          ),
+      },
+    ],
+  },
 ];

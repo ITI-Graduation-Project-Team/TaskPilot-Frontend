@@ -5,6 +5,7 @@ import { SprintRiskAlertDto, WhatIfScenarioDto } from '../../../../shared/models
 import { ToastService } from '../../../../shared/services/toast.service';
 import { SprintRiskCardComponent } from '../sprint-risk-card/sprint-risk-card.component';
 import { SimulationResultsViewComponent } from '../simulation-results-view/simulation-results-view.component';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 @Component({
   selector: 'app-sprint-risk-list',
@@ -48,7 +49,7 @@ export class SprintRiskListComponent {
         this.toastService.show(this.error()!, 'error');
       }
     } catch (err: any) {
-      this.error.set(err.message || 'An error occurred');
+      this.error.set(extractApiError(err) || 'Failed to load risks');
       this.toastService.show(this.error()!, 'error');
     } finally {
       this.isLoading.set(false);
@@ -65,7 +66,7 @@ export class SprintRiskListComponent {
         this.toastService.show(response?.error?.message || 'Failed to dismiss risk', 'error');
       }
     } catch (err: any) {
-      this.toastService.show(err.message || 'Error dismissing risk', 'error');
+      this.toastService.show(extractApiError(err) || 'Failed to dismiss risk', 'error');
     }
   }
 
@@ -79,7 +80,7 @@ export class SprintRiskListComponent {
         this.toastService.show(response?.error?.message || 'Simulation failed', 'error');
       }
     } catch (err: any) {
-      this.toastService.show(err.message || 'Error running simulation', 'error');
+      this.toastService.show(extractApiError(err) || 'Simulation failed', 'error');
     } finally {
       this.simulatingRiskId.set(null);
     }

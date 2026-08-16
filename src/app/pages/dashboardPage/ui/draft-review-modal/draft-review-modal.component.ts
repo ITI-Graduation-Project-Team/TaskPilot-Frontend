@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AiRequirementsService, GeneratedProjectDTO } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { extractApiError } from '../../../../shared/api/auth.api';
 
 @Component({
   selector: 'app-draft-review-modal',
@@ -179,7 +180,7 @@ export class DraftReviewModalComponent implements OnInit {
       this.projectSaved.emit();
     } catch (e) {
       console.error(e);
-      this.toastService.show('Failed to save project. Ensure the backend is running and details are valid.', 'error');
+      this.toastService.show(extractApiError(e) || 'Failed to save project. Ensure the backend is running and details are valid.', 'error');
     } finally {
       this.isSaving.set(false);
     }

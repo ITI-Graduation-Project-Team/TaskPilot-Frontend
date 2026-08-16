@@ -12,12 +12,16 @@ import {
   saveTokens,
 } from '../lib/auth/cookie.helper';
 import { LoadingService } from '../services/loading.service';
+import { LimitReachedModalService, LimitType } from '../services/limit-reached-modal.service';
 
 // Lazily resolved so we never call inject() outside an injection context.
 let _injector: Injector | null = null;
 export function setAxiosInjector(injector: Injector) { _injector = injector; }
 function getLoadingService(): LoadingService | null {
   return _injector ? _injector.get(LoadingService) : null;
+}
+function getLimitReachedModalService(): LimitReachedModalService | null {
+  return _injector ? _injector.get(LimitReachedModalService) : null;
 }
 
 
@@ -126,6 +130,36 @@ apiClient.interceptors.response.use(
     }
 
     const status = error.response?.status;
+    const errorCode = (error.response?.data as any)?.errors?.[0]?.code;
+
+    // Check for Limit Reached (403) before processing auth
+    if (status === 403 && errorCode) {
+      const limitCodes = [
+        'MAX_PROJECTS_REACHED',
+        'MAX_TEAM_MEMBERS_REACHED',
+        'STORAGE_LIMIT_REACHED',
+        'TOKEN_LIMIT_REACHED'
+      ];
+      
+      if (limitCodes.includes(errorCode)) {
+        const metadata = (error.response?.data as any)?.errors[0]?.metadata;
+        const limitReachedService = getLimitReachedModalService();
+        
+        if (limitReachedService && metadata) {
+          let limitType: LimitType = 'projects';
+          if (errorCode === 'MAX_TEAM_MEMBERS_REACHED') limitType = 'teamMembers';
+          else if (errorCode === 'STORAGE_LIMIT_REACHED') limitType = 'storage';
+          else if (errorCode === 'TOKEN_LIMIT_REACHED') limitType = 'tokens';
+          
+          limitReachedService.openModal({
+            limitType,
+            limit: Number(metadata['Limit'] || metadata['limit'] || 0),
+            currentCount: Number(metadata['CurrentUsage'] || metadata['currentUsage'] || metadata['CurrentCount'] || metadata['currentCount'] || 0),
+            message: (error.response?.data as any)?.errors[0]?.description || 'Limit reached.'
+          });
+        }
+      }
+    }
 
     // Public auth endpoints — never attempt token refresh on these.
     // A 401 here means wrong credentials, not an expired session.
