@@ -46,6 +46,12 @@ export class ProjectStateService {
   readonly loading = this._loading.asReadonly();
   readonly projectEmployeeCount = this._projectEmployeeCount.asReadonly();
 
+  private pagedProjectsCache = new Map<string, Promise<{ projects: ProjectInfo[], totalCount: number }>>();
+
+  clearPagedCache() {
+    this.pagedProjectsCache.clear();
+  }
+
   readonly selectedProject = computed(() => {
     const id = this._selectedProjectId();
     if (!id) return null;
@@ -217,58 +223,68 @@ export class ProjectStateService {
     }
   }
 
-  async loadProjectsPaged(page: number, pageSize: number): Promise<{ projects: ProjectInfo[], totalCount: number }> {
-    try {
-      const isPM = this._isProjectManager();
-      const userId = this._userId();
-      const companyId = this._userCompanyId();
-      if (!userId) return { projects: [], totalCount: 0 };
+  loadProjectsPaged(page: number, pageSize: number, statusFilter: string = '', searchQuery: string = ''): Promise<{ projects: ProjectInfo[], totalCount: number }> {
+    const isPM = this._isProjectManager();
+    const userId = this._userId();
+    const companyId = this._userCompanyId();
+    if (!userId) return Promise.resolve({ projects: [], totalCount: 0 });
 
-      // The deployed company/paged endpoint can include projects managed by other
-      // PMs. Use the ownership-filtered company endpoint as the source of truth and
-      // paginate its result locally until every environment runs the fixed backend.
-      const isProjectManagerRequest = isPM && !!companyId;
-      const endpoint = isProjectManagerRequest
-        ? `/Projects/company/${companyId}`
-        : `/employees/${userId}/projects/paged?page=${page}&pageSize=${pageSize}`;
+    const cacheKey = `${companyId || 'no-comp'}-${userId}-page-${page}-size-${pageSize}-tab-${statusFilter}-search-${searchQuery}`;
 
-      const { data } = await apiClient.get<any>(endpoint);
-      const allItems: any[] = isProjectManagerRequest
-        ? (data.data || [])
-        : (data.data?.items || []);
-      const totalCount = isProjectManagerRequest
-        ? allItems.length
-        : (data.data?.totalItems || 0);
-      const items = isProjectManagerRequest
-        ? allItems.slice((page - 1) * pageSize, page * pageSize)
-        : allItems;
-      
-      const filtered: ProjectInfo[] = items.map(p => ({
-        id: p.id,
-        name: p.name || p.nameEn || '',
-        nameEn: p.nameEn || p.name || '',
-        nameAr: p.nameAr || p.name || '',
-        description: p.description || p.descriptionEn || '',
-        descriptionEn: p.descriptionEn || p.description || '',
-        descriptionAr: p.descriptionAr || p.description || '',
-        companyId: p.companyId,
-        managerId: p.managerId,
-        techStack: p.techStack || [],
-        platformTargets: p.platformTargets || [],
-        projectType: p.projectType || '',
-        status: p.status || 'Active',
-        teamSize: p.teamSize || 0,
-        totalUserStories: p.totalUserStories || 0,
-        completedSprintsCount: p.completedSprintsCount || 0,
-        activeSprintsCount: p.activeSprintsCount || 0,
-        setupStatus: p.setupStatus || 'NeedsTechStack'
-      }));
-      
-      return { projects: filtered, totalCount };
-    } catch (e) {
-      console.warn('Failed to load paginated projects:', e);
-      return { projects: [], totalCount: 0 };
+    if (this.pagedProjectsCache.has(cacheKey)) {
+      return this.pagedProjectsCache.get(cacheKey)!;
     }
+
+    const request = (async () => {
+      try {
+        const isProjectManagerRequest = isPM && !!companyId;
+        const endpointBase = isProjectManagerRequest
+          ? `/Projects/company/${companyId}/paged`
+          : `/employees/${userId}/projects/paged`;
+
+        let endpoint = `${endpointBase}?page=${page}&pageSize=${pageSize}`;
+        if (statusFilter) {
+          endpoint += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+        }
+        if (searchQuery) {
+          endpoint += `&searchQuery=${encodeURIComponent(searchQuery)}`;
+        }
+
+        const { data } = await apiClient.get<any>(endpoint);
+        const items: any[] = data.data?.items || [];
+        const totalCount = data.data?.totalItems || 0;
+        
+        const filtered: ProjectInfo[] = items.map(p => ({
+          id: p.id,
+          name: p.name || p.nameEn || '',
+          nameEn: p.nameEn || p.name || '',
+          nameAr: p.nameAr || p.name || '',
+          description: p.description || p.descriptionEn || '',
+          descriptionEn: p.descriptionEn || p.description || '',
+          descriptionAr: p.descriptionAr || p.description || '',
+          companyId: p.companyId,
+          managerId: p.managerId,
+          techStack: p.techStack || [],
+          platformTargets: p.platformTargets || [],
+          projectType: p.projectType || '',
+          status: p.status || 'Active',
+          teamSize: p.teamSize || 0,
+          totalUserStories: p.totalUserStories || 0,
+          completedSprintsCount: p.completedSprintsCount || 0,
+          activeSprintsCount: p.activeSprintsCount || 0,
+          setupStatus: p.setupStatus || 'NeedsTechStack'
+        }));
+        
+        return { projects: filtered, totalCount };
+      } catch (e) {
+        console.warn('Failed to load paginated projects:', e);
+        this.pagedProjectsCache.delete(cacheKey);
+        return { projects: [], totalCount: 0 };
+      }
+    })();
+
+    this.pagedProjectsCache.set(cacheKey, request);
+    return request;
   }
 
 
@@ -324,6 +340,7 @@ export class ProjectStateService {
       if (newProject) {
         this.setSelectedProject(newProject.id);
       }
+      this.clearPagedCache();
       return true;
     } catch (e) {
       console.error('Failed to create project:', e);
@@ -344,6 +361,7 @@ export class ProjectStateService {
         descriptionAr
       });
       await this.loadProjects();
+      this.clearPagedCache();
       return true;
     } catch (e) {
       console.error('Failed to update project:', e);
@@ -365,6 +383,7 @@ export class ProjectStateService {
           this.setSelectedProject(null);
         }
       }
+      this.clearPagedCache();
       return true;
     } catch (e) {
       console.error('Failed to delete project:', e);
@@ -379,6 +398,7 @@ export class ProjectStateService {
       this._loading.set(true);
       await apiClient.put('/Projects/' + projectId + '/status', { status });
       await this.loadProjects();
+      this.clearPagedCache();
       return { success: true };
     } catch (e: any) {
       console.error('Failed to change project status:', e);
