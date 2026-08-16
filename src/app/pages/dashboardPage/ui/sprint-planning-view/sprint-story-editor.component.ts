@@ -354,12 +354,12 @@ export class SprintStoryEditorComponent {
     effect(() => {
       const story = this.story();
       this.storyModel.set({
-        titleEn: story.titleEn ?? '',
-        titleAr: story.titleAr ?? '',
-        descriptionEn: story.descriptionEn ?? '',
-        descriptionAr: story.descriptionAr ?? '',
-        acceptanceCriteriaEn: story.acceptanceCriteriaEn ?? '',
-        acceptanceCriteriaAr: story.acceptanceCriteriaAr ?? '',
+        titleEn: story.title ?? '',
+        titleAr: '',
+        descriptionEn: story.description ?? '',
+        descriptionAr: '',
+        acceptanceCriteriaEn: story.acceptanceCriteria ?? '',
+        acceptanceCriteriaAr: '',
         priority: mapPriorityToFrontend(story.priority),
       });
       this.storyForm().reset();

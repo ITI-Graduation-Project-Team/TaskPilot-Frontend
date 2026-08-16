@@ -989,7 +989,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <div class="w-full max-w-md h-[82vh] flex flex-col" (click)="$event.stopPropagation()">
           <app-agile-coach-chat
             [taskItemId]="chatTask()!.id"
-            [taskTitle]="currentLang === 'ar' ? (chatTask()!.titleAr || chatTask()!.titleEn) : chatTask()!.titleEn"
+            [taskTitle]="chatTask()!.title"
             [lang]="currentLang"
             [isOpen]="true"
             [loadInitialSummary]="true"
@@ -1204,11 +1204,11 @@ export class BoardComponent implements OnInit, OnChanges {
   }
 
   getTaskTitle(task: Task): string {
-    return this.currentLang === 'ar' ? (task.titleAr || task.titleEn || task.title) : (task.titleEn || task.titleAr || task.title);
+    return task.title || '';
   }
 
   getTaskDescription(task: Task): string {
-    return this.currentLang === 'ar' ? (task.descriptionAr || task.descriptionEn || task.description) : (task.descriptionEn || task.descriptionAr || task.description);
+    return task.description || '';
   }
 
   private sortTasksOwnedByCurrentUser(a: Task, b: Task): number {

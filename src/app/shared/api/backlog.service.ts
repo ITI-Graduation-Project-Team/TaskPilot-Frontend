@@ -4,30 +4,25 @@ import { apiClient } from './axios.instance';
 export interface TaskItemDto {
   id: string;
   userStoryId: string;
-  titleEn: string;
-  titleAr?: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  technicalSummaryEn?: string;
-  technicalSummaryAr?: string;
-  acceptanceCriteriaEn?: string;
-  acceptanceCriteriaAr?: string;
+  title: string;
+  description?: string;
+  technicalSummary?: string;
+  acceptanceCriteria?: string;
   estimatedHours: number;
   effortSize: string;
   type: string;
   priority: string;
   status: string;
+  assigneeId?: string;
+  assigneeName?: string;
 }
 
 export interface UserStoryDto {
   id: string;
   projectId: string;
-  titleEn: string;
-  titleAr?: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  acceptanceCriteriaEn?: string;
-  acceptanceCriteriaAr?: string;
+  title: string;
+  description?: string;
+  acceptanceCriteria?: string;
   priority: string;
   status: string;
   tasks: TaskItemDto[];
@@ -35,8 +30,7 @@ export interface UserStoryDto {
 
 export interface BacklogDto {
   projectId: string;
-  projectNameEn: string;
-  projectNameAr: string;
+  projectName: string;
   userStories: UserStoryDto[];
 }
 
