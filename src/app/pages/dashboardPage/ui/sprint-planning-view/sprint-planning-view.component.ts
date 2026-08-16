@@ -1015,9 +1015,9 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     if (!projId) return;
     this.isBacklogLoading.set(true);
     try {
-      const res = await this.backlogService.getBacklog(projId);
+      const res = await this.backlogService.getBacklog(projId, 1, 1000);
       const map = new Map<string, UserStoryDto>();
-      (res?.userStories || []).forEach((s: UserStoryDto) => map.set(s.id, s));
+      (res?.userStories?.items || []).forEach((s: UserStoryDto) => map.set(s.id, s));
       this.storiesMap.set(map);
       if (map.size === 0 && (this.pageState() === 'empty' || this.pageState() === 'no-sprints')) {
         this.pageState.set('no-sprints');

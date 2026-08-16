@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BacklogService, BacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
+import { BacklogService, BacklogDto, PaginatedBacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-planning-modal.component';
@@ -125,14 +125,14 @@ const EMPTY_TASK: TaskFormModel = {
 
           <div class="flex flex-wrap items-center gap-3">
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
-              @if ((backlog()?.userStories?.length || 0) > 0) {
+              @if ((backlog()?.userStories?.items?.length || 0) > 0) {
               }
               <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">{{ 'BACKLOG.EDIT_BACKLOG' | translate }}</button>
             }
           </div>
         </header>
 
-        @if ((backlog()?.userStories?.length || 0) > 0) {
+        @if ((backlog()?.userStories?.items?.length || 0) > 0) {
           <section class="rounded-2xl border border-border bg-surface shadow-sm">
             <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
               <span>{{ label('story') }}</span>
@@ -142,7 +142,7 @@ const EMPTY_TASK: TaskFormModel = {
             </div>
 
             <div class="divide-y divide-border">
-              @for (story of backlog()?.userStories; track story.id) {
+              @for (story of backlog()?.userStories?.items; track story.id) {
                 <article>
                   <div class="grid grid-cols-[1fr_auto] gap-3 px-4 py-4 md:grid-cols-[1fr_90px_80px_150px] md:items-center">
                     <button type="button" (click)="toggleStory(story.id)" class="min-w-0 text-left">
@@ -218,6 +218,41 @@ const EMPTY_TASK: TaskFormModel = {
               }
             </div>
           </section>
+
+          <!-- Pagination Controls -->
+          @if ((backlog()?.userStories?.totalPages || 0) > 1) {
+            <div class="mt-6 flex items-center justify-center gap-2">
+              <button 
+                type="button" 
+                (click)="prevPage()"
+                [disabled]="!hasPreviousPage()"
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sidebar disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                ‹
+              </button>
+              
+              @for (p of [].constructor(totalPages()); track $index) {
+                <button 
+                  type="button" 
+                  (click)="goToPage($index + 1)"
+                  [class.bg-primary]="currentPage() === ($index + 1)"
+                  [class.text-white]="currentPage() === ($index + 1)"
+                  [class.font-bold]="currentPage() === ($index + 1)"
+                  [class.text-text-secondary]="currentPage() !== ($index + 1)"
+                  [class.hover:bg-sidebar]="currentPage() !== ($index + 1)"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-sm transition-colors">
+                  {{ $index + 1 }}
+                </button>
+              }
+
+              <button 
+                type="button"
+                (click)="nextPage()"
+                [disabled]="!hasNextPage()"
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sidebar disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                ›
+              </button>
+            </div>
+          }
         } @else {
           <section class="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface p-12 text-center shadow-sm">
             <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Empty backlog</p>
@@ -430,7 +465,7 @@ export class BacklogViewComponent implements OnInit {
 
   isLoading = signal(false);
   isAssigned = signal(false);
-  backlog = signal<BacklogDto | null>(null);
+  backlog = signal<PaginatedBacklogDto | null>(null);
   isStoryModalOpen = signal(false);
   isTaskModalOpen = signal(false);
   isSprintPlanningModalOpen = signal(false);
@@ -440,6 +475,12 @@ export class BacklogViewComponent implements OnInit {
   expandedStoryIds = signal<string[]>([]);
   storyForm = signal<StoryFormModel>({ ...EMPTY_STORY });
   taskForm = signal<TaskFormModel>({ ...EMPTY_TASK });
+  
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(7);
+  totalPages = signal<number>(1);
+  hasNextPage = signal<boolean>(false);
+  hasPreviousPage = signal<boolean>(false);
 
   private translate = inject(TranslateService);
 
@@ -557,19 +598,44 @@ export class BacklogViewComponent implements OnInit {
 
   ngOnInit() { }
 
-  async fetchBacklog(projectId: string) {
+  async fetchBacklog(projectId: string, page: number = 1) {
     this.isLoading.set(true);
     this.isAssigned.set(true);
     try {
-      const data = await this.backlogService.getBacklog(projectId);
+      const data = await this.backlogService.getBacklog(projectId, page, this.pageSize());
       this.backlog.set(data);
-      const firstStory = data.userStories[0]?.id;
+      this.currentPage.set(data.userStories.page);
+      this.totalPages.set(data.userStories.totalPages);
+      this.hasNextPage.set(data.userStories.hasNextPage);
+      this.hasPreviousPage.set(data.userStories.hasPreviousPage);
+      const firstStory = data.userStories.items[0]?.id;
       this.expandedStoryIds.set(firstStory ? [firstStory] : []);
     } catch (e) {
       console.error('Failed to fetch backlog:', e);
       this.backlog.set(null);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  nextPage() {
+    const projId = this.projectState.selectedProjectId();
+    if (projId && this.hasNextPage()) {
+      this.fetchBacklog(projId, this.currentPage() + 1);
+    }
+  }
+
+  prevPage() {
+    const projId = this.projectState.selectedProjectId();
+    if (projId && this.hasPreviousPage()) {
+      this.fetchBacklog(projId, this.currentPage() - 1);
+    }
+  }
+
+  goToPage(page: number) {
+    const projId = this.projectState.selectedProjectId();
+    if (projId && page !== this.currentPage()) {
+      this.fetchBacklog(projId, page);
     }
   }
 
@@ -632,7 +698,7 @@ export class BacklogViewComponent implements OnInit {
         this.toastService.show('User story created.', 'success');
       }
       this.isStoryModalOpen.set(false);
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to save user story.', 'error');
     } finally {
@@ -655,7 +721,7 @@ export class BacklogViewComponent implements OnInit {
     try {
       await this.backlogService.deleteUserStory(story.id);
       this.toastService.show('User story deleted.', 'success');
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to delete user story.', 'error');
     }
@@ -698,7 +764,7 @@ export class BacklogViewComponent implements OnInit {
         this.toastService.show('Task created.', 'success');
       }
       this.isTaskModalOpen.set(false);
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
       this.expandedStoryIds.update(ids => ids.includes(task.userStoryId!) ? ids : [...ids, task.userStoryId!]);
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to save task.', 'error');
@@ -722,7 +788,7 @@ export class BacklogViewComponent implements OnInit {
     try {
       await this.backlogService.deleteTask(task.id);
       this.toastService.show('Task deleted.', 'success');
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to delete task.', 'error');
     }

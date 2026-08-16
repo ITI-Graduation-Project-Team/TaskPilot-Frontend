@@ -389,8 +389,8 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
 
     this.isBacklogLoading.set(true);
     try {
-      const res = await this.backlogService.getBacklog(projId);
-      const stories = res?.userStories || [];
+      const res = await this.backlogService.getBacklog(projId, 1, 1000);
+      const stories = res?.userStories?.items || [];
       this.storiesMap.clear();
       stories.forEach((s: any) => {
         this.storiesMap.set(s.id, s.titleEn || s.title || 'Untitled Story');
