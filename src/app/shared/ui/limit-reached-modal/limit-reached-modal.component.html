@@ -1,0 +1,50 @@
+<div *ngIf="modalService.isOpen()" class="fixed inset-0 z-[110] flex items-center justify-center animate-fade-in" dir="auto">
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="modalService.closeModal()"></div>
+  <div class="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-200/50 dark:border-slate-800 p-6 flex flex-col gap-6 transform transition-all text-center">
+    
+    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-2 relative overflow-hidden">
+      <!-- Different icons based on limit type -->
+      <svg *ngIf="modalService.modalData()?.limitType === 'projects'" class="w-8 h-8 text-blue-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      <svg *ngIf="modalService.modalData()?.limitType === 'teamMembers'" class="w-8 h-8 text-blue-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      <svg *ngIf="modalService.modalData()?.limitType === 'storage'" class="w-8 h-8 text-blue-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+      </svg>
+      <svg *ngIf="modalService.modalData()?.limitType === 'tokens'" class="w-8 h-8 text-blue-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    </div>
+    
+    <div>
+      <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Limit Reached</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
+        {{ modalService.modalData()?.message }}
+      </p>
+    </div>
+
+    <!-- Usage Bar -->
+    <div class="px-2" *ngIf="modalService.modalData()?.limit as limit">
+      <div class="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
+        <span>Current Usage</span>
+        <span>
+          {{ modalService.modalData()?.currentCount }} / {{ limit }} {{ modalService.modalData()?.limitType === 'storage' ? 'MB' : (modalService.modalData()?.limitType === 'tokens' ? 'Tokens' : '') }}
+        </span>
+      </div>
+      <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div class="h-full bg-blue-500 rounded-full" [style.width]="'100%'"></div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 justify-center pt-2">
+      <button (click)="modalService.closeModal()" class="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+        Dismiss
+      </button>
+      <button (click)="upgradePlan()" class="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors flex justify-center items-center gap-2 shadow-md shadow-blue-500/20">
+        Upgrade Plan
+      </button>
+    </div>
+  </div>
+</div>
