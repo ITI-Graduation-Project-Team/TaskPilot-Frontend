@@ -63,7 +63,7 @@ export class EmployeesComponent implements OnInit {
   invitations = signal<InvitationModel[]>([]);
   invitationStatus = signal<'pending' | 'expired' | ''>('pending');
   currentPage = signal<number>(1);
-  pageSize = signal<number>(20);
+  pageSize = signal<number>(5);
   totalInvitations = signal<number>(0);
   isLoadingInvitations = signal<boolean>(false);
 
