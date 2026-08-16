@@ -28,10 +28,26 @@ export interface UserStoryDto {
   tasks: TaskItemDto[];
 }
 
+export interface PaginatedUserStories {
+  items: UserStoryDto[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export interface BacklogDto {
   projectId: string;
   projectName: string;
   userStories: UserStoryDto[];
+}
+
+export interface PaginatedBacklogDto {
+  projectId: string;
+  projectName: string;
+  userStories: PaginatedUserStories;
 }
 
 export interface ProjectDto {
@@ -154,9 +170,51 @@ export function mapEffortSizeToBackend(effortSize: string): number {
   providedIn: 'root',
 })
 export class BacklogService {
-  async getBacklog(projectId: string): Promise<BacklogDto> {
-    const { data } = await apiClient.get<any>(`/projects/${projectId}/backlog`);
-    return data.data;
+  private backlogCache = new Map<string, PaginatedBacklogDto>();
+  private inFlightRequests = new Map<string, Promise<PaginatedBacklogDto>>();
+
+  private getCacheKey(projectId: string, page: number, pageSize: number): string {
+    // If the Backlog later has search/filter parameters, include those here
+    return `${projectId}-page-${page}-pageSize-${pageSize}`;
+  }
+
+  private clearProjectCache(projectId?: string): void {
+    if (projectId) {
+      const prefix = `${projectId}-`;
+      for (const key of this.backlogCache.keys()) {
+        if (key.startsWith(prefix)) {
+          this.backlogCache.delete(key);
+        }
+      }
+    } else {
+      this.backlogCache.clear();
+    }
+  }
+
+  async getBacklog(projectId: string, page: number = 1, pageSize: number = 7): Promise<PaginatedBacklogDto> {
+    const key = this.getCacheKey(projectId, page, pageSize);
+
+    if (this.backlogCache.has(key)) {
+      return this.backlogCache.get(key)!;
+    }
+
+    if (this.inFlightRequests.has(key)) {
+      return this.inFlightRequests.get(key)!;
+    }
+
+    const request = apiClient.get<any>(`/projects/${projectId}/backlog?page=${page}&pageSize=${pageSize}`)
+      .then(res => {
+        this.backlogCache.set(key, res.data.data);
+        this.inFlightRequests.delete(key);
+        return res.data.data;
+      })
+      .catch(err => {
+        this.inFlightRequests.delete(key);
+        throw err;
+      });
+
+    this.inFlightRequests.set(key, request);
+    return request;
   }
 
   async createProject(nameEn: string, nameAr: string, descriptionEn: string, companyId: string): Promise<ProjectDto> {
@@ -180,6 +238,7 @@ export class BacklogService {
       acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
       priority: mapPriorityToBackend(story.priority),
     });
+    this.clearProjectCache(projectId);
     return data.data;
   }
 
@@ -193,10 +252,12 @@ export class BacklogService {
       acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
       priority: mapPriorityToBackend(story.priority),
     });
+    this.clearProjectCache();
   }
 
   async deleteUserStory(storyId: string): Promise<void> {
     await apiClient.delete(`/userstories/${storyId}`);
+    this.clearProjectCache();
   }
 
   async createTask(storyId: string, task: TaskPayload): Promise<TaskItemDto> {
@@ -214,6 +275,7 @@ export class BacklogService {
       type: mapTypeToBackend(task.type),
       priority: mapPriorityToBackend(task.priority),
     });
+    this.clearProjectCache();
     return data.data;
   }
 
@@ -233,9 +295,11 @@ export class BacklogService {
       priority: mapPriorityToBackend(task.priority),
       status: mapStatusToBackend(task.status || 'ToDo'),
     });
+    this.clearProjectCache();
   }
 
   async deleteTask(taskId: string): Promise<void> {
     await apiClient.delete(`/tasks/${taskId}`);
+    this.clearProjectCache();
   }
 }
