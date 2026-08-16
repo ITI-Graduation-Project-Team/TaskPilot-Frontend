@@ -404,33 +404,14 @@ interface EmployeeProfile {
                     @if (cvExtractionLoading()) {
                       <div class="absolute inset-0 bg-gradient-to-br from-surface to-background/95 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl p-4 text-center z-10 border border-primary/40 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] overflow-hidden">
                         
-                        <!-- Animated Scanning Line -->
-                        <div class="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-[ping_1.5s_infinite] shadow-[0_2px_10px_var(--tw-colors-primary)]"></div>
-                        
-                        <!-- Magic / AI Icon with rotating border -->
-                        <div class="relative flex items-center justify-center w-12 h-12 mb-3">
-                          <div class="absolute inset-0 rounded-full border-[3px] border-primary/20"></div>
-                          <div class="absolute inset-0 rounded-full border-[3px] border-primary border-t-transparent animate-[spin_1s_linear_infinite]"></div>
-                          <div class="absolute inset-0 rounded-full border-[3px] border-secondary/50 border-b-transparent animate-[spin_1.5s_linear_infinite_reverse]"></div>
-                          
-                          <!-- Sparkles/Magic Icon -->
-                          <svg class="w-5 h-5 text-primary animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
+                        <!-- Simple Loading Spinner -->
+                        <div class="w-8 h-8 rounded-full border-[3px] border-[#D1D5DB] border-t-primary animate-spin mb-3"></div>
                         
                         <!-- Text -->
-                        <div class="flex items-center gap-1.5">
-                           <span class="text-sm font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-                             Extracting Skills via AI
-                           </span>
-                           <span class="flex space-x-1 mt-1">
-                             <span class="w-1 h-1 bg-primary/80 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-                             <span class="w-1 h-1 bg-primary/80 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-                             <span class="w-1 h-1 bg-primary/80 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
-                           </span>
-                        </div>
-                        <p class="text-[10px] text-text-secondary mt-1 tracking-widest uppercase font-bold opacity-70">Analyzing document...</p>
+                        <span class="text-sm font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                          Extracting Skills via AI
+                        </span>
+                        <p class="text-[10px] text-text-secondary mt-1 tracking-widest uppercase font-bold opacity-70">ANALYZING DOCUMENT...</p>
                       </div>
                     } @else if (cvFile()) {
                       <div class="absolute inset-0 bg-surface flex flex-col items-center justify-center rounded-xl p-4 text-center border-2 border-success/30 shadow-sm transition-all group">
