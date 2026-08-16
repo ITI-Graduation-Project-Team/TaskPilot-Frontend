@@ -399,23 +399,55 @@ interface EmployeeProfile {
                 <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">Resume / CV</h4>
                 <div class="flex items-center justify-center w-full">
                   <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-xl cursor-pointer bg-background hover:bg-surface transition-colors relative">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg class="w-8 h-8 text-primary/70 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                      <p class="mb-1 text-sm text-text-secondary"><span class="font-semibold text-primary">Click to upload</span> or drag and drop</p>
-                      <p class="text-xs text-text-secondary">PDF files only (Max 10MB)</p>
-                    </div>
                     <input type="file" class="hidden" accept="application/pdf" (change)="onCvSelected($event)" />
                     
                     @if (cvExtractionLoading()) {
-                      <div class="absolute inset-0 bg-background/95 flex flex-col items-center justify-center rounded-xl p-4 text-center z-10 border border-primary/50 shadow-sm">
-                        <svg class="animate-spin h-8 w-8 text-primary mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <p class="text-sm font-bold text-primary">Extracting Skills via AI...</p>
+                      <div class="absolute inset-0 bg-gradient-to-br from-surface to-background/95 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl p-4 text-center z-10 border border-primary/40 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] overflow-hidden">
+                        
+                        <!-- Animated Scanning Line -->
+                        <div class="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-[ping_1.5s_infinite] shadow-[0_2px_10px_var(--tw-colors-primary)]"></div>
+                        
+                        <!-- Magic / AI Icon with rotating border -->
+                        <div class="relative flex items-center justify-center w-12 h-12 mb-3">
+                          <div class="absolute inset-0 rounded-full border-[3px] border-primary/20"></div>
+                          <div class="absolute inset-0 rounded-full border-[3px] border-primary border-t-transparent animate-[spin_1s_linear_infinite]"></div>
+                          <div class="absolute inset-0 rounded-full border-[3px] border-secondary/50 border-b-transparent animate-[spin_1.5s_linear_infinite_reverse]"></div>
+                          
+                          <!-- Sparkles/Magic Icon -->
+                          <svg class="w-5 h-5 text-primary animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        
+                        <!-- Text -->
+                        <div class="flex items-center gap-1.5">
+                           <span class="text-sm font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                             Extracting Skills via AI
+                           </span>
+                           <span class="flex space-x-1 mt-1">
+                             <span class="w-1 h-1 bg-primary/80 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                             <span class="w-1 h-1 bg-primary/80 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                             <span class="w-1 h-1 bg-primary/80 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                           </span>
+                        </div>
+                        <p class="text-[10px] text-text-secondary mt-1 tracking-widest uppercase font-bold opacity-70">Analyzing document...</p>
                       </div>
                     } @else if (cvFile()) {
-                      <div class="absolute inset-0 bg-background/95 flex flex-col items-center justify-center rounded-xl p-4 text-center border border-success/30 shadow-sm">
-                        <svg class="w-8 h-8 text-success mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <div class="absolute inset-0 bg-surface flex flex-col items-center justify-center rounded-xl p-4 text-center border-2 border-success/30 shadow-sm transition-all group">
+                        <button (click)="removeCv($event)" class="absolute top-2 right-2 p-1.5 bg-background text-text-secondary hover:text-danger hover:bg-danger/10 rounded-full transition-colors opacity-0 group-hover:opacity-100 shadow-sm border border-border" title="Remove file">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                        <div class="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-2">
+                           <svg class="w-6 h-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
                         <p class="text-sm font-bold text-text-primary truncate w-full px-4">{{ cvFile()?.name }}</p>
-                        <p class="text-xs text-text-secondary mt-1">Ready to upload</p>
+                        <p class="text-xs text-success font-semibold mt-1">File attached successfully</p>
+                      </div>
+                    } @else {
+                      <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg class="w-8 h-8 text-primary/70 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                        <p class="mb-1 text-sm text-text-secondary"><span class="font-semibold text-primary">Click to upload</span> or drag and drop</p>
+                        <p class="text-xs text-text-secondary">PDF files only (Max 10MB)</p>
                       </div>
                     }
                   </label>
@@ -486,10 +518,13 @@ interface EmployeeProfile {
               <button (click)="closeModal()" class="px-4 py-2 text-sm font-semibold border border-border text-text-secondary hover:text-text-primary rounded-xl transition-colors">
                 {{ 'MODALS.CANCEL' | translate }}
               </button>
-              <button (click)="saveProfile()" [disabled]="isSaving()" class="px-6 py-2 text-sm font-bold bg-primary hover:bg-primary-hover text-white rounded-xl shadow-md shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+              <button (click)="saveProfile()" [disabled]="isSaving()" class="relative overflow-hidden px-6 py-2 text-sm font-bold bg-primary hover:bg-primary-hover text-white rounded-xl shadow-md shadow-primary/20 transition-all disabled:opacity-80 disabled:cursor-wait flex items-center justify-center gap-2 min-w-[140px]">
                 @if (isSaving()) {
-                  <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  Saving...
+                  <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                  <div class="flex items-center gap-2 z-10">
+                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Saving...
+                  </div>
                 } @else {
                   {{ 'MODALS.SAVE_CHANGES' | translate }}
                 }
@@ -514,11 +549,11 @@ export class MyProfileComponent implements OnInit {
   private toastService = inject(ToastService);
   private profileService = inject(ProfileService);
 
-  loading     = signal(true);
-  isSaving    = signal(false);
-  profile     = signal<EmployeeProfile | null>(null);
+  loading = signal(true);
+  isSaving = signal(false);
+  profile = signal<EmployeeProfile | null>(null);
 
-  showModal   = signal(false);
+  showModal = signal(false);
   editForm = signal({
     firstNameEn: '',
     lastNameEn: '',
@@ -554,17 +589,17 @@ export class MyProfileComponent implements OnInit {
 
       this.profile.set({
         firstName: raw.firstName ?? '',
-        lastName:  raw.lastName ?? '',
+        lastName: raw.lastName ?? '',
         firstNameAr: raw.firstNameAr ?? '',
-        lastNameAr:  raw.lastNameAr ?? '',
+        lastNameAr: raw.lastNameAr ?? '',
         phoneNumber: raw.phoneNumber ?? '',
         avatarUrl: raw.avatarUrl,
         latestCvUrl: raw.latestCvUrl,
-        email:     raw.email ?? '',
-        jobTitle:  raw.jobTitle ?? '',
+        email: raw.email ?? '',
+        jobTitle: raw.jobTitle ?? '',
         companyName: raw.companyName ?? '',
         seniorityLevel: mapSeniorityLevelToFrontend(raw.seniorityLevel ?? 2),
-        totalYearsOfExperience:  raw.totalYearsOfExperience ?? 0,
+        totalYearsOfExperience: raw.totalYearsOfExperience ?? 0,
         skills: (raw.skills ?? []).map((s: any, index: number) => {
           if (typeof s === 'string') {
             return {
@@ -575,10 +610,10 @@ export class MyProfileComponent implements OnInit {
             };
           }
           return {
-            name:                s.name ?? '',
-            level:               mapSkillLevelToFrontend(s.level ?? 1),
-            yearsOfExperience:   s.yearsOfExperience ?? 0,
-            isPrimary:           s.isPrimary ?? false,
+            name: s.name ?? '',
+            level: mapSkillLevelToFrontend(s.level ?? 1),
+            yearsOfExperience: s.yearsOfExperience ?? 0,
+            isPrimary: s.isPrimary ?? false,
           };
         }),
       });
@@ -605,21 +640,19 @@ export class MyProfileComponent implements OnInit {
       this.avatarFile.set(null);
       this.avatarPreview.set(null);
       this.cvFile.set(null);
-      
+
       this.showModal.set(true);
     }
   }
 
   closeModal() {
-    if (!this.isSaving()) {
-      this.showModal.set(false);
-      this.avatarFile.set(null);
-      this.avatarPreview.set(null);
-      this.deleteAvatarSignal.set(false);
-      this.cvFile.set(null);
-      this.extractedSkills.set([]);
-      this.cvExtractionLoading.set(false);
-    }
+    this.showModal.set(false);
+    this.avatarFile.set(null);
+    this.avatarPreview.set(null);
+    this.deleteAvatarSignal.set(false);
+    this.cvFile.set(null);
+    this.extractedSkills.set([]);
+    this.cvExtractionLoading.set(false);
   }
 
   onAvatarSelected(event: Event) {
@@ -659,7 +692,7 @@ export class MyProfileComponent implements OnInit {
       // Trigger AI Extraction
       this.cvExtractionLoading.set(true);
       this.extractedSkills.set([]);
-      
+
       this.profileService.uploadCV(file).subscribe({
         next: (res) => {
           this.cvExtractionLoading.set(false);
@@ -688,7 +721,7 @@ export class MyProfileComponent implements OnInit {
                 mapped[0].isPrimary = true;
               }
             }
-            
+
             this.extractedSkills.set(mapped);
             this.toastService.show('🎉 CV Extracted Successfully! Please review your skills below.', 'success');
           } else {
@@ -702,6 +735,12 @@ export class MyProfileComponent implements OnInit {
         }
       });
     }
+  }
+
+  removeCv(event: Event) {
+    event.stopPropagation();
+    this.cvFile.set(null);
+    this.extractedSkills.set([]);
   }
 
   // ── Extracted Skills Actions ──
@@ -753,7 +792,7 @@ export class MyProfileComponent implements OnInit {
 
     try {
       this.isSaving.set(true);
-      
+
       // Step 1: If a new CV was uploaded and extracted, confirm the skills first
       if (this.cvFile() && this.extractedSkills().length > 0) {
         const confirmData = {
@@ -786,11 +825,11 @@ export class MyProfileComponent implements OnInit {
       const formData = new FormData();
       formData.append('FirstNameEn', form.firstNameEn.trim());
       formData.append('LastNameEn', form.lastNameEn.trim());
-      
+
       if (form.firstNameAr) formData.append('FirstNameAr', form.firstNameAr.trim());
       if (form.lastNameAr) formData.append('LastNameAr', form.lastNameAr.trim());
       if (form.phoneNumber) formData.append('PhoneNumber', form.phoneNumber.trim());
-      
+
       formData.append('JobTitle', form.jobTitle.trim());
       formData.append('SeniorityLevel', mapSeniorityLevelToBackend(form.seniorityLevel).toString());
       formData.append('TotalYearsOfExperience', form.totalYearsOfExperience.toString());
@@ -801,7 +840,7 @@ export class MyProfileComponent implements OnInit {
       if (this.deleteAvatarSignal()) {
         formData.append('DeleteAvatar', 'true');
       }
-      
+
       if (this.cvFile()) {
         formData.append('CvFile', this.cvFile()!);
       }
@@ -811,7 +850,7 @@ export class MyProfileComponent implements OnInit {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+
       if (response.data.succeeded) {
         this.toastService.show('🎉 Profile updated successfully!', 'success');
         this.closeModal();

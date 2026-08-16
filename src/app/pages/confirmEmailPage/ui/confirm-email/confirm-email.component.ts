@@ -181,6 +181,8 @@ export class ConfirmEmailComponent implements OnInit, AfterViewInit {
       if (role) {
         localStorage.setItem('userRole', role);
       }
+      const isProfileCompleted = tokenData?.isProfileCompleted === true;
+      localStorage.setItem('isProfileCompleted', isProfileCompleted ? 'true' : 'false');
 
       this.state.set('success');
       

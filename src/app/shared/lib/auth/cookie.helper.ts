@@ -45,11 +45,13 @@ export function getRoleFromToken(): string | null {
 
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return (
-      payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
-      ?? payload['role']
-      ?? null
-    );
+    let role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? payload['role'];
+    
+    if (Array.isArray(role)) {
+      role = role[0];
+    }
+    
+    return role ?? null;
   } catch {
     return null;
   }
@@ -73,8 +75,9 @@ export function getUserIdFromToken(): string | null {
 
 export function isProfileCompleted(): boolean {
   if (typeof localStorage !== 'undefined') {
-    if (localStorage.getItem('isProfileCompleted') === 'true') {
-      return true;
+    const localVal = localStorage.getItem('isProfileCompleted');
+    if (localVal !== null) {
+      return localVal === 'true';
     }
   }
 
