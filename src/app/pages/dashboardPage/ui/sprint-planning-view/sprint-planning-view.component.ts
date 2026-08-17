@@ -1010,14 +1010,50 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   }
 
   // ── Backlog loader ─────────────────────────────────────────────
+  // Fix A: The old single call getBacklog(projId, 1, 1000) relied on the server
+  // accepting pageSize=1000 literally.  The server has no enforced MaxPageSize cap,
+  // but passing 1000 is fragile and transfers the full UserStoryDto payload for up to
+  // 1000 stories in one request.  Fix 1 (topological sort) now correctly selects
+  // low-priority prerequisite stories — these sit further down the backlog sort order
+  // and may be missing from whatever the old call returned, causing grey GUID rows.
+  //
+  // Solution: paginate with pageSize=100, following hasNextPage until exhausted.
+  // BacklogService.backlogCache keys by (projectId, page, pageSize) so each page gets
+  // its own cache slot — no stale cross-contamination between loop iterations.
+  //
+  // Follow-up recommendation: expose a dedicated GET /projects/{id}/backlog/all endpoint
+  // (non-paginated, projection of id+title+priority+estimatedHours only) for sprint planning.
+  // That would be lighter than iterating the full UserStoryDto paginated endpoint which
+  // was designed for the backlog browsing UI, not bulk lookup.
   async loadBacklogStories() {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
     this.isBacklogLoading.set(true);
     try {
-      const res = await this.backlogService.getBacklog(projId, 1, 1000);
       const map = new Map<string, UserStoryDto>();
-      (res?.userStories?.items || []).forEach((s: UserStoryDto) => map.set(s.id, s));
+      let page = 1;
+      const pageSize = 100;
+      let hasMore = true;
+      // Safety valve: 20 × 100 = 2 000 stories ceiling.
+      // A project with >2 000 unassigned backlog stories is pathological;
+      // warn loudly and stop rather than loop indefinitely.
+      const MAX_PAGES = 20;
+
+      while (hasMore && page <= MAX_PAGES) {
+        const res = await this.backlogService.getBacklog(projId, page, pageSize);
+        (res?.userStories?.items || []).forEach((s: UserStoryDto) => map.set(s.id, s));
+        hasMore = res?.userStories?.hasNextPage === true;
+        page++;
+      }
+
+      if (hasMore && page > MAX_PAGES) {
+        console.warn(
+          `[SprintPlanningView] loadBacklogStories: hit MAX_PAGES (${MAX_PAGES}) safety limit ` +
+          `— backlog has more than ${MAX_PAGES * pageSize} stories. ` +
+          `storiesMap may be incomplete. Consider a dedicated bulk-fetch endpoint.`
+        );
+      }
+
       this.storiesMap.set(map);
       if (map.size === 0 && (this.pageState() === 'empty' || this.pageState() === 'no-sprints')) {
         this.pageState.set('no-sprints');
