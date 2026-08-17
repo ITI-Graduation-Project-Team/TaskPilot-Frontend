@@ -42,7 +42,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
   ],
   template: `
     <div
-      class="min-h-screen flex transition-colors duration-300 font-dashboard"
+      class="w-full overflow-x-hidden min-h-screen flex transition-colors duration-300 font-dashboard"
       style="background: var(--background); color: var(--text-primary);"
       [attr.dir]="isRtl() ? 'rtl' : 'ltr'"
     >
@@ -432,52 +432,98 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Notification Bell -->
             <app-notification-bell />
 
-            <!-- Language Toggle Button -->
-            <button (click)="toggleLanguage()" 
-                    [disabled]="isSwitchingLanguage()"
-                    class="p-2 text-text-secondary hover:text-text-primary font-bold text-xs rounded-lg hover:bg-border transition-colors uppercase disabled:opacity-50 relative min-w-[36px] flex items-center justify-center"
-                    style="color: var(--text-secondary);">
-              @if (isSwitchingLanguage()) {
-                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <!-- Desktop Utilities -->
+            <div class="hidden lg:flex items-center gap-1.5 sm:gap-2">
+              <!-- Language Toggle Button -->
+              <button (click)="toggleLanguage()" 
+                      [disabled]="isSwitchingLanguage()"
+                      class="p-1 sm:p-2 text-text-secondary hover:text-text-primary font-bold text-xs rounded-lg hover:bg-border transition-colors uppercase disabled:opacity-50 relative min-w-[36px] flex items-center justify-center"
+                      style="color: var(--text-secondary);">
+                @if (isSwitchingLanguage()) {
+                  <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                } @else {
+                  {{ currentLang() === 'en' ? 'AR' : 'EN' }}
+                }
+              </button>
+
+              <!-- Dark / Light Toggle -->
+              <button
+                (click)="toggleTheme()"
+                [disabled]="isSwitchingTheme()"
+                class="p-1 sm:p-2 rounded-xl hover:bg-border transition-all duration-200 disabled:opacity-50 relative flex items-center justify-center"
+                style="color: var(--text-secondary);"
+                [title]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+              >
+                @if (isSwitchingTheme()) {
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                } @else if (isDark()) {
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                } @else {
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                  </svg>
+                }
+              </button>
+
+              <!-- Logout Button -->
+              <button
+                (click)="logout()"
+                class="p-1 sm:p-2 sm:px-3 rounded-xl hover:bg-error/10 transition-all duration-200 text-error flex items-center justify-center gap-1.5"
+                title="Logout"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
-              } @else {
-                {{ currentLang() === 'en' ? 'AR' : 'EN' }}
+                <span class="hidden md:inline text-xs font-bold">{{ 'employee.header.logout' | translate }}</span>
+              </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div class="lg:hidden relative">
+              <button (click)="isMobileMenuOpen.set(!isMobileMenuOpen())"
+                      class="p-2 text-text-secondary hover:text-text-primary rounded-xl hover:bg-border transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+
+              @if (isMobileMenuOpen()) {
+                <div class="fixed inset-0 z-40" (click)="isMobileMenuOpen.set(false)"></div>
+                <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both] flex flex-col p-2 gap-1">
+                  <!-- Language Toggle -->
+                  <button (click)="toggleLanguage(); isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-sidebar transition-colors rounded-lg">
+                    <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                    <span class="font-medium text-text-primary">{{ currentLang() === 'en' ? 'العربية' : 'English' }}</span>
+                  </button>
+                  <!-- Theme Toggle -->
+                  <button (click)="toggleTheme(); isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-sidebar transition-colors rounded-lg">
+                    @if (isDark()) {
+                      <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    } @else {
+                      <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    }
+                    <span class="font-medium text-text-primary">{{ isDark() ? 'Light Mode' : 'Dark Mode' }}</span>
+                  </button>
+                  <div class="border-t border-border my-1"></div>
+                  <!-- Logout -->
+                  <button (click)="logout()" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-error/10 transition-colors rounded-lg text-error">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span class="font-bold">{{ 'employee.header.logout' | translate }}</span>
+                  </button>
+                </div>
               }
-            </button>
-
-            <!-- Dark / Light Toggle -->
-            <button
-              (click)="toggleTheme()"
-              [disabled]="isSwitchingTheme()"
-              class="p-2 rounded-xl hover:bg-border transition-all duration-200 disabled:opacity-50 relative flex items-center justify-center"
-              style="color: var(--text-secondary);"
-              [title]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-            >
-              @if (isSwitchingTheme()) {
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              } @else if (isDark()) {
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-              } @else {
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                </svg>
-              }
-            </button>
+            </div>
 
 
-            <!-- Date -->
-            <span class="text-sm font-semibold hidden sm:inline" style="color: var(--text-secondary);">
-              {{ currentDate }}
-            </span>
+            <!-- Date Removed per user request -->
           </div>
         </header>
 
@@ -564,14 +610,14 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
       <!-- ══════════════════════════════════════════
            MOBILE BOTTOM NAVIGATION
       ══════════════════════════════════════════ -->
-      <div class="fixed bottom-3 start-3 end-3 z-40 md:hidden">
-        <div class="border rounded-2xl shadow-2xl flex items-center justify-start overflow-x-auto flex-nowrap gap-2 py-2 px-3 backdrop-blur-xl hide-scrollbar [&>button]:shrink-0 [&>button]:min-w-[4.5rem]"
+      <div class="fixed bottom-2 start-2 end-2 z-40 lg:hidden">
+        <div class="border rounded-2xl shadow-2xl flex items-center justify-start overflow-x-auto flex-nowrap gap-1 py-1.5 px-3 backdrop-blur-xl hide-scrollbar [&>button]:shrink-0 [&>button]:min-w-[3.5rem]"
              style="background: color-mix(in srgb, var(--surface) 80%, transparent); border-color: var(--border); scrollbar-width: none;">
 
           <!-- Sprint Board -->
           <button
             [routerLink]="['/employee-dashboard', 'sprint']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'sprint'"
             [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
           >
@@ -585,7 +631,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Current Projects -->
           <button
             [routerLink]="['/employee-dashboard', 'current-projects']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'current-projects'"
             [style.color]="activeTab() !== 'current-projects' ? 'var(--text-secondary)' : ''"
           >
@@ -599,7 +645,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Calendar -->
           <button
             [routerLink]="['/employee-dashboard', 'calendar']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'calendar'"
             [style.color]="activeTab() !== 'calendar' ? 'var(--text-secondary)' : ''"
           >
@@ -612,7 +658,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Project History -->
           <button
             [routerLink]="['/employee-dashboard', 'project-history']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'project-history'"
             [style.color]="activeTab() !== 'project-history' ? 'var(--text-secondary)' : ''"
           >
@@ -625,7 +671,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Policies -->
           <button
             [routerLink]="['/employee-dashboard', 'policies-chat']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'policies-chat'"
             [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
           >
@@ -638,7 +684,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Project Policies Chat Mobile -->
           <button
             [routerLink]="['/employee-dashboard', 'project-policies']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'project-policies'"
             [style.color]="activeTab() !== 'project-policies' ? 'var(--text-secondary)' : ''"
           >
@@ -651,7 +697,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- My Profile -->
           <button
             [routerLink]="['/employee-dashboard', 'profile']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'profile'"
             [style.color]="activeTab() !== 'profile' ? 'var(--text-secondary)' : ''"
           >
@@ -665,7 +711,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Settings -->
           <button
             [routerLink]="['/employee-dashboard', 'settings']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'settings'"
             [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
           >
@@ -704,6 +750,7 @@ export class EmployeeDashboardComponent implements OnInit {
   hasActiveSprint = signal(false);
   isSidebarCollapsed = signal(true);
   isProjectDropdownOpen = signal(false);
+  isMobileMenuOpen = signal(false);
 
   currentDate: string = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
