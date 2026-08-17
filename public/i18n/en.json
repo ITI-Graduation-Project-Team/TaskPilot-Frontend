@@ -586,7 +586,7 @@
     "BACKLOG": "Backlog"
   },
   "SPRINT_LIST": {
-    "TITLE": "Sprint Planning",
+    "TITLE": "Sprints",
     "SUBTITLE": "Plan and manage your project sprints here.",
     "STATUS": "Status",
     "ALL_STATUSES": "All Statuses",

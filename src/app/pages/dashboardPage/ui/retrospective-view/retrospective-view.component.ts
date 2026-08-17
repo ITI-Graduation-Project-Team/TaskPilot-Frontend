@@ -680,7 +680,7 @@ export class RetrospectiveViewComponent implements OnInit {
     try {
       const list = await this.sprintService.getAllSprints(projId);
       // Retrospectives are only available for completed sprints
-      const completedSprints = (list || []).filter(s => s.status === 'Completed');
+      const completedSprints = (list?.items || []).filter(s => s.status === 'Completed');
       this.sprints.set(completedSprints);
 
       // Check query param sprintId or pick latest completed sprint

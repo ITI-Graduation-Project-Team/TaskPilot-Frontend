@@ -1,6 +1,16 @@
 import { Injectable } from '@angular/core';
 import { apiClient } from './axios.instance';
 
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export interface PartiallyCompletedStory {
   userStoryId: string;
   titleEn: string;
@@ -250,14 +260,44 @@ export class SprintPlanningService {
     );
   }
 
-  async getAllSprints(projectId: string): Promise<SprintListItem[]> {
+  async getAllSprints(
+    projectId: string,
+    page: number = 1,
+    pageSize: number = 10,
+    statusFilter?: string,
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<PagedResult<SprintListItem>> {
     try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+      if (statusFilter && statusFilter !== 'All') params.append('statusFilter', statusFilter);
+      if (dateFrom) params.append('dateFrom', dateFrom);
+      if (dateTo) params.append('dateTo', dateTo);
+
       const { data } = await apiClient.get(
-        `/projects/${projectId}/sprints`
+        `/projects/${projectId}/sprints?${params.toString()}`
       );
-      return data?.data || [];
+      return data?.data || {
+        items: [],
+        page,
+        pageSize,
+        totalItems: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false
+      };
     } catch {
-      return [];
+      return {
+        items: [],
+        page,
+        pageSize,
+        totalItems: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false
+      };
     }
   }
 
