@@ -21,7 +21,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-surface border border-border p-4 rounded-2xl shadow-sm">
           
           <!-- Tabs -->
-          <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto custom-scrollbar shrink-0">
+          <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto hide-scrollbar shrink-0 w-full lg:w-auto">
             <button (click)="onTabChange('active')" 
                     [class.bg-surface]="activeTab() === 'active'" [class.shadow-sm]="activeTab() === 'active'" [class.text-text-primary]="activeTab() === 'active'" [class.text-text-secondary]="activeTab() !== 'active'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ACTIVE_DRAFT' | translate }}</button>
@@ -33,7 +33,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ARCHIVED' | translate }}</button>
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1 justify-end">
+          <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1 justify-end w-full lg:w-auto">
             <div class="relative flex-1 sm:max-w-[280px]">
               <span class="absolute top-1/2 left-3.5 -translate-y-1/2 text-text-secondary pointer-events-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

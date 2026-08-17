@@ -144,9 +144,9 @@
         <div *ngFor="let plan of plans(); let i = index" 
              class="relative bg-surface rounded-2xl p-8 flex flex-col transition-all duration-300"
              [ngClass]="{
-               'border-2 border-primary shadow-lg scale-[1.02]': isCurrentPlan(plan.id),
+               'border-2 border-primary shadow-lg': isCurrentPlan(plan.id),
                'border border-border shadow-sm hover:shadow-md': !isCurrentPlan(plan.id),
-               'shadow-md border-primary/50 -mt-2 mb-2': plans().length === 3 && i === 1 && !isCurrentPlan(plan.id)
+               'shadow-md border-primary/50': plans().length === 3 && i === 1 && !isCurrentPlan(plan.id)
              }">
           
           <!-- Current Plan Badge -->
@@ -212,13 +212,12 @@
           <!-- Action Button -->
           <button *ngIf="showChoosePlanButton(plan) && pendingSubscription()?.subscriptionPlanId !== plan.id" 
                   (click)="choosePlan(plan)"
-                  class="w-full py-3.5 rounded-xl font-bold transition-all duration-200"
-                  [ngClass]="plans().length === 3 && i === 1 ? 'bg-primary text-white hover:bg-error shadow-md' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'">
+                  class="w-full py-3.5 rounded-xl font-bold transition-all duration-200 bg-primary text-white hover:opacity-90 shadow-md">
             {{ currentLang === 'ar' ? 'اختر الخطة' : 'Choose Plan' }}
           </button>
           
           <button *ngIf="isCurrentPlan(plan.id)" disabled
-                  class="w-full py-3.5 rounded-xl font-bold bg-surface border border-border text-text-secondary opacity-70 cursor-not-allowed">
+                  class="w-full py-3.5 rounded-xl font-bold bg-primary/10 border border-primary/20 text-primary cursor-default">
             {{ currentLang === 'ar' ? 'الخطة الحالية' : 'Current Plan' }}
           </button>
         </div>

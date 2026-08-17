@@ -147,8 +147,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
         @if (activeTab() === 'board') {
           <!-- Metrics overview -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.TOTAL_TASKS' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ totalTasksCount() }}</h3>
@@ -160,7 +160,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
 
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.IN_PROGRESS' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ inProgress().length }}</h3>
@@ -172,7 +172,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
 
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.UNDER_REVIEW' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ review().length }}</h3>
@@ -185,7 +185,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
 
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.COMPLETED' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ done().length }}</h3>
@@ -215,7 +215,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             <p class="text-text-secondary text-sm mt-1">{{ 'BOARD.MANAGE_MONITOR' | translate }}</p>
           </div>
           
-          <div class="flex items-center gap-3">
+          <div class="flex items-center flex-wrap gap-3">
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
               @if (hasUnassignedTasks()) {
                 <button (click)="goToAssignment()" 
@@ -324,10 +324,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
         <!-- Kanban columns -->
-        <div cdkDropListGroup class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div cdkDropListGroup class="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 pb-4 hide-scrollbar" style="scrollbar-width: thin;">
           
           <!-- TO DO -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.TO_DO' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">{{ todo().length }}</span>
@@ -413,7 +413,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
 
           <!-- IN PROGRESS -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.IN_PROGRESS' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-warning/15 text-warning rounded-full">{{ inProgress().length }}</span>
@@ -495,7 +495,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
 
           <!-- UNDER REVIEW -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.REVIEW' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-info/15 text-info rounded-full">{{ review().length }}</span>
@@ -577,7 +577,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
 
           <!-- DONE -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.DONE' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full">{{ done().length }}</span>
