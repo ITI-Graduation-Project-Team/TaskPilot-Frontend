@@ -1,15 +1,37 @@
-// Frontend models simplified for the UI
+export interface ScoringWeights {
+  skillWeight: number;
+  availabilityWeight: number;
+  velocityWeight: number;
+  experienceWeight: number;
+}
+
+export interface SkillGap {
+  skillId: number;
+  skillName: string;
+  reason?: string;
+}
+
 export interface DeveloperSuggestion {
   employeeId: string;
   employeeName: string;
   jobTitle?: string;
-  score: number;          // finalScore mapped directly (0–100)
-  reasonEn: string;
-  reasonAr: string;
-  rank: number;           // 1, 2, or 3 — position in rankedDevelopers
-  initialRemainingHours: number;
+  score: number;
+  rank: number;
+  skillScore: number;
+  availabilityScore: number;
+  velocityScore: number;
+  hasHistoricalData: boolean;
+  experienceScore: number;
+  matchedSkillsCount: number;
+  requiredSkillsCount: number;
+  skillGaps: SkillGap[];
   maxSprintHours: number;
   currentAssignedHours: number;
+  nonEditableHours: number;
+  assignedBefore: number;
+  assignedAfter: number;
+  remainingAfter: number;
+  hasSufficientCapacity: boolean;
 }
 
 export interface AssignmentSuggestion {
@@ -20,57 +42,33 @@ export interface AssignmentSuggestion {
   priority: string;
   type: string;
   assigneeId?: string;
-  requiredSkills: { skillId: string; skillNameEn: string; skillNameAr: string }[];
-  rankedDevelopers: DeveloperSuggestion[];   // top 3, ordered by rank
+  requiredSkills: { skillId: number; skillName: string }[];
+  rankedDevelopers: DeveloperSuggestion[];
   isUnassignable?: boolean;
 }
 
-// Raw Backend DTOs
-export interface TaskRequiredSkillDto {
-  skillId: string;
-  skillNameEn: string;
-  skillNameAr: string;
-}
-
-export interface TaskSnapshotDto {
-  taskId: string;
-  titleEn: string;
-  titleAr: string;
-  estimatedHours: number;
-  priority: string; // TaskPriority enum string
-  effortSize: string; // EffortSize enum string
-  type: string; // TaskType enum string
-  assigneeId?: string;
-  requiredSkills: TaskRequiredSkillDto[];
-}
-
-export interface DeveloperScoreDto {
-  employeeId: string;
-  finalScore: number;
-}
-
-export interface ExplainedDeveloperDto extends DeveloperScoreDto {
-  reasonEn: string;
-  reasonAr: string;
-  fullName?: string; // Embedded from backend if available
-  jobTitle?: string;
-  remainingHours: number;
-  maxSprintHours?: number;
-  currentAssignedHours?: number;
-}
-
-export interface ExplainedTaskScoringResultDto {
-  task: TaskSnapshotDto;
-  rankedDevelopers: ExplainedDeveloperDto[];
-  isUnassignable?: boolean;
-}
-
-export interface ExplainedAssignmentDto {
-  projectId: string;
-  sprintId: string;
-  taskScores: ExplainedTaskScoringResultDto[];
+export interface AssignmentContext {
+  suggestions: AssignmentSuggestion[];
+  weights: ScoringWeights;
 }
 
 export interface ConfirmAssignmentsRequest {
   assignments: { taskId: string; employeeId: string | null }[];
+  allowOverCapacity?: boolean;
+}
+
+export interface AssignTaskResult {
+  taskId: string;
+  previousEmployeeId?: string;
+  employeeId?: string;
+  changed: boolean;
+  assignedHours?: number;
+  maxSprintHours?: number;
+  warnings: string[];
+}
+
+export interface AssignmentTeamMember {
+  employeeId: string;
+  fullName: string;
+  jobTitle?: string;
 }

@@ -12,6 +12,13 @@ export const projectSetupGuard: CanActivateFn = () => {
 
   if (!projectId) return router.createUrlTree(['/dashboard', 'projects']);
 
+  // The dashboard project list already carries the setup status. Reuse it on
+  // normal in-app navigation instead of loading the full setup graph again.
+  const selectedProject = projects.selectedProject();
+  if (selectedProject && ['Ready', 'ReadyWithWarnings'].includes(selectedProject.setupStatus || '')) {
+    return true;
+  }
+
   return setupApi.get(projectId).pipe(
     map(response => response.data.wbs.status === 'Succeeded'
       ? true
