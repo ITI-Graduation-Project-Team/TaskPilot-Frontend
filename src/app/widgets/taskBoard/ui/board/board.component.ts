@@ -24,6 +24,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
+import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
 
 interface Task {
   id: string;
@@ -58,7 +59,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       
@@ -143,6 +144,18 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
             {{ 'BOARD.KANBAN_BOARD' | translate }}
           </button>
+          
+          @if (activeSprintId()) {
+            <button (click)="activeTab.set('health')"
+                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
+                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
+                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              {{ 'BOARD.SPRINT_HEALTH' | translate }}
+            </button>
+          }
         </div>
 
         @if (activeTab() === 'board') {
@@ -658,6 +671,8 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
         </div>
+        } @else if (activeTab() === 'health') {
+          <app-sprint-health-dashboard [sprintId]="activeSprintId()!"></app-sprint-health-dashboard>
         }
       }
     
