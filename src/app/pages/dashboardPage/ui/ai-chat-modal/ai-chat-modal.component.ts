@@ -415,20 +415,6 @@ import { getRequirementSessionUiState } from './requirement-session-state';
                           placeholder="اكتب وصف المشروع..."></textarea>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-border/60 pt-4">
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.SPRINT_DAYS' | translate }}</label>
-                <input type="number" [value]="sprintDurationInput() ?? ''" (input)="sprintDurationInput.set(+durationField.value || null)" #durationField
-                       [disabled]="isGeneratingDraft()" min="1" max="90" [placeholder]="'e.g. ' + sprintDurationPlaceholder()"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"/>
-              </div>
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.SPRINT_HOURS' | translate }}</label>
-                <input type="number" [value]="targetSprintHoursInput() ?? ''" (input)="targetSprintHoursInput.set(+hoursField.value || null)" #hoursField
-                       [disabled]="isGeneratingDraft()" min="1" max="1000" [placeholder]="'e.g. ' + targetSprintHoursPlaceholder()"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"/>
-              </div>
-            </div>
           </div>
           <div class="flex items-center justify-end gap-2.5 mt-2 border-t border-border/60 pt-4 shrink-0">
             <button (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
@@ -697,9 +683,6 @@ export class AiChatModalComponent implements AfterViewChecked {
   get sprintDurationInput() { return this.aiChatState.sprintDurationInput; }
   get targetSprintHoursInput() { return this.aiChatState.targetSprintHoursInput; }
   
-  sprintDurationPlaceholder = signal('14');
-  targetSprintHoursPlaceholder = signal('80');
-
   onGenerateDraft() {
     const activeChatId = this.chatId();
     const companyId = this.projectState.userCompanyId();
