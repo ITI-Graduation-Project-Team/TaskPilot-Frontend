@@ -473,19 +473,6 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               }
             </button>
 
-            <!-- Logout -->
-            <button
-              (click)="logout()"
-              class="flex px-2 sm:px-3 py-1.5 hover:bg-error/10 border border-transparent hover:border-error/20 text-xs font-bold rounded-xl shadow-sm transition-all items-center gap-1.5"
-              style="color: var(--error);"
-              [title]="'employee.header.logout' | translate"
-            >
-              <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-              </svg>
-              <span class="hidden sm:inline">{{ 'employee.header.logout' | translate }}</span>
-            </button>
 
             <!-- Date -->
             <span class="text-sm font-semibold hidden sm:inline" style="color: var(--text-secondary);">
@@ -607,6 +594,19 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             </svg>
             <span class="text-[9px] font-bold">{{ 'employee.nav.current' | translate }}</span>
+          </button>
+
+          <!-- Calendar -->
+          <button
+            [routerLink]="['/employee-dashboard', 'calendar']"
+            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            [class.mobile-tab-active]="activeTab() === 'calendar'"
+            [style.color]="activeTab() !== 'calendar' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-[9px] font-bold">{{ 'calendar.title' | translate }}</span>
           </button>
 
           <!-- Project History -->
