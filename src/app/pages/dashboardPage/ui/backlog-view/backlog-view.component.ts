@@ -381,9 +381,6 @@ const EMPTY_TASK: TaskFormModel = {
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description EN
                     <textarea name="taskDescriptionEn" rows="3" [(ngModel)]="taskForm().descriptionEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary EN
-                    <textarea name="technicalSummaryEn" rows="3" [(ngModel)]="taskForm().technicalSummaryEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
-                  </label>
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaEn') }}
                     <textarea name="taskAcceptanceCriteriaEn" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
@@ -399,9 +396,6 @@ const EMPTY_TASK: TaskFormModel = {
                   </label>
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description AR
                     <textarea name="taskDescriptionAr" rows="3" [(ngModel)]="taskForm().descriptionAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
-                  </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary AR
-                    <textarea name="technicalSummaryAr" rows="3" [(ngModel)]="taskForm().technicalSummaryAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaAr') }}
                     <textarea name="taskAcceptanceCriteriaAr" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
@@ -577,7 +571,7 @@ export class BacklogViewComponent implements OnInit {
   }
 
   taskDescription(task: TaskItemDto): string {
-    return task.description || task.technicalSummary || this.label('noDescription');
+    return task.description || this.label('noDescription');
   }
   selectedProjectHasStack = computed(() => {
     const project = this.projectState.selectedProject();
@@ -667,18 +661,31 @@ export class BacklogViewComponent implements OnInit {
     this.expandedStoryIds.update(ids => ids.includes(storyId) ? ids.filter(id => id !== storyId) : [...ids, storyId]);
   }
 
-  openStoryModal(story?: UserStoryDto) {
-    this.storyForm.set(story ? {
-      id: story.id,
-      titleEn: story.title || '',
-      titleAr: '',
-      descriptionEn: story.description || '',
-      descriptionAr: '',
-      acceptanceCriteriaEn: story.acceptanceCriteria || '',
-      acceptanceCriteriaAr: '',
-      priority: story.priority || 'Medium',
-    } : { ...EMPTY_STORY });
-    this.isStoryModalOpen.set(true);
+  async openStoryModal(story?: UserStoryDto) {
+    if (story) {
+      try {
+        this.isLoading.set(true);
+        const details = await this.backlogService.getUserStory(story.id);
+        this.storyForm.set({
+          id: details.id,
+          titleEn: details.titleEn || '',
+          titleAr: details.titleAr || '',
+          descriptionEn: details.descriptionEn || '',
+          descriptionAr: details.descriptionAr || '',
+          acceptanceCriteriaEn: details.acceptanceCriteriaEn || '',
+          acceptanceCriteriaAr: details.acceptanceCriteriaAr || '',
+          priority: details.priority || 'Medium',
+        });
+        this.isStoryModalOpen.set(true);
+      } catch (e: any) {
+        this.toastService.show(e?.response?.data?.message || 'Failed to load story details.', 'error');
+      } finally {
+        this.isLoading.set(false);
+      }
+    } else {
+      this.storyForm.set({ ...EMPTY_STORY });
+      this.isStoryModalOpen.set(true);
+    }
   }
 
   async saveStory(event: Event) {
@@ -727,25 +734,38 @@ export class BacklogViewComponent implements OnInit {
     }
   }
 
-  openTaskModal(story: UserStoryDto, task?: TaskItemDto) {
-    this.taskForm.set(task ? {
-      id: task.id,
-      userStoryId: story.id,
-      titleEn: task.title || '',
-      titleAr: '',
-      descriptionEn: task.description || '',
-      descriptionAr: '',
-      technicalSummaryEn: task.technicalSummary || '',
-      technicalSummaryAr: '',
-      acceptanceCriteriaEn: task.acceptanceCriteria || '',
-      acceptanceCriteriaAr: '',
-      estimatedHours: Number(task.estimatedHours || 1),
-      effortSize: task.effortSize || 'Medium',
-      priority: task.priority || 'Medium',
-      type: task.type || 'Technical',
-      status: task.status || 'ToDo',
-    } : { ...EMPTY_TASK, userStoryId: story.id });
-    this.isTaskModalOpen.set(true);
+  async openTaskModal(story: UserStoryDto, task?: TaskItemDto) {
+    if (task) {
+      try {
+        this.isLoading.set(true);
+        const details = await this.backlogService.getTask(task.id);
+        this.taskForm.set({
+          id: details.id,
+          userStoryId: story.id,
+          titleEn: details.titleEn || '',
+          titleAr: details.titleAr || '',
+          descriptionEn: details.descriptionEn || '',
+          descriptionAr: details.descriptionAr || '',
+          technicalSummaryEn: details.technicalSummaryEn || '',
+          technicalSummaryAr: details.technicalSummaryAr || '',
+          acceptanceCriteriaEn: details.acceptanceCriteriaEn || '',
+          acceptanceCriteriaAr: details.acceptanceCriteriaAr || '',
+          estimatedHours: Number(details.estimatedHours || 1),
+          effortSize: details.effortSize || 'Medium',
+          priority: details.priority || 'Medium',
+          type: details.type || 'Technical',
+          status: details.status || 'ToDo',
+        });
+        this.isTaskModalOpen.set(true);
+      } catch (e: any) {
+        this.toastService.show(e?.response?.data?.message || 'Failed to load task details.', 'error');
+      } finally {
+        this.isLoading.set(false);
+      }
+    } else {
+      this.taskForm.set({ ...EMPTY_TASK, userStoryId: story.id });
+      this.isTaskModalOpen.set(true);
+    }
   }
 
   async saveTask(event: Event) {

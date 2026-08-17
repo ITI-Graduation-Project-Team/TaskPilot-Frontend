@@ -17,6 +17,24 @@ export interface TaskItemDto {
   assigneeName?: string;
 }
 
+export interface TaskDetailDto {
+  id: string;
+  userStoryId: string;
+  titleEn: string;
+  titleAr: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  technicalSummaryEn?: string;
+  technicalSummaryAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
+  estimatedHours: number;
+  effortSize: string;
+  type: string;
+  priority: string;
+  status: string;
+}
+
 export interface UserStoryDto {
   id: string;
   projectId: string;
@@ -26,6 +44,18 @@ export interface UserStoryDto {
   priority: string;
   status: string;
   tasks: TaskItemDto[];
+}
+
+export interface UserStoryDetailDto {
+  id: string;
+  projectId: string;
+  titleEn: string;
+  titleAr: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
+  priority: string;
 }
 
 export interface PaginatedUserStories {
@@ -242,6 +272,11 @@ export class BacklogService {
     return data.data;
   }
 
+  async getUserStory(storyId: string): Promise<UserStoryDetailDto> {
+    const { data } = await apiClient.get<any>(`/userstories/${storyId}`);
+    return data.data;
+  }
+
   async updateUserStory(storyId: string, story: UserStoryPayload): Promise<void> {
     await apiClient.put(`/userstories/${storyId}`, {
       titleEn: story.titleEn,
@@ -276,6 +311,11 @@ export class BacklogService {
       priority: mapPriorityToBackend(task.priority),
     });
     this.clearProjectCache();
+    return data.data;
+  }
+
+  async getTask(taskId: string): Promise<TaskDetailDto> {
+    const { data } = await apiClient.get<any>(`/tasks/${taskId}`);
     return data.data;
   }
 
