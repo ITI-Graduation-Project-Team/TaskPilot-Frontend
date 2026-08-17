@@ -925,7 +925,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     try {
       // 1. Try fetching all sprints to check for any sprint with status 'Active'
       const sprints = await this.sprintService.getAllSprints(projId);
-      const active = sprints.find(s => s.status === 'Active');
+      const active = sprints?.items?.find(s => s.status === 'Active');
       if (active) {
         this.hasActiveSprint.set(true);
         this.activeSprintId.set(active.sprintId);

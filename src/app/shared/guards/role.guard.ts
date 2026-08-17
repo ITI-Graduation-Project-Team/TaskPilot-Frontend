@@ -22,5 +22,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
   if (currentRole === 'Employee') {
     return router.createUrlTree(['/employee-dashboard']);
   }
+  if (currentRole === 'Admin') {
+    return router.createUrlTree(['/admin/subscription-plans']);
+  }
   return router.createUrlTree(['/dashboard']);
 };
