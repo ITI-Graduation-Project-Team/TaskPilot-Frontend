@@ -36,7 +36,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="text-sm text-slate-500 font-medium">{{ 'DEACTIVATION.ANALYZING' | translate }}</p>
+          <p class="text-sm text-slate-500 font-medium">{{ mode === 'terminate' ? 'Analyzing dependencies...' : ('DEACTIVATION.ANALYZING' | translate) }}</p>
         </div>
 
         <div *ngIf="!isLoading() && analysisResult()" class="flex flex-col gap-4">
@@ -45,7 +45,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h4 class="text-sm font-bold text-emerald-800">{{ 'DEACTIVATION.READY_TITLE' | translate }}</h4>
+              <h4 class="text-sm font-bold text-emerald-800">{{ mode === 'terminate' ? 'Ready to Terminate' : ('DEACTIVATION.READY_TITLE' | translate) }}</h4>
               <p *ngIf="mode === 'deactivate'" class="text-xs text-emerald-600 mt-1">{{ 'DEACTIVATION.READY_DESC' | translate }}</p>
               <p *ngIf="mode === 'terminate'" class="text-xs text-emerald-600 mt-1">Are you absolutely sure you want to permanently terminate <strong>{{ employeeName }}</strong>? This will remove them from the company and cannot be undone.</p>
             </div>
@@ -129,8 +129,8 @@ import { ProjectStateService } from '../../shared/services/project-state.service
           </div>
 
           <div class="flex flex-col gap-1 mt-2">
-            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ 'DEACTIVATION.REASON_LABEL' | translate }}</label>
-            <textarea [(ngModel)]="reason" rows="3" [placeholder]="'DEACTIVATION.REASON_PLACEHOLDER' | translate" 
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ mode === 'terminate' ? 'Reason for Termination' : ('DEACTIVATION.REASON_LABEL' | translate) }}</label>
+            <textarea [(ngModel)]="reason" rows="3" [placeholder]="mode === 'terminate' ? 'E.g., Resigned, Contract ended...' : ('DEACTIVATION.REASON_PLACEHOLDER' | translate)" 
               class="w-full px-3 py-2 bg-brandLight border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"></textarea>
           </div>
         </div>
