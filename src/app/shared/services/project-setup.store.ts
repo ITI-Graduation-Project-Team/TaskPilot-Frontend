@@ -1,18 +1,23 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
 import { ConfirmTechStackRequest, normalizeProjectSetup, ProjectSetupApi, ProjectSetupDto } from '../api/project-setup.api';
+import { NotificationHubService } from './notification-hub.service';
 
 interface ApiEnvelope { data: ProjectSetupDto; }
 
 @Injectable({ providedIn: 'root' })
 export class ProjectSetupStore {
   private api = inject(ProjectSetupApi);
+  private notificationHub = inject(NotificationHubService);
   private _setup = signal<ProjectSetupDto | null>(null);
   private _loading = signal(false);
   private _action = signal<string | null>(null);
   private _error = signal<string | null>(null);
   private projectId: string | null = null;
   private pollingHandle: ReturnType<typeof setInterval> | null = null;
+  private refreshInFlight: Promise<void> | null = null;
+  private refreshProjectId: string | null = null;
+  private refreshQueued = false;
 
   readonly setup = this._setup.asReadonly();
   readonly loading = this._loading.asReadonly();
@@ -24,6 +29,18 @@ export class ProjectSetupStore {
     return setup?.wbs.status === 'Queued' || setup?.wbs.status === 'Running'
       || setup?.skills.status === 'Queued' || setup?.skills.status === 'Running';
   });
+
+  constructor() {
+    effect(() => {
+      const change = this.notificationHub.latestProjectSetupStatusChange();
+      if (change && change.projectId === this.projectId) void this.refresh();
+    });
+
+    effect(() => {
+      const connectionRevision = this.notificationHub.connectionRevision();
+      if (connectionRevision > 0 && this.projectId) void this.refresh();
+    });
+  }
 
   async start(projectId: string): Promise<void> {
     this.stop();
@@ -46,16 +63,41 @@ export class ProjectSetupStore {
     if (this.pollingHandle) clearInterval(this.pollingHandle);
     this.pollingHandle = null;
     this.projectId = null;
+    this.refreshQueued = false;
   }
 
-  async refresh(): Promise<void> {
-    if (!this.projectId) return;
+  refresh(): Promise<void> {
+    if (!this.projectId) return Promise.resolve();
+    if (this.refreshInFlight && this.refreshProjectId === this.projectId) {
+      this.refreshQueued = true;
+      return this.refreshInFlight;
+    }
+
+    const requestedProjectId = this.projectId;
+    const request = this.load(requestedProjectId);
+    this.refreshInFlight = request;
+    this.refreshProjectId = requestedProjectId;
+    void request.finally(() => {
+      if (this.refreshInFlight !== request) return;
+      this.refreshInFlight = null;
+      this.refreshProjectId = null;
+      if (this.refreshQueued) {
+        this.refreshQueued = false;
+        void this.refresh();
+      }
+    });
+    return request;
+  }
+
+  private async load(requestedProjectId: string): Promise<void> {
     try {
-      const response = await firstValueFrom(this.api.get(this.projectId));
+      const response = await firstValueFrom(this.api.get(requestedProjectId));
+      if (this.projectId !== requestedProjectId) return;
       this._setup.set(normalizeProjectSetup(response.data));
       this._error.set(null);
       this.syncPolling();
     } catch (error) {
+      if (this.projectId !== requestedProjectId) return;
       this._error.set(this.errorMessage(error));
     }
   }
@@ -93,7 +135,7 @@ export class ProjectSetupStore {
 
   private syncPolling(): void {
     if (this.isBackgroundActive() && !this.pollingHandle) {
-      this.pollingHandle = setInterval(() => void this.refresh(), 3000);
+      this.pollingHandle = setInterval(() => void this.refresh(), 15000);
     } else if (!this.isBackgroundActive() && this.pollingHandle) {
       clearInterval(this.pollingHandle);
       this.pollingHandle = null;

@@ -8,7 +8,7 @@ import {
   RetryContext
 } from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
-import { NotificationDto } from '../models/notification.model';
+import { NotificationDto, ProjectSetupStatusChangedDto } from '../models/notification.model';
 import { notificationApi } from '../api/notification.api';
 import { getAccessToken } from '../lib/auth/cookie.helper';
 
@@ -29,6 +29,12 @@ export class NotificationHubService {
 
   private _latestNotification = signal<NotificationDto | null>(null);
   readonly latestNotification = this._latestNotification.asReadonly();
+
+  private _latestProjectSetupStatusChange = signal<ProjectSetupStatusChangedDto | null>(null);
+  readonly latestProjectSetupStatusChange = this._latestProjectSetupStatusChange.asReadonly();
+
+  private _connectionRevision = signal(0);
+  readonly connectionRevision = this._connectionRevision.asReadonly();
 
   readonly unreadCount = computed(() => this._notifications().filter(notification => !notification.isRead).length);
 
@@ -61,6 +67,7 @@ export class NotificationHubService {
 
     // Connect first so notifications created while the initial list loads are received live.
     await this.syncNotifications();
+    this._connectionRevision.update(revision => revision + 1);
   }
 
   private ensureConnection(): HubConnection {
@@ -78,8 +85,14 @@ export class NotificationHubService {
       this.mergeNotifications([notification]);
     });
 
+    connection.on('ProjectSetupStatusChanged', (change: ProjectSetupStatusChangedDto) => {
+      this._latestProjectSetupStatusChange.set(this.normalizeProjectSetupStatusChange(change));
+    });
+
     connection.onreconnected(() => {
-      void this.syncNotifications();
+      void this.syncNotifications().finally(() => {
+        this._connectionRevision.update(revision => revision + 1);
+      });
     });
 
     this.hubConnection = connection;
@@ -122,6 +135,21 @@ export class NotificationHubService {
     };
   }
 
+  private normalizeProjectSetupStatusChange(change: ProjectSetupStatusChangedDto): ProjectSetupStatusChangedDto {
+    const source = change as ProjectSetupStatusChangedDto & {
+      ProjectId?: string;
+      Stage?: ProjectSetupStatusChangedDto['stage'];
+      Status?: ProjectSetupStatusChangedDto['status'];
+      OccurredAt?: string;
+    };
+    return {
+      projectId: source.projectId ?? source.ProjectId ?? '',
+      stage: source.stage ?? source.Stage ?? 'Wbs',
+      status: source.status ?? source.Status ?? 'NotStarted',
+      occurredAt: source.occurredAt ?? source.OccurredAt ?? new Date().toISOString(),
+    };
+  }
+
   async stopConnection(): Promise<void> {
     if (this.connectionPromise) await this.connectionPromise;
 
@@ -132,6 +160,7 @@ export class NotificationHubService {
 
     this._notifications.set([]);
     this._latestNotification.set(null);
+    this._latestProjectSetupStatusChange.set(null);
   }
 
   async markAsRead(id: string): Promise<void> {
