@@ -17,7 +17,7 @@ export class TaskListComponent {
   @Input() selectedTaskId: string | null = null;
   @Input() localAssignments: { [taskId: string]: string } = {};
 
-  @Output() taskSelected = new EventEmitter<string>();
+  @Output() taskSelected = new EventEmitter<string | null>();
 
   get currentLang(): string {
     return (this as any).translateService?.currentLang() || (typeof localStorage !== 'undefined' && localStorage.getItem('app_lang')) || 'en';
@@ -78,7 +78,7 @@ export class TaskListComponent {
     this.currentPage.set(1);
   }
 
-  selectTask(taskId: string) {
+  selectTask(taskId: string | null) {
     this.taskSelected.emit(taskId);
   }
 
