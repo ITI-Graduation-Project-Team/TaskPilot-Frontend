@@ -45,7 +45,7 @@ export interface ProjectStats {
         <!-- Settings menu -->
         <div class="relative shrink-0">
           <button (click)="toggleMenu($event)" 
-                  class="p-1.5 hover:bg-sidebar rounded-lg text-text-secondary hover:text-text-primary transition-colors focus:outline-none">
+                  class="p-1.5 hover:bg-sidebar rounded-lg text-text-secondary hover:text-text-primary transition-all duration-200 active:scale-95 focus:outline-none">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
             </svg>
@@ -54,18 +54,19 @@ export interface ProjectStats {
           @if (isMenuOpen()) {
             <!-- Backdrop -->
             <div class="fixed inset-0 z-40" (click)="closeMenu($event)"></div>
-            <div class="absolute ltr:right-0 rtl:left-0 mt-1 z-50 min-w-[14rem] bg-surface border border-border rounded-xl shadow-xl overflow-hidden py-1 animate-[fadeDown_0.12s_ease_both]">
-              <button (click)="onEdit($event)" class="w-full text-start px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
+            <div class="absolute ltr:right-0 rtl:left-0 mt-1 z-50 min-w-[14rem] bg-surface border border-border rounded-xl shadow-xl p-1.5 animate-[fadeDown_0.12s_ease_both]">
+              <button (click)="onEdit($event)" class="w-full text-start px-3 py-2.5 text-xs font-semibold text-text-primary hover:bg-sidebar rounded-lg transition-colors flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 <span class="truncate">{{ 'PROJECT_CARD.EDIT_PROJECT' | translate }}</span>
               </button>
-              <button (click)="onToggleStatus($event)" class="w-full text-start px-3.5 py-2 text-xs font-semibold text-text-primary hover:bg-sidebar transition-colors flex items-center gap-2">
+              <button (click)="onToggleStatus($event)" class="w-full text-start px-3 py-2.5 text-xs font-semibold text-text-primary hover:bg-sidebar rounded-lg transition-colors flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-text-secondary shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span class="truncate">{{ 'PROJECT_CARD.VIEW_STATUS' | translate }}</span>
               </button>
-              <button (click)="onDelete($event)" class="w-full text-start px-3.5 py-2 text-xs font-semibold text-error hover:bg-error/5 transition-colors flex items-center gap-2 border-t border-border mt-1 pt-2">
+              <div class="h-px bg-border my-1.5 mx-1"></div>
+              <button (click)="onDelete($event)" class="w-full text-start px-3 py-2.5 text-xs font-semibold text-error hover:bg-error/10 rounded-lg transition-colors flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 <span class="truncate">{{ 'PROJECT_CARD.DELETE' | translate }}</span>
               </button>
@@ -85,35 +86,35 @@ export interface ProjectStats {
         <div class="flex items-center">
           @if (!isSetupReady()) {
             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border"
-                 [class.bg-primary-foreground]="project().setupStatus !== 'Failed'"
+                 [class.bg-primary/20]="project().setupStatus !== 'Failed'"
                  [class.text-primary]="project().setupStatus !== 'Failed'"
-                 [class.border-primary]="project().setupStatus !== 'Failed'"
-                 [class.bg-error]="project().setupStatus === 'Failed'"
-                 [class.text-white]="project().setupStatus === 'Failed'"
-                 [class.border-error]="project().setupStatus === 'Failed'">
+                 [class.border-primary/40]="project().setupStatus !== 'Failed'"
+                 [class.bg-error/20]="project().setupStatus === 'Failed'"
+                 [class.text-error]="project().setupStatus === 'Failed'"
+                 [class.border-error/40]="project().setupStatus === 'Failed'">
               <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
               {{ setupLabel() }}
             </div>
           } @else if (project().status === 'Completed') {
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-600 border border-blue-500/40">
               {{ 'PROJECT_CARD.COMPLETED' | translate }}
             </div>
           } @else if (project().status === 'Archived') {
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 border border-slate-500/20">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-600 border border-slate-500/40">
               {{ 'PROJECT_CARD.ARCHIVED' | translate }}
             </div>
           } @else if (stats()?.activeSprint && stats()?.activeSprint !== 'No Active Sprint') {
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/20 text-success border border-success/40">
               <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
               {{ stats()?.activeSprint }}
             </div>
           } @else if (project().status === 'Draft') {
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 border border-amber-500/40">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
               {{ 'PROJECT_CARD.DRAFT' | translate }}
             </div>
           } @else {
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-success/20 text-success border border-success/40">
               <span class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
               {{ 'PROJECT_CARD.ACTIVE' | translate }}
             </div>
@@ -154,11 +155,11 @@ export interface ProjectStats {
 
       <!-- Actions -->
       <div class="grid grid-cols-2 gap-2 mt-5">
-        <button (click)="onSprintClick($event)" class="py-2 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 group/btn">
+        <button (click)="onSprintClick($event)" class="py-2 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-1.5 group/btn">
           <span>{{ isSetupReady() ? ('PROJECT_CARD.SPRINT_BOARD' | translate) : 'Resume setup' }}</span>
           <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         </button>
-        <button (click)="onBacklogClick($event)" class="py-2 px-3 bg-sidebar hover:bg-primary/10 border border-border hover:border-primary/20 text-text-primary text-xs font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5">
+        <button (click)="onBacklogClick($event)" class="py-2 px-3 bg-sidebar hover:bg-primary/10 border border-border hover:border-primary/30 text-text-primary text-xs font-bold rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5">
           <span>{{ 'PROJECT_CARD.BACKLOG' | translate }}</span>
         </button>
       </div>

@@ -45,9 +45,12 @@ import { DashboardService } from '../../services/dashboard.service';
        
   <!-- Collapse Toggle Button -->
   <button (click)="isSidebarCollapsed.update(v => !v)"
-          class="absolute -end-5 top-8 bg-surface border border-border rounded-full p-1 text-text-secondary hover:text-primary hover:border-primary/40 shadow-sm z-10 transition-transform duration-200 bg-white dark:bg-[#020114]"
-          [class.rotate-180]="isSidebarCollapsed()">
-    <svg class="w-4 h-4 rtl:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          class="absolute -end-4 top-20 w-4 h-12 flex items-center justify-center bg-surface text-text-secondary/60 hover:text-primary hover:bg-primary/5 hover:shadow-md rounded-e-xl border border-border border-s-0 shadow-sm z-50 transition-all duration-200 focus:outline-none group cursor-pointer">
+    <span class="transition-transform duration-300 flex items-center justify-center" [class.rotate-180]="isSidebarCollapsed()">
+      <svg class="w-3.5 h-3.5 rtl:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <path d="M15 19l-7-7 7-7"/>
+      </svg>
+    </span>
   </button>
 
         <div class="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden pb-4 hide-scrollbar">
@@ -90,7 +93,7 @@ import { DashboardService } from '../../services/dashboard.service';
         <nav class="flex-1 space-y-1.5">
           <!-- All Projects Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <button routerLink="/dashboard/projects" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProj="routerLinkActive"
+            <button routerLink="/dashboard/projects" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaProj="routerLinkActive"
                [class.text-text-secondary]="!rlaProj.isActive"
                [class.hover:text-text-primary]="!rlaProj.isActive"
                [class.hover:bg-primary/5]="!rlaProj.isActive"
@@ -103,18 +106,8 @@ import { DashboardService } from '../../services/dashboard.service';
             </button>
           }
 
-          <button routerLink="/dashboard/sprint" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprint="routerLinkActive"
-             [class.text-text-secondary]="!rlaSprint.isActive"
-             [class.hover:text-text-primary]="!rlaSprint.isActive"
-             [class.hover:bg-primary/5]="!rlaSprint.isActive"
-             [class.font-medium]="!rlaSprint.isActive"
-             [class.justify-center]="isSidebarCollapsed()" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" class="group w-full text-left rtl:text-right cursor-pointer flex items-center gap-3 py-3 rounded-xl transition-all duration-200 ">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-            </svg>
-            <span [class.hidden]="isSidebarCollapsed()" class="truncate">{{ 'SIDEBAR.SPRINTS' | translate }}</span>
-          </button>
-          <button routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaBacklog="routerLinkActive"
+
+          <button routerLink="/dashboard/backlog" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaBacklog="routerLinkActive"
              [class.text-text-secondary]="!rlaBacklog.isActive"
              [class.hover:text-text-primary]="!rlaBacklog.isActive"
              [class.hover:bg-primary/5]="!rlaBacklog.isActive"
@@ -127,7 +120,7 @@ import { DashboardService } from '../../services/dashboard.service';
           </button>
           @if (projectState.isProjectManager()) {
             <!-- Sprint Planning tab (PM only) -->
-            <button routerLink="/dashboard/sprint-planning" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSprintPlan="routerLinkActive"
+            <button routerLink="/dashboard/sprint-planning" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaSprintPlan="routerLinkActive"
                [class.text-text-secondary]="!rlaSprintPlan.isActive"
                [class.hover:text-text-primary]="!rlaSprintPlan.isActive"
                [class.hover:bg-primary/5]="!rlaSprintPlan.isActive"
@@ -142,7 +135,7 @@ import { DashboardService } from '../../services/dashboard.service';
           }
 
           <!-- Retrospective Tab -->
-          <button routerLink="/dashboard/retrospective" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaRetro="routerLinkActive"
+          <button routerLink="/dashboard/retrospective" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaRetro="routerLinkActive"
              [class.text-text-secondary]="!rlaRetro.isActive"
              [class.hover:text-text-primary]="!rlaRetro.isActive"
              [class.hover:bg-primary/5]="!rlaRetro.isActive"
@@ -158,7 +151,7 @@ import { DashboardService } from '../../services/dashboard.service';
 
 
           @if (projectState.isProjectManager()) {
-            <button routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaTeam="routerLinkActive"
+            <button routerLink="/dashboard/team" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaTeam="routerLinkActive"
                [class.text-text-secondary]="!rlaTeam.isActive"
                [class.hover:text-text-primary]="!rlaTeam.isActive"
                [class.hover:bg-primary/5]="!rlaTeam.isActive"
@@ -169,7 +162,7 @@ import { DashboardService } from '../../services/dashboard.service';
             </button>
 
             <!-- Project Policies Tab -->
-            <button routerLink="/dashboard/project-policies" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProjPol="routerLinkActive"
+            <button routerLink="/dashboard/project-policies" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaProjPol="routerLinkActive"
                [class.text-text-secondary]="!rlaProjPol.isActive"
                [class.hover:text-text-primary]="!rlaProjPol.isActive"
                [class.hover:bg-primary/5]="!rlaProjPol.isActive"
@@ -184,7 +177,7 @@ import { DashboardService } from '../../services/dashboard.service';
           } 
           <!-- Employees Tab (PM only) -->
           @if (projectState.isProjectManager()) {
-            <button routerLink="/dashboard/employees" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaEmp="routerLinkActive"
+            <button routerLink="/dashboard/employees" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaEmp="routerLinkActive"
                [class.text-text-secondary]="!rlaEmp.isActive"
                [class.hover:text-text-primary]="!rlaEmp.isActive"
                [class.hover:bg-primary/5]="!rlaEmp.isActive"
@@ -197,7 +190,7 @@ import { DashboardService } from '../../services/dashboard.service';
             </button>
           }
           <!-- Organization Hub / Company Policies Tab -->
-          <button routerLink="/dashboard/organization" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaOrg="routerLinkActive"
+          <button routerLink="/dashboard/organization" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaOrg="routerLinkActive"
              [class.text-text-secondary]="!rlaOrg.isActive"
              [class.hover:text-text-primary]="!rlaOrg.isActive"
              [class.hover:bg-primary/5]="!rlaOrg.isActive"
@@ -214,7 +207,7 @@ import { DashboardService } from '../../services/dashboard.service';
           </button>
 
 
-          <button routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaProfile="routerLinkActive"
+          <button routerLink="/dashboard/profile" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaProfile="routerLinkActive"
              [class.text-text-secondary]="!rlaProfile.isActive"
              [class.hover:text-text-primary]="!rlaProfile.isActive"
              [class.hover:bg-primary/5]="!rlaProfile.isActive"
@@ -228,7 +221,7 @@ import { DashboardService } from '../../services/dashboard.service';
           </button>
 
           <!-- Settings Tab -->
-          <button routerLink="/dashboard/settings" routerLinkActive="bg-primary/10 text-primary font-bold shadow-sm" #rlaSettings="routerLinkActive"
+          <button routerLink="/dashboard/settings" routerLinkActive="bg-primary/10 text-primary font-semibold relative before:absolute before:top-1.5 before:bottom-1.5 before:start-0 before:w-1 before:bg-primary before:rounded-e-full" #rlaSettings="routerLinkActive"
              [class.text-text-secondary]="!rlaSettings.isActive"
              [class.hover:text-text-primary]="!rlaSettings.isActive"
              [class.hover:bg-primary/5]="!rlaSettings.isActive"
@@ -273,7 +266,7 @@ import { DashboardService } from '../../services/dashboard.service';
                 {{ 'HEADER.MY_PROFILE' | translate }}
               } @else if (currentTab() === 'sprint-planning') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary hover:text-text-primary hover:underline cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
@@ -281,7 +274,7 @@ import { DashboardService } from '../../services/dashboard.service';
                 {{ 'HEADER.SPRINT_PLANNING' | translate }}
               } @else if (currentTab() === 'retrospective') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary hover:text-text-primary hover:underline cursor-pointer transition-colors" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light">/</span>
                 }
                 <span class="truncate max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
@@ -296,7 +289,7 @@ import { DashboardService } from '../../services/dashboard.service';
             } @else if (currentTab() === 'project-policies') {
                 @if (projectState.isProjectManager()) {
                     <span
-                        class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors hidden sm:inline"
+                        class="text-text-secondary hover:text-text-primary hover:underline cursor-pointer transition-colors hidden sm:inline"
                         (click)="currentTab.set('projects')">
                         {{ 'HEADER.ALL_PROJECTS' | translate }}
                     </span>
@@ -312,7 +305,7 @@ import { DashboardService } from '../../services/dashboard.service';
                 Project Policies
               } @else if (currentTab() === 'assignment') {
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors hidden sm:inline" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary hover:text-text-primary hover:underline cursor-pointer transition-colors hidden sm:inline" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light hidden sm:inline">/</span>
                 }
                 <span class="truncate max-w-[80px] sm:max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
@@ -321,7 +314,7 @@ import { DashboardService } from '../../services/dashboard.service';
               } @else {
                 <!-- Breadcrumbs inside project tabs -->
                 @if (projectState.isProjectManager()) {
-                  <span class="text-text-secondary hover:text-text-primary cursor-pointer transition-colors hidden sm:inline" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
+                  <span class="text-text-secondary hover:text-text-primary hover:underline cursor-pointer transition-colors hidden sm:inline" (click)="currentTab.set('projects')">{{ 'HEADER.ALL_PROJECTS' | translate }}</span>
                   <span class="text-text-secondary font-light hidden sm:inline">/</span>
                 }
                 <span class="truncate max-w-[80px] sm:max-w-[200px]">{{ getProjectName(projectState.selectedProject()) || ('HEADER.WORKSPACE' | translate) }}</span>
@@ -346,7 +339,7 @@ import { DashboardService } from '../../services/dashboard.service';
                 <!-- Custom Project Dropdown -->
                 <div class="relative">
                   <button (click)="toggleProjectDropdown()"
-                          class="flex items-center gap-2 px-3 py-1.5 bg-background border border-border hover:border-primary/40 rounded-xl text-xs font-bold text-text-primary transition-all duration-200 hover:bg-sidebar focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] group">
+                          class="flex items-center gap-2 px-3 py-1.5 bg-background border border-border hover:border-primary/40 rounded-xl text-xs font-bold text-text-primary transition-all duration-200 hover:bg-sidebar focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[140px] group active:scale-95">
                     <svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                     </svg>
@@ -518,15 +511,7 @@ import { DashboardService } from '../../services/dashboard.service';
           </button>
         }
 
-        <!-- Sprint Tab -->
-        <button routerLink="/dashboard/sprint" routerLinkActive="text-primary scale-105" #rlaSprintM="routerLinkActive"
-           [class.text-text-secondary]="!rlaSprintM.isActive"
-           class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-          </svg>
-          <span class="text-[9px] font-bold">{{ 'SIDEBAR.SPRINT' | translate }}</span>
-        </button>
+
 
         <!-- Sprint Planning (Mobile PM only) -->
         @if (projectState.isProjectManager()) {
