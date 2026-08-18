@@ -1071,7 +1071,7 @@
     "MAP_SKILLS": "Map required skills",
     "SKILLS_HINT": "TaskPilot starts this automatically after the backlog is saved.",
     "ENRICHING_TASKS": "Enriching technical tasks in the background…",
-    "SKILL_MAPPING_COMPLETE": "Skill mapping complete for {{count}} tasks.",
+    "SKILL_MAPPING_COMPLETE": "Skill mapping completed successfully.",
     "SKILL_MAPPING_WARNING": "The backlog is usable, but some skill mappings need another attempt.",
     "RETRY_SKILLS": "Retry skill mapping",
     "TECH_STACK_STEP": "Tech stack",

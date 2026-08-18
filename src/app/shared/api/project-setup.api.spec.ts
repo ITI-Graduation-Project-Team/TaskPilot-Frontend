@@ -63,4 +63,24 @@ describe('normalizeProjectSetup', () => {
 
     expect(setup.techStack.suggestion).toBeUndefined();
   });
+
+  it('normalizes skill coverage counters used by partial-success retries', () => {
+    const setup = normalizeProjectSetup({
+      techStack: {},
+      wbs: {},
+      skills: {
+        Status: 'PartiallySucceeded',
+        ItemsProcessed: 91,
+        ItemsCreated: 82,
+        ItemsSkipped: 9,
+      },
+    });
+
+    expect(setup.skills).toEqual(expect.objectContaining({
+      status: 'PartiallySucceeded',
+      itemsProcessed: 91,
+      itemsCreated: 82,
+      itemsSkipped: 9,
+    }));
+  });
 });

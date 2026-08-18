@@ -44,6 +44,7 @@ export interface SetupJobDto {
   status: BackgroundSetupStatus;
   jobId?: string;
   attemptCount: number;
+  itemsProcessed: number;
   itemsCreated: number;
   secondaryItemsCreated: number;
   itemsSkipped: number;
@@ -148,6 +149,7 @@ export function normalizeProjectSetup(source: any): ProjectSetupDto {
     status: value(jobSource, 'status', 'Status') ?? 'NotStarted',
     jobId: value(jobSource, 'jobId', 'JobId'),
     attemptCount: value(jobSource, 'attemptCount', 'AttemptCount') ?? 0,
+    itemsProcessed: value(jobSource, 'itemsProcessed', 'ItemsProcessed') ?? 0,
     itemsCreated: value(jobSource, 'itemsCreated', 'ItemsCreated') ?? 0,
     secondaryItemsCreated: value(jobSource, 'secondaryItemsCreated', 'SecondaryItemsCreated') ?? 0,
     itemsSkipped: value(jobSource, 'itemsSkipped', 'ItemsSkipped') ?? 0,
