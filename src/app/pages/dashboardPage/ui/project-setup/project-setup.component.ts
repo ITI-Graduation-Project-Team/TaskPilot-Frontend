@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BackgroundSetupStatus, RecommendedStackDto } from '../../../../shared/api/project-setup.api';
 import { NotificationHubService } from '../../../../shared/services/notification-hub.service';
 import { ProjectSetupStore } from '../../../../shared/services/project-setup.store';
@@ -21,25 +21,25 @@ type StackChoice = 'primary' | 'ideal';
         <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
-        Back to projects
+        {{ 'PROJECT_SETUP.BACK_TO_PROJECTS' | translate }}
       </a>
 
       <header class="relative overflow-hidden rounded-3xl border border-primary/20 bg-surface p-6 shadow-sm md:p-8">
         <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden="true"></div>
         <div class="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <p class="text-[11px] font-extrabold uppercase tracking-[0.24em] text-primary">Project flight plan</p>
+            <p class="text-[11px] font-extrabold uppercase tracking-[0.24em] text-primary">{{ 'PROJECT_SETUP.FLIGHT_PLAN' | translate }}</p>
             <h1 id="setup-title" class="mt-2 text-3xl font-extrabold tracking-tight text-text-primary font-display md:text-4xl">
-              {{ store.setup()?.projectName || 'Preparing project setup' }}
+              {{ store.setup()?.projectName || ('PROJECT_SETUP.PREPARING' | translate) }}
             </h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">
-              Lock the architecture, launch backlog generation, then continue elsewhere while TaskPilot finishes the background work.
+              {{ 'PROJECT_SETUP.INTRO' | translate }}
             </p>
           </div>
           @if (store.setup(); as setup) {
             <span class="inline-flex min-h-10 items-center gap-2 self-start rounded-full border border-border bg-sidebar px-4 text-xs font-extrabold text-text-primary md:self-auto">
               <span class="h-2.5 w-2.5 rounded-full" [class.bg-success]="setup.overallStatus === 'Ready'" [class.bg-warning]="setup.overallStatus !== 'Ready'"></span>
-              {{ overallLabel() }}
+              {{ overallLabel() | translate }}
             </span>
           }
         </div>
@@ -48,18 +48,18 @@ type StackChoice = 'primary' | 'ideal';
       @if (store.error()) {
         <div class="mt-5 flex items-start justify-between gap-4 rounded-2xl border border-error/30 bg-error/10 p-4 text-sm text-error" role="alert">
           <p>{{ store.error() }}</p>
-          <button type="button" (click)="refresh()" class="min-h-11 shrink-0 rounded-xl border border-error/30 px-4 font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40">Retry</button>
+          <button type="button" (click)="refresh()" class="min-h-11 shrink-0 rounded-xl border border-error/30 px-4 font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40">{{ 'PROJECT_SETUP.RETRY' | translate }}</button>
         </div>
       }
 
       @if (store.loading() && !store.setup()) {
-        <section class="mt-6 grid gap-4" aria-label="Loading project setup">
+        <section class="mt-6 grid gap-4" [attr.aria-label]="'PROJECT_SETUP.LOADING' | translate">
           @for (item of [1, 2, 3]; track item) {
             <div class="h-36 animate-pulse rounded-3xl border border-border bg-surface"></div>
           }
         </section>
       } @else if (store.setup(); as setup) {
-        <ol class="setup-rail mt-6 grid gap-3 md:grid-cols-3" aria-label="Project setup progress">
+        <ol class="setup-rail mt-6 grid gap-3 md:grid-cols-3" [attr.aria-label]="'PROJECT_SETUP.PROGRESS' | translate">
           @for (step of steps(); track step.label; let index = $index) {
             <li class="relative flex min-h-20 items-center gap-3 rounded-2xl border bg-surface p-4"
                 [class.border-primary]="step.state === 'active'"
@@ -76,8 +76,8 @@ type StackChoice = 'primary' | 'ideal';
                 } @else { {{ index + 1 }} }
               </span>
               <div>
-                <p class="font-extrabold text-text-primary">{{ step.label }}</p>
-                <p class="mt-1 text-xs text-text-secondary">{{ step.detail }}</p>
+                <p class="font-extrabold text-text-primary">{{ step.label | translate }}</p>
+                <p class="mt-1 text-xs text-text-secondary">{{ step.detail | translate }}</p>
               </div>
             </li>
           }
@@ -86,14 +86,14 @@ type StackChoice = 'primary' | 'ideal';
         <section class="mt-6 rounded-3xl border border-border bg-surface p-5 shadow-sm md:p-7" aria-labelledby="tech-heading">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary">Stage 01</p>
-              <h2 id="tech-heading" class="mt-1 text-xl font-extrabold text-text-primary font-display">Choose the architecture</h2>
-              <p class="mt-1 text-sm text-text-secondary">The recommendation is cached. Regenerate only when the requirements or delivery priorities changed.</p>
+              <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary">{{ 'PROJECT_SETUP.STAGE_01' | translate }}</p>
+              <h2 id="tech-heading" class="mt-1 text-xl font-extrabold text-text-primary font-display">{{ 'PROJECT_SETUP.CHOOSE_ARCHITECTURE' | translate }}</h2>
+              <p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.RECOMMENDATION_HINT' | translate }}</p>
             </div>
             @if (setup.techStack.status !== 'Confirmed') {
               <button type="button" (click)="regenerate()" [disabled]="store.isBusy()"
                       class="min-h-11 rounded-xl border border-border px-4 text-sm font-bold text-text-secondary transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                Regenerate suggestion
+                {{ 'PROJECT_SETUP.REGENERATE' | translate }}
               </button>
             }
           </div>
@@ -101,11 +101,11 @@ type StackChoice = 'primary' | 'ideal';
           @if (store.action() === 'suggesting' || store.action() === 'regenerating') {
             <div class="mt-6 flex min-h-32 items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5" role="status">
               <span class="h-9 w-9 shrink-0 animate-spin rounded-full border-4 border-primary/15 border-t-primary"></span>
-              <div><p class="font-extrabold text-text-primary">Comparing architecture options</p><p class="mt-1 text-sm text-text-secondary">Requirements and skills from the assigned project team are being evaluated.</p></div>
+              <div><p class="font-extrabold text-text-primary">{{ 'PROJECT_SETUP.COMPARING' | translate }}</p><p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.EVALUATING' | translate }}</p></div>
             </div>
           } @else if (setup.techStack.status === 'Confirmed') {
             <div class="mt-6 rounded-2xl border border-success/25 bg-success/5 p-5">
-              <p class="text-sm font-extrabold text-success">Architecture confirmed</p>
+              <p class="text-sm font-extrabold text-success">{{ 'PROJECT_SETUP.ARCHITECTURE_CONFIRMED' | translate }}</p>
               <div class="mt-3 flex flex-wrap gap-2">
                 @for (tech of setup.techStack.confirmedStack; track tech) {
                   <span class="rounded-full border border-success/25 bg-surface px-3 py-1.5 text-xs font-bold text-text-primary">{{ tech }}</span>
@@ -162,14 +162,14 @@ type StackChoice = 'primary' | 'ideal';
               <aside class="mt-5 overflow-hidden rounded-2xl border border-warning/30 bg-warning/10" aria-labelledby="gap-analysis-heading">
                 <div class="flex flex-col gap-2 border-b border-warning/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-warning">Team readiness</p>
+                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-warning">{{ 'PROJECT_SETUP.TEAM_READINESS' | translate }}</p>
                     <h3 id="gap-analysis-heading" class="mt-1 text-base font-extrabold text-text-primary">{{ 'PROJECT_SETUP.GAP_TITLE' | translate }}</h3>
                   </div>
                   <span class="inline-flex min-h-8 w-fit items-center rounded-full border border-warning/30 bg-surface px-3 text-xs font-extrabold text-text-primary">
-                    {{ suggestion.gapAnalysis.length }} {{ suggestion.gapAnalysis.length === 1 ? 'gap' : 'gaps' }}
+                    {{ 'PROJECT_SETUP.GAP_COUNT' | translate: { count: suggestion.gapAnalysis.length } }}
                   </span>
                 </div>
-                <ul class="grid gap-px bg-warning/15 lg:grid-cols-2" aria-label="Skills and technologies missing from the current team">
+                <ul class="grid gap-px bg-warning/15 lg:grid-cols-2" [attr.aria-label]="'PROJECT_SETUP.MISSING_SKILLS_LABEL' | translate">
                   @for (gap of suggestion.gapAnalysis; track gap) {
                     <li class="bg-surface/95 px-5 py-4 text-sm leading-5 text-text-primary">
                       <div class="flex items-start gap-3">
@@ -178,15 +178,15 @@ type StackChoice = 'primary' | 'ideal';
                         </svg>
                         <div class="min-w-0 flex-1">
                           <div class="flex flex-wrap items-center gap-2">
-                            <strong>{{ gap.skill || gap.technology || 'Capability gap' }}</strong>
-                            <span class="gap-badge" [class.gap-badge--high]="gap.severity === 'High'">{{ gap.severity }}</span>
-                            <span class="gap-badge">{{ gap.gapType }}</span>
+                            <strong>{{ gap.skill || gap.technology || ('PROJECT_SETUP.CAPABILITY_GAP' | translate) }}</strong>
+                            <span class="gap-badge" [class.gap-badge--high]="gap.severity === 'High'">{{ severityLabel(gap.severity) | translate }}</span>
+                            <span class="gap-badge">{{ gapTypeLabel(gap.gapType) | translate }}</span>
                           </div>
                           <p class="mt-2 text-text-secondary">{{ gap.summary }}</p>
                           @if (gap.requiredLevel || gap.availableLevel || gap.requiredCount) {
                             <p class="mt-2 text-xs font-bold text-text-secondary">
-                              Required: {{ gap.requiredLevel || 'Not specified' }}{{ gap.requiredCount ? ' × ' + gap.requiredCount : '' }}
-                              · Available: {{ gap.availableLevel || 'None' }} × {{ gap.availableCount }} ({{ gap.availableFte }} FTE)
+                              {{ 'PROJECT_SETUP.REQUIRED' | translate }}: {{ gap.requiredLevel || ('PROJECT_SETUP.NOT_SPECIFIED' | translate) }}{{ gap.requiredCount ? ' × ' + gap.requiredCount : '' }}
+                              · {{ 'PROJECT_SETUP.AVAILABLE' | translate }}: {{ gap.availableLevel || ('PROJECT_SETUP.NONE' | translate) }} × {{ gap.availableCount }} ({{ gap.availableFte }} {{ 'PROJECT_SETUP.FTE' | translate }})
                             </p>
                           }
                           <p class="mt-2 text-xs font-bold text-text-primary">{{ gap.recommendation }}</p>
@@ -210,7 +210,7 @@ type StackChoice = 'primary' | 'ideal';
 
             <div class="mt-5 rounded-2xl border border-border bg-sidebar p-5">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h3 class="text-sm font-extrabold text-text-primary">Stack to confirm</h3><p class="mt-1 text-xs text-text-secondary">Confirm the recommendation as-is, or customize it for a known delivery constraint.</p></div>
+                <div><h3 class="text-sm font-extrabold text-text-primary">{{ 'PROJECT_SETUP.STACK_TO_CONFIRM' | translate }}</h3><p class="mt-1 text-xs text-text-secondary">{{ 'PROJECT_SETUP.CONFIRM_HINT' | translate }}</p></div>
                 <button type="button" (click)="toggleCustomization()" class="min-h-11 rounded-xl border border-border bg-surface px-4 text-sm font-bold text-text-secondary hover:border-primary/35 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
                   {{ (isCustomizing() ? 'PROJECT_SETUP.CLOSE_CUSTOMIZE' : 'PROJECT_SETUP.CUSTOMIZE') | translate }}
                 </button>
@@ -220,75 +220,75 @@ type StackChoice = 'primary' | 'ideal';
                   <span class="inline-flex min-h-9 items-center gap-2 rounded-full border border-primary/25 bg-surface px-3 text-xs font-bold text-text-primary">
                     {{ tech }}
                     @if (isCustomizing()) {
-                      <button type="button" (click)="removeTech(tech)" class="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-error/10 hover:text-error" [attr.aria-label]="'Remove ' + tech">×</button>
+                      <button type="button" (click)="removeTech(tech)" class="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-error/10 hover:text-error" [attr.aria-label]="'PROJECT_SETUP.REMOVE_TECH' | translate: { tech: tech }">×</button>
                     }
                   </span>
                 }
               </div>
               @if (isCustomizing()) {
                 <form class="mt-4 flex flex-col gap-2 sm:flex-row" (submit)="addTech($event)">
-                  <label class="sr-only" for="new-tech">Add technology</label>
-                  <input id="new-tech" [value]="newTech()" (input)="newTech.set(asInput($event).value)" placeholder="Add technology, e.g. Redis 7"
+                  <label class="sr-only" for="new-tech">{{ 'PROJECT_SETUP.ADD_TECH' | translate }}</label>
+                  <input id="new-tech" [value]="newTech()" (input)="newTech.set(asInput($event).value)" [placeholder]="'PROJECT_SETUP.ADD_TECH_PLACEHOLDER' | translate"
                          class="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-4 text-base text-text-primary outline-none focus:ring-2 focus:ring-primary/30">
-                  <button type="submit" class="min-h-11 rounded-xl bg-text-primary px-5 text-sm font-extrabold text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Add technology</button>
-                  <button type="button" (click)="resetCustomization()" class="min-h-11 rounded-xl border border-border bg-surface px-4 text-sm font-bold text-text-secondary">Reset</button>
+                  <button type="submit" class="min-h-11 rounded-xl bg-text-primary px-5 text-sm font-extrabold text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{{ 'PROJECT_SETUP.ADD_TECH' | translate }}</button>
+                  <button type="button" (click)="resetCustomization()" class="min-h-11 rounded-xl border border-border bg-surface px-4 text-sm font-bold text-text-secondary">{{ 'PROJECT_SETUP.RESET' | translate }}</button>
                 </form>
-                <p class="mt-3 text-xs text-text-secondary">Gap analysis continues to compare your team with the AI ideal stack and is not recalculated for manual changes.</p>
+                <p class="mt-3 text-xs text-text-secondary">{{ 'PROJECT_SETUP.CUSTOM_GAP_NOTE' | translate }}</p>
               }
 
               <div class="mt-6 flex justify-end">
                 <button type="button" (click)="confirmStack()" [disabled]="confirmDisabled()"
                         class="min-h-12 rounded-xl bg-primary px-6 text-sm font-extrabold text-white shadow-md transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                  {{ store.action() === 'confirming' ? 'Saving architecture…' : 'Confirm architecture' }}
+                  {{ (store.action() === 'confirming' ? 'PROJECT_SETUP.SAVING_ARCHITECTURE' : 'PROJECT_SETUP.CONFIRM_ARCHITECTURE') | translate }}
                 </button>
               </div>
             </div>
           } @else {
             <div class="mt-6 rounded-2xl border border-warning/30 bg-warning/10 p-5" role="alert">
-              <p class="font-extrabold text-text-primary">The architecture suggestion is incomplete</p>
-              <p class="mt-1 text-sm text-text-secondary">Regenerate the recommendation to continue project setup.</p>
+              <p class="font-extrabold text-text-primary">{{ 'PROJECT_SETUP.INCOMPLETE_TITLE' | translate }}</p>
+              <p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.INCOMPLETE_DESC' | translate }}</p>
             </div>
           }
         </section>
 
         <section class="mt-5 rounded-3xl border border-border bg-surface p-5 shadow-sm md:p-7" aria-labelledby="wbs-heading">
-          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary">Stage 02</p>
-          <h2 id="wbs-heading" class="mt-1 text-xl font-extrabold text-text-primary font-display">Generate the work breakdown</h2>
-          <p class="mt-1 text-sm text-text-secondary">This job creates stories and tasks in the background. It is safe to leave this page after launch.</p>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary">{{ 'PROJECT_SETUP.STAGE_02' | translate }}</p>
+          <h2 id="wbs-heading" class="mt-1 text-xl font-extrabold text-text-primary font-display">{{ 'PROJECT_SETUP.GENERATE_BREAKDOWN' | translate }}</h2>
+          <p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.WBS_HINT' | translate }}</p>
 
           @if (setup.wbs.status === 'Queued' || setup.wbs.status === 'Running') {
             <div class="mt-5 overflow-hidden rounded-2xl border border-primary/25 bg-primary/5 p-5" role="status" aria-live="polite">
-              <div class="flex items-center gap-4"><span class="setup-pulse h-3 w-3 rounded-full bg-primary"></span><div><p class="font-extrabold text-text-primary">{{ setup.wbs.status === 'Queued' ? 'Waiting for a worker' : 'Building stories and tasks' }}</p><p class="mt-1 text-sm text-text-secondary">Attempt {{ setup.wbs.attemptCount || 1 }} · You can continue working elsewhere.</p></div></div>
+              <div class="flex items-center gap-4"><span class="setup-pulse h-3 w-3 rounded-full bg-primary"></span><div><p class="font-extrabold text-text-primary">{{ (setup.wbs.status === 'Queued' ? 'PROJECT_SETUP.WAITING_WORKER' : 'PROJECT_SETUP.BUILDING_TASKS') | translate }}</p><p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.ATTEMPT_CONTINUE' | translate: { count: setup.wbs.attemptCount || 1 } }}</p></div></div>
               <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-primary/10"><span class="progress-sweep block h-full w-1/3 rounded-full bg-primary"></span></div>
             </div>
           } @else if (setup.wbs.status === 'Succeeded') {
             <div class="mt-5 flex flex-col gap-4 rounded-2xl border border-success/25 bg-success/5 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div><p class="font-extrabold text-success">Backlog ready</p><p class="mt-1 text-sm text-text-secondary">{{ setup.wbs.itemsCreated }} stories · {{ setup.wbs.secondaryItemsCreated }} tasks</p></div>
-              <button type="button" (click)="openBacklog()" class="min-h-11 rounded-xl bg-primary px-5 text-sm font-extrabold text-white hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">Open backlog</button>
+              <div><p class="font-extrabold text-success">{{ 'PROJECT_SETUP.BACKLOG_READY' | translate }}</p><p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.CREATED_ITEMS' | translate: { stories: setup.wbs.itemsCreated, tasks: setup.wbs.secondaryItemsCreated } }}</p></div>
+              <button type="button" (click)="openBacklog()" class="min-h-11 rounded-xl bg-primary px-5 text-sm font-extrabold text-white hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{{ 'PROJECT_SETUP.OPEN_BACKLOG' | translate }}</button>
             </div>
           } @else {
             @if (setup.wbs.error) { <p class="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error" role="alert">{{ setup.wbs.error }}</p> }
             <div class="mt-5 flex justify-end">
               <button type="button" (click)="generateWbs()" [disabled]="setup.techStack.status !== 'Confirmed' || store.isBusy()"
                       class="min-h-12 rounded-xl bg-primary px-6 text-sm font-extrabold text-white shadow-md hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                {{ setup.wbs.status === 'Failed' ? 'Retry WBS generation' : 'Generate WBS' }}
+                {{ (setup.wbs.status === 'Failed' ? 'PROJECT_SETUP.RETRY_WBS' : 'PROJECT_SETUP.GENERATE_WBS') | translate }}
               </button>
             </div>
           }
         </section>
 
         <section class="mt-5 rounded-3xl border border-border bg-surface p-5 shadow-sm md:p-7" aria-labelledby="skills-heading">
-          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary">Stage 03</p>
-          <h2 id="skills-heading" class="mt-1 text-xl font-extrabold text-text-primary font-display">Map required skills</h2>
-          <p class="mt-1 text-sm text-text-secondary">TaskPilot starts this automatically after the backlog is saved.</p>
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary">{{ 'PROJECT_SETUP.STAGE_03' | translate }}</p>
+          <h2 id="skills-heading" class="mt-1 text-xl font-extrabold text-text-primary font-display">{{ 'PROJECT_SETUP.MAP_SKILLS' | translate }}</h2>
+          <p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.SKILLS_HINT' | translate }}</p>
           @if (setup.skills.status === 'Queued' || setup.skills.status === 'Running') {
-            <p class="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm font-bold text-text-primary" role="status">Enriching technical tasks in the background…</p>
+            <p class="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm font-bold text-text-primary" role="status">{{ 'PROJECT_SETUP.ENRICHING_TASKS' | translate }}</p>
           } @else if (setup.skills.status === 'Succeeded') {
-            <p class="mt-5 rounded-2xl border border-success/25 bg-success/5 p-4 text-sm font-bold text-success">Skill mapping complete for {{ setup.skills.itemsCreated }} tasks.</p>
+            <p class="mt-5 rounded-2xl border border-success/25 bg-success/5 p-4 text-sm font-bold text-success">{{ 'PROJECT_SETUP.SKILL_MAPPING_COMPLETE' | translate: { count: setup.skills.itemsCreated } }}</p>
           } @else if (setup.skills.status === 'Failed' || setup.skills.status === 'PartiallySucceeded') {
             <div class="mt-5 flex flex-col gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <p class="text-sm text-text-primary">The backlog is usable, but some skill mappings need another attempt.</p>
-              <button type="button" (click)="retrySkills()" [disabled]="store.isBusy()" class="min-h-11 rounded-xl border border-warning/40 px-4 text-sm font-extrabold text-text-primary disabled:opacity-50">Retry skill mapping</button>
+              <p class="text-sm text-text-primary">{{ 'PROJECT_SETUP.SKILL_MAPPING_WARNING' | translate }}</p>
+              <button type="button" (click)="retrySkills()" [disabled]="store.isBusy()" class="min-h-11 rounded-xl border border-warning/40 px-4 text-sm font-extrabold text-text-primary disabled:opacity-50">{{ 'PROJECT_SETUP.RETRY_SKILLS' | translate }}</button>
             </div>
           }
         </section>
@@ -321,6 +321,7 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
   private projectState = inject(ProjectStateService);
   private notifications = inject(NotificationHubService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
   private initializedProject: string | null = null;
 
   readonly selectedChoice = signal<StackChoice>('ideal');
@@ -360,16 +361,16 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
     const setup = this.store.setup();
     if (!setup) return [];
     return [
-      { label: 'Tech stack', detail: setup.techStack.status === 'Confirmed' ? 'Architecture locked' : 'Review recommendation', state: setup.techStack.status === 'Confirmed' ? 'complete' : setup.techStack.status === 'Failed' ? 'failed' : 'active' },
-      { label: 'WBS generation', detail: this.jobLabel(setup.wbs.status), state: this.stageState(setup.wbs.status, setup.techStack.status === 'Confirmed') },
-      { label: 'Skill mapping', detail: this.jobLabel(setup.skills.status), state: this.stageState(setup.skills.status, setup.wbs.status === 'Succeeded') }
+      { label: 'PROJECT_SETUP.TECH_STACK_STEP', detail: setup.techStack.status === 'Confirmed' ? 'PROJECT_SETUP.ARCHITECTURE_LOCKED' : 'PROJECT_SETUP.REVIEW_RECOMMENDATION', state: setup.techStack.status === 'Confirmed' ? 'complete' : setup.techStack.status === 'Failed' ? 'failed' : 'active' },
+      { label: 'PROJECT_SETUP.WBS_STEP', detail: this.jobLabel(setup.wbs.status), state: this.stageState(setup.wbs.status, setup.techStack.status === 'Confirmed') },
+      { label: 'PROJECT_SETUP.SKILL_MAPPING_STEP', detail: this.jobLabel(setup.skills.status), state: this.stageState(setup.skills.status, setup.wbs.status === 'Succeeded') }
     ];
   });
 
   overallLabel = computed(() => ({
-    NeedsTechStack: 'Architecture needed', ReadyForWbs: 'Ready to generate', WbsQueued: 'Generation queued',
-    WbsGenerating: 'Generating backlog', WbsReady: 'Backlog ready', EnrichingSkills: 'Mapping skills',
-    Ready: 'Setup complete', ReadyWithWarnings: 'Ready with warnings', Failed: 'Action needed'
+    NeedsTechStack: 'PROJECT_SETUP.STATUS_ARCHITECTURE_NEEDED', ReadyForWbs: 'PROJECT_SETUP.STATUS_READY_TO_GENERATE', WbsQueued: 'PROJECT_SETUP.STATUS_GENERATION_QUEUED',
+    WbsGenerating: 'PROJECT_SETUP.STATUS_GENERATING_BACKLOG', WbsReady: 'PROJECT_SETUP.STATUS_BACKLOG_READY', EnrichingSkills: 'PROJECT_SETUP.STATUS_MAPPING_SKILLS',
+    Ready: 'PROJECT_SETUP.STATUS_COMPLETE', ReadyWithWarnings: 'PROJECT_SETUP.STATUS_WARNINGS', Failed: 'PROJECT_SETUP.STATUS_ACTION_NEEDED'
   }[this.store.setup()?.overallStatus || 'NeedsTechStack']));
 
   asInput(event: Event): HTMLInputElement { return event.target as HTMLInputElement; }
@@ -416,31 +417,42 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
 
   async regenerate(): Promise<void> {
     this.initializedProject = null;
-    try { await this.store.generateSuggestion(true); } catch { this.toast.show('Could not regenerate the recommendation.', 'error'); }
+    try { await this.store.generateSuggestion(true); } catch { this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_REGENERATE_ERROR'), 'error'); }
   }
 
   async confirmStack(): Promise<void> {
     if (this.confirmDisabled()) return;
     try {
       await this.store.confirmTechStack({ techStack: this.selectedTechStack() });
-      this.toast.show('Architecture confirmed. WBS generation is ready to launch.', 'success');
-    } catch { this.toast.show('Could not confirm the architecture.', 'error'); }
+      this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_CONFIRM_SUCCESS'), 'success');
+    } catch { this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_CONFIRM_ERROR'), 'error'); }
   }
 
   async generateWbs(): Promise<void> {
-    try { await this.store.queueWbs(); this.toast.show('WBS generation started. You can safely leave this page.', 'success'); }
-    catch { this.toast.show('Could not start WBS generation.', 'error'); }
+    try { await this.store.queueWbs(); this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_WBS_STARTED'), 'success'); }
+    catch { this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_WBS_ERROR'), 'error'); }
   }
 
   async retrySkills(): Promise<void> {
-    try { await this.store.retrySkills(); this.toast.show('Skill mapping was queued again.', 'success'); }
-    catch { this.toast.show('Could not retry skill mapping.', 'error'); }
+    try { await this.store.retrySkills(); this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_SKILLS_QUEUED'), 'success'); }
+    catch { this.toast.show(this.translate.instant('PROJECT_SETUP.TOAST_SKILLS_ERROR'), 'error'); }
   }
 
   openBacklog(): void { this.projectState.setSelectedProject(this.projectId()); void this.router.navigate(['/dashboard', 'backlog']); }
 
   private jobLabel(status: BackgroundSetupStatus): string {
-    return ({ NotStarted: 'Waiting', Queued: 'Queued', Running: 'In progress', Succeeded: 'Complete', PartiallySucceeded: 'Warnings', Failed: 'Retry needed' })[status];
+    return ({ NotStarted: 'PROJECT_SETUP.JOB_WAITING', Queued: 'PROJECT_SETUP.JOB_QUEUED', Running: 'PROJECT_SETUP.JOB_IN_PROGRESS', Succeeded: 'PROJECT_SETUP.JOB_COMPLETE', PartiallySucceeded: 'PROJECT_SETUP.JOB_WARNINGS', Failed: 'PROJECT_SETUP.JOB_RETRY_NEEDED' })[status];
+  }
+
+  severityLabel(severity: string): string { return `PROJECT_SETUP.SEVERITY_${severity.toUpperCase()}`; }
+
+  gapTypeLabel(gapType: string): string {
+    return ({
+      MissingSkill: 'PROJECT_SETUP.GAP_TYPE_MISSING_SKILL',
+      ProficiencyGap: 'PROJECT_SETUP.GAP_TYPE_PROFICIENCY',
+      CapacityGap: 'PROJECT_SETUP.GAP_TYPE_CAPACITY',
+      Unclassified: 'PROJECT_SETUP.GAP_TYPE_UNCLASSIFIED'
+    } as Record<string, string>)[gapType] || 'PROJECT_SETUP.GAP_TYPE_UNCLASSIFIED';
   }
 
   private stageState(status: BackgroundSetupStatus, available: boolean): 'pending' | 'active' | 'complete' | 'failed' {
