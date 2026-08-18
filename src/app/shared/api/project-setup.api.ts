@@ -74,6 +74,12 @@ export interface ProjectSetupDto {
   skills: SetupJobDto;
 }
 
+export interface ProjectSetupStatusDto {
+  projectId: string;
+  wbsStatus: BackgroundSetupStatus;
+  isReady: boolean;
+}
+
 export interface ConfirmTechStackRequest {
   techStack: string[];
 }
@@ -187,6 +193,13 @@ export class ProjectSetupApi {
 
   get(projectId: string) {
     return this.http.get<ApiResponse<ProjectSetupDto>>(`${environment.apiUrl}/projects/${projectId}/setup`, { context: this.quietContext });
+  }
+
+  getStatus(projectId: string) {
+    return this.http.get<ApiResponse<ProjectSetupStatusDto>>(
+      `${environment.apiUrl}/projects/${projectId}/setup/status`,
+      { context: this.quietContext }
+    );
   }
 
   suggest(projectId: string, regenerate = false) {

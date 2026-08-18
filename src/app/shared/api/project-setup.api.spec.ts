@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { normalizeProjectSetup } from './project-setup.api';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { environment } from '../../../environments/environment';
+import { normalizeProjectSetup, ProjectSetupApi } from './project-setup.api';
 
 describe('normalizeProjectSetup', () => {
   it('normalizes legacy PascalCase suggestion JSON returned through JsonElement', () => {
@@ -82,5 +86,34 @@ describe('normalizeProjectSetup', () => {
       itemsCreated: 82,
       itemsSkipped: 9,
     }));
+  });
+});
+
+describe('ProjectSetupApi', () => {
+  let api: ProjectSetupApi;
+  let httpTesting: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [ProjectSetupApi, provideHttpClient(), provideHttpClientTesting()],
+    });
+    api = TestBed.inject(ProjectSetupApi);
+    httpTesting = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => httpTesting.verify());
+
+  it('loads the lightweight setup status endpoint', () => {
+    const projectId = 'project-1';
+    const expected = {
+      succeeded: true,
+      data: { projectId, wbsStatus: 'Succeeded' as const, isReady: true },
+    };
+
+    api.getStatus(projectId).subscribe(response => expect(response).toEqual(expected));
+
+    const request = httpTesting.expectOne(`${environment.apiUrl}/projects/${projectId}/setup/status`);
+    expect(request.request.method).toBe('GET');
+    request.flush(expected);
   });
 });
