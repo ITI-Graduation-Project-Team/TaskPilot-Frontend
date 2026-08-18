@@ -33,8 +33,7 @@ interface SprintCard {
 }
 
 interface SuggestedStoryMeta {
-  reasonEn: string;
-  reasonAr: string;
+  reason: string;
   priorityScore: number;
   estimatedHours: number;
 }
@@ -434,8 +433,8 @@ const LOADING_HINTS = [
                 <div class="flex-1 min-w-0">
                   <input
                     type="text"
-                    [ngModel]="currentLang() === 'ar' ? card.sprint.titleAr : card.sprint.titleEn"
-                    (ngModelChange)="currentLang() === 'ar' ? card.sprint.titleAr = $event : card.sprint.titleEn = $event"
+                    [ngModel]="card.sprint.sprintTitle || card.sprint.titleEn"
+                    (ngModelChange)="card.sprint.sprintTitle = $event"
                     [id]="'sprint-title-' + idx"
                     [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'"
                     class="bg-transparent text-sm font-bold text-text-primary outline-none focus:border-b focus:border-primary pb-0.5 w-full transition-all"
@@ -467,9 +466,13 @@ const LOADING_HINTS = [
                     <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'المدة' : 'Duration' }}</p>
                     <p class="text-xl font-extrabold text-text-primary">{{ currentLang() === 'ar' ? 'أسبوعين' : '2 wks' }}</p>
                   </div>
+
+                  <!-- Team Capacity (Explanation) -->
+                  <div class="rounded-xl bg-primary/5 border border-primary/15 p-3 flex flex-col justify-center">
+                    <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'استيعاب الفريق' : 'Team Capacity' }}</p>
+                    <p class="text-xs font-semibold text-text-primary leading-tight">{{ card.sprint.capacityExplanation }}</p>
+                  </div>
                 </div>
-
-
 
                 <!-- Goal input -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
@@ -479,7 +482,7 @@ const LOADING_HINTS = [
                     </label>
                     <input
                       type="text"
-                      [(ngModel)]="card.sprint.goalEn"
+                      [(ngModel)]="card.sprint.sprintGoalEn"
                       [id]="'goal-en-' + idx"
                       dir="ltr"
                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all text-text-primary"
@@ -491,7 +494,7 @@ const LOADING_HINTS = [
                     </label>
                     <input
                       type="text"
-                      [(ngModel)]="card.sprint.goalAr"
+                      [(ngModel)]="card.sprint.sprintGoalAr"
                       [id]="'goal-ar-' + idx"
                       dir="rtl"
                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all text-text-primary"
@@ -568,10 +571,10 @@ const LOADING_HINTS = [
                             </p>
                           }
                           @if (getStoryMeta(storyId); as meta) {
-                            @if (currentLang() === 'ar' ? meta.reasonAr : meta.reasonEn) {
-                              <p class="text-[10px] text-text-secondary mt-1 leading-4 line-clamp-2 italic opacity-80">{{ currentLang() === 'ar' ? meta.reasonAr : meta.reasonEn }}</p>
+                              @if (meta.reason) {
+                                <p class="text-[10px] text-text-secondary mt-1 leading-4 line-clamp-2 italic opacity-80">{{ meta.reason }}</p>
+                              }
                             }
-                          }
                         </div>
 
                         <!-- Priority badge -->
@@ -1107,21 +1110,17 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       if (Array.isArray(raw)) {
         mappedSuggestions = raw.map((item: any) => ({
           sprintNumber: item.sprintNumber,
-          sprintTitleEn: item.sprintTitleEn || item.titleEn,
-          sprintTitleAr: item.sprintTitleAr || item.titleAr,
-          titleEn: item.sprintTitleEn || item.titleEn || (item.sprintNumber ? `Sprint ${item.sprintNumber}` : 'Sprint 1'),
-          titleAr: item.sprintTitleAr || item.titleAr || (item.sprintNumber ? `السبرينت ${item.sprintNumber}` : 'السبرينت 1'),
-          goalEn: item.sprintGoalEn || item.goalEn || '',
-          goalAr: item.sprintGoalAr || item.goalAr || '',
+          sprintTitle: item.sprintTitle || item.sprintTitleEn || item.titleEn,
+          titleEn: item.sprintTitle || item.sprintTitleEn || item.titleEn || (item.sprintNumber ? `Sprint ${item.sprintNumber}` : 'Sprint 1'),
+          titleAr: item.sprintNumber ? `السبرينت ${item.sprintNumber}` : 'السبرينت 1',
           sprintGoalEn: item.sprintGoalEn || item.goalEn || '',
           sprintGoalAr: item.sprintGoalAr || item.goalAr || '',
+          goalEn: item.sprintGoalEn || item.goalEn || '',
+          goalAr: item.sprintGoalAr || item.goalAr || '',
+          capacityExplanation: item.capacityExplanation || '',
           userStoryIds: (item.stories || item.userStoryIds || []).map((s: any) => s.storyId || s.id || s),
         }));
       } else if (raw && typeof raw === 'object') {
-        const titleEn = raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
-        const titleAr = raw.sprintTitleAr || raw.titleAr || (raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1');
-        const goalEn = raw.sprintGoalEn || raw.goalEn || '';
-        const goalAr = raw.sprintGoalAr || raw.goalAr || '';
         const storiesList: any[] = raw.stories || raw.userStoryIds || [];
         apiTotalHours = raw.totalEstimatedHours || 0;
         const userStoryIds = storiesList.map((s: any) => (typeof s === 'string' ? s : s.storyId || s.id));
@@ -1136,8 +1135,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
             const id = s.storyId || s.id;
             if (id) {
               metaMap.set(id, {
-                reasonEn: s.reasonEn || '',
-                reasonAr: s.reasonAr || '',
+                reason: s.reason || s.reasonEn || '',
                 priorityScore: s.priorityScore ?? 0,
                 estimatedHours: s.estimatedHours || 0,
               });
@@ -1146,17 +1144,21 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
         });
         this.suggestedStoriesMeta.set(metaMap);
 
+        const titleEn = raw.sprintTitle || raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
+        const goalEn = raw.sprintGoalEn || raw.goalEn || '';
+        const goalAr = raw.sprintGoalAr || raw.goalAr || '';
+
         mappedSuggestions = [
           {
             sprintNumber: raw.sprintNumber,
-            sprintTitleEn: titleEn,
-            sprintTitleAr: titleAr,
+            sprintTitle: titleEn,
             titleEn: titleEn,
-            titleAr: titleAr,
-            goalEn: goalEn,
-            goalAr: goalAr,
+            titleAr: raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1',
             sprintGoalEn: goalEn,
             sprintGoalAr: goalAr,
+            goalEn: goalEn,
+            goalAr: goalAr,
+            capacityExplanation: raw.capacityExplanation || '',
             userStoryIds: userStoryIds,
           }
         ];
@@ -1208,11 +1210,11 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload: ConfirmSprintRequest = {
-      titleEn: card.sprint.titleEn,
-      titleAr: card.sprint.titleAr,
-      sprintGoalEn: card.sprint.goalEn || '',
-      sprintGoalAr: card.sprint.goalAr || '',
+    const payload = {
+      titleEn: card.sprint.sprintTitle || card.sprint.titleEn,
+      titleAr: card.sprint.titleAr || card.sprint.sprintTitle || card.sprint.titleEn,
+      sprintGoalEn: card.sprint.sprintGoalEn || card.sprint.goalEn,
+      sprintGoalAr: card.sprint.sprintGoalAr || card.sprint.goalAr,
       userStoryIds: card.sprint.userStoryIds.filter(id => !card.removedStoryIds.has(id)),
     };
 
