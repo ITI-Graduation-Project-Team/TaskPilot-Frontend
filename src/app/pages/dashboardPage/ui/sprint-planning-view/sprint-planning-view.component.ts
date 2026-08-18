@@ -30,8 +30,7 @@ interface SprintCard {
 }
 
 interface SuggestedStoryMeta {
-  reasonEn: string;
-  reasonAr: string;
+  reason: string;
   priorityScore: number;
   estimatedHours: number;
 }
@@ -372,8 +371,8 @@ const LOADING_HINTS = [
                 <div class="flex-1 min-w-0">
                   <input
                     type="text"
-                    [ngModel]="currentLang() === 'ar' ? card.sprint.titleAr : card.sprint.titleEn"
-                    (ngModelChange)="currentLang() === 'ar' ? card.sprint.titleAr = $event : card.sprint.titleEn = $event"
+                    [ngModel]="card.sprint.sprintTitle || card.sprint.titleEn"
+                    (ngModelChange)="card.sprint.sprintTitle = $event"
                     [id]="'sprint-title-' + idx"
                     [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'"
                     class="bg-transparent text-sm font-bold text-text-primary outline-none focus:border-b focus:border-primary pb-0.5 w-full transition-all"
@@ -406,31 +405,10 @@ const LOADING_HINTS = [
                     <p class="text-xl font-extrabold text-text-primary">{{ currentLang() === 'ar' ? 'أسبوعين' : '2 wks' }}</p>
                   </div>
 
-                  <!-- Capacity -->
-                  <div class="rounded-xl bg-primary/5 border border-primary/15 p-3">
-                    <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'نسبة الاستيعاب %' : 'Capacity %' }}</p>
-                    <p class="text-xl font-extrabold text-primary">{{ calcCapacity(card) }}%</p>
-                  </div>
-                </div>
-
-                <!-- Capacity bar -->
-                <div class="mb-4">
-                  <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{{ currentLang() === 'ar' ? 'الاستيعاب المستخدم' : 'Capacity Used' }}</span>
-                    <span class="text-[10px] font-bold"
-                      [class.text-emerald-600]="calcCapacity(card) <= 80"
-                      [class.text-warning]="calcCapacity(card) > 80 && calcCapacity(card) <= 100"
-                      [class.text-error]="calcCapacity(card) > 100">
-                      {{ calcCapacity(card) }}%
-                    </span>
-                  </div>
-                  <div class="h-2 w-full bg-border/50 rounded-full overflow-hidden" [dir]="'ltr'">
-                    <div class="h-full rounded-full transition-all duration-700"
-                      [style.width]="(calcCapacity(card) > 100 ? 100 : calcCapacity(card)) + '%'"
-                      [class.bg-emerald-500]="calcCapacity(card) <= 80"
-                      [class.bg-warning]="calcCapacity(card) > 80 && calcCapacity(card) <= 100"
-                      [class.bg-error]="calcCapacity(card) > 100">
-                    </div>
+                  <!-- Team Capacity (Explanation) -->
+                  <div class="rounded-xl bg-primary/5 border border-primary/15 p-3 flex flex-col justify-center">
+                    <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'استيعاب الفريق' : 'Team Capacity' }}</p>
+                    <p class="text-xs font-semibold text-text-primary leading-tight">{{ card.sprint.capacityExplanation }}</p>
                   </div>
                 </div>
 
@@ -442,7 +420,7 @@ const LOADING_HINTS = [
                     </label>
                     <input
                       type="text"
-                      [(ngModel)]="card.sprint.goalEn"
+                      [(ngModel)]="card.sprint.sprintGoalEn"
                       [id]="'goal-en-' + idx"
                       dir="ltr"
                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all text-text-primary"
@@ -454,7 +432,7 @@ const LOADING_HINTS = [
                     </label>
                     <input
                       type="text"
-                      [(ngModel)]="card.sprint.goalAr"
+                      [(ngModel)]="card.sprint.sprintGoalAr"
                       [id]="'goal-ar-' + idx"
                       dir="rtl"
                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all text-text-primary"
@@ -512,10 +490,10 @@ const LOADING_HINTS = [
                             </p>
                           }
                           @if (getStoryMeta(storyId); as meta) {
-                            @if (currentLang() === 'ar' ? meta.reasonAr : meta.reasonEn) {
-                              <p class="text-[10px] text-text-secondary mt-1 leading-4 line-clamp-2 italic opacity-80">{{ currentLang() === 'ar' ? meta.reasonAr : meta.reasonEn }}</p>
+                              @if (meta.reason) {
+                                <p class="text-[10px] text-text-secondary mt-1 leading-4 line-clamp-2 italic opacity-80">{{ meta.reason }}</p>
+                              }
                             }
-                          }
                         </div>
 
                         <!-- Priority badge -->
@@ -729,21 +707,17 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       if (Array.isArray(raw)) {
         mappedSuggestions = raw.map((item: any) => ({
           sprintNumber: item.sprintNumber,
-          sprintTitleEn: item.sprintTitleEn || item.titleEn,
-          sprintTitleAr: item.sprintTitleAr || item.titleAr,
-          titleEn: item.sprintTitleEn || item.titleEn || (item.sprintNumber ? `Sprint ${item.sprintNumber}` : 'Sprint 1'),
-          titleAr: item.sprintTitleAr || item.titleAr || (item.sprintNumber ? `السبرينت ${item.sprintNumber}` : 'السبرينت 1'),
-          goalEn: item.sprintGoalEn || item.goalEn || '',
-          goalAr: item.sprintGoalAr || item.goalAr || '',
+          sprintTitle: item.sprintTitle || item.sprintTitleEn || item.titleEn,
+          titleEn: item.sprintTitle || item.sprintTitleEn || item.titleEn || (item.sprintNumber ? `Sprint ${item.sprintNumber}` : 'Sprint 1'),
+          titleAr: item.sprintNumber ? `السبرينت ${item.sprintNumber}` : 'السبرينت 1',
           sprintGoalEn: item.sprintGoalEn || item.goalEn || '',
           sprintGoalAr: item.sprintGoalAr || item.goalAr || '',
+          goalEn: item.sprintGoalEn || item.goalEn || '',
+          goalAr: item.sprintGoalAr || item.goalAr || '',
+          capacityExplanation: item.capacityExplanation || '',
           userStoryIds: (item.stories || item.userStoryIds || []).map((s: any) => s.storyId || s.id || s),
         }));
       } else if (raw && typeof raw === 'object') {
-        const titleEn = raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
-        const titleAr = raw.sprintTitleAr || raw.titleAr || (raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1');
-        const goalEn = raw.sprintGoalEn || raw.goalEn || '';
-        const goalAr = raw.sprintGoalAr || raw.goalAr || '';
         const storiesList: any[] = raw.stories || raw.userStoryIds || [];
         apiTotalHours = raw.totalEstimatedHours || 0;
         const userStoryIds = storiesList.map((s: any) => (typeof s === 'string' ? s : s.storyId || s.id));
@@ -758,8 +732,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
             const id = s.storyId || s.id;
             if (id) {
               metaMap.set(id, {
-                reasonEn: s.reasonEn || '',
-                reasonAr: s.reasonAr || '',
+                reason: s.reason || s.reasonEn || '',
                 priorityScore: s.priorityScore ?? 0,
                 estimatedHours: s.estimatedHours || 0,
               });
@@ -768,17 +741,21 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
         });
         this.suggestedStoriesMeta.set(metaMap);
 
+        const titleEn = raw.sprintTitle || raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
+        const goalEn = raw.sprintGoalEn || raw.goalEn || '';
+        const goalAr = raw.sprintGoalAr || raw.goalAr || '';
+
         mappedSuggestions = [
           {
             sprintNumber: raw.sprintNumber,
-            sprintTitleEn: titleEn,
-            sprintTitleAr: titleAr,
+            sprintTitle: titleEn,
             titleEn: titleEn,
-            titleAr: titleAr,
-            goalEn: goalEn,
-            goalAr: goalAr,
+            titleAr: raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1',
             sprintGoalEn: goalEn,
             sprintGoalAr: goalAr,
+            goalEn: goalEn,
+            goalAr: goalAr,
+            capacityExplanation: raw.capacityExplanation || '',
             userStoryIds: userStoryIds,
           }
         ];
@@ -827,10 +804,10 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     }
 
     const payload = {
-      titleEn: card.sprint.titleEn,
-      titleAr: card.sprint.titleAr,
-      sprintGoalEn: card.sprint.goalEn,
-      sprintGoalAr: card.sprint.goalAr,
+      titleEn: card.sprint.sprintTitle || card.sprint.titleEn,
+      titleAr: card.sprint.titleAr || card.sprint.sprintTitle || card.sprint.titleEn,
+      sprintGoalEn: card.sprint.sprintGoalEn || card.sprint.goalEn,
+      sprintGoalAr: card.sprint.sprintGoalAr || card.sprint.goalAr,
       userStoryIds: card.sprint.userStoryIds.filter(id => !card.removedStoryIds.has(id)),
     };
 
