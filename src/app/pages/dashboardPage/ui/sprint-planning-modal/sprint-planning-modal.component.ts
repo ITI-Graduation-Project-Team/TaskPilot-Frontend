@@ -507,7 +507,7 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
             userStoryIds: first.userStoryIds || [],
           };
 
-      await this.sprintService.confirmSprints(projId, payload);
+      await this.sprintService.confirmSprints(projId, payload as any);
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();

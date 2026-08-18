@@ -1211,10 +1211,10 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
     }
 
     const payload = {
-      titleEn: card.sprint.sprintTitle || card.sprint.titleEn,
-      titleAr: card.sprint.titleAr || card.sprint.sprintTitle || card.sprint.titleEn,
-      sprintGoalEn: card.sprint.sprintGoalEn || card.sprint.goalEn,
-      sprintGoalAr: card.sprint.sprintGoalAr || card.sprint.goalAr,
+      titleEn: card.sprint.sprintTitle || card.sprint.titleEn || '',
+      titleAr: card.sprint.titleAr || card.sprint.sprintTitle || card.sprint.titleEn || '',
+      sprintGoalEn: card.sprint.sprintGoalEn || card.sprint.goalEn || '',
+      sprintGoalAr: card.sprint.sprintGoalAr || card.sprint.goalAr || '',
       userStoryIds: card.sprint.userStoryIds.filter(id => !card.removedStoryIds.has(id)),
     };
 
