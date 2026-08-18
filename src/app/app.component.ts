@@ -66,15 +66,15 @@ export class AppComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       if (this.authService.isLoggedIn()) {
-        this.notificationHubService.startConnection();
+        void this.notificationHubService.startConnection();
       } else {
-        this.notificationHubService.stopConnection();
+        void this.notificationHubService.stopConnection();
       }
     });
 
     // Also check on initial load
     if (this.authService.isLoggedIn()) {
-      this.notificationHubService.startConnection();
+      void this.notificationHubService.startConnection();
     }
   }
 }

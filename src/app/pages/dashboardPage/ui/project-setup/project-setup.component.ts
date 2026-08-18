@@ -344,9 +344,14 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
     });
 
     effect(() => {
-      const latest = this.notifications.notifications()[0];
+      const latest = this.notifications.latestNotification();
       const activeProjectId = this.store.setup()?.projectId;
-      if (activeProjectId && latest?.url?.includes(activeProjectId)) void this.store.refresh();
+      const setupNotification = latest?.type === 'BacklogGenerated'
+        || latest?.type === 'ProjectSetupCompleted'
+        || latest?.type === 'ProjectSetupFailed';
+      if (setupNotification && activeProjectId && latest?.url?.includes(activeProjectId)) {
+        void this.store.refresh();
+      }
     });
   }
 
