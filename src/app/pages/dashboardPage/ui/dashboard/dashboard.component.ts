@@ -22,6 +22,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DashboardService } from '../../services/dashboard.service';
+import { getProjectErrorMessage } from '../../../../shared/api/project-error';
  
 @Component({
   selector: 'app-dashboard',
@@ -859,15 +860,17 @@ export class DashboardComponent implements OnInit {
     const projectId = this.dashboardService.selectedEditProjectId();
     if (!projectId) return;
 
-    const success = await this.projectState.updateProject(
+    const result = await this.projectState.updateProject(
       projectId,
       this.editNameEn,
       this.editNameAr,
       this.editDescEn,
       this.editDescAr
     );
-    if (success) {
+    if (result.succeeded) {
       this.dashboardService.isEditProjectModalOpen.set(false);
+    } else {
+      this.toastService.show(getProjectErrorMessage(result.error, this.tr), 'error');
     }
   }
 

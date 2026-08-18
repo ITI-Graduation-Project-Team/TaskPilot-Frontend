@@ -14,13 +14,15 @@ import {
 import { detectTextDir } from '../../../../shared/utils/text-direction.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 import { AiChatStateService } from '../../services/ai-chat-state.service';
 import { getRequirementSessionUiState } from './requirement-session-state';
+import { parseApiError } from '../../../../shared/api/api-error';
+import { getProjectErrorMessage, PROJECT_NAME_ALREADY_EXISTS } from '../../../../shared/api/project-error';
 
 @Component({
   selector: 'app-ai-chat-modal',
@@ -172,22 +174,6 @@ import { getRequirementSessionUiState } from './requirement-session-state';
             </div>
           }
 
-          <!-- Clarifying Questions (PM only) -->
-          @if (clarifyingQuestions().length > 0 && projectState.isProjectManager()) {
-            <div class="self-start max-w-[90%] shrink-0 px-4 py-3.5 bg-amber-500/[0.06] border border-amber-500/22 rounded-2xl">
-              <p class="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-amber-600 mb-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {{ 'AI_CHAT.CLARIFYING_QUESTIONS' | translate }}
-              </p>
-              <ul class="list-disc ps-4.5 flex flex-col gap-1">
-                @for (q of clarifyingQuestions(); track q) {
-                  <li class="text-xs text-text-secondary">{{ q }}</li>
-                }
-              </ul>
-            </div>
-          }
         </div>
 
         <!-- FOOTER -->
@@ -318,14 +304,6 @@ import { getRequirementSessionUiState } from './requirement-session-state';
                 </div>
               </div>
             }
-            @if (clarifyingQuestions().length > 0 && projectState.isProjectManager()) {
-              <div class="p-5 bg-warning/5 border border-warning/20 rounded-2xl space-y-2.5 animate-[fadeIn_0.3s_ease_both]">
-                <h4 class="text-xs font-bold text-warning uppercase tracking-wider">{{ 'AI_CHAT.CLARIFYING_QUESTIONS' | translate }}</h4>
-                <ul class="space-y-1.5 text-xs text-text-secondary list-disc ps-5">
-                  @for (q of clarifyingQuestions(); track q) { <li>{{ q }}</li> }
-                </ul>
-              </div>
-            }
             @if (isGeneratingDraft()) {
               <div class="flex items-center gap-2 text-primary font-semibold text-sm animate-pulse p-4">
                 <div class="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
@@ -386,10 +364,18 @@ import { getRequirementSessionUiState } from './requirement-session-state';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.PROJ_NAME_EN' | translate }}</label>
-                <input type="text" [value]="projectNameInput()" (input)="projectNameInput.set(nameEnField.value)" #nameEnField
+                <input type="text" [value]="projectNameInput()" (input)="projectNameInput.set(nameEnField.value); projectNameError.set(null)" #nameEnField
                        [disabled]="isGeneratingDraft()"
+                       [class.border-red-500]="projectNameError()"
+                       [attr.aria-invalid]="projectNameError() ? 'true' : null"
+                       [attr.aria-describedby]="projectNameError() ? 'project-name-error' : null"
                        class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"
                        placeholder="e.g. E-Commerce App"/>
+                @if (projectNameError()) {
+                  <p id="project-name-error" role="alert" class="mt-1.5 text-xs font-semibold text-red-500">
+                    {{ projectNameError() }}
+                  </p>
+                }
               </div>
               <div>
                 <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.PROJ_NAME_AR' | translate }}</label>
@@ -473,6 +459,7 @@ export class AiChatModalComponent implements AfterViewChecked {
   private aiChatState = inject(AiChatStateService);
   projectState = inject(ProjectStateService);
   toastService = inject(ToastService);
+  private translate = inject(TranslateService);
 
   get chatId() { return this.aiChatState.chatId; }
   get completenessScore() { return this.aiChatState.completenessScore; }
@@ -520,6 +507,7 @@ export class AiChatModalComponent implements AfterViewChecked {
 
   isLoading = signal(false);
   isGeneratingDraft = signal(false);
+  projectNameError = signal<string | null>(null);
 
   private _shouldScroll = false;
 
@@ -692,6 +680,7 @@ export class AiChatModalComponent implements AfterViewChecked {
     if (!managerId) { this.toastService.show('Missing user ID. Please log in again.', 'error'); return; }
 
     this.projectNameInput.set('');
+    this.projectNameError.set(null);
     this.projectNameArInput.set('');
     this.projectDescriptionEnInput.set('');
     this.projectDescriptionArInput.set('');
@@ -717,6 +706,7 @@ export class AiChatModalComponent implements AfterViewChecked {
     if (!companyId) { this.toastService.show('Missing company ID.', 'error'); return; }
     if (!managerId) { this.toastService.show('Missing user ID.', 'error'); return; }
 
+    this.projectNameError.set(null);
     this.isGeneratingDraft.set(true);
     try {
       // Re-read the authoritative session immediately before finalization. This
@@ -744,10 +734,14 @@ export class AiChatModalComponent implements AfterViewChecked {
         this.showNamePrompt.set(false);
         this.draftGenerated.emit({ projectId: finalizeResult.projectId, draft: finalizeResult, chatId: activeChatId });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      const msg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Please check and try again.';
-      this.toastService.show(`Failed to finalize requirements: ${msg}`, 'error');
+      const parsed = parseApiError(err, this.translate.instant('PROJECT_ERRORS.SAVE_FAILED'));
+      const message = getProjectErrorMessage(parsed, this.translate);
+      if (parsed.code === PROJECT_NAME_ALREADY_EXISTS) {
+        this.projectNameError.set(message);
+      }
+      this.toastService.show(message, 'error');
     } finally {
       this.isGeneratingDraft.set(false);
     }

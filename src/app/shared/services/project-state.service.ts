@@ -1,6 +1,12 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { apiClient } from '../api/axios.instance';
 import { getUserIdFromToken, getRoleFromToken } from '../lib/auth/cookie.helper';
+import { ParsedApiError, parseApiError } from '../api/api-error';
+
+export interface ProjectMutationResult {
+  succeeded: boolean;
+  error?: ParsedApiError;
+}
 
 export interface ProjectInfo {
   id: string;
@@ -301,9 +307,14 @@ export class ProjectStateService {
     this._projectEmployeeCount.set(count);
   }
 
-  async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
+  async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<ProjectMutationResult> {
     const companyId = this._userCompanyId();
-    if (!companyId) return false;
+    if (!companyId) {
+      return {
+        succeeded: false,
+        error: { code: 'COMPANY_NOT_FOUND', message: 'Company information is missing.', errors: [] },
+      };
+    }
 
     const descAr = descriptionAr || descriptionEn;
     try {
@@ -323,16 +334,16 @@ export class ProjectStateService {
       if (newProject) {
         this.setSelectedProject(newProject.id);
       }
-      return true;
+      return { succeeded: true };
     } catch (e) {
       console.error('Failed to create project:', e);
-      return false;
+      return { succeeded: false, error: parseApiError(e, 'Failed to create project.') };
     } finally {
       this._loading.set(false);
     }
   }
 
-  async updateProject(projectId: string, nameEn: string, nameAr: string, descriptionEn: string, descriptionAr: string): Promise<boolean> {
+  async updateProject(projectId: string, nameEn: string, nameAr: string, descriptionEn: string, descriptionAr: string): Promise<ProjectMutationResult> {
     try {
       this._loading.set(true);
       await apiClient.put('/Projects', {
@@ -343,10 +354,10 @@ export class ProjectStateService {
         descriptionAr
       });
       await this.loadProjects();
-      return true;
+      return { succeeded: true };
     } catch (e) {
       console.error('Failed to update project:', e);
-      return false;
+      return { succeeded: false, error: parseApiError(e, 'Failed to update project.') };
     } finally {
       this._loading.set(false);
     }

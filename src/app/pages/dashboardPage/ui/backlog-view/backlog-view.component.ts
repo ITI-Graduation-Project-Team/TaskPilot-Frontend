@@ -11,6 +11,7 @@ import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/projec
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AiActivityComponent, AiActivityPhase } from '../../../../shared/ui/ai-activity/ai-activity.component';
 import { Router } from '@angular/router';
+import { getProjectErrorMessage } from '../../../../shared/api/project-error';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -822,8 +823,12 @@ export class BacklogViewComponent implements OnInit {
     const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
     const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
-    if (success) form.reset();
+    const result = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
+    if (result.succeeded) {
+      form.reset();
+    } else {
+      this.toastService.show(getProjectErrorMessage(result.error, this.translate), 'error');
+    }
   }
 }
 
