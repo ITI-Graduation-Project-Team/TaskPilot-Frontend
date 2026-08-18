@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, effect
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { BackgroundSetupStatus, RecommendedStackDto } from '../../../../shared/api/project-setup.api';
-import { NotificationHubService } from '../../../../shared/services/notification-hub.service';
 import { ProjectSetupStore } from '../../../../shared/services/project-setup.store';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -319,7 +318,6 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
   readonly store = inject(ProjectSetupStore);
   private router = inject(Router);
   private projectState = inject(ProjectStateService);
-  private notifications = inject(NotificationHubService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
   private initializedProject: string | null = null;
@@ -343,16 +341,6 @@ export class ProjectSetupComponent implements OnInit, OnDestroy {
         setup.teamContext.teamStackAvailable ? 'primary' : 'ideal');
     });
 
-    effect(() => {
-      const latest = this.notifications.latestNotification();
-      const activeProjectId = this.store.setup()?.projectId;
-      const setupNotification = latest?.type === 'BacklogGenerated'
-        || latest?.type === 'ProjectSetupCompleted'
-        || latest?.type === 'ProjectSetupFailed';
-      if (setupNotification && activeProjectId && latest?.url?.includes(activeProjectId)) {
-        void this.store.refresh();
-      }
-    });
   }
 
   ngOnInit(): void {

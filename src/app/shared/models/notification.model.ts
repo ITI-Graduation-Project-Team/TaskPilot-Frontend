@@ -28,3 +28,19 @@ export interface NotificationDto {
   isRead: boolean;
   createdAt: string;
 }
+
+export type ProjectSetupStage = 'Wbs' | 'SkillEnrichment';
+export type ProjectSetupBackgroundStatus =
+  | 'NotStarted'
+  | 'Queued'
+  | 'Running'
+  | 'Succeeded'
+  | 'PartiallySucceeded'
+  | 'Failed';
+
+export interface ProjectSetupStatusChangedDto {
+  projectId: string;
+  stage: ProjectSetupStage;
+  status: ProjectSetupBackgroundStatus;
+  occurredAt: string;
+}
