@@ -121,25 +121,23 @@ export type SprintRetroDto = SprintRetrospectiveDto | SprintRetrospectiveData;
 
 export interface SuggestedStory {
   storyId: string;
-  titleEn: string;
-  titleAr: string;
+  title: string;
   estimatedHours: number;
   priorityScore: number;
-  reasonEn: string;
-  reasonAr: string;
+  reason: string;
 }
 
 export interface SprintSuggestionDto {
   sprintNumber?: number;
-  sprintTitleEn?: string;
-  sprintTitleAr?: string;
-  titleEn: string;
-  titleAr: string;
+  sprintTitle?: string;
+  titleEn: string;  // kept for ConfirmSprintRequest compatibility (different endpoint)
+  titleAr: string;  // kept for ConfirmSprintRequest compatibility (different endpoint)
   sprintGoalEn?: string;
   sprintGoalAr?: string;
-  goalEn?: string;
-  goalAr?: string;
+  goalEn?: string;  // kept for confirm payload
+  goalAr?: string;  // kept for confirm payload
   totalEstimatedHours?: number;
+  capacityExplanation?: string;
   risks?: string[];
   stories?: SuggestedStory[];
   userStoryIds: string[];
