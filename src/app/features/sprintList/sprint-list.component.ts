@@ -5,11 +5,12 @@ import { SprintPlanningService, SprintListItem } from '../../shared/api/sprint-p
 import { ProjectStateService } from '../../shared/services/project-state.service';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { PaginationComponent } from '../../shared/ui/pagination/pagination.component';
 
 @Component({
   selector: 'app-sprint-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent],
   templateUrl: './sprint-list.component.html'
 })
 export class SprintListComponent implements OnInit {
@@ -20,13 +21,19 @@ export class SprintListComponent implements OnInit {
   @Input() set isLoading(value: boolean) {
     this._isLoading.set(value);
   }
+  @Input() currentPage: number = 1;
+  @Input() pageSize: number = 10;
+  @Input() totalItems: number = 0;
+  
   @Output() viewBoard = new EventEmitter<{ sprintId: string; sprintStatus: string }>();
+  @Output() filtersChange = new EventEmitter<{ status: string; dateFrom: string; dateTo: string }>();
+  @Output() pageChange = new EventEmitter<number>();
 
   sprintService = inject(SprintPlanningService);
   projectState = inject(ProjectStateService);
   translate = inject(TranslateService);
 
-  private _sprints = signal<SprintListItem[]>([]);
+  _sprints = signal<SprintListItem[]>([]);
   _isLoading = signal<boolean>(true);
   
   get currentLang() {
@@ -44,33 +51,42 @@ export class SprintListComponent implements OnInit {
   getSprintGoal(sprint: SprintListItem): string | undefined {
     return this.currentLang === 'ar' ? (sprint.sprintGoalAr || sprint.sprintGoalEn) : sprint.sprintGoalEn;
   }
-  
-  filterStatus = signal<string>('All');
-  filterDateFrom = signal<string>('');
-  filterDateTo = signal<string>('');
+  private _filterStatus = 'All';
+  private _filterDateFrom = '';
+  private _filterDateTo = '';
 
-  filteredSprints = computed(() => {
-    let result = this._sprints();
-    
-    if (this.filterStatus() !== 'All') {
-      result = result.filter(s => s.status === this.filterStatus());
-    }
-    
-    if (this.filterDateFrom()) {
-      const fromDate = new Date(this.filterDateFrom());
-      result = result.filter(s => new Date(s.startDate) >= fromDate);
-    }
-    
-    if (this.filterDateTo()) {
-      const toDate = new Date(this.filterDateTo());
-      result = result.filter(s => new Date(s.endDate) <= toDate);
-    }
-    
-    return result;
-  });
+  get filterStatus() { return this._filterStatus; }
+  set filterStatus(val: string) { 
+    this._filterStatus = val; 
+    this.emitFilters(); 
+  }
+
+  get filterDateFrom() { return this._filterDateFrom; }
+  set filterDateFrom(val: string) { 
+    this._filterDateFrom = val; 
+    this.emitFilters(); 
+  }
+
+  get filterDateTo() { return this._filterDateTo; }
+  set filterDateTo(val: string) { 
+    this._filterDateTo = val; 
+    this.emitFilters(); 
+  }
+
+  private emitFilters() {
+    this.filtersChange.emit({
+      status: this._filterStatus,
+      dateFrom: this._filterDateFrom,
+      dateTo: this._filterDateTo
+    });
+  }
+
+  onPageChange(newPage: number) {
+    this.pageChange.emit(newPage);
+  }
 
   ngOnInit() {
-    // No longer fetching internally. Handled by DashboardComponent.
+    // Handled by SprintViewComponent
   }
 
   onViewBoard(event: Event, sprint: SprintListItem) {

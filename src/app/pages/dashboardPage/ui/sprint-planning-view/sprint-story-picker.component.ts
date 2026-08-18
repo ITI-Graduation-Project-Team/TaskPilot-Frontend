@@ -141,11 +141,11 @@ import { UserStoryDto, mapPriorityToFrontend } from '../../../../shared/api/back
               />
               <span class="min-w-0 flex-1">
                 <span class="block text-sm font-bold leading-6">{{
-                  lang() === 'ar' ? story.titleAr || story.titleEn : story.titleEn
+                  story.title
                 }}</span>
-                @if (lang() === 'ar' ? story.descriptionAr : story.descriptionEn) {
+                @if (story.description) {
                   <span class="mt-1 line-clamp-2 block text-sm leading-5 text-text-secondary">{{
-                    lang() === 'ar' ? story.descriptionAr : story.descriptionEn
+                    story.description
                   }}</span>
                 }
                 <span class="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
@@ -246,7 +246,7 @@ export class SprintStoryPickerComponent {
     const query = this.query().trim().toLocaleLowerCase();
     if (!query) return this.availableStories();
     return this.availableStories().filter((story) =>
-      [story.titleEn, story.titleAr, story.descriptionEn, story.descriptionAr].some((value) =>
+      [story.title, story.description].some((value) =>
         value?.toLocaleLowerCase().includes(query),
       ),
     );

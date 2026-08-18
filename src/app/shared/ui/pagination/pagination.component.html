@@ -1,0 +1,44 @@
+@if (displayTotalPages > 1) {
+  <div class="flex justify-center items-center gap-2">
+    <button
+      class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-color bg-white dark:bg-card-bg text-text-secondary hover:bg-sidebar disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      (click)="previousPage()"
+      [disabled]="!hasPrevious()"
+    >
+      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+      </svg>
+    </button>
+
+    @for (p of visiblePages(); track $index) {
+      @if (p === '...') {
+        <div class="w-10 h-10 flex items-center justify-center text-text-secondary">
+          ...
+        </div>
+      } @else {
+        <button
+          class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-color transition-colors"
+          (click)="goToPage(p)"
+          [class.bg-primary]="displayCurrentPage === p"
+          [class.text-white]="displayCurrentPage === p"
+          [class.font-bold]="displayCurrentPage === p"
+          [class.text-text-secondary]="displayCurrentPage !== p"
+          [class.hover:bg-sidebar]="displayCurrentPage !== p"
+          [class.dark:bg-card-bg]="displayCurrentPage !== p"
+        >
+          {{ p }}
+        </button>
+      }
+    }
+
+    <button
+      class="w-10 h-10 flex items-center justify-center rounded-lg border border-border-color bg-white dark:bg-card-bg text-text-secondary hover:bg-sidebar disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      (click)="nextPage()"
+      [disabled]="!hasNext()"
+    >
+      <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+      </svg>
+    </button>
+  </div>
+}

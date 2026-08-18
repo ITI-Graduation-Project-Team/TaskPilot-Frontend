@@ -218,33 +218,12 @@ export class ProjectHubComponent implements OnInit {
 
   async loadPaginatedProjects() {
     this.isLoading.set(true);
-    const { projects, totalCount } = await this.projectState.loadProjectsPaged(this.currentPage(), this.pageSize());
-
-    // Apply local filters (tab and search)
-    // Wait, backend doesn't filter by status or search. For now we will just load paged and apply client-side filter to the current page.
-    // Ideally, the backend should handle filtering too. Let's just use it as is for the page.
-    let filtered = projects;
-
     const tab = this.activeTab();
-    const query = this.searchQuery().toLowerCase().trim();
+    const query = this.searchQuery().trim();
+    
+    const { projects, totalCount } = await this.projectState.loadProjectsPaged(this.currentPage(), this.pageSize(), tab, query);
 
-    if (tab === 'active') {
-      filtered = filtered.filter(p => p.status === 'Active' || p.status === 'Draft' || !p.status);
-    } else if (tab === 'completed') {
-      filtered = filtered.filter(p => p.status === 'Completed');
-    } else if (tab === 'archived') {
-      filtered = filtered.filter(p => p.status === 'Archived');
-    }
-
-    if (query) {
-      filtered = filtered.filter(p =>
-        (p.nameEn || '').toLowerCase().includes(query) ||
-        (p.nameAr || '').toLowerCase().includes(query) ||
-        (p.description || '').toLowerCase().includes(query)
-      );
-    }
-
-    this.paginatedProjects.set(filtered);
+    this.paginatedProjects.set(projects);
     this.totalProjects.set(totalCount);
     this.isLoading.set(false);
   }

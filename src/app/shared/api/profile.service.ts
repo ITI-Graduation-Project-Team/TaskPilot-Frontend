@@ -59,7 +59,7 @@ export function mapSkillLevelToBackend(level: string | number): number {
 }
 
 export function mapSkillLevelToFrontend(level: number | string): string {
-  const l = String(level);
+  const l = String(level)?.trim();
   if (l === '0' || l?.toLowerCase() === 'beginner') return 'Beginner';
   if (l === '2' || l?.toLowerCase() === 'advanced') return 'Advanced';
   if (l === '3' || l?.toLowerCase() === 'expert') return 'Expert';

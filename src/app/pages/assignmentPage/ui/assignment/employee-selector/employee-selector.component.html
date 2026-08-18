@@ -21,8 +21,8 @@
     </h3>
     <p class="text-[11px] text-text-secondary leading-relaxed mb-5 max-w-[240px]">
       {{ lang === 'ar'
-        ? 'انقر على أي مهمة في القائمة لعرض توصيات الذكاء الاصطناعي.'
-        : 'Click any task on the left to see AI-ranked developer recommendations.' }}
+          ? 'انقر على أي مهمة في القائمة لعرض المرشحين حسب المهارات والسعة.'
+          : 'Select a task to see candidates ranked by skills and capacity.' }}
     </p>
 
     <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-surface border border-border/70 text-left shadow-sm w-full max-w-[260px]">
@@ -81,7 +81,7 @@
     <div>
       <div class="flex items-center gap-2 mb-1">
         <span class="text-[10px] font-extrabold text-text-primary uppercase tracking-widest">
-          🎯 {{ lang === 'ar' ? 'توصيات الذكاء الاصطناعي' : 'AI Candidate Recommendations' }}
+          {{ lang === 'ar' ? 'المرشحون المقترحون' : 'Recommended candidates' }}
         </span>
       </div>
       <p class="text-[10px] text-text-secondary">
@@ -99,7 +99,7 @@
         </div>
         <div>
           <h4 class="text-sm font-extrabold">{{ lang === 'ar' ? 'السعة الاستيعابية للفريق غير كافية' : 'Team Capacity Exhausted' }}</h4>
-          <p class="text-[10px] mt-1 leading-relaxed">{{ lang === 'ar' ? 'لا يمكن للذكاء الاصطناعي اقتراح مطورين لهذه المهمة لأن جميع المطورين المؤهلين وصلوا أو تجاوزوا قدرتهم الاستيعابية للسبرينت.' : 'The AI cannot suggest developers for this task because all qualified developers have reached or exceeded their sprint capacity.' }}</p>
+          <p class="text-[10px] mt-1 leading-relaxed">{{ lang === 'ar' ? 'لا يوجد أعضاء فريق متاحون لهذه المهمة.' : 'No active project team members are available for this task.' }}</p>
         </div>
       </div>
       <div *ngFor="let dev of selectedTask.rankedDevelopers; let i = index"
@@ -114,7 +114,7 @@
         <!-- Top-ranked ribbon -->
         <div *ngIf="dev.rank === 1"
           class="absolute top-0 right-0 flex items-center gap-1 px-3 py-1 bg-gradient-to-l from-amber-500 to-amber-400 text-white text-[8px] font-extrabold uppercase tracking-widest rounded-bl-2xl shadow-sm">
-          🏆 {{ lang === 'ar' ? 'أفضل توصية' : 'Top Pick' }}
+          {{ lang === 'ar' ? 'أفضل ملاءمة' : 'Best fit' }}
         </div>
 
         <div class="p-4">
@@ -175,18 +175,42 @@
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                {{ dev.score }}%
+                {{ getFitLabel(dev.score) }}
               </div>
-              <p class="text-[9px] text-text-secondary mt-0.5 text-right">{{ lang === 'ar' ? 'تطابق' : 'match' }}</p>
+              <p class="text-[9px] text-text-secondary mt-0.5 text-right">{{ lang === 'ar' ? 'درجة ' + dev.score : 'Score ' + dev.score }}</p>
             </div>
           </div>
 
-          <!-- AI reason box -->
-          <div class="flex items-start gap-2 p-3 bg-background rounded-xl border border-border/60 mb-3">
-            <span class="text-[11px] leading-none mt-0.5 shrink-0">💡</span>
-            <p class="text-[10px] text-text-secondary leading-relaxed font-medium flex-1">
-              {{ lang === 'ar' ? cleanReasonAr(dev.reasonAr) : dev.reasonEn }}
-            </p>
+          <!-- Structured recommendation evidence -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+            <div class="p-2.5 bg-background rounded-lg border border-border/60">
+              <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'تطابق المهارات' : 'Skill match' }}</p>
+              <p class="text-[11px] font-extrabold text-text-primary mt-1">
+                {{ dev.requiredSkillsCount > 0 ? dev.matchedSkillsCount + '/' + dev.requiredSkillsCount : (lang === 'ar' ? 'لا توجد متطلبات' : 'No requirements') }}
+              </p>
+            </div>
+            <div class="p-2.5 bg-background rounded-lg border border-border/60 min-w-0">
+              <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'السعة بعد التعيين' : 'Capacity after assign' }}</p>
+              <p class="text-[11px] font-extrabold mt-1" [ngClass]="dev.remainingAfter < 0 ? 'text-rose-500' : 'text-text-primary'">
+                {{ dev.assignedAfter }}h / {{ dev.maxSprintHours }}h
+              </p>
+              <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
+                <div class="h-full rounded-full transition-all" [ngClass]="getCapacityBarClass(dev)" [style.width.%]="getCapacityPercent(dev)"></div>
+              </div>
+              <p class="mt-1 text-[9px] font-bold" [ngClass]="dev.remainingAfter < 0 ? 'text-rose-500' : 'text-text-secondary'">
+                {{ dev.remainingAfter < 0 ? (lang === 'ar' ? 'تجاوز السعة' : 'Over capacity') : '+' + getTaskAddedHours(dev) + 'h ' + (lang === 'ar' ? 'من هذه المهمة' : 'from this task') }}
+              </p>
+            </div>
+            <div class="p-2.5 bg-background rounded-lg border border-border/60">
+              <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'الترشيح' : 'Recommendation' }}</p>
+              <p class="text-[11px] font-extrabold mt-1" [ngClass]="getFitTextClass(dev.score)">{{ getFitLabel(dev.score) }}</p>
+              <p class="mt-1 text-[9px] font-bold text-text-secondary">{{ lang === 'ar' ? 'درجة ' + dev.score : 'Score ' + dev.score }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="dev.skillGaps.length > 0" class="mb-3 flex flex-wrap items-center gap-1.5 text-[10px]">
+            <span class="font-bold text-amber-600">{{ lang === 'ar' ? 'فجوات المهارات:' : 'Skill gaps:' }}</span>
+            <span *ngFor="let gap of dev.skillGaps" class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/20">{{ gap.skillName }}</span>
           </div>
 
           <!-- Footer action row -->

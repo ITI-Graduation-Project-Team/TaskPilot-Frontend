@@ -55,9 +55,37 @@ export class EmployeeSelectorComponent {
     return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
   }
 
-  cleanReasonAr(reason: string | undefined): string {
-    if (!reason) return '';
-    return reason.replace(/\uFFFD/g, '');
+  getFitTextClass(score: number): string {
+    if (score >= 80) return 'text-emerald-500';
+    if (score >= 60) return 'text-amber-500';
+    return 'text-rose-500';
+  }
+
+  getFitLabel(score: number): string {
+    if (this.lang === 'ar') {
+      if (score >= 80) return 'ملاءمة قوية';
+      if (score >= 60) return 'ملاءمة جيدة';
+      return 'ملاءمة محدودة';
+    }
+    if (score >= 80) return 'Strong fit';
+    if (score >= 60) return 'Good fit';
+    return 'Limited fit';
+  }
+
+  getCapacityPercent(dev: DeveloperSuggestion): number {
+    if (!dev.maxSprintHours || dev.maxSprintHours <= 0) return 0;
+    return Math.min(100, Math.max(0, Math.round((dev.assignedAfter / dev.maxSprintHours) * 100)));
+  }
+
+  getCapacityBarClass(dev: DeveloperSuggestion): string {
+    if (dev.remainingAfter < 0) return 'bg-rose-500';
+    const percent = this.getCapacityPercent(dev);
+    if (percent >= 90) return 'bg-amber-500';
+    return 'bg-emerald-500';
+  }
+
+  getTaskAddedHours(dev: DeveloperSuggestion): number {
+    return Math.round((dev.assignedAfter - dev.assignedBefore) * 10) / 10;
   }
 
   getCloseMatchText(dev: DeveloperSuggestion): string | null {

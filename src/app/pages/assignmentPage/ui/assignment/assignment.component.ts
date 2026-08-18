@@ -6,7 +6,7 @@ import { EmployeeSelectorComponent } from './employee-selector/employee-selector
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { TranslateService } from '@ngx-translate/core';
-import { AssignmentSuggestion } from '../../../../entities/assignment.entity';
+import { AssignmentSuggestion, DeveloperSuggestion, ScoringWeights } from '../../../../entities/assignment.entity';
 
 @Component({
   selector: 'app-assignment',
@@ -32,8 +32,18 @@ export class AssignmentComponent implements OnInit {
 
   // State Signals
   readonly suggestions = signal<AssignmentSuggestion[]>([]);
+  readonly weights = signal<ScoringWeights>({
+    skillWeight: 40,
+    availabilityWeight: 30,
+    velocityWeight: 20,
+    experienceWeight: 10
+  });
   readonly selectedTaskId = signal<string | null>(null);
   readonly localAssignments = signal<{ [taskId: string]: string }>({});
+
+  readonly dynamicSuggestions = computed(() =>
+    this.calculateDynamicSuggestions(this.localAssignments())
+  );
   
   readonly isLoadingPage = signal<boolean>(true);
   readonly isConfirming = signal<boolean>(false);
@@ -53,13 +63,21 @@ export class AssignmentComponent implements OnInit {
   });
 
   readonly canConfirm = computed(() => {
-    return this.assignedCount() > 0 && !this.isConfirming();
+    return this.changedAssignments().length > 0 && !this.isConfirming();
   });
+
+  readonly changedAssignments = computed(() => this.suggestions()
+    .filter(task => (task.assigneeId || null) !== (this.localAssignments()[task.taskId] || null))
+    .map(task => ({
+      taskId: task.taskId,
+      employeeId: this.localAssignments()[task.taskId] || null
+    }))
+  );
 
   readonly selectedTask = computed(() => {
     const taskId = this.selectedTaskId();
     if (!taskId) return null;
-    return this.suggestions().find(t => t.taskId === taskId) || null;
+    return this.dynamicSuggestions().find(t => t.taskId === taskId) || null;
   });
 
   readonly currentAssigneeId = computed(() => {
@@ -70,11 +88,15 @@ export class AssignmentComponent implements OnInit {
 
   // Track each developer's starting capacity from the suggestions
   readonly developerInitialCapacities = computed(() => {
-    const capacities: { [empId: string]: { name: string, capacity: number } } = {};
-    for (const task of this.suggestions()) {
+    const capacities: { [empId: string]: { name: string, capacity: number, baseAssigned: number } } = {};
+    for (const task of this.dynamicSuggestions()) {
       for (const dev of task.rankedDevelopers) {
         if (!capacities[dev.employeeId]) {
-          capacities[dev.employeeId] = { name: dev.employeeName, capacity: dev.initialRemainingHours };
+          capacities[dev.employeeId] = { 
+            name: dev.employeeName, 
+            capacity: dev.maxSprintHours,
+            baseAssigned: dev.nonEditableHours
+          };
         }
       }
     }
@@ -102,12 +124,15 @@ export class AssignmentComponent implements OnInit {
     
     for (const empId in initial) {
       const cap = initial[empId].capacity;
-      const ass = assigned[empId] || 0;
+      const baseAssigned = initial[empId].baseAssigned;
+      const localAss = assigned[empId] || 0;
+      const totalAssigned = baseAssigned + localAss;
+      
       remaining[empId] = {
         name: initial[empId].name,
-        assigned: ass,
+        assigned: totalAssigned,
         capacity: cap,
-        remaining: cap - ass
+        remaining: cap - totalAssigned
       };
     }
     return remaining;
@@ -125,7 +150,9 @@ export class AssignmentComponent implements OnInit {
       this.isLoadingPage.set(true);
 
       // Load suggestions
-      const suggestionsData = await this.assignmentService.getSuggestions(this.sprintId);
+      const context = await this.assignmentService.getSuggestions(this.sprintId);
+      const suggestionsData = context.suggestions;
+      this.weights.set(context.weights);
       this.suggestions.set(suggestionsData);
 
       // Auto-select first task if available
@@ -171,8 +198,11 @@ export class AssignmentComponent implements OnInit {
     let countAdded = 0;
 
     for (const task of this.suggestions()) {
-      if (!newAssignments[task.taskId] && task.rankedDevelopers && task.rankedDevelopers.length > 0) {
-        const topDev = task.rankedDevelopers.find(d => d.rank === 1) || task.rankedDevelopers[0];
+      if (!newAssignments[task.taskId]) {
+        const dynamicTask = this.calculateDynamicSuggestions(newAssignments)
+          .find(candidateTask => candidateTask.taskId === task.taskId);
+        const topDev = dynamicTask?.rankedDevelopers.find(d => d.hasSufficientCapacity)
+          || dynamicTask?.rankedDevelopers[0];
         if (topDev) {
           newAssignments[task.taskId] = topDev.employeeId;
           countAdded++;
@@ -182,7 +212,7 @@ export class AssignmentComponent implements OnInit {
 
     this.localAssignments.set(newAssignments);
     if (countAdded > 0) {
-      this.toastService.show(`Auto-assigned ${countAdded} task(s) to top AI matched candidates!`, 'success');
+      this.toastService.show(`Auto-assigned ${countAdded} task(s) using the current scores and capacity.`, 'success');
     } else {
       this.toastService.show('All tasks are already assigned.', 'info');
     }
@@ -208,7 +238,7 @@ export class AssignmentComponent implements OnInit {
       this.overCapacityDevsForModal.set(overCapacity.map(d => ({ name: d.name, assigned: d.assigned, capacity: d.capacity })));
       this.showOverCapacityModal.set(true);
     } else {
-      this.confirmAssignments();
+      this.confirmAssignments(false);
     }
   }
 
@@ -218,21 +248,20 @@ export class AssignmentComponent implements OnInit {
 
   proceedWithOverCapacity() {
     this.showOverCapacityModal.set(false);
-    this.confirmAssignments();
+    this.confirmAssignments(true);
   }
 
-  async confirmAssignments() {
+  async confirmAssignments(allowOverCapacity = false) {
     if (!this.canConfirm()) return;
 
     try {
       this.isConfirming.set(true);
       
-      const assignmentsPayload = Object.entries(this.localAssignments()).map(
-        ([taskId, employeeId]) => ({ taskId, employeeId })
-      );
+      const assignmentsPayload = this.changedAssignments();
 
       const warnings = await this.assignmentService.confirm(this.sprintId, {
-        assignments: assignmentsPayload
+        assignments: assignmentsPayload,
+        allowOverCapacity
       });
       
       if (warnings && warnings.length > 0) {
@@ -248,5 +277,69 @@ export class AssignmentComponent implements OnInit {
       this.toastService.show(error.message || 'Failed to confirm assignments', 'error');
       this.isConfirming.set(false);
     }
+  }
+
+  private calculateDynamicSuggestions(assignments: { [taskId: string]: string }): AssignmentSuggestion[] {
+    const baseSuggestions = this.suggestions();
+    const weights = this.weights();
+    const developerInfo = new Map<string, DeveloperSuggestion>();
+
+    for (const task of baseSuggestions) {
+      for (const developer of task.rankedDevelopers) {
+        if (!developerInfo.has(developer.employeeId)) {
+          developerInfo.set(developer.employeeId, developer);
+        }
+      }
+    }
+
+    const assignedHours = new Map<string, number>();
+    for (const developer of developerInfo.values()) {
+      assignedHours.set(developer.employeeId, developer.nonEditableHours);
+    }
+    for (const task of baseSuggestions) {
+      const employeeId = assignments[task.taskId];
+      if (employeeId) {
+        assignedHours.set(employeeId, (assignedHours.get(employeeId) || 0) + task.estimatedHours);
+      }
+    }
+
+    return baseSuggestions.map(task => {
+      const rankedDevelopers = task.rankedDevelopers.map(developer => {
+        const taskAlreadyAssignedToDeveloper = assignments[task.taskId] === developer.employeeId;
+        const assignedBefore = Math.max(
+          developer.nonEditableHours,
+          (assignedHours.get(developer.employeeId) || 0) - (taskAlreadyAssignedToDeveloper ? task.estimatedHours : 0)
+        );
+        const assignedAfter = assignedBefore + task.estimatedHours;
+        const remainingAfter = developer.maxSprintHours - assignedAfter;
+        const availabilityScore = developer.maxSprintHours > 0
+          ? Math.max(0, Math.min(100, (remainingAfter / developer.maxSprintHours) * 100))
+          : 0;
+        const score = (
+          developer.skillScore * weights.skillWeight +
+          availabilityScore * weights.availabilityWeight +
+          developer.velocityScore * weights.velocityWeight +
+          developer.experienceScore * weights.experienceWeight
+        ) / 100;
+
+        return {
+          ...developer,
+          score: Number(score.toFixed(1)),
+          availabilityScore: Number(availabilityScore.toFixed(1)),
+          assignedBefore,
+          assignedAfter,
+          remainingAfter,
+          hasSufficientCapacity: remainingAfter >= 0
+        };
+      })
+        .sort((a, b) => b.score - a.score || b.remainingAfter - a.remainingAfter)
+        .map((developer, index) => ({ ...developer, rank: index + 1 }));
+
+      return {
+        ...task,
+        rankedDevelopers,
+        isUnassignable: rankedDevelopers.length === 0
+      };
+    });
   }
 }

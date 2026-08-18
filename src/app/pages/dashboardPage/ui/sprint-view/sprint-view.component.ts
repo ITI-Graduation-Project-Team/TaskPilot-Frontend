@@ -25,7 +25,12 @@ import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.com
           [projectId]="projectState.selectedProjectId()!"
           [sprints]="cachedSprints()"
           [isLoading]="isSprintsLoading()"
-          (viewBoard)="onViewBoard($event)">
+          [currentPage]="currentPage()"
+          [pageSize]="pageSize()"
+          [totalItems]="totalItems()"
+          (viewBoard)="onViewBoard($event)"
+          (pageChange)="onPageChange($event)"
+          (filtersChange)="onFiltersChange($event)">
         </app-sprint-list>
       } @else {
         <div class="flex items-center justify-center h-full text-text-secondary font-medium">
@@ -45,6 +50,11 @@ export class SprintViewComponent {
   selectedSprintStatus = signal<string | null>(null);
   cachedSprints = signal<SprintListItem[]>([]);
   isSprintsLoading = signal(true);
+
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalItems = signal(0);
+  currentFilters = signal<{ status: string; dateFrom: string; dateTo: string }>({ status: 'All', dateFrom: '', dateTo: '' });
 
   constructor() {
     effect(() => {
@@ -71,14 +81,35 @@ export class SprintViewComponent {
     if (!projectId) return;
     this.isSprintsLoading.set(true);
     try {
-      const sprints = await this.sprintService.getAllSprints(projectId);
-      this.cachedSprints.set(sprints);
+      const filters = this.currentFilters();
+      const pagedResult = await this.sprintService.getAllSprints(
+        projectId, 
+        this.currentPage(), 
+        this.pageSize(),
+        filters.status,
+        filters.dateFrom,
+        filters.dateTo
+      );
+      this.cachedSprints.set(pagedResult.items);
+      this.totalItems.set(pagedResult.totalItems);
     } catch (e) {
       console.warn('Failed to load sprints', e);
       this.cachedSprints.set([]);
+      this.totalItems.set(0);
     } finally {
       this.isSprintsLoading.set(false);
     }
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.loadSprints();
+  }
+
+  onFiltersChange(filters: { status: string; dateFrom: string; dateTo: string }): void {
+    this.currentFilters.set(filters);
+    this.currentPage.set(1);
+    this.loadSprints();
   }
 
   onViewBoard(event: { sprintId: string; sprintStatus: string }): void {

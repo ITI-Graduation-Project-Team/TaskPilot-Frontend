@@ -50,6 +50,12 @@ export class RegisterComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   ngOnInit() {
+    const roleParam = this.route.snapshot.queryParamMap.get('role');
+    if (roleParam === 'Employee' || roleParam === 'ProjectManager') {
+      this.selectedRole.set(roleParam as RegisterRole);
+      this.step.set('form');
+    }
+
     const emailParam = this.route.snapshot.queryParamMap.get('email');
     if (emailParam) {
       this.email.set(emailParam);

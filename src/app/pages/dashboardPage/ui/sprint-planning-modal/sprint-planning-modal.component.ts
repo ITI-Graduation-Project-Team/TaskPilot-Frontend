@@ -389,8 +389,8 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
 
     this.isBacklogLoading.set(true);
     try {
-      const res = await this.backlogService.getBacklog(projId);
-      const stories = res?.userStories || [];
+      const res = await this.backlogService.getBacklog(projId, 1, 1000);
+      const stories = res?.userStories?.items || [];
       this.storiesMap.clear();
       stories.forEach((s: any) => {
         this.storiesMap.set(s.id, s.titleEn || s.title || 'Untitled Story');
@@ -420,19 +420,17 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
       if (Array.isArray(raw)) {
         mapped = raw.map((s: any) => ({
           sprintNumber: s.sprintNumber,
-          sprintTitleEn: s.sprintTitleEn || s.titleEn,
-          sprintTitleAr: s.sprintTitleAr || s.titleAr,
-          titleEn: s.sprintTitleEn || s.titleEn || (s.sprintNumber ? `Sprint ${s.sprintNumber}` : 'Sprint 1'),
-          titleAr: s.sprintTitleAr || s.titleAr || (s.sprintNumber ? `السبرينت ${s.sprintNumber}` : 'السبرينت 1'),
-          goalEn: s.sprintGoalEn || s.goalEn || '',
-          goalAr: s.sprintGoalAr || s.goalAr || '',
+          sprintTitle: s.sprintTitle || s.sprintTitleEn || s.titleEn,
+          titleEn: s.sprintTitle || s.sprintTitleEn || s.titleEn || (s.sprintNumber ? `Sprint ${s.sprintNumber}` : 'Sprint 1'),
+          titleAr: s.sprintNumber ? `السبرينت ${s.sprintNumber}` : 'السبرينت 1',
           sprintGoalEn: s.sprintGoalEn || s.goalEn || '',
           sprintGoalAr: s.sprintGoalAr || s.goalAr || '',
+          goalEn: s.sprintGoalEn || s.goalEn || '',
+          goalAr: s.sprintGoalAr || s.goalAr || '',
           userStoryIds: (s.stories || s.userStoryIds || []).map((st: any) => (typeof st === 'string' ? st : st.storyId || st.id)),
         }));
       } else if (raw && typeof raw === 'object') {
-        const titleEn = raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
-        const titleAr = raw.sprintTitleAr || raw.titleAr || (raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1');
+        const titleEn = raw.sprintTitle || raw.sprintTitleEn || raw.titleEn || (raw.sprintNumber ? `Sprint ${raw.sprintNumber}` : 'Sprint 1');
         const goalEn = raw.sprintGoalEn || raw.goalEn || '';
         const goalAr = raw.sprintGoalAr || raw.goalAr || '';
         const storiesList: any[] = raw.stories || raw.userStoryIds || [];
@@ -440,14 +438,13 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
         mapped = [
           {
             sprintNumber: raw.sprintNumber,
-            sprintTitleEn: titleEn,
-            sprintTitleAr: titleAr,
+            sprintTitle: titleEn,
             titleEn: titleEn,
-            titleAr: titleAr,
-            goalEn: goalEn,
-            goalAr: goalAr,
+            titleAr: raw.sprintNumber ? `السبرينت ${raw.sprintNumber}` : 'السبرينت 1',
             sprintGoalEn: goalEn,
             sprintGoalAr: goalAr,
+            goalEn: goalEn,
+            goalAr: goalAr,
             userStoryIds: userStoryIds,
           }
         ];
@@ -494,15 +491,23 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
     this.isSaving.set(true);
     try {
       const first = this.suggestions()[0];
-      const payload = {
-        titleEn: first.titleEn || first.sprintTitleEn || '',
-        titleAr: first.titleAr || first.sprintTitleAr || '',
-        sprintGoalEn: first.goalEn || first.sprintGoalEn || '',
-        sprintGoalAr: first.goalAr || first.sprintGoalAr || '',
-        userStoryIds: first.userStoryIds || [],
-      };
+      const payload = this.suggestions().length > 1
+        ? this.suggestions().map(s => ({
+            titleEn: s.sprintTitle || s.titleEn || '',
+            titleAr: s.titleAr || s.sprintTitle || s.titleEn || '',
+            sprintGoalEn: s.sprintGoalEn || s.goalEn || '',
+            sprintGoalAr: s.sprintGoalAr || s.goalAr || '',
+            userStoryIds: s.userStoryIds || [],
+          }))
+        : {
+            titleEn: first.sprintTitle || first.titleEn || '',
+            titleAr: first.titleAr || first.sprintTitle || first.titleEn || '',
+            sprintGoalEn: first.sprintGoalEn || first.goalEn || '',
+            sprintGoalAr: first.sprintGoalAr || first.goalAr || '',
+            userStoryIds: first.userStoryIds || [],
+          };
 
-      await this.sprintService.confirmSprints(projId, payload);
+      await this.sprintService.confirmSprints(projId, payload as any);
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();
