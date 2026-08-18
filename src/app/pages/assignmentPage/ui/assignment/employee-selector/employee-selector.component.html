@@ -140,11 +140,11 @@
             <!-- Name + rank -->
             <div class="flex-1 min-w-0 pt-0.5">
               <h4
-                class="text-base font-extrabold text-text-primary group-hover:text-primary transition-colors flex items-center gap-2">
+                class="text-base font-extrabold text-text-primary group-hover:text-primary transition-colors flex flex-wrap items-center gap-2">
                 {{ dev.employeeName || 'Developer' }}
                 <!-- Live Capacity Indicator -->
                 <ng-container *ngIf="devCapacities[dev.employeeId] as capData">
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-mono border"
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-mono border whitespace-nowrap shrink-0"
                         [ngClass]="capData.remaining < 0 ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
                                    capData.remaining <= (capData.capacity * 0.2) ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
                                    'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'"
@@ -181,8 +181,8 @@
             </div>
           </div>
 
-          <!-- Structured recommendation evidence -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <!-- Structured recommendation evidence (Hidden on Mobile/Tablet, Visible on Desktop) -->
+          <div class="hidden lg:grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
             <div class="p-2.5 bg-background rounded-lg border border-border/60">
               <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'تطابق المهارات' : 'Skill match' }}</p>
               <p class="text-[11px] font-extrabold text-text-primary mt-1">
@@ -208,7 +208,7 @@
             </div>
           </div>
 
-          <div *ngIf="dev.skillGaps.length > 0" class="mb-3 flex flex-wrap items-center gap-1.5 text-[10px]">
+          <div *ngIf="dev.skillGaps.length > 0" class="hidden lg:flex mb-3 flex-wrap items-center gap-1.5 text-[10px]">
             <span class="font-bold text-amber-600">{{ lang === 'ar' ? 'فجوات المهارات:' : 'Skill gaps:' }}</span>
             <span *ngFor="let gap of dev.skillGaps" class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/20">{{ gap.skillName }}</span>
           </div>

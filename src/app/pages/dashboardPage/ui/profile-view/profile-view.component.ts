@@ -44,96 +44,127 @@ interface EmployeeProfile {
         </div>
       } @else {
         
-        <!-- Profile Header Card -->
-        <div class="bg-surface border border-border rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-6 transition-colors duration-200">
-          <div class="flex flex-col sm:flex-row items-center gap-6">
-            <div class="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm overflow-hidden border border-border bg-background">
-              @if (profile()?.avatarUrl) {
-                <img [src]="profile()?.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
-              } @else {
-                <div class="w-full h-full bg-primary/10 text-primary flex items-center justify-center">{{ userInitial() }}</div>
-              }
-            </div>
-            <div class="text-center sm:text-left space-y-1">
-              <h2 class="text-2xl font-extrabold text-text-primary">{{ profile()?.firstName }} {{ profile()?.lastName }}</h2>
-              <p class="text-text-secondary text-sm font-medium">{{ profile()?.jobTitle || ('PROFILE.TEAM_MEMBER' | translate) }}</p>
-              <div class="flex items-center gap-2 justify-center sm:justify-start pt-1.5 flex-wrap">
-                <span class="px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full">
-                  {{ profile()?.seniorityLevel }}
-                </span>
-                <span class="px-2.5 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">
-                  {{ profile()?.email }}
-                </span>
-                @if (profile()?.phoneNumber) {
-                  <span class="px-2.5 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                    {{ profile()?.phoneNumber }}
-                  </span>
-                }
-              </div>
-            </div>
-          </div>
+        <!-- Single Unified Profile Card -->
+        <div class="bg-surface border border-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-200">
           
-          <button (click)="openEditModal()" 
-                  class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl
-                         shadow-md shadow-primary/20 transition-all duration-200 hover:-translate-y-px active:translate-y-0 text-sm whitespace-nowrap">
-            {{ 'PROFILE.EDIT_PROFILE' | translate }}
-          </button>
-        </div>
-
-        <!-- Details Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          <!-- Core Info -->
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4 transition-colors duration-200">
-            <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">{{ 'PROFILE.JOB_EXPERIENCE' | translate }}</h3>
-            
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-text-secondary font-medium">{{ 'PROFILE.JOB_TITLE' | translate }}</span>
-              <span class="text-text-primary font-semibold">{{ profile()?.jobTitle || ('PROFILE.NA' | translate) }}</span>
-            </div>
-
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-text-secondary font-medium">{{ 'PROFILE.SENIORITY' | translate }}</span>
-              <span class="text-text-primary font-semibold">{{ profile()?.seniorityLevel || ('PROFILE.NA' | translate) }}</span>
-            </div>
-
-            @if (profile()?.isEmployee) {
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-text-secondary font-medium">{{ 'PROFILE.EXPERIENCE_YEARS' | translate }}</span>
-                <span class="text-text-primary font-semibold">{{ profile()?.totalYearsOfExperience || 0 }} {{ 'PROFILE.YEARS' | translate }}</span>
-              </div>
-              <div class="flex justify-between items-center text-sm pt-2 border-t border-border">
-                <span class="text-text-secondary font-medium">CV / Resume</span>
-                @if (profile()?.latestCvUrl) {
-                  <a [href]="profile()?.latestCvUrl" target="_blank" class="text-primary hover:underline font-semibold flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    View CV
-                  </a>
+          <!-- Header Section -->
+          <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex flex-col sm:flex-row items-center gap-6">
+              <div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-extrabold shadow-sm overflow-hidden border-2 border-border bg-background relative group">
+                @if (profile()?.avatarUrl) {
+                  <img [src]="profile()?.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
                 } @else {
-                  <span class="text-text-secondary italic">Not uploaded</span>
+                  <div class="w-full h-full bg-gradient-to-br from-primary/15 to-primary/5 text-primary flex items-center justify-center">{{ userInitial() }}</div>
                 }
               </div>
-            }
-          </div>
-
-          <!-- Skills Card -->
-          @if (profile()?.isEmployee) {
-            <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4 transition-colors duration-200">
-              <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">{{ 'PROFILE.SKILLS' | translate }}</h3>
-              
-              <div class="flex flex-wrap gap-2 pt-1">
-                @for (skill of profile()?.skills; track skill) {
-                  <span class="px-3 py-1 text-xs font-bold bg-primary/10 text-primary border border-primary/20 rounded-xl">
-                    {{ skill }}
+              <div class="text-center sm:text-left space-y-1.5">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">{{ profile()?.firstName }} {{ profile()?.lastName }}</h2>
+                <p class="text-primary text-sm font-bold">{{ profile()?.jobTitle || ('PROFILE.TEAM_MEMBER' | translate) }}</p>
+                <div class="flex items-center gap-2.5 justify-center sm:justify-start pt-2 flex-wrap">
+                  <span class="px-3 py-1 text-[11px] font-extrabold tracking-widest uppercase bg-primary/10 text-primary border border-primary/20 rounded-full shadow-sm">
+                    {{ profile()?.seniorityLevel }}
                   </span>
-                } @empty {
-                  <span class="text-xs text-text-secondary">{{ 'PROFILE.NO_SKILLS' | translate }}</span>
-                }
+                  <span class="px-3 py-1 text-xs font-semibold bg-background text-text-secondary border border-border rounded-full flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v10a2 2 0 002 2z"/></svg>
+                    {{ profile()?.email }}
+                  </span>
+                  @if (profile()?.phoneNumber) {
+                    <span class="px-3 py-1 text-xs font-semibold bg-background text-text-secondary border border-border rounded-full flex items-center gap-1.5 shadow-sm">
+                      <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                      {{ profile()?.phoneNumber }}
+                    </span>
+                  }
+                </div>
               </div>
             </div>
-          }
+            
+            <button (click)="openEditModal()" 
+                    class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl
+                           shadow-md shadow-primary/20 transition-all duration-200 active:scale-95 text-sm whitespace-nowrap flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+              {{ 'PROFILE.EDIT_PROFILE' | translate }}
+            </button>
+          </div>
 
+          <!-- Divider -->
+          <div class="h-px bg-border/60 mx-6 sm:mx-8"></div>
+
+          <!-- Details Section -->
+          <div class="px-6 sm:px-8 pb-8 pt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+              
+              <!-- Core Info -->
+              <div class="space-y-5">
+                <div class="flex items-center gap-3 pb-2 border-b border-border/40">
+                  <div class="p-2 rounded-xl bg-primary/10 text-primary">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  </div>
+                  <h3 class="font-extrabold text-text-primary text-sm uppercase tracking-widest">{{ 'PROFILE.JOB_EXPERIENCE' | translate }}</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- Job Title Box -->
+                  <div class="p-4 rounded-2xl bg-background border border-border/60 shadow-sm flex flex-col justify-center">
+                    <span class="block text-[10px] uppercase font-extrabold tracking-wider text-text-secondary mb-1.5">{{ 'PROFILE.JOB_TITLE' | translate }}</span>
+                    <span class="text-text-primary font-bold text-sm">{{ profile()?.jobTitle || ('PROFILE.NA' | translate) }}</span>
+                  </div>
+
+                  <!-- Seniority Box -->
+                  <div class="p-4 rounded-2xl bg-background border border-border/60 shadow-sm flex flex-col justify-center">
+                    <span class="block text-[10px] uppercase font-extrabold tracking-wider text-text-secondary mb-1.5">{{ 'PROFILE.SENIORITY' | translate }}</span>
+                    <span class="text-primary font-bold text-sm">{{ profile()?.seniorityLevel || ('PROFILE.NA' | translate) }}</span>
+                  </div>
+
+                  @if (profile()?.isEmployee) {
+                    <!-- Exp Years Box -->
+                    <div class="p-4 rounded-2xl bg-background border border-border/60 shadow-sm flex flex-col justify-center">
+                      <span class="block text-[10px] uppercase font-extrabold tracking-wider text-text-secondary mb-1.5">{{ 'PROFILE.EXPERIENCE_YEARS' | translate }}</span>
+                      <span class="text-text-primary font-bold text-sm">{{ profile()?.totalYearsOfExperience || 0 }} {{ 'PROFILE.YEARS' | translate }}</span>
+                    </div>
+
+                    <!-- CV Box -->
+                    <div class="p-4 rounded-2xl bg-background border border-border/60 shadow-sm flex flex-col justify-center">
+                      <span class="block text-[10px] uppercase font-extrabold tracking-wider text-text-secondary mb-1.5">CV / Resume</span>
+                      @if (profile()?.latestCvUrl) {
+                        <a [href]="profile()?.latestCvUrl" target="_blank" class="inline-flex items-center gap-1.5 text-primary hover:text-primary-hover font-bold text-sm transition-colors w-fit">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          View CV
+                        </a>
+                      } @else {
+                        <span class="text-text-secondary italic text-xs font-medium">Not uploaded</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Skills Card -->
+              @if (profile()?.isEmployee) {
+                <div class="space-y-5">
+                  <div class="flex items-center gap-3 pb-2 border-b border-border/40">
+                    <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="font-extrabold text-text-primary text-sm uppercase tracking-widest">{{ 'PROFILE.SKILLS' | translate }}</h3>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2.5 pt-1">
+                    @for (skill of profile()?.skills; track skill) {
+                      <span class="px-4 py-2 text-xs font-bold bg-background text-text-primary border border-border/60 rounded-xl shadow-sm hover:border-primary hover:text-primary transition-colors cursor-default">
+                        {{ skill }}
+                      </span>
+                    } @empty {
+                      <div class="w-full py-8 flex flex-col items-center justify-center text-center bg-background rounded-2xl border border-dashed border-border/80">
+                        <svg class="w-10 h-10 text-text-secondary/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        <span class="text-sm text-text-secondary font-medium">{{ 'PROFILE.NO_SKILLS' | translate }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+            </div>
+          </div>
         </div>
       }
     </div>
