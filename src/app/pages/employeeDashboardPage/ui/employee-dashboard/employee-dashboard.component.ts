@@ -610,7 +610,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
       <!-- ══════════════════════════════════════════
            MOBILE BOTTOM NAVIGATION
       ══════════════════════════════════════════ -->
-      <div class="fixed bottom-2 start-2 end-2 z-40 lg:hidden">
+      <div class="fixed bottom-2 start-2 end-2 z-40 md:hidden">
         <div class="border rounded-2xl shadow-2xl flex items-center justify-start overflow-x-auto flex-nowrap gap-1 py-1.5 px-3 backdrop-blur-xl hide-scrollbar [&>button]:shrink-0 [&>button]:min-w-[3.5rem]"
              style="background: color-mix(in srgb, var(--surface) 80%, transparent); border-color: var(--border); scrollbar-width: none;">
 

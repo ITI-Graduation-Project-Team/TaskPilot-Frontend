@@ -818,6 +818,7 @@
     "TAB_CHAT": "Policy Chat"
   },
   "DEACTIVATION": {
+    "CONFIRM_BTN": "Deactivate Employee",
     "TITLE": "Deactivate Employee",
     "ANALYZING": "Analyzing dependencies...",
     "READY_TITLE": "Ready to Deactivate",

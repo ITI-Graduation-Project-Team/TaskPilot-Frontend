@@ -504,7 +504,7 @@ import { DashboardService } from '../../services/dashboard.service';
       </div>
 
       <!-- Mobile Bottom Navigation Bar -->
-      <div class="fixed bottom-2 left-2 right-2 z-40 bg-surface/75 backdrop-blur-xl border border-border flex items-center justify-start overflow-x-auto flex-nowrap gap-1 px-3 py-1.5 lg:hidden rounded-2xl shadow-xl transition-all duration-300 [&>button]:shrink-0 [&>button]:min-w-[3.5rem]" style="scrollbar-width: none;">
+      <div class="fixed bottom-2 left-2 right-2 z-40 bg-surface/75 backdrop-blur-xl border border-border flex items-center justify-start overflow-x-auto flex-nowrap gap-1 px-3 py-1.5 md:hidden rounded-2xl shadow-xl transition-all duration-300 [&>button]:shrink-0 [&>button]:min-w-[3.5rem]" style="scrollbar-width: none;">
         
         <!-- Projects Hub Tab (Mobile PM) -->
         @if (projectState.isProjectManager()) {
