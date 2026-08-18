@@ -50,8 +50,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
       <!-- ══════════════════════════════════════════
            DESKTOP SIDEBAR — Glassmorphism
       ══════════════════════════════════════════ -->
-      <aside class="bg-sidebar border-e border-border hidden md:flex flex-col shrink-0 sticky top-0 h-screen
-                    transition-all duration-300 relative z-50"
+      <aside class="bg-sidebar border-e border-border hidden md:flex flex-col shrink-0 fixed inset-y-0 ltr:left-0 rtl:right-0
+                    transition-all duration-300 z-50"
                     [class.w-64]="!isSidebarCollapsed()" [class.w-20]="isSidebarCollapsed()">
                     
         <!-- Collapse Toggle Button -->
@@ -62,7 +62,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <svg class="w-4 h-4 rtl:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </button>
 
-        <div class="flex-1 flex flex-col w-full overflow-y-auto pb-4 hide-scrollbar">
+        <div class="flex-1 flex flex-col w-full pb-4 hide-scrollbar">
         <!-- Logo Block -->
         <div class="pb-3" [class.p-5]="!isSidebarCollapsed()" [class.px-1]="isSidebarCollapsed()" [class.py-5]="isSidebarCollapsed()">
           <div class="flex flex-col gap-2 rounded-2xl border transition-all duration-200 hover:shadow-md"
@@ -323,7 +323,9 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
       <!-- ══════════════════════════════════════════
            MAIN PANEL
       ══════════════════════════════════════════ -->
-      <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-0">
+      <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-0 transition-[margin] duration-300"
+           [class.md:ms-64]="!isSidebarCollapsed()"
+           [class.md:ms-20]="isSidebarCollapsed()">
 
         <!-- ── STICKY HEADER ── -->
         <header class="h-16 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-30
