@@ -101,12 +101,12 @@
     <button
       *ngIf="toast.action"
       (click)="toast.action.onClick(); close()"
-      class="shrink-0 px-3 py-1 text-xs font-bold rounded-lg border transition-all"
+      class="shrink-0 px-3 py-1 text-xs font-bold rounded-lg border transition-all text-white"
       [ngClass]="{
-        'bg-green-600 text-white border-green-600 hover:bg-green-700': toast.type === 'success',
-        'bg-brandPrimary text-white border-brandPrimary hover:opacity-90': toast.type === 'error',
-        'bg-blue-600 text-white border-blue-600 hover:bg-blue-700': toast.type === 'info',
-        'bg-amber-600 text-white border-amber-600 hover:bg-amber-700': toast.type === 'warning'
+        'bg-green-600 border-green-600 hover:bg-green-700': toast.type === 'success',
+        'bg-brandPrimary border-brandPrimary hover:opacity-90': toast.type === 'error',
+        'bg-blue-600 border-blue-600 hover:bg-blue-700': toast.type === 'info',
+        'bg-amber-600 border-amber-600 hover:bg-amber-700': toast.type === 'warning'
       }"
     >
       {{ toast.action.label }}

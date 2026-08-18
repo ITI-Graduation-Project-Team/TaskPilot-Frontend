@@ -22,7 +22,7 @@ export class SprintListComponent implements OnInit {
     this._isLoading.set(value);
   }
   @Input() currentPage: number = 1;
-  @Input() pageSize: number = 10;
+  @Input() pageSize: number = 5;
   @Input() totalItems: number = 0;
   
   @Output() viewBoard = new EventEmitter<{ sprintId: string; sprintStatus: string }>();
@@ -41,15 +41,11 @@ export class SprintListComponent implements OnInit {
   }
 
   getSprintTitle(sprint: SprintListItem): string {
-    if (this.currentLang === 'ar') {
-      const title = sprint.titleAr || sprint.titleEn || '';
-      return title.replace(/Sprint/g, 'السبرينت');
-    }
-    return sprint.titleEn || '';
+    return sprint.title || '';
   }
 
   getSprintGoal(sprint: SprintListItem): string | undefined {
-    return this.currentLang === 'ar' ? (sprint.sprintGoalAr || sprint.sprintGoalEn) : sprint.sprintGoalEn;
+    return sprint.sprintGoal;
   }
   private _filterStatus = 'All';
   private _filterDateFrom = '';

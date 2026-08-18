@@ -18,7 +18,6 @@ import {
 import { BacklogService, UserStoryDto } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
-import { SprintStoryEditorComponent } from './sprint-story-editor.component';
 import { SprintStoryPickerComponent } from './sprint-story-picker.component';
 import { parseApiError } from '../../../../shared/api/api-error';
 import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activity.component';
@@ -51,7 +50,7 @@ const LOADING_HINTS = [
   selector: 'app-sprint-planning-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintStoryEditorComponent, SprintStoryPickerComponent, AiActivityComponent],
+  imports: [CommonModule, FormsModule, SprintStoryPickerComponent, AiActivityComponent],
   template: `
     <div class="space-y-6 animate-[fadeIn_0.25s_ease_both]">
 
@@ -466,12 +465,6 @@ const LOADING_HINTS = [
                     <p class="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'المدة' : 'Duration' }}</p>
                     <p class="text-xl font-extrabold text-text-primary">{{ currentLang() === 'ar' ? 'أسبوعين' : '2 wks' }}</p>
                   </div>
-
-                  <!-- Team Capacity (Explanation) -->
-                  <div class="rounded-xl bg-primary/5 border border-primary/15 p-3 flex flex-col justify-center">
-                    <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">{{ currentLang() === 'ar' ? 'استيعاب الفريق' : 'Team Capacity' }}</p>
-                    <p class="text-xs font-semibold text-text-primary leading-tight">{{ card.sprint.capacityExplanation }}</p>
-                  </div>
                 </div>
 
                 <!-- Goal input -->
@@ -591,18 +584,6 @@ const LOADING_HINTS = [
                           {{ mapPriority(story.priority) }}
                         </span>
 
-                        <button
-                          type="button"
-                          (click)="openStoryEditor(story, $event)"
-                          [disabled]="pageState() === 'confirming'"
-                          class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-bold text-primary transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
-                          [attr.aria-label]="currentLang() === 'ar' ? 'تعديل ' + story.title : 'Edit ' + story.title">
-                          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L8.25 18.463 3 21l2.537-5.25L16.862 3.487z" />
-                          </svg>
-                          <span class="hidden sm:inline">{{ currentLang() === 'ar' ? 'تعديل' : 'Edit' }}</span>
-                        </button>
-
                         <!-- Remove from scope button -->
                         <button
                           type="button"
@@ -654,11 +635,6 @@ const LOADING_HINTS = [
                 <p class="text-xs font-bold uppercase tracking-wider text-text-secondary">{{ currentLang() === 'ar' ? 'الساعات' : 'Estimated' }}</p>
                 <p class="mt-0.5 text-sm font-extrabold text-text-primary">{{ primaryCardHours() }}h</p>
               </div>
-              <div class="h-9 w-px bg-border" aria-hidden="true"></div>
-              <div>
-                <p class="text-xs font-bold uppercase tracking-wider text-text-secondary">{{ currentLang() === 'ar' ? 'التعديلات المحفوظة' : 'Saved edits' }}</p>
-                <p class="mt-0.5 text-sm font-extrabold" [class.text-primary]="changedStoryIds().size > 0" [class.text-text-primary]="changedStoryIds().size === 0">{{ changedStoryIds().size }}</p>
-              </div>
             </div>
             @if (primaryCapacity() > 100) {
               <div class="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-sm font-bold text-warning" role="status">
@@ -666,21 +642,6 @@ const LOADING_HINTS = [
                 {{ currentLang() === 'ar' ? 'النطاق يتجاوز السعة' : 'Scope exceeds capacity' }}
               </div>
             }
-          </div>
-        </div>
-      }
-
-      <!-- ─── ACTIVE SPRINT ALREADY RUNNING MODAL ─── -->
-      @if (editingStory(); as story) {
-        <div class="fixed inset-0 z-[70]" aria-live="polite">
-          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true"></div>
-          <div class="absolute inset-y-0 w-full max-w-xl animate-[sheetIn_0.24s_ease-out_both] sm:w-[min(520px,92vw)]"
-            [class.right-0]="currentLang() !== 'ar'" [class.left-0]="currentLang() === 'ar'">
-            <app-sprint-story-editor
-              [story]="story"
-              [lang]="currentLang()"
-              (saved)="onStorySaved($event)"
-              (cancelled)="closeStoryEditor()" />
           </div>
         </div>
       }
@@ -932,7 +893,7 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
       if (active) {
         this.hasActiveSprint.set(true);
         this.activeSprintId.set(active.sprintId);
-        this.activeSprintTitle.set(this.currentLang() === 'ar' ? (active.titleAr || active.titleEn) : (active.titleEn || active.titleAr));
+        this.activeSprintTitle.set(active.title);
         return true;
       }
 

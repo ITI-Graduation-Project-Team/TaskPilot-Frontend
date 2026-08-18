@@ -165,10 +165,8 @@ export interface ConfirmSprintResult {
 
 export interface SprintListItem {
   sprintId: string;
-  titleEn: string;
-  titleAr: string;
-  sprintGoalEn?: string;
-  sprintGoalAr?: string;
+  title: string;
+  sprintGoal?: string;
   startDate: string;
   endDate: string;
   status: 'Planned' | 'Active' | 'Completed' | 'Cancelled';
@@ -261,7 +259,7 @@ export class SprintPlanningService {
   async getAllSprints(
     projectId: string,
     page: number = 1,
-    pageSize: number = 10,
+    pageSize: number = 5,
     statusFilter?: string,
     dateFrom?: string,
     dateTo?: string
