@@ -24,6 +24,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { SprintBoardTaskDto, TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
+import { getProjectErrorMessage } from '../../../../shared/api/project-error';
 import {
   TaskAssigneePickerComponent,
   TaskAssignmentChangedEvent
@@ -2088,12 +2089,12 @@ export class BoardComponent implements OnInit, OnChanges {
     const descEn = (form.elements.namedItem('projDescEn') as HTMLTextAreaElement).value;
     const descAr = (form.elements.namedItem('projDescAr') as HTMLTextAreaElement).value;
 
-    const success = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
-    if (success) {
+    const result = await this.projectState.createNewProject(nameEn, nameAr, descEn, descAr);
+    if (result.succeeded) {
       form.reset();
       this.toastService.show('Project created successfully.', 'success');
     } else {
-      this.toastService.show('Failed to create project.', 'error');
+      this.toastService.show(getProjectErrorMessage(result.error, this.tr), 'error');
     }
   }
 

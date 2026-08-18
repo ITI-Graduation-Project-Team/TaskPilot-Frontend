@@ -779,6 +779,10 @@
     "TEAM_HANDOFF": "Team handoff",
     "TEAM_HANDOFF_DESC": "The final project opens directly into a backlog your team can refine."
   },
+  "PROJECT_ERRORS": {
+    "NAME_ALREADY_EXISTS": "A project with this name already exists in your company. Choose another name.",
+    "SAVE_FAILED": "The project could not be saved. Please try again."
+  },
   "AI_CHAT": {
     "GREETING": "Hello! I am your AI assistant.",
     "GREETING_PM": "Tell me about the project you want to build. You can describe it in text, upload technical documentation, or specify platforms and stack you prefer.",
