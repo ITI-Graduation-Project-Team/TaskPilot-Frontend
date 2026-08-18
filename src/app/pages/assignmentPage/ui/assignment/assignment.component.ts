@@ -129,9 +129,10 @@ export class AssignmentComponent implements OnInit {
       this.suggestions.set(suggestionsData);
 
       // Auto-select first task if available
-      if (suggestionsData.length > 0) {
-        this.selectedTaskId.set(suggestionsData[0].taskId);
-      }
+      // Removed to support mobile Master-Detail pattern where list should be visible first
+      // if (suggestionsData.length > 0) {
+      //   this.selectedTaskId.set(suggestionsData[0].taskId);
+      // }
 
       // Initialize local assignments with existing assignments
       const initialAssignments: { [taskId: string]: string } = {};
@@ -149,7 +150,7 @@ export class AssignmentComponent implements OnInit {
     }
   }
 
-  onTaskSelected(taskId: string) {
+  onTaskSelected(taskId: string | null) {
     this.selectedTaskId.set(taskId);
   }
 

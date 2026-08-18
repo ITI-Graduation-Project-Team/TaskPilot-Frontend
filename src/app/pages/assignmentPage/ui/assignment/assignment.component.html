@@ -77,7 +77,8 @@
     <div class="flex-1 flex min-h-0 overflow-hidden">
 
       <!-- Left: Task Feed (36%) -->
-      <div class="w-full md:w-[36%] h-full flex flex-col border-r border-border shrink-0">
+      <div class="h-full flex-col border-r border-border shrink-0 w-full md:w-[36%]"
+           [ngClass]="selectedTaskId() ? 'hidden md:flex' : 'flex'">
         <app-task-list
           [tasks]="suggestions()"
           [selectedTaskId]="selectedTaskId()"
@@ -88,7 +89,17 @@
       </div>
 
       <!-- Right: Developer Selector (64%) -->
-      <div class="flex-1 h-full flex flex-col bg-background/50 min-w-0">
+      <div class="h-full flex-col bg-background/50 min-w-0 w-full md:flex-1"
+           [ngClass]="selectedTaskId() ? 'flex' : 'hidden md:flex'">
+        
+        <!-- Mobile Back Button -->
+        <div class="md:hidden px-4 py-3 border-b border-border bg-sidebar/50 flex items-center shrink-0">
+          <button (click)="onTaskSelected(null)" class="text-sm font-bold text-primary flex items-center gap-1 transition-all active:scale-95">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            {{ currentLang === 'ar' ? 'العودة لقائمة المهام' : 'Back to Tasks' }}
+          </button>
+        </div>
+
         <app-employee-selector
           [selectedTask]="selectedTask()"
           [currentAssigneeId]="currentAssigneeId()"
