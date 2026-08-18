@@ -225,7 +225,7 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
         <div class="space-y-6" [dir]="currentLang() === 'ar' ? 'rtl' : 'ltr'">
 
           <!-- 1. KPI Executive Summary Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             
             <!-- Completion Rate Card -->
             <div class="p-5 rounded-2xl bg-surface border border-border shadow-xs hover:border-primary/30 transition-all flex flex-col justify-between">
@@ -296,26 +296,6 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                   {{ currentLang() === 'ar' ? 'دقة التقدير: ' : 'Accuracy: ' }}
                   <strong class="text-text-primary">{{ (activeRetro()?.estimationAccuracy ?? 100) | number:'1.0-1' }}%</strong>
                 </p>
-              </div>
-            </div>
-
-            <!-- Velocity Ratio Card -->
-            <div class="p-5 rounded-2xl bg-surface border border-border shadow-xs hover:border-indigo-500/30 transition-all flex flex-col justify-between">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">
-                  {{ currentLang() === 'ar' ? 'معدل السرعة (Velocity)' : 'Velocity Ratio' }}
-                </span>
-                <span class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-xs font-bold">
-                  🚀
-                </span>
-              </div>
-              <div>
-                <p class="text-3xl font-black text-text-primary tracking-tight">
-                  {{ (activeRetro()?.velocityRatio ?? 1.0) | number:'1.1-2' }}x
-                </p>
-                <span class="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 mt-1">
-                  {{ (activeRetro()?.velocityRatio ?? 1.0) >= 1.0 ? 'Optimal Output' : 'Needs Capacity Balancing' }}
-                </span>
               </div>
             </div>
 

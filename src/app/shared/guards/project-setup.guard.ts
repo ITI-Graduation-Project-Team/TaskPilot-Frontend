@@ -19,8 +19,8 @@ export const projectSetupGuard: CanActivateFn = () => {
     return true;
   }
 
-  return setupApi.get(projectId).pipe(
-    map(response => response.data.wbs.status === 'Succeeded'
+  return setupApi.getStatus(projectId).pipe(
+    map(response => response.data.isReady
       ? true
       : router.createUrlTree(['/dashboard', 'projects', projectId, 'setup'])),
     catchError(() => of(router.createUrlTree(['/dashboard', 'projects', projectId, 'setup'])))
