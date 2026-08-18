@@ -22,7 +22,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
 import { SprintRiskListComponent } from '../../../sprintRisks';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
-import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
+import { SprintBoardTaskDto, TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
 import {
   TaskAssigneePickerComponent,
@@ -334,14 +334,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.TO_DO' | translate }}</span>
-              <span class="px-2 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">{{ todo().length }}</span>
+              <span class="px-2 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">{{ columnTotal('todo') }}</span>
             </div>
             
             <div cdkDropList
                  id="todo-list"
                  [cdkDropListData]="todo()"
                  (cdkDropListDropped)="drop($event)"
-                 class="flex-1 space-y-3 p-1 rounded-lg">
+                 (scroll)="onColumnScroll('todo', $event)"
+                 class="kanban-column-scroll flex-1 min-h-[420px] max-h-[calc(100vh-23rem)] space-y-3 overflow-y-auto overscroll-contain p-1 pr-1 pb-6 scroll-pb-6 rounded-lg">
               @for (task of visibleTodo(); track task.id) {
                 <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" 
                      class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" 
@@ -417,14 +418,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   {{ emptyColumnMessage('todo') }}
                 </div>
               }
-              @if (visibleTodo().length < filteredTodo().length) {
-                <button type="button" (click)="showMore('todo')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
-                  {{ 'BOARD.SHOW_MORE' | translate: { count: remainingTasks('todo') } }}
-                </button>
-              } @else if (todoLimit() > boardPageSize && filteredTodo().length > boardPageSize) {
-                <button type="button" (click)="showLess('todo')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
-                  {{ 'BOARD.SHOW_LESS' | translate }}
-                </button>
+              @if (isColumnLoading('todo')) {
+                <div class="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-center text-[11px] font-semibold text-primary">
+                  {{ currentLang === 'ar' ? 'يتم تحميل مهام أخرى...' : 'Loading more tasks...' }}
+                </div>
               }
             </div>
           </div>
@@ -433,14 +430,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.IN_PROGRESS' | translate }}</span>
-              <span class="px-2 py-0.5 text-xs font-semibold bg-warning/15 text-warning rounded-full">{{ inProgress().length }}</span>
+              <span class="px-2 py-0.5 text-xs font-semibold bg-warning/15 text-warning rounded-full">{{ columnTotal('inProgress') }}</span>
             </div>
 
             <div cdkDropList
                  id="in-progress-list"
                  [cdkDropListData]="inProgress()"
                  (cdkDropListDropped)="drop($event)"
-                 class="flex-1 space-y-3 p-1 rounded-lg">
+                 (scroll)="onColumnScroll('inProgress', $event)"
+                 class="kanban-column-scroll flex-1 min-h-[420px] max-h-[calc(100vh-23rem)] space-y-3 overflow-y-auto overscroll-contain p-1 pr-1 pb-6 scroll-pb-6 rounded-lg">
               @for (task of visibleInProgress(); track task.id) {
                 <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
@@ -499,14 +497,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   {{ emptyColumnMessage('inProgress') }}
                 </div>
               }
-              @if (visibleInProgress().length < filteredInProgress().length) {
-                <button type="button" (click)="showMore('inProgress')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
-                  {{ 'BOARD.SHOW_MORE' | translate: { count: remainingTasks('inProgress') } }}
-                </button>
-              } @else if (inProgressLimit() > boardPageSize && filteredInProgress().length > boardPageSize) {
-                <button type="button" (click)="showLess('inProgress')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
-                  {{ 'BOARD.SHOW_LESS' | translate }}
-                </button>
+              @if (isColumnLoading('inProgress')) {
+                <div class="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-center text-[11px] font-semibold text-primary">
+                  {{ currentLang === 'ar' ? 'يتم تحميل مهام أخرى...' : 'Loading more tasks...' }}
+                </div>
               }
             </div>
           </div>
@@ -515,14 +509,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.REVIEW' | translate }}</span>
-              <span class="px-2 py-0.5 text-xs font-semibold bg-info/15 text-info rounded-full">{{ review().length }}</span>
+              <span class="px-2 py-0.5 text-xs font-semibold bg-info/15 text-info rounded-full">{{ columnTotal('review') }}</span>
             </div>
 
             <div cdkDropList
                  id="review-list"
                  [cdkDropListData]="review()"
                  (cdkDropListDropped)="drop($event)"
-                 class="flex-1 space-y-3 p-1 rounded-lg">
+                 (scroll)="onColumnScroll('review', $event)"
+                 class="kanban-column-scroll flex-1 min-h-[420px] max-h-[calc(100vh-23rem)] space-y-3 overflow-y-auto overscroll-contain p-1 pr-1 pb-6 scroll-pb-6 rounded-lg">
               @for (task of visibleReview(); track task.id) {
                 <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
@@ -581,14 +576,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   {{ emptyColumnMessage('review') }}
                 </div>
               }
-              @if (visibleReview().length < filteredReview().length) {
-                <button type="button" (click)="showMore('review')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
-                  {{ 'BOARD.SHOW_MORE' | translate: { count: remainingTasks('review') } }}
-                </button>
-              } @else if (reviewLimit() > boardPageSize && filteredReview().length > boardPageSize) {
-                <button type="button" (click)="showLess('review')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
-                  {{ 'BOARD.SHOW_LESS' | translate }}
-                </button>
+              @if (isColumnLoading('review')) {
+                <div class="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-center text-[11px] font-semibold text-primary">
+                  {{ currentLang === 'ar' ? 'يتم تحميل مهام أخرى...' : 'Loading more tasks...' }}
+                </div>
               }
             </div>
           </div>
@@ -597,14 +588,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.DONE' | translate }}</span>
-              <span class="px-2 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full">{{ done().length }}</span>
+              <span class="px-2 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full">{{ columnTotal('done') }}</span>
             </div>
 
             <div cdkDropList
                  id="done-list"
                  [cdkDropListData]="done()"
                  (cdkDropListDropped)="drop($event)"
-                 class="flex-1 space-y-3 p-1 rounded-lg">
+                 (scroll)="onColumnScroll('done', $event)"
+                 class="kanban-column-scroll flex-1 min-h-[420px] max-h-[calc(100vh-23rem)] space-y-3 overflow-y-auto overscroll-contain p-1 pr-1 pb-6 scroll-pb-6 rounded-lg">
               @for (task of visibleDone(); track task.id) {
                 <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
@@ -663,14 +655,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   {{ emptyColumnMessage('done') }}
                 </div>
               }
-              @if (visibleDone().length < filteredDone().length) {
-                <button type="button" (click)="showMore('done')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-primary hover:bg-primary/5 transition-all">
-                  {{ 'BOARD.SHOW_MORE' | translate: { count: remainingTasks('done') } }}
-                </button>
-              } @else if (doneLimit() > boardPageSize && filteredDone().length > boardPageSize) {
-                <button type="button" (click)="showLess('done')" class="w-full mt-3 py-2.5 rounded-xl border border-border bg-surface text-xs font-bold text-text-secondary hover:text-text-primary transition-all">
-                  {{ 'BOARD.SHOW_LESS' | translate }}
-                </button>
+              @if (isColumnLoading('done')) {
+                <div class="rounded-md border border-primary/10 bg-primary/5 px-3 py-2 text-center text-[11px] font-semibold text-primary">
+                  {{ currentLang === 'ar' ? 'يتم تحميل مهام أخرى...' : 'Loading more tasks...' }}
+                </div>
               }
             </div>
           </div>
@@ -1161,7 +1149,26 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       </div>
     }
-  `
+  `,
+  styles: [`
+    .kanban-column-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, var(--text-secondary) 45%, transparent) transparent;
+    }
+
+    .kanban-column-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .kanban-column-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .kanban-column-scroll::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--text-secondary) 45%, transparent);
+      border-radius: 999px;
+    }
+  `]
 })
 export class BoardComponent implements OnInit, OnChanges {
   @Input() overrideSprintId: string | null = null;
@@ -1284,6 +1291,10 @@ export class BoardComponent implements OnInit, OnChanges {
   inProgress = signal<Task[]>([]);
   review = signal<Task[]>([]);
   done = signal<Task[]>([]);
+  columnPages = signal<Record<ColumnKey, number>>({ todo: 1, inProgress: 1, review: 1, done: 1 });
+  columnTotals = signal<Record<ColumnKey, number>>({ todo: 0, inProgress: 0, review: 0, done: 0 });
+  columnHasNext = signal<Record<ColumnKey, boolean>>({ todo: false, inProgress: false, review: false, done: false });
+  columnLoading = signal<Record<ColumnKey, boolean>>({ todo: false, inProgress: false, review: false, done: false });
 
   // PM Action Modals State
   inlineAction = signal<'reject' | 'reopen' | null>(null);
@@ -1349,9 +1360,7 @@ export class BoardComponent implements OnInit, OnChanges {
     }
   }
 
-  totalTasksCount = computed(() => {
-    return this.todo().length + this.inProgress().length + this.review().length + this.done().length;
-  });
+  totalTasksCount = computed(() => Object.values(this.columnTotals()).reduce((sum, count) => sum + count, 0));
 
   activeTab = signal<'board' | 'health'>('board');
 
@@ -1359,11 +1368,6 @@ export class BoardComponent implements OnInit, OnChanges {
   boardSearch = signal('');
   priorityFilter = signal<'All' | Task['priority']>('All');
   typeFilter = signal<'All' | Task['type']>('All');
-  todoLimit = signal(this.boardPageSize);
-  inProgressLimit = signal(this.boardPageSize);
-  reviewLimit = signal(this.boardPageSize);
-  doneLimit = signal(this.boardPageSize);
-
   hasActiveBoardFilters = computed(() => {
     return Boolean(this.boardSearch().trim()) || this.priorityFilter() !== 'All' || this.typeFilter() !== 'All';
   });
@@ -1373,10 +1377,10 @@ export class BoardComponent implements OnInit, OnChanges {
   filteredReview = computed(() => this.filterTasks(this.review()));
   filteredDone = computed(() => this.filterTasks(this.done()));
 
-  visibleTodo = computed(() => this.filteredTodo().slice(0, this.todoLimit()));
-  visibleInProgress = computed(() => this.filteredInProgress().slice(0, this.inProgressLimit()));
-  visibleReview = computed(() => this.filteredReview().slice(0, this.reviewLimit()));
-  visibleDone = computed(() => this.filteredDone().slice(0, this.doneLimit()));
+  visibleTodo = computed(() => this.filteredTodo());
+  visibleInProgress = computed(() => this.filteredInProgress());
+  visibleReview = computed(() => this.filteredReview());
+  visibleDone = computed(() => this.filteredDone());
 
   visibleTasksCount = computed(() => {
     return this.visibleTodo().length + this.visibleInProgress().length + this.visibleReview().length + this.visibleDone().length;
@@ -1595,10 +1599,7 @@ export class BoardComponent implements OnInit, OnChanges {
     const projectId = this.projectState.selectedProjectId();
     if (!projectId) {
       this.isAssignedToProject.set(false);
-      this.todo.set([]);
-      this.inProgress.set([]);
-      this.review.set([]);
-      this.done.set([]);
+      this.resetBoardTaskState();
       return;
     }
 
@@ -1683,8 +1684,7 @@ export class BoardComponent implements OnInit, OnChanges {
       this.sprintStatus.set(null);
     }
 
-    // 4. Load only the tasks that belong to the sprint being viewed.
-    let tasks: any[] = [];
+    // 4. Load the first page for each board column.
     const sprintId = this.overrideSprintId
       || this.activeSprintId()
       || this.plannedSprintId()
@@ -1695,75 +1695,142 @@ export class BoardComponent implements OnInit, OnChanges {
     }
 
     if (!sprintId) {
-      tasks = [];
+      this.resetBoardTaskState();
     } else {
       try {
-        tasks = await this.tasksService.getSprintTasks(this.activeProjectId, sprintId);
-        if (this.projectState.isProjectManager()) {
-          this.activeUserStoryId = tasks[0]?.userStoryId || '';
-        }
+        await this.loadInitialSprintTaskPages(sprintId);
       } catch (err) {
         console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
-        tasks = [];
+        this.resetBoardTaskState();
       }
     }
+  }
 
-    // 5. Populate task columns from real data
-    const todoList: Task[] = [];
-    const inProgressList: Task[] = [];
-    const reviewList: Task[] = [];
-    const doneList: Task[] = [];
+  private resetBoardTaskState(): void {
+    this.todo.set([]);
+    this.inProgress.set([]);
+    this.review.set([]);
+    this.done.set([]);
+    this.activeUserStoryId = '';
+    this.columnPages.set({ todo: 1, inProgress: 1, review: 1, done: 1 });
+    this.columnTotals.set({ todo: 0, inProgress: 0, review: 0, done: 0 });
+    this.columnHasNext.set({ todo: false, inProgress: false, review: false, done: false });
+    this.columnLoading.set({ todo: false, inProgress: false, review: false, done: false });
+    this.hasAssignments.set(false);
+    this.hasUnassignedTasks.set(false);
+  }
 
-    const isPm = this.projectState.isProjectManager();
-    for (const t of tasks) {
-      const task: Task = {
-        id: t.taskId,
-        userStoryId: t.userStoryId || '',
-        title: this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn,
-        titleEn: t.titleEn,
-        titleAr: t.titleAr,
-        description: this.currentLang === 'ar' ? (t.descriptionAr || t.descriptionEn || '') : (t.descriptionEn || ''),
-        descriptionEn: t.descriptionEn,
-        descriptionAr: t.descriptionAr,
-        priority: mapPriorityToFrontend(t.priority),
-        hours: t.estimatedHours || 0,
-        actualHours: t.actualHours || 0,
-        type: mapTypeToFrontend(t.type),
-        assigneeId: t.assigneeId,
-        assigneeName: t.assigneeName,
-        isOwnedByCurrentUser: t.assigneeId === this.currentUserId(),
-        permissions: this.buildPermissions(t.assigneeId, isPm)
-      };
+  private async loadInitialSprintTaskPages(sprintId: string): Promise<void> {
+    this.resetBoardTaskState();
+    await Promise.all([
+      this.loadColumnPage('todo', sprintId, 1, true),
+      this.loadColumnPage('inProgress', sprintId, 1, true),
+      this.loadColumnPage('review', sprintId, 1, true),
+      this.loadColumnPage('done', sprintId, 1, true)
+    ]);
 
-      const title = this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn;
-      const desc = this.currentLang === 'ar' ? (t.descriptionAr || t.descriptionEn || '') : (t.descriptionEn || '');
-      task.searchString = `${title} ${desc}`.toLowerCase();
-
-      const col = mapStatusToFrontend(t.status);
-      if (col === 'todo') todoList.push(task);
-      else if (col === 'inProgress') inProgressList.push(task);
-      else if (col === 'review') reviewList.push(task);
-      else if (col === 'done') doneList.push(task);
+    if (this.projectState.isProjectManager()) {
+      const firstTask = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()][0];
+      this.activeUserStoryId = firstTask?.userStoryId || '';
     }
 
-    this.todo.set(todoList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
-    this.inProgress.set(inProgressList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
-    this.review.set(reviewList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
-    this.done.set(doneList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
-    const isTaskAssigned = (t: any): boolean => {
-      if (t.isAssigned === true) return true;
-      if (t.isAssigned === false) return false;
-      const val = t.employeeId || t.assignedTo || t.assigneeId || t.assignedEmployeeId ||
-        t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
-        t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
-        t.assignedToName || t.assignedEmployeeName;
-      return val !== undefined && val !== null && val !== '';
-    };
+    this.refreshAssignmentFlagsFromLoadedTasks();
+  }
 
-    this.hasAssignments.set(tasks.some((t: any) => isTaskAssigned(t)));
-    const unassignedExist = tasks.length > 0 && tasks.some((t: any) => !isTaskAssigned(t));
-    this.hasUnassignedTasks.set(unassignedExist);
+  private async loadNextColumnPage(column: ColumnKey): Promise<void> {
+    const sprintId = this.overrideSprintId
+      || this.activeSprintId()
+      || this.plannedSprintId()
+      || this.completedSprintId();
+
+    if (!sprintId || this.columnLoading()[column] || !this.columnHasNext()[column]) return;
+    await this.loadColumnPage(column, sprintId, this.columnPages()[column] + 1, false);
+    this.refreshAssignmentFlagsFromLoadedTasks();
+  }
+
+  private async loadColumnPage(column: ColumnKey, sprintId: string, page: number, replace: boolean): Promise<void> {
+    this.columnLoading.update(state => ({ ...state, [column]: true }));
+    try {
+      const response = await this.tasksService.getSprintTasksPage(
+        this.activeProjectId,
+        sprintId,
+        this.statusForColumn(column),
+        page,
+        this.boardPageSize
+      );
+
+      const mappedTasks = response.items.map(task => this.mapSprintBoardTask(task));
+      const taskSignal = this.taskSignalFor(column);
+
+      taskSignal.update(current => {
+        const next = replace ? mappedTasks : [...current, ...mappedTasks];
+        const unique = new Map(next.map(task => [task.id, task]));
+        return Array.from(unique.values()).sort(this.sortTasksOwnedByCurrentUser.bind(this));
+      });
+
+      this.columnPages.update(state => ({ ...state, [column]: response.page }));
+      this.columnTotals.update(state => ({ ...state, [column]: response.totalItems }));
+      this.columnHasNext.update(state => ({ ...state, [column]: response.hasNextPage }));
+    } catch (error) {
+      console.error(`Failed to load ${column} tasks page:`, error);
+    } finally {
+      this.columnLoading.update(state => ({ ...state, [column]: false }));
+    }
+  }
+
+  private mapSprintBoardTask(t: SprintBoardTaskDto): Task {
+    const isPm = this.projectState.isProjectManager();
+    const title = this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn;
+    const description = this.currentLang === 'ar' ? (t.descriptionAr || t.descriptionEn || '') : (t.descriptionEn || '');
+    return {
+      id: t.taskId,
+      userStoryId: t.userStoryId || '',
+      title,
+      titleEn: t.titleEn,
+      titleAr: t.titleAr,
+      description,
+      descriptionEn: t.descriptionEn,
+      descriptionAr: t.descriptionAr,
+      priority: mapPriorityToFrontend(t.priority),
+      hours: t.estimatedHours || 0,
+      actualHours: t.actualHours || 0,
+      type: mapTypeToFrontend(t.type),
+      assigneeId: t.assigneeId,
+      assigneeName: t.assigneeName,
+      isOwnedByCurrentUser: t.assigneeId === this.currentUserId(),
+      permissions: this.buildPermissions(t.assigneeId, isPm),
+      searchString: `${title} ${description}`.toLowerCase()
+    };
+  }
+
+  private taskSignalFor(column: ColumnKey) {
+    if (column === 'inProgress') return this.inProgress;
+    if (column === 'review') return this.review;
+    if (column === 'done') return this.done;
+    return this.todo;
+  }
+
+  private statusForColumn(column: ColumnKey): TaskItemStatus {
+    if (column === 'inProgress') return TaskItemStatus.InProgress;
+    if (column === 'review') return TaskItemStatus.Review;
+    if (column === 'done') return TaskItemStatus.Done;
+    return TaskItemStatus.ToDo;
+  }
+
+  private updateColumnTotalsAfterMove(from: ColumnKey, to: ColumnKey): void {
+    if (from === to) return;
+    this.columnTotals.update(state => ({
+      ...state,
+      [from]: Math.max(0, state[from] - 1),
+      [to]: state[to] + 1
+    }));
+  }
+
+  private refreshAssignmentFlagsFromLoadedTasks(): void {
+    const loadedTasks = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()];
+    this.hasAssignments.set(loadedTasks.some(task => Boolean(task.assigneeId)));
+    this.hasUnassignedTasks.set(loadedTasks.length > 0 && loadedTasks.some(task => !task.assigneeId));
   }
 
   private filterTasks(tasks: Task[]): Task[] {
@@ -1779,13 +1846,6 @@ export class BoardComponent implements OnInit, OnChanges {
     });
   }
 
-  private limitSignalFor(column: ColumnKey) {
-    if (column === 'inProgress') return this.inProgressLimit;
-    if (column === 'review') return this.reviewLimit;
-    if (column === 'done') return this.doneLimit;
-    return this.todoLimit;
-  }
-
   private filteredTasksFor(column: ColumnKey): Task[] {
     if (column === 'inProgress') return this.filteredInProgress();
     if (column === 'review') return this.filteredReview();
@@ -1793,20 +1853,20 @@ export class BoardComponent implements OnInit, OnChanges {
     return this.filteredTodo();
   }
 
-  showMore(column: ColumnKey) {
-    const limit = this.limitSignalFor(column);
-    const total = this.filteredTasksFor(column).length;
-    limit.set(Math.min(total, limit() + this.boardPageSize));
+  columnTotal(column: ColumnKey): number {
+    return this.columnTotals()[column];
   }
 
-  showLess(column: ColumnKey) {
-    this.limitSignalFor(column).set(this.boardPageSize);
+  isColumnLoading(column: ColumnKey): boolean {
+    return this.columnLoading()[column];
   }
 
-  remainingTasks(column: ColumnKey): number {
-    const limit = this.limitSignalFor(column)();
-    const total = this.filteredTasksFor(column).length;
-    return Math.min(this.boardPageSize, Math.max(total - limit, 0));
+  onColumnScroll(column: ColumnKey, event: Event): void {
+    const element = event.target as HTMLElement;
+    const nearBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 80;
+    if (nearBottom) {
+      void this.loadNextColumnPage(column);
+    }
   }
 
   resetBoardFilters() {
@@ -1871,6 +1931,7 @@ export class BoardComponent implements OnInit, OnChanges {
         event.previousIndex,
         event.currentIndex
       );
+      this.updateColumnTotalsAfterMove(oldStatus as ColumnKey, newStatus as ColumnKey);
 
       // Notify signals IMMEDIATELY so the UI updates instantly without waiting for backend
       this.todo.update(v => [...v]);
@@ -1904,6 +1965,7 @@ export class BoardComponent implements OnInit, OnChanges {
           event.currentIndex,
           event.previousIndex
         );
+        this.updateColumnTotalsAfterMove(newStatus as ColumnKey, oldStatus as ColumnKey);
         
         // Notify signals of rollback
         this.todo.update(v => [...v]);

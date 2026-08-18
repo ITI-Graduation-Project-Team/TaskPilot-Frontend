@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AssignmentTeamMember, AssignTaskResult } from '../../entities/assignment.entity';
 import { AssignmentService } from '../../shared/api/assignment.service';
@@ -20,7 +20,7 @@ export interface TaskAssignmentChangedEvent {
   },
   template: `
     <div class="relative min-w-0 max-w-full" (click)="$event.stopPropagation()">
-      <button type="button" (click)="toggle()" [disabled]="saving()"
+      <button #triggerButton type="button" (click)="toggle()" [disabled]="saving()"
         class="flex min-w-0 max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-semibold text-text-primary transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-wait disabled:opacity-60"
         [attr.aria-expanded]="open()" aria-haspopup="dialog"
         [title]="assigneeName || (isArabic ? 'تعيين أو تغيير الموظف' : 'Assign or change assignee')">
@@ -41,8 +41,8 @@ export interface TaskAssignmentChangedEvent {
       @if (open()) {
         <button type="button" class="fixed inset-0 z-40 cursor-default" (click)="close()" aria-label="Close"></button>
         <section role="dialog" [attr.aria-label]="isArabic ? 'اختيار الموظف' : 'Choose assignee'"
-          class="absolute end-0 z-50 w-[min(20rem,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-border bg-surface shadow-xl sm:w-80"
-          [ngClass]="panelPlacement === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'">
+          class="fixed z-50 overflow-hidden rounded-lg border border-border bg-surface shadow-xl"
+          [ngStyle]="panelStyle()">
           <header class="flex items-center justify-between border-b border-border px-4 py-3">
             <h4 class="text-sm font-bold text-text-primary">{{ isArabic ? 'اختيار الموظف' : 'Choose assignee' }}</h4>
             <button type="button" (click)="close()" class="rounded p-1 text-text-secondary hover:bg-background hover:text-text-primary" [title]="isArabic ? 'إغلاق' : 'Close'">
@@ -101,6 +101,8 @@ export interface TaskAssignmentChangedEvent {
   `
 })
 export class TaskAssigneePickerComponent {
+  @ViewChild('triggerButton') triggerButton?: ElementRef<HTMLButtonElement>;
+
   @Input({ required: true }) sprintId!: string;
   @Input({ required: true }) taskId!: string;
   @Input() assigneeId?: string;
@@ -118,6 +120,7 @@ export class TaskAssigneePickerComponent {
   saving = signal(false);
   errorMessage = signal('');
   team = signal<AssignmentTeamMember[]>([]);
+  panelStyle = signal<Record<string, string>>({});
   search = '';
 
   get isArabic(): boolean { return this.language === 'ar'; }
@@ -132,7 +135,9 @@ export class TaskAssigneePickerComponent {
     if (this.open()) { this.close(); return; }
     this.open.set(true);
     this.search = '';
+    this.updatePanelPosition();
     await this.loadTeam();
+    this.updatePanelPosition();
   }
 
   close(): void {
@@ -150,6 +155,38 @@ export class TaskAssigneePickerComponent {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (this.open()) this.updatePanelPosition();
+  }
+
+  private updatePanelPosition(): void {
+    const trigger = this.triggerButton?.nativeElement;
+    if (!trigger || typeof window === 'undefined') return;
+
+    const rect = trigger.getBoundingClientRect();
+    const gap = 8;
+    const viewportPadding = 8;
+    const width = Math.min(320, window.innerWidth - viewportPadding * 2);
+    const left = Math.min(
+      Math.max(viewportPadding, rect.right - width),
+      Math.max(viewportPadding, window.innerWidth - width - viewportPadding)
+    );
+
+    const spaceBelow = window.innerHeight - rect.bottom - gap - viewportPadding;
+    const spaceAbove = rect.top - gap - viewportPadding;
+    const openAbove = this.panelPlacement === 'above' || (spaceBelow < 260 && spaceAbove > spaceBelow);
+    const availableHeight = Math.max(180, Math.min(360, openAbove ? spaceAbove : spaceBelow));
+
+    this.panelStyle.set({
+      width: `${width}px`,
+      left: `${left}px`,
+      top: openAbove ? 'auto' : `${rect.bottom + gap}px`,
+      bottom: openAbove ? `${window.innerHeight - rect.top + gap}px` : 'auto',
+      maxHeight: `${availableHeight}px`
+    });
   }
 
   async select(member: AssignmentTeamMember): Promise<void> {

@@ -66,6 +66,16 @@ export interface SprintBoardTaskDto {
   assigneeName?: string;
 }
 
+export interface PagedSprintBoardTasksDto {
+  items: SprintBoardTaskDto[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -76,6 +86,32 @@ export class TasksService {
       `/projects/${projectId}/sprints/${sprintId}/tasks`
     );
     return this.extractSprintTasks(data);
+  }
+
+  async getSprintTasksPage(
+    projectId: string,
+    sprintId: string,
+    status: TaskItemStatus,
+    page: number = 1,
+    pageSize: number = 8
+  ): Promise<PagedSprintBoardTasksDto> {
+    const { data } = await apiClient.get<any>(
+      `/projects/${projectId}/sprints/${sprintId}/tasks/paged`,
+      {
+        params: { status: TaskItemStatus[status], page, pageSize },
+        headers: { 'X-Skip-Loader': 'true' }
+      }
+    );
+    const payload = data?.data ?? data;
+    return {
+      items: payload?.items ?? [],
+      page: payload?.page ?? page,
+      pageSize: payload?.pageSize ?? pageSize,
+      totalItems: payload?.totalItems ?? 0,
+      totalPages: payload?.totalPages ?? 0,
+      hasPreviousPage: payload?.hasPreviousPage ?? page > 1,
+      hasNextPage: payload?.hasNextPage ?? false
+    };
   }
 
   /**
