@@ -52,7 +52,7 @@ export class SprintViewComponent {
   isSprintsLoading = signal(true);
 
   currentPage = signal(1);
-  pageSize = signal(10);
+  pageSize = signal(5);
   totalItems = signal(0);
   currentFilters = signal<{ status: string; dateFrom: string; dateTo: string }>({ status: 'All', dateFrom: '', dateTo: '' });
 

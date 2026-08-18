@@ -83,7 +83,7 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                   class="w-full flex items-center justify-between gap-3 bg-sidebar border border-border hover:border-primary/40 text-text-primary text-xs font-bold rounded-xl px-4 py-2.5 outline-none transition-all cursor-pointer shadow-xs focus:ring-2 focus:ring-primary/20 text-left">
                   <span class="truncate flex-1">
                     @if (selectedSprint()) {
-                      {{ currentLang() === 'ar' ? (selectedSprint()!.titleAr || selectedSprint()!.titleEn) : selectedSprint()!.titleEn }}
+                      {{ selectedSprint()!.title }}
                     } @else {
                       {{ currentLang() === 'ar' ? 'اختر السبرينت' : 'Select Sprint' }}
                     }
@@ -109,7 +109,7 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                           [class.text-text-primary]="selectedSprintId() !== sp.sprintId"
                           [class.font-semibold]="selectedSprintId() !== sp.sprintId">
                           <span class="truncate pr-3">
-                            {{ currentLang() === 'ar' ? (sp.titleAr || sp.titleEn) : sp.titleEn }}
+                            {{ sp.title }}
                           </span>
                           @if (sp.status === 'Completed') {
                             <span class="shrink-0 flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
