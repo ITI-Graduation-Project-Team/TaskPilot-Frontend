@@ -60,6 +60,15 @@ export const routes: Routes = [
     data: { roles: ['ProjectManager'] }
   },
   {
+    path: 'admin/subscription-plans',
+    loadComponent: () =>
+      import('./pages/subscriptionPage/ui/admin-coming-soon/admin-coming-soon.component').then(
+        (m) => m.AdminComingSoonComponent
+      ),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Admin'] }
+  },
+  {
     path: 'payment/callback',
     loadComponent: () =>
       import('./pages/paymentCallbackPage/ui/payment-callback/payment-callback.component').then(

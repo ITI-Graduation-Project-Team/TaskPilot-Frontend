@@ -37,7 +37,7 @@ export class SelectRoleComponent {
   selectRole(role: 'Employee' | 'ProjectManager') {
     const idToken = sessionStorage.getItem('googleIdToken');
     if (!idToken) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/register'], { queryParams: { role } });
       return;
     }
 

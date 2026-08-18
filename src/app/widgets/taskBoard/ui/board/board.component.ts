@@ -24,6 +24,10 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
+import {
+  TaskAssigneePickerComponent,
+  TaskAssignmentChangedEvent
+} from '../../../../features/task-assignee-picker/task-assignee-picker.component';
 
 interface Task {
   id: string;
@@ -58,7 +62,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, TaskAssigneePickerComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       
@@ -373,6 +377,19 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
+                  @if (projectState.isProjectManager() && sprintStatus() === 'Planned' && plannedSprintId()) {
+                    <div class="mb-3 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-md bg-background px-2.5 py-2">
+                      <span class="shrink-0 text-[10px] font-bold uppercase text-text-secondary">{{ currentLang === 'ar' ? 'المسؤول' : 'Assignee' }}</span>
+                      <app-task-assignee-picker
+                        class="min-w-0 justify-self-end"
+                        [sprintId]="plannedSprintId()!"
+                        [taskId]="task.id"
+                        [assigneeId]="task.assigneeId"
+                        [assigneeName]="task.assigneeName"
+                        [language]="currentLang"
+                        (assignmentChanged)="onTaskAssignmentChanged(task, $event)" />
+                    </div>
+                  }
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
                     <span class="text-xs text-text-secondary flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -808,29 +825,53 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
                   <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الموظف المعين' : 'Assigned Employee' }}</label>
-                    <div [ngClass]="modalTask().assigneeId ? 'border-border bg-surface' : 'border-dashed border-gray-300 bg-gray-50/50'" 
-                         class="px-4 py-3.5 border text-text-primary rounded-xl flex items-center gap-3 shadow-sm transition-all duration-200">
-                      
-                      @if (modalTask().assigneeId) {
-                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase shadow-inner">
-                          {{ modalTask().assigneeName!.charAt(0) }}
+                    @if (sprintStatus() === 'Planned' && plannedSprintId() && modalTask().id) {
+                      <div class="rounded-xl border border-border bg-surface px-4 py-3.5 shadow-sm">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                          <div class="min-w-0">
+                            <p class="truncate text-[13px] font-bold text-text-primary">
+                              {{ modalTask().assigneeName || (currentLang === 'ar' ? 'غير معين' : 'Unassigned') }}
+                            </p>
+                            <p class="text-[10px] text-text-secondary">
+                              {{ currentLang === 'ar' ? 'يمكن تغييره طالما السبرنت لم يبدأ' : 'Can be changed while the sprint is planned' }}
+                            </p>
+                          </div>
+                          <app-task-assignee-picker
+                            class="min-w-0 max-w-[13rem]"
+                            [sprintId]="plannedSprintId()!"
+                            [taskId]="modalTask().id"
+                            [assigneeId]="modalTask().assigneeId"
+                            [assigneeName]="modalTask().assigneeName"
+                            [language]="currentLang"
+                            panelPlacement="above"
+                            (assignmentChanged)="onTaskAssignmentChanged(modalTask(), $event)" />
                         </div>
-                        <div class="flex flex-col">
-                          <span class="font-bold text-[13px]">{{ modalTask().assigneeName }}</span>
-                          <span class="text-[10px] text-text-secondary">{{ currentLang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
-                        </div>
-                      } @else {
-                        <div class="w-8 h-8 rounded-full bg-gray-100/80 text-gray-400 flex items-center justify-center border border-dashed border-gray-300">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
-                        <div class="flex flex-col">
-                          <span class="font-bold text-[13px] text-gray-500">{{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}</span>
-                          <span class="text-[10px] text-gray-400">{{ currentLang === 'ar' ? 'في انتظار التعيين' : 'Awaiting assignment' }}</span>
-                        </div>
-                      }
-                    </div>
+                      </div>
+                    } @else {
+                      <div [ngClass]="modalTask().assigneeId ? 'border-border bg-surface' : 'border-dashed border-gray-300 bg-gray-50/50'"
+                           class="px-4 py-3.5 border text-text-primary rounded-xl flex min-w-0 items-center gap-3 shadow-sm transition-all duration-200">
+
+                        @if (modalTask().assigneeId) {
+                          <div class="w-8 h-8 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase shadow-inner">
+                            {{ modalTask().assigneeName!.charAt(0) }}
+                          </div>
+                          <div class="flex min-w-0 flex-col">
+                            <span class="truncate font-bold text-[13px]">{{ modalTask().assigneeName }}</span>
+                            <span class="text-[10px] text-text-secondary">{{ currentLang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
+                          </div>
+                        } @else {
+                          <div class="w-8 h-8 shrink-0 rounded-full bg-gray-100/80 text-gray-400 flex items-center justify-center border border-dashed border-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div class="flex min-w-0 flex-col">
+                            <span class="truncate font-bold text-[13px] text-gray-500">{{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}</span>
+                            <span class="text-[10px] text-gray-400">{{ currentLang === 'ar' ? 'في انتظار التعيين' : 'Awaiting assignment' }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 } @else {
                   <div class="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
@@ -989,7 +1030,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <div class="w-full max-w-md h-[82vh] flex flex-col" (click)="$event.stopPropagation()">
           <app-agile-coach-chat
             [taskItemId]="chatTask()!.id"
-            [taskTitle]="currentLang === 'ar' ? (chatTask()!.titleAr || chatTask()!.titleEn) : chatTask()!.titleEn"
+            [taskTitle]="chatTask()!.title"
             [lang]="currentLang"
             [isOpen]="true"
             [loadInitialSummary]="true"
@@ -1166,6 +1207,29 @@ export class BoardComponent implements OnInit, OnChanges {
       canDownloadAttachments: canInteract
     };
   }
+
+  onTaskAssignmentChanged(task: Task, assignment: TaskAssignmentChangedEvent): void {
+    const applyAssignment = (item: Task): Task => ({
+      ...item,
+      assigneeId: assignment.employeeId,
+      assigneeName: assignment.employeeName,
+      isOwnedByCurrentUser: assignment.employeeId === this.currentUserId(),
+      permissions: this.buildPermissions(assignment.employeeId, this.projectState.isProjectManager())
+    });
+
+    this.todo.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+    this.inProgress.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+    this.review.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+    this.done.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+
+    if (this.modalTask().id === task.id) {
+      this.modalTask.update(item => applyAssignment(item));
+    }
+
+    const allTasks = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()];
+    this.hasAssignments.set(allTasks.some(item => Boolean(item.assigneeId)));
+    this.hasUnassignedTasks.set(allTasks.length > 0 && allTasks.some(item => !item.assigneeId));
+  }
   activeSprintId = signal<string | null>(null);
   plannedSprintId = signal<string | null>(null);
   completedSprintId = signal<string | null>(null);
@@ -1204,11 +1268,11 @@ export class BoardComponent implements OnInit, OnChanges {
   }
 
   getTaskTitle(task: Task): string {
-    return this.currentLang === 'ar' ? (task.titleAr || task.titleEn || task.title) : (task.titleEn || task.titleAr || task.title);
+    return task.title || '';
   }
 
   getTaskDescription(task: Task): string {
-    return this.currentLang === 'ar' ? (task.descriptionAr || task.descriptionEn || task.description) : (task.descriptionEn || task.descriptionAr || task.description);
+    return task.description || '';
   }
 
   private sortTasksOwnedByCurrentUser(a: Task, b: Task): number {
@@ -1625,6 +1689,10 @@ export class BoardComponent implements OnInit, OnChanges {
       || this.activeSprintId()
       || this.plannedSprintId()
       || this.completedSprintId();
+
+    if (this.projectState.isProjectManager() && this.sprintStatus() === 'Planned' && sprintId) {
+      void this.assignmentService.getAssignmentTeam(sprintId).catch(() => undefined);
+    }
 
     if (!sprintId) {
       tasks = [];

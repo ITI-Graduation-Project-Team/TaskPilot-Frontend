@@ -15,10 +15,27 @@ export interface RecommendedStackDto {
   reasoning: string;
 }
 
+export type SkillGapType = 'MissingSkill' | 'ProficiencyGap' | 'CapacityGap' | 'Unclassified';
+export type SkillGapSeverity = 'Low' | 'Medium' | 'High';
+
+export interface SkillGapDto {
+  skill: string;
+  technology: string;
+  gapType: SkillGapType;
+  severity: SkillGapSeverity;
+  requiredLevel?: string;
+  availableLevel?: string;
+  requiredCount?: number;
+  availableCount: number;
+  availableFte: number;
+  summary: string;
+  recommendation: string;
+}
+
 export interface TechStackSuggestionDto {
   primaryStack: RecommendedStackDto;
   idealStack: RecommendedStackDto;
-  gapAnalysis: string[];
+  gapAnalysis: SkillGapDto[];
   platformTargets: string[];
   projectType: string;
 }
@@ -27,6 +44,7 @@ export interface SetupJobDto {
   status: BackgroundSetupStatus;
   jobId?: string;
   attemptCount: number;
+  itemsProcessed: number;
   itemsCreated: number;
   secondaryItemsCreated: number;
   itemsSkipped: number;
@@ -39,6 +57,11 @@ export interface ProjectSetupDto {
   projectId: string;
   projectName: string;
   overallStatus: ProjectSetupOverallStatus;
+  teamContext: {
+    activeMemberCount: number;
+    membersWithSkillsCount: number;
+    teamStackAvailable: boolean;
+  };
   techStack: {
     status: TechStackSetupStatus;
     suggestion?: TechStackSuggestionDto;
@@ -53,8 +76,6 @@ export interface ProjectSetupDto {
 
 export interface ConfirmTechStackRequest {
   techStack: string[];
-  platformTargets: string[];
-  projectType: string;
 }
 
 interface ApiResponse<T> { data: T; succeeded: boolean; message?: string; }
@@ -77,6 +98,32 @@ function normalizeRecommendedStack(source: any): RecommendedStackDto | undefined
   };
 }
 
+function normalizeGap(source: unknown): SkillGapDto | undefined {
+  if (typeof source === 'string' && source.trim()) {
+    return {
+      skill: '', technology: '', gapType: 'Unclassified', severity: 'Medium',
+      availableCount: 0, availableFte: 0, summary: source.trim(), recommendation: source.trim(),
+    };
+  }
+  if (!source || typeof source !== 'object') return undefined;
+  const gap = source as any;
+  const summary = value(gap, 'summary', 'Summary');
+  if (typeof summary !== 'string' || !summary.trim()) return undefined;
+  return {
+    skill: value(gap, 'skill', 'Skill') ?? '',
+    technology: value(gap, 'technology', 'Technology') ?? '',
+    gapType: value(gap, 'gapType', 'GapType') ?? 'Unclassified',
+    severity: value(gap, 'severity', 'Severity') ?? 'Medium',
+    requiredLevel: value(gap, 'requiredLevel', 'RequiredLevel') ?? undefined,
+    availableLevel: value(gap, 'availableLevel', 'AvailableLevel') ?? undefined,
+    requiredCount: value(gap, 'requiredCount', 'RequiredCount') ?? undefined,
+    availableCount: value(gap, 'availableCount', 'AvailableCount') ?? 0,
+    availableFte: value(gap, 'availableFte', 'AvailableFte') ?? 0,
+    summary: summary.trim(),
+    recommendation: value(gap, 'recommendation', 'Recommendation') ?? summary.trim(),
+  };
+}
+
 /** Supports both current camelCase responses and legacy suggestions stored as PascalCase JsonElement. */
 export function normalizeProjectSetup(source: any): ProjectSetupDto {
   const techStackSource = value(source, 'techStack', 'TechStack') ?? {};
@@ -85,11 +132,15 @@ export function normalizeProjectSetup(source: any): ProjectSetupDto {
   const idealStack = normalizeRecommendedStack(value(suggestionSource, 'idealStack', 'IdealStack'));
   const confirmedStack = value(techStackSource, 'confirmedStack', 'ConfirmedStack');
   const platforms = value(techStackSource, 'platforms', 'Platforms');
+  const teamContextSource = value(source, 'teamContext', 'TeamContext') ?? {};
+  const activeMemberCount = value(teamContextSource, 'activeMemberCount', 'ActiveMemberCount') ?? 0;
+  const membersWithSkillsCount = value(teamContextSource, 'membersWithSkillsCount', 'MembersWithSkillsCount') ?? 0;
+  const rawGaps = value(suggestionSource, 'gapAnalysis', 'GapAnalysis');
 
   const suggestion = primaryStack && idealStack ? {
     primaryStack,
     idealStack,
-    gapAnalysis: stringList(value(suggestionSource, 'gapAnalysis', 'GapAnalysis')),
+    gapAnalysis: Array.isArray(rawGaps) ? rawGaps.map(normalizeGap).filter((gap): gap is SkillGapDto => !!gap) : [],
     platformTargets: stringList(value(suggestionSource, 'platformTargets', 'PlatformTargets')),
     projectType: value(suggestionSource, 'projectType', 'ProjectType') ?? 'Other',
   } : undefined;
@@ -98,6 +149,7 @@ export function normalizeProjectSetup(source: any): ProjectSetupDto {
     status: value(jobSource, 'status', 'Status') ?? 'NotStarted',
     jobId: value(jobSource, 'jobId', 'JobId'),
     attemptCount: value(jobSource, 'attemptCount', 'AttemptCount') ?? 0,
+    itemsProcessed: value(jobSource, 'itemsProcessed', 'ItemsProcessed') ?? 0,
     itemsCreated: value(jobSource, 'itemsCreated', 'ItemsCreated') ?? 0,
     secondaryItemsCreated: value(jobSource, 'secondaryItemsCreated', 'SecondaryItemsCreated') ?? 0,
     itemsSkipped: value(jobSource, 'itemsSkipped', 'ItemsSkipped') ?? 0,
@@ -110,6 +162,11 @@ export function normalizeProjectSetup(source: any): ProjectSetupDto {
     projectId: value(source, 'projectId', 'ProjectId') ?? '',
     projectName: value(source, 'projectName', 'ProjectName') ?? '',
     overallStatus: value(source, 'overallStatus', 'OverallStatus') ?? 'NeedsTechStack',
+    teamContext: {
+      activeMemberCount,
+      membersWithSkillsCount,
+      teamStackAvailable: value(teamContextSource, 'teamStackAvailable', 'TeamStackAvailable') ?? (activeMemberCount > 0 && membersWithSkillsCount > 0),
+    },
     techStack: {
       status: value(techStackSource, 'status', 'Status') ?? 'NotStarted',
       suggestion,

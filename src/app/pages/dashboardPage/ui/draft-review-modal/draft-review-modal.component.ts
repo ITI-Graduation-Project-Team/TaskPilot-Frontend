@@ -52,20 +52,10 @@ import { ToastService } from '../../../../shared/services/toast.service';
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Tech Stack</label>
                 <input type="text" [(ngModel)]="draft.techStack" required placeholder="e.g. Angular, Node.js"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Platform Targets</label>
-                <input type="text" [(ngModel)]="draft.platformTargets" required placeholder="e.g. Web, Mobile"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Project Type</label>
-                <input type="text" [(ngModel)]="draft.projectType" required placeholder="e.g. Fitness Tracking"
                        class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
               </div>
             </div>

@@ -34,6 +34,7 @@ export interface ProjectEmployee {
   isDeactivated?: boolean;
   deactivationReason?: string;
   deactivatedAt?: string;
+  skills?: string[];
 }
 
 export interface ApiResponse<T> {

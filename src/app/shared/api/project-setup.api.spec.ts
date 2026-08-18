@@ -18,13 +18,40 @@ describe('normalizeProjectSetup', () => {
       },
       wbs: { status: 'NotStarted' },
       skills: { status: 'NotStarted' },
+      TeamContext: { ActiveMemberCount: 2, MembersWithSkillsCount: 1 },
     });
 
     expect(setup.techStack.suggestion?.primaryStack.techStack).toEqual(['Angular', '.NET']);
     expect(setup.techStack.suggestion?.primaryStack.reasoning).toBe('Matches the team');
     expect(setup.techStack.suggestion?.idealStack.reasoning).toBe('Best fit');
     expect(setup.techStack.suggestion?.platformTargets).toEqual(['Web']);
-    expect(setup.techStack.suggestion?.gapAnalysis).toEqual(['Redis']);
+    expect(setup.teamContext).toEqual({ activeMemberCount: 2, membersWithSkillsCount: 1, teamStackAvailable: true });
+    expect(setup.techStack.suggestion?.gapAnalysis).toEqual([expect.objectContaining({
+      gapType: 'Unclassified', severity: 'Medium', summary: 'Redis', recommendation: 'Redis',
+    })]);
+  });
+
+  it('normalizes structured skill gaps from the new setup contract', () => {
+    const setup = normalizeProjectSetup({
+      teamContext: { activeMemberCount: 3, membersWithSkillsCount: 2, teamStackAvailable: true },
+      techStack: {
+        status: 'Suggested',
+        suggestion: {
+          primaryStack: { techStack: ['Angular'], reasoning: 'Team fit' },
+          idealStack: { techStack: ['Angular', 'Redis'], reasoning: 'Ideal fit' },
+          gapAnalysis: [{
+            skill: 'Redis', gapType: 'CapacityGap', severity: 'High', requiredCount: 2,
+            availableCount: 1, availableFte: 0.5, summary: 'Limited Redis capacity', recommendation: 'Add capacity',
+          }],
+        },
+      },
+      wbs: {}, skills: {},
+    });
+
+    expect(setup.techStack.suggestion?.gapAnalysis[0]).toEqual(expect.objectContaining({
+      skill: 'Redis', gapType: 'CapacityGap', severity: 'High', requiredCount: 2,
+      availableCount: 1, availableFte: 0.5,
+    }));
   });
 
   it('drops an incomplete suggestion instead of exposing unsafe nested values', () => {
@@ -35,5 +62,25 @@ describe('normalizeProjectSetup', () => {
     });
 
     expect(setup.techStack.suggestion).toBeUndefined();
+  });
+
+  it('normalizes skill coverage counters used by partial-success retries', () => {
+    const setup = normalizeProjectSetup({
+      techStack: {},
+      wbs: {},
+      skills: {
+        Status: 'PartiallySucceeded',
+        ItemsProcessed: 91,
+        ItemsCreated: 82,
+        ItemsSkipped: 9,
+      },
+    });
+
+    expect(setup.skills).toEqual(expect.objectContaining({
+      status: 'PartiallySucceeded',
+      itemsProcessed: 91,
+      itemsCreated: 82,
+      itemsSkipped: 9,
+    }));
   });
 });

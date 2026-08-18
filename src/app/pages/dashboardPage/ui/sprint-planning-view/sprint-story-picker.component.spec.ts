@@ -2,15 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { UserStoryDto } from '../../../../shared/api/backlog.service';
 import { SprintStoryPickerComponent } from './sprint-story-picker.component';
 
-const makeStory = (id: string, titleEn: string, hours: number): UserStoryDto => ({
+const makeStory = (id: string, title: string, hours: number): UserStoryDto => ({
   id,
   projectId: 'project-1',
-  titleEn,
-  titleAr: '',
-  descriptionEn: '',
-  descriptionAr: '',
-  acceptanceCriteriaEn: '',
-  acceptanceCriteriaAr: '',
+  title,
+  description: '',
+  acceptanceCriteria: '',
   priority: 'Medium',
   status: 'New',
   tasks:
@@ -19,7 +16,7 @@ const makeStory = (id: string, titleEn: string, hours: number): UserStoryDto => 
           {
             id: `task-${id}`,
             userStoryId: id,
-            titleEn: 'Task',
+            title: 'Task',
             estimatedHours: hours,
             effortSize: 'Small',
             type: 'Feature',

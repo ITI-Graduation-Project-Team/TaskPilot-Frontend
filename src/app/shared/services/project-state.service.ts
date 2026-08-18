@@ -46,6 +46,7 @@ export class ProjectStateService {
   readonly loading = this._loading.asReadonly();
   readonly projectEmployeeCount = this._projectEmployeeCount.asReadonly();
 
+
   readonly selectedProject = computed(() => {
     const id = this._selectedProjectId();
     if (!id) return null;
@@ -57,6 +58,10 @@ export class ProjectStateService {
       const stored = localStorage.getItem('localCompletedIds');
       if (stored) {
         try { this._localCompletedIds.set(JSON.parse(stored)); } catch (e) { }
+      }
+      const savedProjectId = localStorage.getItem('selectedProjectId');
+      if (savedProjectId) {
+        this._selectedProjectId.set(savedProjectId);
       }
     }
     this.initializeState();
@@ -213,32 +218,30 @@ export class ProjectStateService {
     }
   }
 
-  async loadProjectsPaged(page: number, pageSize: number): Promise<{ projects: ProjectInfo[], totalCount: number }> {
-    try {
-      const isPM = this._isProjectManager();
-      const userId = this._userId();
-      const companyId = this._userCompanyId();
-      if (!userId) return { projects: [], totalCount: 0 };
+  async loadProjectsPaged(page: number, pageSize: number, statusFilter: string = '', searchQuery: string = ''): Promise<{ projects: ProjectInfo[], totalCount: number }> {
+    const isPM = this._isProjectManager();
+    const userId = this._userId();
+    const companyId = this._userCompanyId();
+    if (!userId) return { projects: [], totalCount: 0 };
 
-      // The deployed company/paged endpoint can include projects managed by other
-      // PMs. Use the ownership-filtered company endpoint as the source of truth and
-      // paginate its result locally until every environment runs the fixed backend.
+    try {
       const isProjectManagerRequest = isPM && !!companyId;
-      const endpoint = isProjectManagerRequest
-        ? `/Projects/company/${companyId}`
-        : `/employees/${userId}/projects/paged?page=${page}&pageSize=${pageSize}`;
+      const endpointBase = isProjectManagerRequest
+        ? `/Projects/company/${companyId}/paged`
+        : `/employees/${userId}/projects/paged`;
+
+      let endpoint = `${endpointBase}?page=${page}&pageSize=${pageSize}`;
+      if (statusFilter) {
+        endpoint += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+      }
+      if (searchQuery) {
+        endpoint += `&searchQuery=${encodeURIComponent(searchQuery)}`;
+      }
 
       const { data } = await apiClient.get<any>(endpoint);
-      const allItems: any[] = isProjectManagerRequest
-        ? (data.data || [])
-        : (data.data?.items || []);
-      const totalCount = isProjectManagerRequest
-        ? allItems.length
-        : (data.data?.totalItems || 0);
-      const items = isProjectManagerRequest
-        ? allItems.slice((page - 1) * pageSize, page * pageSize)
-        : allItems;
-      
+      const items: any[] = data.data?.items || [];
+      const totalCount = data.data?.totalItems || 0;
+
       const filtered: ProjectInfo[] = items.map(p => ({
         id: p.id,
         name: p.name || p.nameEn || '',
@@ -259,7 +262,7 @@ export class ProjectStateService {
         activeSprintsCount: p.activeSprintsCount || 0,
         setupStatus: p.setupStatus || 'NeedsTechStack'
       }));
-      
+
       return { projects: filtered, totalCount };
     } catch (e) {
       console.warn('Failed to load paginated projects:', e);
@@ -284,9 +287,8 @@ export class ProjectStateService {
 
   async loadProjectEmployeeCount(projectId: string): Promise<number> {
     try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees`);
-      const list = data.data || data || [];
-      const count = Array.isArray(list) ? list.length : 0;
+      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees/count`);
+      const count = typeof data.data === 'number' ? data.data : (typeof data === 'number' ? data : 0);
       this._projectEmployeeCount.set(count);
       return count;
     } catch (e) {

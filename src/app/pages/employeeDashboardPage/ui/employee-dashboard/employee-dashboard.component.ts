@@ -542,7 +542,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               </div>
             </div>
 
-          } @else if (projectState.projects().length === 0 && activeTab() !== 'profile') {
+          } @else if (projectState.projects().length === 0 && !['profile', 'policies-chat', 'settings'].includes(activeTab())) {
             <!-- No project assigned -->
             <div class="flex items-center justify-center h-full min-h-[50vh]">
               <div class="text-center max-w-md p-8 rounded-3xl border shadow-sm animate-[fadeUp_0.4s_ease_both]"

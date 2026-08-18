@@ -9,8 +9,10 @@ const read = (value: any, camelCase: string, pascalCase: string): any =>
 
 /**
  * Maps both the legacy RequirementSession payload and the newer discovery DTO.
- * A completeness score is informative only; the backend can finalize a session
- * only after it has entered Planning and built FinalRequirements.
+ * Preserve the original confirmation policy used by the chat: Planning, no
+ * remaining questions, >=85% completeness, or an explicit server-ready flag.
+ * The finalize endpoint remains authoritative and prepares a missing legacy
+ * FinalRequirements snapshot before creating the project.
  */
 export function getRequirementSessionUiState(response: any): RequirementSessionUiState {
   const data = response?.data ?? response;
@@ -42,13 +44,21 @@ export function getRequirementSessionUiState(response: any): RequirementSessionU
     read(readinessReport, 'readyForFinalization', 'ReadyForFinalization') ??
     read(legacyReport, 'readyForPlanning', 'ReadyForPlanning');
 
+  const hasStarted =
+    completenessScore > 0 ||
+    status != null ||
+    finalRequirements != null ||
+    serverReady != null ||
+    questionPool.length > 0;
+
   return {
     completenessScore,
     pendingQuestions,
     readyForFinalization:
-      status === 'Planning' &&
-      finalRequirements != null &&
-      serverReady !== false &&
-      pendingQuestions.length === 0,
+      hasStarted &&
+      (status === 'Planning' ||
+        pendingQuestions.length === 0 ||
+        completenessScore >= 85 ||
+        serverReady === true),
   };
 }

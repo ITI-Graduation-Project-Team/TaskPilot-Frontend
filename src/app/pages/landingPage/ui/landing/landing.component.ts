@@ -46,7 +46,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   get buttonLink(): string {
     return this.authService.isLoggedIn()
       ? getRedirectForRole(this.authService.getUserRole(), isProfileCompleted())
-      : '/select-role';
+      : '/register';
   }
 
   constructor(
@@ -75,7 +75,7 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.quoteInterval = setInterval(() => {
       // Trigger fade out
       this.isFading.set(true);
-      
+
       // Wait for fade out animation to finish (e.g., 500ms), then change quote and fade in
       setTimeout(() => {
         this.currentQuoteIndex.update(idx => (idx + 1) % this.quotes.length);
