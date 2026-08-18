@@ -709,19 +709,6 @@ export class AiChatModalComponent implements AfterViewChecked {
     this.projectNameError.set(null);
     this.isGeneratingDraft.set(true);
     try {
-      // Re-read the authoritative session immediately before finalization. This
-      // prevents a stale 85%/no-visible-questions UI state from calling finalize
-      // before the backend has built FinalRequirements.
-      const isPrepared = await this.pollStatus(activeChatId);
-      if (!isPrepared) {
-        this.showNamePrompt.set(false);
-        this.toastService.show(
-          'Requirements are not ready yet. Please complete the remaining requirements questions and try again.',
-          'error',
-        );
-        return;
-      }
-
       const res = await this.aiRequirements.finalizeSession(activeChatId, {
         projectNameEn: nameEn, projectNameAr: nameAr,
         companyId: companyId,
@@ -732,7 +719,17 @@ export class AiChatModalComponent implements AfterViewChecked {
       const finalizeResult = res.data || res;
       if (finalizeResult && finalizeResult.projectId) {
         this.showNamePrompt.set(false);
-        this.draftGenerated.emit({ projectId: finalizeResult.projectId, draft: finalizeResult, chatId: activeChatId });
+        this.draftGenerated.emit({
+          projectId: finalizeResult.projectId,
+          draft: {
+            ...finalizeResult,
+            nameEn,
+            nameAr,
+            descriptionEn: descEn,
+            descriptionAr: descAr,
+          },
+          chatId: activeChatId,
+        });
       }
     } catch (err: unknown) {
       console.error(err);

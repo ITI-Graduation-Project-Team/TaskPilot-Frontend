@@ -72,4 +72,47 @@ describe('ProjectStateService', () => {
     ]);
     expect(getSpy).toHaveBeenCalledWith(`/Projects/company/${companyId}/paged?page=2&pageSize=5`);
   });
+
+  it('registers a created project from the POST response without reloading the project list', async () => {
+    const createdProjectId = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({
+      data: { data: { id: createdProjectId, status: 'Draft' } },
+    } as any);
+    const getSpy = vi.spyOn(apiClient, 'get');
+
+    const service = new ProjectStateService();
+    (service as any)._userId.set(managerId);
+    (service as any)._userCompanyId.set(companyId);
+
+    const result = await service.createNewProject('Fast project', 'مشروع سريع', 'Description', 'الوصف');
+
+    expect(result.succeeded).toBe(true);
+    expect(postSpy).toHaveBeenCalledOnce();
+    expect(getSpy).not.toHaveBeenCalled();
+    expect(service.selectedProjectId()).toBe(createdProjectId);
+    expect(service.selectedProject()?.nameEn).toBe('Fast project');
+  });
+
+  it('updates the local project after PUT without reloading the project list', async () => {
+    vi.spyOn(apiClient, 'put').mockResolvedValue({ data: {} } as any);
+    const getSpy = vi.spyOn(apiClient, 'get');
+
+    const service = new ProjectStateService();
+    (service as any)._userId.set(managerId);
+    (service as any)._userCompanyId.set(companyId);
+    service.registerSavedProject({ id: savedProjectId, nameEn: 'Before' });
+
+    const result = await service.updateProject(
+      savedProjectId,
+      'After',
+      'بعد',
+      'Updated description',
+      'وصف محدث',
+    );
+
+    expect(result.succeeded).toBe(true);
+    expect(getSpy).not.toHaveBeenCalled();
+    expect(service.selectedProject()?.nameEn).toBe('After');
+    expect(service.selectedProject()?.descriptionEn).toBe('Updated description');
+  });
 });

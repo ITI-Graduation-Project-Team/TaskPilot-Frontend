@@ -829,8 +829,15 @@ export class DashboardComponent implements OnInit {
 
   async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
     this.dashboardService.isAiChatOpen.set(false);
-    await this.projectState.loadProjects();
-    this.projectState.setSelectedProject(event.projectId);
+    this.projectState.registerSavedProject({
+      id: event.projectId,
+      nameEn: event.draft.nameEn || event.draft.projectName,
+      nameAr: event.draft.nameAr,
+      descriptionEn: event.draft.descriptionEn,
+      descriptionAr: event.draft.descriptionAr,
+      status: event.draft.status,
+      setupStatus: event.draft.setupStatus,
+    });
   }
 
   onProjectSaved() {
