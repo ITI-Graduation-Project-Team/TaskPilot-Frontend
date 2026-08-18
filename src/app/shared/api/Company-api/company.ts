@@ -15,6 +15,14 @@ export interface EmployeeSuggestionModel {
   statusMessage: string;
 }
 
+export interface EmployeeStatisticsModel {
+  totalEmployees: number;
+  activeEmployees: number;
+  deactivatedEmployees: number;
+  availableEmployees: number;
+  employeesInProjects: number;
+}
+
 export interface CompanyEmployeeModel {
   employeeId: string;
   fullName: string;
@@ -44,9 +52,24 @@ export interface DeactivationBlock {
   severity: 'Warning' | 'High' | 'Critical';
 }
 
+export interface AffectedSprintDto {
+  projectId: string;
+  projectName: string;
+  sprintId: string;
+  sprintTitle: string;
+  taskCount: number;
+}
+
 export interface AnalysisResultDto {
   isAllowed: boolean;
   blocks: DeactivationBlock[];
+  hasPlannedSprintTasks?: boolean;
+  affectedSprints?: AffectedSprintDto[];
+}
+
+export interface ReactivationAnalysisResultDto {
+  hasRestorableProjects: boolean;
+  restorableProjectNames: string[];
 }
 
 export interface DeactivateEmployeeRequest {
@@ -57,6 +80,12 @@ export interface DeactivateEmployeeResult {
   code: string;
   message: string;
   data: any;
+  succeeded?: boolean;
+  isSuccess?: boolean;
+}
+
+export interface TerminateEmployeeRequest {
+  reason?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -89,6 +118,12 @@ export interface PaginatedEmployeeResponse {
   message: string;
 }
 
+export interface UpdateWorkingConfigDto {
+  workingHoursPerDay: number;
+  workingDaysMask: number;
+  defaultCapacityBufferPercentage: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -113,6 +148,13 @@ export class CompanyService {
 
   async searchEmployees(query: string): Promise<{ succeeded: boolean; data?: EmployeeSuggestionModel[]; message: string }> {
     const response = await apiClient.get<{ succeeded: boolean; data?: EmployeeSuggestionModel[]; message: string }>(`/companies/employees/search?query=${encodeURIComponent(query)}`, {
+      withCredentials: false
+    });
+    return response.data;
+  }
+
+  async getEmployeeStatistics(): Promise<{ succeeded: boolean; data?: EmployeeStatisticsModel; message: string }> {
+    const response = await apiClient.get<{ succeeded: boolean; data?: EmployeeStatisticsModel; message: string }>('/companies/employees/statistics', {
       withCredentials: false
     });
     return response.data;
@@ -171,6 +213,21 @@ export class CompanyService {
     return response.data;
   }
 
+  async analyzeReactivation(employeeId: string): Promise<{ data: ReactivationAnalysisResultDto }> {
+    const response = await apiClient.get<{ data: ReactivationAnalysisResultDto }>(`/employees/${employeeId}/reactivation-analysis`);
+    return response.data;
+  }
+
+  async reactivateEmployee(employeeId: string, request: { restorePreviousProjects: boolean }): Promise<{ succeeded: boolean; data?: any; message: string }> {
+    const response = await apiClient.post<{ succeeded: boolean; data?: any; message: string }>(`/employees/${employeeId}/reactivate`, request);
+    return response.data;
+  }
+
+  async terminateEmployee(employeeId: string, request: TerminateEmployeeRequest): Promise<any> {
+    const response = await apiClient.post(`/employees/${employeeId}/terminate`, request);
+    return response.data;
+  }
+
   async resendInvitation(invitationId: string): Promise<{ succeeded: boolean; message: string }> {
     const response = await apiClient.post<{ succeeded: boolean; message: string }>(`/companies/invitations/${invitationId}/resend`, {}, {
       withCredentials: false
@@ -182,6 +239,16 @@ export class CompanyService {
     const response = await apiClient.delete<{ succeeded: boolean; message: string }>(`/companies/invitations/${invitationId}`, {
       withCredentials: false
     });
+    return response.data;
+  }
+
+  async getWorkingConfig(companyId: string): Promise<{ succeeded: boolean; data?: UpdateWorkingConfigDto; message: string }> {
+    const response = await apiClient.get<{ succeeded: boolean; data?: UpdateWorkingConfigDto; message: string }>(`/companies/${companyId}/working-config`);
+    return response.data;
+  }
+
+  async updateWorkingConfig(companyId: string, config: UpdateWorkingConfigDto): Promise<{ succeeded: boolean; message: string }> {
+    const response = await apiClient.put<{ succeeded: boolean; message: string }>(`/companies/${companyId}/working-config`, config);
     return response.data;
   }
 }

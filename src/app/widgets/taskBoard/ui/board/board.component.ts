@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, effect, untracked, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
@@ -16,17 +16,18 @@ import { getUserIdFromToken } from '../../../../shared/lib/auth/cookie.helper';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { RetrospectiveModalComponent } from '../../../../pages/dashboardPage/ui/retrospective-modal/retrospective-modal.component';
 import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
-// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.component';
-// import { AgileCoachSummaryComponent } from '../agile-coach-summary/agile-coach-summary.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
-import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
+import {
+  TaskAssigneePickerComponent,
+  TaskAssignmentChangedEvent
+} from '../../../../features/task-assignee-picker/task-assignee-picker.component';
 
 interface Task {
   id: string;
@@ -41,6 +42,18 @@ interface Task {
   hours: number;
   actualHours?: number;
   type: 'Feature' | 'Bug' | 'Refactor';
+  assigneeId?: string;
+  assigneeName?: string;
+  isOwnedByCurrentUser: boolean;
+  permissions: {
+    canDrag: boolean;
+    canView: boolean;
+    canSummarize: boolean;
+    canEdit: boolean;
+    canComment: boolean;
+    canDownloadAttachments: boolean;
+  };
+  searchString?: string;
 }
 
 type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
@@ -49,7 +62,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, SprintHealthDashboardComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, TaskAssigneePickerComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       
@@ -109,7 +122,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </button>
           </form>
         </div>
-      } @else if (!isAssignedToProject() || isBoardReadonly()) {
+      } @else if (!isAssignedToProject() || projectState.selectedProject()?.status === 'Archived' || projectState.selectedProject()?.status === 'Completed') {
         <!-- Warning Panel for unassigned employee or archived project -->
         <div class="bg-surface border border-warning/30 p-8 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center space-y-4 max-w-xl mx-auto my-12 transition-colors duration-200">
           <div class="w-16 h-16 bg-warning/10 text-warning rounded-2xl flex items-center justify-center shadow-inner">
@@ -134,23 +147,12 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
             {{ 'BOARD.KANBAN_BOARD' | translate }}
           </button>
-          @if (projectState.isProjectManager() && sprintStatus() !== 'Planned') {
-            <button (click)="activeTab.set('health')"
-                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
-                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
-                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary flex items-center gap-2">
-              @if (sprintStatus() === 'Active') {
-                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
-              }
-              {{ 'BOARD.HEALTH_PULSE' | translate }}
-            </button>
-          }
         </div>
 
         @if (activeTab() === 'board') {
           <!-- Metrics overview -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.TOTAL_TASKS' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ totalTasksCount() }}</h3>
@@ -162,7 +164,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
 
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.IN_PROGRESS' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ inProgress().length }}</h3>
@@ -174,7 +176,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
 
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.UNDER_REVIEW' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ review().length }}</h3>
@@ -187,7 +189,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
 
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-colors duration-200">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
             <div>
               <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.COMPLETED' | translate }}</p>
               <h3 class="text-text-primary text-2xl font-bold mt-1">{{ done().length }}</h3>
@@ -217,21 +219,33 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             <p class="text-text-secondary text-sm mt-1">{{ 'BOARD.MANAGE_MONITOR' | translate }}</p>
           </div>
           
-          <div class="flex items-center gap-3">
+          <div class="flex items-center flex-wrap gap-3">
             @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
-              <button (click)="goToAssignment()" 
-                      class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
+              @if (hasUnassignedTasks()) {
+                <button (click)="goToAssignment()" 
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                  👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
+                </button>
+              } @else {
+                <button (click)="goToAssignment()"
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                  👥 {{ currentLang === 'ar' ? 'إعادة التعيين' : 'Reassign Tasks' }}
+                </button>
+              }
+              <button (click)="cancelSprintClicked()" 
+                      class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                ❌ {{ 'BOARD.CANCEL_SPRINT' | translate }}
               </button>
               <button (click)="startSprint()" 
-                      [disabled]="projectState.projectEmployeeCount() === 0"
-                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل للمشروع قبل بدء السبرينت' : 'At least one employee must be assigned to this project before starting a sprint') : ''"
+                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
                       class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 ▶ {{ 'BOARD.START_SPRINT' | translate }}
               </button>
             }
+
             @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
-              <button (click)="completeSprintFromBoard()" 
+              <button (click)="completeSprintBtnClicked()" 
                       class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
                 {{ 'BOARD.COMPLETE_SPRINT' | translate }}
               </button>
@@ -314,10 +328,10 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
         <!-- Kanban columns -->
-        <div cdkDropListGroup class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div cdkDropListGroup class="flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 pb-4 hide-scrollbar" style="scrollbar-width: thin;">
           
           <!-- TO DO -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.TO_DO' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-border text-text-secondary rounded-full">{{ todo().length }}</span>
@@ -329,7 +343,11 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleTodo(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" 
+                     class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" 
+                     [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" 
+                     [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag"
+                     [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -348,8 +366,30 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
+                  @if (projectState.isProjectManager() && sprintStatus() === 'Planned' && plannedSprintId()) {
+                    <div class="mb-3 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-md bg-background px-2.5 py-2">
+                      <span class="shrink-0 text-[10px] font-bold uppercase text-text-secondary">{{ currentLang === 'ar' ? 'المسؤول' : 'Assignee' }}</span>
+                      <app-task-assignee-picker
+                        class="min-w-0 justify-self-end"
+                        [sprintId]="plannedSprintId()!"
+                        [taskId]="task.id"
+                        [assigneeId]="task.assigneeId"
+                        [assigneeName]="task.assigneeName"
+                        [language]="currentLang"
+                        (assignmentChanged)="onTaskAssignmentChanged(task, $event)" />
+                    </div>
+                  }
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
                     <span class="text-xs text-text-secondary flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -358,15 +398,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
+                        </button>
+                      }
                     </div>
                   </div>
                 </div>
@@ -388,7 +430,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
 
           <!-- IN PROGRESS -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.IN_PROGRESS' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-warning/15 text-warning rounded-full">{{ inProgress().length }}</span>
@@ -400,7 +442,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleInProgress(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -419,6 +461,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -429,15 +480,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
+                        </button>
+                      }
                     </div>
                   </div>
                 </div>
@@ -459,7 +512,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
 
           <!-- UNDER REVIEW -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.REVIEW' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-info/15 text-info rounded-full">{{ review().length }}</span>
@@ -471,7 +524,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleReview(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -490,6 +543,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -500,23 +562,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      @if (projectState.isProjectManager() && !isBoardReadonly()) {
-                        <button (click)="pmAcceptReview(task)" class="text-xs text-white bg-success px-3 py-1 rounded-md font-semibold hover:bg-success/80 shadow-sm transition-colors">
-                          {{ 'BOARD.ACCEPT' | translate }}
-                        </button>
-                        <button (click)="openRejectModal(task)" class="text-xs text-white bg-error px-3 py-1 rounded-md font-semibold hover:bg-error/80 shadow-sm transition-colors">
-                          {{ 'BOARD.REJECT' | translate }}
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -538,7 +594,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
 
           <!-- DONE -->
-          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px]">
+          <div class="flex flex-col bg-sidebar border border-border rounded-2xl p-4 min-h-[500px] min-w-[85vw] md:min-w-[45vw] lg:min-w-0 shrink-0">
             <div class="flex items-center justify-between mb-4 px-1">
               <span class="text-sm font-bold text-text-primary uppercase tracking-wider">{{ 'BOARD.DONE' | translate }}</span>
               <span class="px-2 py-0.5 text-xs font-semibold bg-success/15 text-success rounded-full">{{ done().length }}</span>
@@ -550,7 +606,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                  (cdkDropListDropped)="drop($event)"
                  class="flex-1 space-y-3 p-1 rounded-lg">
               @for (task of visibleDone(); track task.id) {
-                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly()" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly()" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly()">
+                <div cdkDrag [cdkDragDisabled]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" class="bg-surface border border-border p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200" [class.cursor-grab]="!hasActiveBoardFilters() && !isBoardReadonly() && task.permissions.canDrag" [class.cursor-default]="hasActiveBoardFilters() || isBoardReadonly() || !task.permissions.canDrag" [class.opacity-75]="!task.permissions.canDrag">
                   <div class="flex items-center justify-between mb-2">
                     <span class="px-2 py-0.5 text-[10px] font-bold rounded"
                           [ngClass]="{
@@ -569,6 +625,15 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ ('BOARD.' + task.priority.toUpperCase()) | translate }}
                     </span>
                   </div>
+                  @if (task.isOwnedByCurrentUser) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-2 px-2 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" />
+                        <path d="M19.4 21a8.9 8.9 0 0 0-14.8 0" />
+                      </svg>
+                      {{ 'BOARD.MY_TASK' | translate }}
+                    </span>
+                  }
                   <h4 class="font-bold text-text-primary text-[15px] mb-1 line-through opacity-75" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskTitle(task) }}</h4>
                   <p class="text-text-secondary text-xs line-clamp-2 mb-3 opacity-75" [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">{{ getTaskDescription(task) }}</p>
                   <div class="flex items-center justify-between border-t border-border pt-3 mt-3">
@@ -579,20 +644,17 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                       {{ task.hours }}h
                     </span>
                     <div class="flex items-center gap-3">
-                      @if (!projectState.isProjectManager()) {
+                      @if (task.permissions.canSummarize) {
                         <button (click)="openSummarizeChat(task)" class="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           {{ 'BOARD.SUMMARIZE' | translate }}
                         </button>
                       }
-                      @if (projectState.isProjectManager() && !isBoardReadonly()) {
-                        <button (click)="openReopenModal(task)" class="text-xs text-white bg-warning px-3 py-1 rounded-md font-semibold hover:bg-warning/80 shadow-sm transition-colors">
-                          {{ 'BOARD.REOPEN' | translate }}
+                      @if (task.permissions.canView) {
+                        <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
+                          {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
                         </button>
                       }
-                      <button (click)="openEditModal(task)" class="text-xs text-primary font-semibold hover:underline">
-                        {{ projectState.isProjectManager() && !isBoardReadonly() ? ('BOARD.EDIT' | translate) : ('BOARD.VIEW' | translate) }}
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -613,10 +675,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
         </div>
-        } @else if (activeTab() === 'health' && (activeSprintId() || completedSprintId())) {
-          <app-sprint-health-dashboard [sprintId]="(activeSprintId() || completedSprintId())!"></app-sprint-health-dashboard>
         }
       }
+    
     </div>
 
     <!-- Edit/Add Task Modal Overlay -->
@@ -655,7 +716,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               
               <!-- LEFT COLUMN: Main Task Info & Form -->
               <div class="space-y-6 flex flex-col">
-                @if (projectState.isProjectManager()) {
+                @if (projectState.isProjectManager() && !isBoardReadonly()) {
                   <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'عنوان المهمة' : 'Task Title' }}</label>
                     <input type="text" [(ngModel)]="modalTask().title" 
@@ -761,6 +822,57 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                             [ngClass]="currentLang === 'ar' ? 'left-4' : 'right-4'">{{ currentLang === 'ar' ? 'ساعات' : 'hrs' }}</span>
                     </div>
                   </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'الموظف المعين' : 'Assigned Employee' }}</label>
+                    @if (sprintStatus() === 'Planned' && plannedSprintId() && modalTask().id) {
+                      <div class="rounded-xl border border-border bg-surface px-4 py-3.5 shadow-sm">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                          <div class="min-w-0">
+                            <p class="truncate text-[13px] font-bold text-text-primary">
+                              {{ modalTask().assigneeName || (currentLang === 'ar' ? 'غير معين' : 'Unassigned') }}
+                            </p>
+                            <p class="text-[10px] text-text-secondary">
+                              {{ currentLang === 'ar' ? 'يمكن تغييره طالما السبرنت لم يبدأ' : 'Can be changed while the sprint is planned' }}
+                            </p>
+                          </div>
+                          <app-task-assignee-picker
+                            class="min-w-0 max-w-[13rem]"
+                            [sprintId]="plannedSprintId()!"
+                            [taskId]="modalTask().id"
+                            [assigneeId]="modalTask().assigneeId"
+                            [assigneeName]="modalTask().assigneeName"
+                            [language]="currentLang"
+                            panelPlacement="above"
+                            (assignmentChanged)="onTaskAssignmentChanged(modalTask(), $event)" />
+                        </div>
+                      </div>
+                    } @else {
+                      <div [ngClass]="modalTask().assigneeId ? 'border-border bg-surface' : 'border-dashed border-gray-300 bg-gray-50/50'"
+                           class="px-4 py-3.5 border text-text-primary rounded-xl flex min-w-0 items-center gap-3 shadow-sm transition-all duration-200">
+
+                        @if (modalTask().assigneeId) {
+                          <div class="w-8 h-8 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase shadow-inner">
+                            {{ modalTask().assigneeName!.charAt(0) }}
+                          </div>
+                          <div class="flex min-w-0 flex-col">
+                            <span class="truncate font-bold text-[13px]">{{ modalTask().assigneeName }}</span>
+                            <span class="text-[10px] text-text-secondary">{{ currentLang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
+                          </div>
+                        } @else {
+                          <div class="w-8 h-8 shrink-0 rounded-full bg-gray-100/80 text-gray-400 flex items-center justify-center border border-dashed border-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div class="flex min-w-0 flex-col">
+                            <span class="truncate font-bold text-[13px] text-gray-500">{{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}</span>
+                            <span class="text-[10px] text-gray-400">{{ currentLang === 'ar' ? 'في انتظار التعيين' : 'Awaiting assignment' }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
                 } @else {
                   <div class="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
                     <div class="p-6 space-y-4">
@@ -814,22 +926,67 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
 
                 <!-- Buttons inside left column if it's editing -->
                 @if (isEditing()) {
-                  <div class="flex items-center space-x-3 pt-6 border-t border-border mt-6">
-                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
-                      <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
-                        {{ currentLang === 'ar' ? 'حذف المهمة' : 'Delete Task' }}
-                      </button>
-                    }
-                    <div class="flex-1"></div>
-                    <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
-                      {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
-                    </button>
-                    @if (projectState.isProjectManager() && !isBoardReadonly()) {
-                      <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
-                        {{ currentLang === 'ar' ? 'حفظ التغييرات' : 'Save Changes' }}
-                      </button>
-                    }
-                  </div>
+                  @if (!inlineAction()) {
+                    <div class="pt-6 border-t border-border mt-6">
+                      <!-- PM Actions for Review and Done columns -->
+                      @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                        @if (originalColumn === 'review') {
+                          <div class="flex items-center gap-3 w-full pb-5 mb-5 border-b border-border border-dashed">
+                            <button (click)="pmAcceptReview(modalTask()); closeModal()" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all hover:-translate-y-px">
+                              {{ currentLang === 'ar' ? 'قبول (مكتملة)' : 'Accept (Done)' }}
+                            </button>
+                            <button (click)="inlineAction.set('reject')" class="flex-1 py-3 bg-error hover:bg-error/90 text-white text-sm font-bold rounded-xl shadow-md shadow-error/20 transition-all hover:-translate-y-px">
+                              {{ currentLang === 'ar' ? 'رفض (قيد التنفيذ)' : 'Reject (In Progress)' }}
+                            </button>
+                          </div>
+                        } @else if (originalColumn === 'done') {
+                          @if (sprintStatus() !== 'Completed') {
+                            <div class="flex items-center gap-3 w-full pb-5 mb-5 border-b border-border border-dashed">
+                              <button (click)="inlineAction.set('reopen')" class="w-full py-3 bg-warning hover:bg-warning/90 text-white text-sm font-bold rounded-xl shadow-md shadow-warning/20 transition-all hover:-translate-y-px">
+                                {{ currentLang === 'ar' ? 'إعادة فتح (قيد التنفيذ)' : 'Reopen (In Progress)' }}
+                              </button>
+                            </div>
+                          }
+                        }
+                      }
+                      
+                      <div class="flex items-center space-x-3">
+                        @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                          <button (click)="deleteTask()" class="px-5 py-3 text-error hover:bg-error/10 font-bold rounded-xl transition-colors">
+                            {{ currentLang === 'ar' ? 'حذف المهمة' : 'Delete Task' }}
+                          </button>
+                        }
+                        <div class="flex-1"></div>
+                        <button (click)="closeModal()" class="px-5 py-3 border border-border text-text-secondary hover:text-text-primary hover:bg-surface font-bold rounded-xl transition-colors">
+                          {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+                        </button>
+                        @if (projectState.isProjectManager() && !isBoardReadonly()) {
+                          <button (click)="saveTask()" class="px-6 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all hover:-translate-y-px">
+                            {{ currentLang === 'ar' ? 'حفظ التغييرات' : 'Save Changes' }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="flex flex-col gap-4 p-5 rounded-xl border border-border bg-surface mt-6 animate-[fadeIn_0.2s_ease_both]">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-text-primary text-sm">{{ inlineAction() === 'reject' ? (currentLang === 'ar' ? 'رفض المهمة' : 'Reject Task') : (currentLang === 'ar' ? 'إعادة فتح المهمة' : 'Reopen Task') }}</h4>
+                        <button (click)="inlineAction.set(null)" class="text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-background transition-colors">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                      <div class="space-y-3">
+                        <textarea [(ngModel)]="inlineReasonEn" rows="2" placeholder="{{ currentLang === 'ar' ? 'السبب (بالإنجليزية)' : 'Reason (English)' }}" class="w-full px-4 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm resize-none"></textarea>
+                        <textarea [(ngModel)]="inlineReasonAr" rows="2" dir="rtl" placeholder="{{ currentLang === 'ar' ? 'السبب (بالعربية)' : 'Reason (Arabic)' }}" class="w-full px-4 py-2.5 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm resize-none"></textarea>
+                      </div>
+                      <div class="flex justify-end gap-3 mt-1">
+                        <button (click)="inlineAction.set(null)" class="px-5 py-2.5 text-sm text-text-secondary font-bold hover:text-text-primary transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
+                        <button (click)="confirmInlineAction()" [disabled]="!inlineReasonEn && !inlineReasonAr" class="px-6 py-2.5 text-sm text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0" [ngClass]="inlineAction() === 'reject' ? 'bg-error hover:bg-error/90 shadow-error/20' : 'bg-warning hover:bg-warning/90 shadow-warning/20'">
+                          {{ currentLang === 'ar' ? 'تأكيد' : 'Confirm' }}
+                        </button>
+                      </div>
+                    </div>
+                  }
                 }
               </div>
 
@@ -838,7 +995,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                 <div class="flex flex-col h-full border-border lg:border-l lg:pl-8 space-y-6 lg:pt-0 pt-6 border-t lg:border-t-0">
                   <!-- Task Discussion Component -->
                   <div class="flex-1 min-h-[400px] flex flex-col bg-background rounded-2xl border border-border shadow-inner overflow-hidden">
-                    <app-task-discussion [taskId]="modalTask().id" class="flex-1" />
+                    <app-task-discussion [taskId]="modalTask().id" [isReadonly]="isBoardReadonly()" class="flex-1" />
                   </div>
                 </div>
               }
@@ -873,13 +1030,100 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         <div class="w-full max-w-md h-[82vh] flex flex-col" (click)="$event.stopPropagation()">
           <app-agile-coach-chat
             [taskItemId]="chatTask()!.id"
-            [taskTitle]="currentLang === 'ar' ? (chatTask()!.titleAr || chatTask()!.titleEn) : chatTask()!.titleEn"
+            [taskTitle]="chatTask()!.title"
             [lang]="currentLang"
             [isOpen]="true"
             [loadInitialSummary]="true"
             (closed)="closeSummarizeChat()"
             class="h-full"
           />
+        </div>
+      </div>
+    }
+
+    <!-- ─── COMPLETE SPRINT MODAL ─── -->
+    @if (showCompleteSprintModal()) {
+      <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
+        <div class="bg-surface border border-border rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[scaleUp_0.25s_ease_both]" [dir]="currentLang === 'ar' ? 'rtl' : 'ltr'">
+          <!-- Header -->
+          <div class="px-6 py-5 border-b border-border bg-sidebar/50 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-text-primary tracking-wide">{{ currentLang === 'ar' ? 'إنهاء السبرنت' : 'Complete Sprint' }}</h2>
+                <p class="text-[11px] text-text-secondary uppercase tracking-wider font-semibold">{{ currentLang === 'ar' ? 'تأكيد المهام المتبقية' : 'Confirm remaining tasks' }}</p>
+              </div>
+            </div>
+            <button (click)="showCompleteSprintModal.set(false)" class="p-2 text-text-secondary hover:text-text-primary hover:bg-background rounded-xl transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <div class="p-6 space-y-6 overflow-y-auto">
+            <!-- Unfinished Tasks Info -->
+            <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4">
+              <h3 class="text-sm font-bold text-amber-600 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {{ currentLang === 'ar' ? 'مهام سيتم نقلها للباك لوج' : 'Tasks moving to Backlog' }}
+              </h3>
+              <ul class="text-xs text-text-secondary space-y-1.5 list-disc list-inside marker:text-amber-500/50">
+                @if (todo().length > 0) {
+                  <li><strong class="text-text-primary">{{ todo().length }}</strong> {{ currentLang === 'ar' ? 'مهام (ToDo) ستعود للباك لوج' : 'tasks (ToDo) will move to Backlog' }}</li>
+                }
+                @if (inProgress().length > 0) {
+                  <li><strong class="text-text-primary">{{ inProgress().length }}</strong> {{ currentLang === 'ar' ? 'مهام (In Progress) ستعود للباك لوج (سيتم إزالة تعيينها)' : 'tasks (In Progress) will move to Backlog (assignments cleared)' }}</li>
+                }
+                @if (todo().length === 0 && inProgress().length === 0) {
+                  <li>{{ currentLang === 'ar' ? 'لا يوجد مهام غير مكتملة' : 'No unfinished tasks' }}</li>
+                }
+              </ul>
+            </div>
+
+            <!-- Review Action Required -->
+            @if (review().length > 0) {
+              <div class="space-y-4">
+                <div>
+                  <h3 class="text-sm font-bold text-text-primary">{{ currentLang === 'ar' ? 'مهام تحتاج قرارك (المراجعة)' : 'Tasks in Review - Action Required' }}</h3>
+                  <p class="text-xs text-text-secondary mt-1">{{ review().length }} {{ currentLang === 'ar' ? 'مهام بانتظار قرارك كمراجع. ماذا تود أن تفعل بها؟' : 'tasks are waiting for your review. What would you like to do with them?' }}</p>
+                </div>
+                
+                <div class="grid sm:grid-cols-2 gap-3">
+                  <!-- Accept All -->
+                  <button (click)="completeSprintFromBoard('AcceptAll')" class="group p-4 rounded-2xl border-2 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition-all active:scale-[0.98]">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div class="font-bold text-emerald-700 text-sm mb-1">{{ currentLang === 'ar' ? 'قبول الجميع' : 'Accept All' }}</div>
+                    <div class="text-[11px] text-emerald-600/80">{{ currentLang === 'ar' ? 'تحويل لـ Done' : 'Mark as Done' }}</div>
+                  </button>
+
+                  <!-- Reject All -->
+                  <button (click)="completeSprintFromBoard('SendToBacklog')" class="group p-4 rounded-2xl border-2 border-error/20 bg-error/5 hover:border-error/40 hover:bg-error/10 text-left transition-all active:scale-[0.98]">
+                    <div class="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                    </div>
+                    <div class="font-bold text-error text-sm mb-1">{{ currentLang === 'ar' ? 'رفض الجميع' : 'Reject All' }}</div>
+                    <div class="text-[11px] text-error/80">{{ currentLang === 'ar' ? 'إرسال للباك لوج' : 'Send to Backlog' }}</div>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="p-6 border-t border-border flex items-center justify-end gap-3 bg-surface shrink-0">
+            <button (click)="showCompleteSprintModal.set(false)" class="px-5 py-2.5 text-text-secondary hover:text-text-primary text-sm font-bold transition-colors">
+              {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
+            </button>
+            @if (review().length === 0) {
+              <button (click)="completeSprintFromBoard()" class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl shadow-md transition-all hover:-translate-y-px">
+                {{ currentLang === 'ar' ? 'إنهاء السبرنت' : 'Complete Sprint' }}
+              </button>
+            }
+          </div>
         </div>
       </div>
     }
@@ -906,77 +1150,13 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
               {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
             </button>
             <button
-              (click)="showNoEmployeesModal.set(false); navigateToTeam.emit()"
+              (click)="showNoEmployeesModal.set(false); goToTeam()"
               class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
               </svg>
               {{ currentLang === 'ar' ? 'تعيين الموظفين' : 'Assign Employees' }}
             </button>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- ─── PM REJECT MODAL ─── -->
-    @if (rejectModalOpen()) {
-      <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
-          <div class="flex items-center gap-3 border-b border-border pb-3">
-            <div class="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-bold text-text-primary">{{ currentLang === 'ar' ? 'رفض المهمة' : 'Reject Task' }}</h3>
-          </div>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالإنجليزية)' : 'Reason (English)' }}</label>
-              <textarea [(ngModel)]="rejectReasonEn" rows="3"
-                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-error focus:ring-2 focus:ring-error/20 transition-all resize-none text-sm"></textarea>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالعربية)' : 'Reason (Arabic)' }}</label>
-              <textarea [(ngModel)]="rejectReasonAr" rows="3" dir="rtl"
-                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-error focus:ring-2 focus:ring-error/20 transition-all resize-none text-sm text-right"></textarea>
-            </div>
-          </div>
-          <div class="flex items-center justify-end gap-3 pt-2">
-            <button (click)="closeRejectModal()" class="px-4 py-2 text-text-secondary hover:text-text-primary text-sm font-semibold transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
-            <button (click)="pmConfirmReject()" [disabled]="!rejectReasonEn && !rejectReasonAr" class="px-5 py-2 bg-error hover:bg-error/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">{{ currentLang === 'ar' ? 'رفض وإعادة قيد التنفيذ' : 'Reject to In Progress' }}</button>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- ─── PM REOPEN MODAL ─── -->
-    @if (reopenModalOpen()) {
-      <div class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-[scaleUp_0.25s_ease_both]">
-          <div class="flex items-center gap-3 border-b border-border pb-3">
-            <div class="w-10 h-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-bold text-text-primary">{{ currentLang === 'ar' ? 'إعادة فتح المهمة' : 'Reopen Task' }}</h3>
-          </div>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالإنجليزية)' : 'Reason (English)' }}</label>
-              <textarea [(ngModel)]="reopenReasonEn" rows="3"
-                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-warning focus:ring-2 focus:ring-warning/20 transition-all resize-none text-sm"></textarea>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1.5">{{ currentLang === 'ar' ? 'السبب (بالعربية)' : 'Reason (Arabic)' }}</label>
-              <textarea [(ngModel)]="reopenReasonAr" rows="3" dir="rtl"
-                        class="w-full px-4 py-3 border border-border bg-background text-text-primary rounded-xl outline-none focus:border-warning focus:ring-2 focus:ring-warning/20 transition-all resize-none text-sm text-right"></textarea>
-            </div>
-          </div>
-          <div class="flex items-center justify-end gap-3 pt-2">
-            <button (click)="closeReopenModal()" class="px-4 py-2 text-text-secondary hover:text-text-primary text-sm font-semibold transition-colors">{{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}</button>
-            <button (click)="pmConfirmReopen()" [disabled]="!reopenReasonEn && !reopenReasonAr" class="px-5 py-2 bg-warning hover:bg-warning/90 text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">{{ currentLang === 'ar' ? 'إعادة الفتح' : 'Reopen Task' }}</button>
           </div>
         </div>
       </div>
@@ -988,9 +1168,11 @@ export class BoardComponent implements OnInit, OnChanges {
   @Input() overrideSprintStatus: string | null = null;
   @Output() backToSprints = new EventEmitter<void>();
   @Output() sprintStatusChanged = new EventEmitter<void>();
-  @Output() navigateToTeam = new EventEmitter<void>();
+
+  @ViewChild(TaskDiscussionComponent) discussionComponent!: TaskDiscussionComponent;
 
   showNoEmployeesModal = signal(false);
+  showCompleteSprintModal = signal(false);
   private backlogService = inject(BacklogService);
   private sprintService = inject(SprintPlanningService);
   private assignmentService = inject(AssignmentService);
@@ -998,12 +1180,9 @@ export class BoardComponent implements OnInit, OnChanges {
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
   private tasksService = inject(TasksService);
   public tr = inject(TranslateService);
-
-  isBoardReadonly = computed(() => {
-    return this.projectState.selectedProject()?.status === 'Completed' || this.projectState.selectedProject()?.status === 'Archived';
-  });
 
   // Loading and assignment status signals
   isLoading = signal(true);
@@ -1013,10 +1192,55 @@ export class BoardComponent implements OnInit, OnChanges {
   // Real active ids
   activeProjectId = '';
   activeUserStoryId = '';
+  currentUserId = signal<string | null>(getUserIdFromToken());
+
+  private buildPermissions(assigneeId: string | undefined, isProjectManager: boolean) {
+    const isAssignee = assigneeId === this.currentUserId();
+    const canInteract = isProjectManager || isAssignee;
+
+    return {
+      canDrag: canInteract,
+      canView: canInteract,
+      canSummarize: isAssignee,
+      canEdit: isProjectManager,
+      canComment: canInteract,
+      canDownloadAttachments: canInteract
+    };
+  }
+
+  onTaskAssignmentChanged(task: Task, assignment: TaskAssignmentChangedEvent): void {
+    const applyAssignment = (item: Task): Task => ({
+      ...item,
+      assigneeId: assignment.employeeId,
+      assigneeName: assignment.employeeName,
+      isOwnedByCurrentUser: assignment.employeeId === this.currentUserId(),
+      permissions: this.buildPermissions(assignment.employeeId, this.projectState.isProjectManager())
+    });
+
+    this.todo.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+    this.inProgress.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+    this.review.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+    this.done.update(tasks => tasks.map(item => item.id === task.id ? applyAssignment(item) : item));
+
+    if (this.modalTask().id === task.id) {
+      this.modalTask.update(item => applyAssignment(item));
+    }
+
+    const allTasks = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()];
+    this.hasAssignments.set(allTasks.some(item => Boolean(item.assigneeId)));
+    this.hasUnassignedTasks.set(allTasks.length > 0 && allTasks.some(item => !item.assigneeId));
+  }
   activeSprintId = signal<string | null>(null);
   plannedSprintId = signal<string | null>(null);
   completedSprintId = signal<string | null>(null);
   sprintStatus = signal<string | null>(null);
+
+  isBoardReadonly = computed(() => {
+    return this.projectState.selectedProject()?.status === 'Completed' || 
+           this.projectState.selectedProject()?.status === 'Archived' ||
+           this.sprintStatus() === 'Completed';
+  });
+
   isRetroModalOpen = signal(false);
   isChatOpen = signal(false);
 
@@ -1044,11 +1268,15 @@ export class BoardComponent implements OnInit, OnChanges {
   }
 
   getTaskTitle(task: Task): string {
-    return this.currentLang === 'ar' ? (task.titleAr || task.titleEn || task.title) : (task.titleEn || task.titleAr || task.title);
+    return task.title || '';
   }
 
   getTaskDescription(task: Task): string {
-    return this.currentLang === 'ar' ? (task.descriptionAr || task.descriptionEn || task.description) : (task.descriptionEn || task.descriptionAr || task.description);
+    return task.description || '';
+  }
+
+  private sortTasksOwnedByCurrentUser(a: Task, b: Task): number {
+    return Number(b.isOwnedByCurrentUser) - Number(a.isOwnedByCurrentUser);
   }
 
   // Task columns
@@ -1058,13 +1286,9 @@ export class BoardComponent implements OnInit, OnChanges {
   done = signal<Task[]>([]);
 
   // PM Action Modals State
-  rejectModalOpen = signal(false);
-  reopenModalOpen = signal(false);
-  taskToActOn = signal<Task | null>(null);
-  rejectReasonEn = '';
-  rejectReasonAr = '';
-  reopenReasonEn = '';
-  reopenReasonAr = '';
+  inlineAction = signal<'reject' | 'reopen' | null>(null);
+  inlineReasonEn = '';
+  inlineReasonAr = '';
 
   async pmAcceptReview(task: Task) {
     if (!this.projectState.isProjectManager() || this.isBoardReadonly()) return;
@@ -1077,53 +1301,51 @@ export class BoardComponent implements OnInit, OnChanges {
     }
   }
 
-  openRejectModal(task: Task) {
-    this.taskToActOn.set(task);
-    this.rejectReasonEn = '';
-    this.rejectReasonAr = '';
-    this.rejectModalOpen.set(true);
-  }
-
-  closeRejectModal() {
-    this.taskToActOn.set(null);
-    this.rejectModalOpen.set(false);
-  }
-
-  async pmConfirmReject() {
-    const task = this.taskToActOn();
-    if (!task || (!this.rejectReasonEn && !this.rejectReasonAr)) return;
+  async confirmInlineAction() {
+    const action = this.inlineAction();
+    const task = this.modalTask();
+    if (!task || !action || (!this.inlineReasonEn && !this.inlineReasonAr)) return;
     try {
-      await this.tasksService.pmRejectReview(task.id, this.rejectReasonEn, this.rejectReasonAr);
-      this.toastService.show(this.currentLang === 'ar' ? 'تم رفض المهمة بنجاح' : 'Task successfully rejected', 'success');
-      this.closeRejectModal();
+      if (action === 'reject') {
+        await this.tasksService.pmRejectReview(task.id, this.inlineReasonEn, this.inlineReasonAr);
+        this.toastService.show(this.currentLang === 'ar' ? 'تم رفض المهمة بنجاح' : 'Task successfully rejected', 'success');
+      } else {
+        await this.tasksService.pmReopenTask(task.id, this.inlineReasonEn, this.inlineReasonAr);
+        this.toastService.show(this.currentLang === 'ar' ? 'تم إعادة فتح المهمة' : 'Task successfully reopened', 'success');
+      }
+
+      // Auto-post the reason as a comment so developers can see it in chat
+      const actionTitleEn = action === 'reject' ? 'Task Status Update: Returned to In Progress ' : 'Task Status Update: Reopened ';
+      const actionTitleAr = action === 'reject' ? 'تحديث حالة المهمة: إعادة المهمة للتنفيذ ' : 'تحديث لحالة المهمة : تمت إعادة الفتح ';
+
+      const reasonLabelEn = 'Manager\'s Feedback:';
+      const reasonLabelAr = 'ملاحظة مدير المشروع:';
+
+      const actionTitle = this.currentLang === 'ar' ? actionTitleAr : actionTitleEn;
+      const reasonLabel = this.currentLang === 'ar' ? reasonLabelAr : reasonLabelEn;
+
+      const reasonText = [this.inlineReasonEn, this.inlineReasonAr].filter(r => !!r).join('\n');
+      const commentContent = `${actionTitle}\n\n${reasonLabel}\n"${reasonText}"`;
+
+      await this.tasksService.addComment(task.id, commentContent);
+
+      this.inlineAction.set(null);
+      this.inlineReasonEn = '';
+      this.inlineReasonAr = '';
+
+      // Update local modal state so the UI reflects the new "InProgress" status 
+      // and hides the Review/Done PM action buttons immediately without closing the modal
+      this.originalColumn = 'inProgress';
+      this.modalTask.set({ ...task });
+
+      if (this.discussionComponent) {
+        this.discussionComponent.loadData();
+      }
+
+      // Refresh background data quietly
       await this.loadWorkspaceData();
     } catch (err: any) {
-      this.toastService.show(err.response?.data?.message || 'Failed to reject task', 'error');
-    }
-  }
-
-  openReopenModal(task: Task) {
-    this.taskToActOn.set(task);
-    this.reopenReasonEn = '';
-    this.reopenReasonAr = '';
-    this.reopenModalOpen.set(true);
-  }
-
-  closeReopenModal() {
-    this.taskToActOn.set(null);
-    this.reopenModalOpen.set(false);
-  }
-
-  async pmConfirmReopen() {
-    const task = this.taskToActOn();
-    if (!task || (!this.reopenReasonEn && !this.reopenReasonAr)) return;
-    try {
-      await this.tasksService.pmReopenTask(task.id, this.reopenReasonEn, this.reopenReasonAr);
-      this.toastService.show(this.currentLang === 'ar' ? 'تم إعادة فتح المهمة' : 'Task successfully reopened', 'success');
-      this.closeReopenModal();
-      await this.loadWorkspaceData();
-    } catch (err: any) {
-      this.toastService.show(err.response?.data?.message || 'Failed to reopen task', 'error');
+      this.toastService.show(err.response?.data?.message || `Failed to ${action} task`, 'error');
     }
   }
 
@@ -1193,26 +1415,95 @@ export class BoardComponent implements OnInit, OnChanges {
     description: '',
     priority: 'Medium',
     hours: 4,
-    type: 'Feature'
+    type: 'Feature',
+    assigneeId: undefined,
+    assigneeName: undefined,
+    isOwnedByCurrentUser: false,
+    permissions: {
+      canDrag: true,
+      canView: true,
+      canSummarize: true,
+      canEdit: true,
+      canComment: true,
+      canDownloadAttachments: true
+    }
   });
 
   hasAssignments = signal(false);
   hasUnassignedTasks = signal(false);
-  private originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
+  originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
 
   constructor() {
     // Automatically trigger reload when the active selected project changes
     effect(() => {
       const projId = this.projectState.selectedProjectId();
-      this.isLoading.set(true);
-      this.loadWorkspaceData()
-        .catch(err => console.error('Error loading backlog data:', err))
-        .finally(() => this.isLoading.set(false));
+      untracked(() => {
+        this.isLoading.set(true);
+        this.loadWorkspaceData()
+          .catch(err => console.error('Error loading backlog data:', err))
+          .finally(() => this.isLoading.set(false));
+      });
     });
   }
 
   async ngOnInit() {
     this.sprintStatus.set(this.overrideSprintStatus);
+
+    this.activatedRoute.queryParams.subscribe(params => {
+      const taskId = params['taskId'];
+      if (taskId) {
+        this.handleDeepLinkTaskId(taskId);
+      }
+    });
+  }
+
+  private deepLinkInterval: any;
+
+  private handleDeepLinkTaskId(taskId: string) {
+    if (this.deepLinkInterval) {
+      clearInterval(this.deepLinkInterval);
+    }
+    
+    // We must wait for isLoading to be completely false before searching
+    this.deepLinkInterval = setInterval(() => {
+      if (!this.isLoading()) {
+        clearInterval(this.deepLinkInterval);
+        this.deepLinkInterval = null;
+        this.executeTaskDeepLink(taskId);
+      }
+    }, 100);
+  }
+
+  ngOnDestroy() {
+    if (this.deepLinkInterval) {
+      clearInterval(this.deepLinkInterval);
+    }
+  }
+
+  private executeTaskDeepLink(taskId: string) {
+    const allLoadedTasks = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()];
+    console.log(`[DeepLink] Searching for taskId: ${taskId}`);
+    console.log(`[DeepLink] Total loaded tasks: ${allLoadedTasks.length}`);
+    const targetTask = allLoadedTasks.find(t => String(t.id).toLowerCase() === String(taskId).toLowerCase());
+    console.log(`[DeepLink] Found task:`, targetTask);
+    
+    if (targetTask) {
+      setTimeout(() => this.openEditModal(targetTask), 200);
+    } else {
+      this.toastService.show(
+        this.currentLang === 'ar' 
+          ? 'المهمة المطلوبة غير موجودة في السبرينت الحالي (قد تكون محذوفة أو في سبرينت منتهي)' 
+          : 'The requested task is not found in the current sprint (it might be in a completed sprint).',
+        'warning'
+      );
+    }
+    
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { taskId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -1232,7 +1523,7 @@ export class BoardComponent implements OnInit, OnChanges {
   goToAssignment() {
     const sprintId = this.plannedSprintId();
     if (sprintId) {
-      this.router.navigate(['/assignment', sprintId]);
+      this.router.navigate(['/dashboard/assignment', sprintId]);
     }
   }
 
@@ -1246,20 +1537,58 @@ export class BoardComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (this.hasUnassignedTasks()) {
+      this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.', 'error');
+      return;
+    }
+
     try {
       await this.sprintService.startSprint(projectId, sprintId);
-      this.toastService.show('Sprint started successfully', 'success');
+      this.toastService.show(this.currentLang === 'ar' ? 'تم بدء السبرنت بنجاح' : 'Sprint started successfully', 'success');
       this.sprintStatusChanged.emit();
     } catch (e: any) {
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      const errorCode = e?.response?.data?.errors?.[0]?.code || e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
       if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
         this.showNoEmployeesModal.set(true);
+      } else if (errorCode === 'SPRINT_UNASSIGNED_TASKS_EXIST') {
+        this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين.' : 'Cannot start sprint. Make sure all tasks are assigned to employees.', 'error');
       } else if (errorCode === 'ANOTHER_SPRINT_ALREADY_ACTIVE') {
-        this.toastService.show('Cannot start: Another sprint is already active in this project.', 'error');
+        this.toastService.show(this.currentLang === 'ar' ? 'لا يمكن البدء: يوجد سبرنت نشط بالفعل في هذا المشروع.' : 'Cannot start: Another sprint is already active in this project.', 'error');
       } else {
-        this.toastService.show(e?.response?.data?.message || 'Failed to start sprint', 'error');
+        this.toastService.show(e?.response?.data?.message || (this.currentLang === 'ar' ? 'فشل بدء السبرنت' : 'Failed to start sprint'), 'error');
       }
     }
+  }
+
+  cancelSprintClicked() {
+    const projectId = this.projectState.selectedProjectId();
+    const sprintId = this.plannedSprintId();
+    if (!projectId || !sprintId) return;
+
+    this.confirmDialog.confirm({
+      title: this.currentLang === 'ar' ? 'إلغاء السبرينت' : 'Cancel Sprint',
+      message: this.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا السبرينت؟ ستعود جميع المهام إلى الـ Backlog.' : 'Are you sure you want to cancel this planned sprint? All tasks will be returned to the backlog.',
+      confirmLabel: this.currentLang === 'ar' ? 'إلغاء السبرينت' : 'Cancel Sprint',
+      cancelLabel: this.currentLang === 'ar' ? 'تراجع' : 'Keep Sprint',
+      type: 'danger'
+    }).then(async (confirmed) => {
+      if (confirmed) {
+        try {
+          await this.sprintService.cancelSprint(projectId, sprintId);
+          this.toastService.show(
+            this.currentLang === 'ar' ? 'تم إلغاء السبرينت بنجاح' : 'Sprint cancelled successfully',
+            'success'
+          );
+          // Go to Sprints tab
+          this.backToSprints.emit();
+        } catch (e: any) {
+          this.toastService.show(
+            e?.response?.data?.message || (this.currentLang === 'ar' ? 'فشل إلغاء السبرينت' : 'Failed to cancel sprint'),
+            'error'
+          );
+        }
+      }
+    });
   }
 
   public async loadWorkspaceData() {
@@ -1276,24 +1605,39 @@ export class BoardComponent implements OnInit, OnChanges {
     this.isAssignedToProject.set(true);
     this.activeProjectId = projectId;
 
-    // Lazy-load employee count only when the board is actually open
-    this.projectState.loadProjectEmployeeCount(projectId);
+    // Lazy-load employee count only when the board is actually open and user is PM
+    if (this.projectState.isProjectManager()) {
+      this.projectState.loadProjectEmployeeCount(projectId);
+    }
 
     const projectInfo = this.projectState.projects().find(p => p.id === projectId);
     this.projectName.set(projectInfo?.nameEn || 'Project');
 
-    // Fetch active sprint to enable retrospectives
-    // Step 1: Try to get active sprint — treat 404 as null, not an error
+    // Fetch sprints to determine board context
     let activeSprint: { sprintId: string } | null = null;
-    try {
-      const activeSprintRes = await this.sprintService.getActiveSprint(projectId);
-      const resolved = activeSprintRes?.data || activeSprintRes;
-      if (resolved && resolved.sprintId) {
-        activeSprint = resolved;
+    let plannedSprint: { sprintId: string } | null = null;
+    let completedSprint: { sprintId: string } | null = null;
+
+    if (!this.overrideSprintId || !this.overrideSprintStatus) {
+      // Step 1: Fire all sprint queries in parallel to avoid waterfall wait times
+      const [activeRes, plannedRes, completedRes] = await Promise.allSettled([
+        this.sprintService.getActiveSprint(projectId),
+        this.sprintService.getPlannedSprint(projectId),
+        this.sprintService.getLatestCompletedSprint(projectId)
+      ]);
+
+      if (activeRes.status === 'fulfilled') {
+        const resolved = (activeRes.value as any)?.data || activeRes.value;
+        if (resolved && resolved.sprintId) activeSprint = resolved;
       }
-    } catch {
-      // 404 or any error = no active sprint. Continue to planned check.
-      activeSprint = null;
+      if (plannedRes.status === 'fulfilled') {
+        const resolved = (plannedRes.value as any)?.data || plannedRes.value;
+        if (resolved && resolved.sprintId) plannedSprint = resolved;
+      }
+      if (completedRes.status === 'fulfilled') {
+        const resolved = (completedRes.value as any)?.data || completedRes.value;
+        if (resolved && resolved.sprintId) completedSprint = resolved;
+      }
     }
 
     // Step 2: Branch based on result
@@ -1322,41 +1666,21 @@ export class BoardComponent implements OnInit, OnChanges {
       this.plannedSprintId.set(null);
       this.completedSprintId.set(null);
       this.sprintStatus.set('Active');
+    } else if (plannedSprint && plannedSprint.sprintId) {
+      this.activeSprintId.set(null);
+      this.plannedSprintId.set(plannedSprint.sprintId);
+      this.completedSprintId.set(null);
+      this.sprintStatus.set('Planned');
+    } else if (completedSprint && completedSprint.sprintId) {
+      this.activeSprintId.set(null);
+      this.plannedSprintId.set(null);
+      this.completedSprintId.set(completedSprint.sprintId);
+      this.sprintStatus.set('Completed');
     } else {
       this.activeSprintId.set(null);
-
-      // Step 3: Try to get planned sprint — isolated try/catch
-      try {
-        const plannedSprint = await this.sprintService.getPlannedSprint(projectId);
-        if (plannedSprint && plannedSprint.sprintId) {
-          this.plannedSprintId.set(plannedSprint.sprintId);
-          this.sprintStatus.set('Planned');
-        } else {
-          this.plannedSprintId.set(null);
-          this.sprintStatus.set(null);
-        }
-      } catch {
-        this.plannedSprintId.set(null);
-        this.sprintStatus.set(null);
-      }
-
-      if (!this.plannedSprintId()) {
-        try {
-          const completedSprint = await this.sprintService.getLatestCompletedSprint(projectId);
-          if (completedSprint && completedSprint.sprintId) {
-            this.activeSprintId.set(null);
-            this.plannedSprintId.set(null);
-            this.completedSprintId.set(completedSprint.sprintId);
-            this.sprintStatus.set('Completed');
-          } else {
-            this.completedSprintId.set(null);
-            this.sprintStatus.set(null);
-          }
-        } catch {
-          this.completedSprintId.set(null);
-          this.sprintStatus.set(null);
-        }
-      }
+      this.plannedSprintId.set(null);
+      this.completedSprintId.set(null);
+      this.sprintStatus.set(null);
     }
 
     // 4. Load only the tasks that belong to the sprint being viewed.
@@ -1366,23 +1690,21 @@ export class BoardComponent implements OnInit, OnChanges {
       || this.plannedSprintId()
       || this.completedSprintId();
 
+    if (this.projectState.isProjectManager() && this.sprintStatus() === 'Planned' && sprintId) {
+      void this.assignmentService.getAssignmentTeam(sprintId).catch(() => undefined);
+    }
+
     if (!sprintId) {
       tasks = [];
-    } else if (this.projectState.isProjectManager()) {
+    } else {
       try {
         tasks = await this.tasksService.getSprintTasks(this.activeProjectId, sprintId);
-        this.activeUserStoryId = tasks[0]?.userStoryId || '';
+        if (this.projectState.isProjectManager()) {
+          this.activeUserStoryId = tasks[0]?.userStoryId || '';
+        }
       } catch (err) {
         console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
-        tasks = [];
-      }
-    } else {
-      // Load only this employee's assignments for the selected sprint.
-      try {
-        tasks = await this.tasksService.getMySprintTasks(this.activeProjectId, sprintId);
-      } catch (err) {
-        console.error('Error loading employee sprint tasks:', err);
         tasks = [];
       }
     }
@@ -1393,9 +1715,10 @@ export class BoardComponent implements OnInit, OnChanges {
     const reviewList: Task[] = [];
     const doneList: Task[] = [];
 
+    const isPm = this.projectState.isProjectManager();
     for (const t of tasks) {
       const task: Task = {
-        id: t.id || t.taskId,
+        id: t.taskId,
         userStoryId: t.userStoryId || '',
         title: this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn,
         titleEn: t.titleEn,
@@ -1405,9 +1728,17 @@ export class BoardComponent implements OnInit, OnChanges {
         descriptionAr: t.descriptionAr,
         priority: mapPriorityToFrontend(t.priority),
         hours: t.estimatedHours || 0,
-        type: mapTypeToFrontend(t.type)
+        actualHours: t.actualHours || 0,
+        type: mapTypeToFrontend(t.type),
+        assigneeId: t.assigneeId,
+        assigneeName: t.assigneeName,
+        isOwnedByCurrentUser: t.assigneeId === this.currentUserId(),
+        permissions: this.buildPermissions(t.assigneeId, isPm)
       };
-      (task as any).actualHours = t.actualHours || 0;
+
+      const title = this.currentLang === 'ar' ? (t.titleAr || t.titleEn) : t.titleEn;
+      const desc = this.currentLang === 'ar' ? (t.descriptionAr || t.descriptionEn || '') : (t.descriptionEn || '');
+      task.searchString = `${title} ${desc}`.toLowerCase();
 
       const col = mapStatusToFrontend(t.status);
       if (col === 'todo') todoList.push(task);
@@ -1416,42 +1747,23 @@ export class BoardComponent implements OnInit, OnChanges {
       else if (col === 'done') doneList.push(task);
     }
 
-    this.todo.set(todoList);
-    this.inProgress.set(inProgressList);
-    this.review.set(reviewList);
-    this.done.set(doneList);
+    this.todo.set(todoList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
+    this.inProgress.set(inProgressList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
+    this.review.set(reviewList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
+    this.done.set(doneList.sort(this.sortTasksOwnedByCurrentUser.bind(this)));
     const isTaskAssigned = (t: any): boolean => {
       if (t.isAssigned === true) return true;
       if (t.isAssigned === false) return false;
       const val = t.employeeId || t.assignedTo || t.assigneeId || t.assignedEmployeeId ||
-                  t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
-                  t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
-                  t.assignedToName || t.assignedEmployeeName;
+        t.assignedToEmployeeId || t.assignedUserId || t.userId || t.developerId ||
+        t.assignedDeveloperId || t.assignedEmployee || t.employee || t.assignee ||
+        t.assignedToName || t.assignedEmployeeName;
       return val !== undefined && val !== null && val !== '';
     };
 
     this.hasAssignments.set(tasks.some((t: any) => isTaskAssigned(t)));
     const unassignedExist = tasks.length > 0 && tasks.some((t: any) => !isTaskAssigned(t));
-
-    try {
-      if (sprintId && this.activeProjectId) {
-        const { data } = await apiClient.get<any>(`/projects/${this.activeProjectId}/sprints/${sprintId}/assignment/validate`);
-        const valData = data?.data ?? data;
-        if (typeof valData === 'boolean') {
-          this.hasUnassignedTasks.set(!valData);
-        } else if (valData && typeof valData.isValid === 'boolean') {
-          this.hasUnassignedTasks.set(!valData.isValid);
-        } else if (valData && typeof valData.isAllAssigned === 'boolean') {
-          this.hasUnassignedTasks.set(!valData.isAllAssigned);
-        } else {
-          this.hasUnassignedTasks.set(unassignedExist);
-        }
-      } else {
-        this.hasUnassignedTasks.set(unassignedExist);
-      }
-    } catch (e) {
-      this.hasUnassignedTasks.set(unassignedExist);
-    }
+    this.hasUnassignedTasks.set(unassignedExist);
   }
 
   private filterTasks(tasks: Task[]): Task[] {
@@ -1460,7 +1772,7 @@ export class BoardComponent implements OnInit, OnChanges {
     const type = this.typeFilter();
 
     return tasks.filter(task => {
-      const matchesSearch = !query || `${this.getTaskTitle(task)} ${this.getTaskDescription(task)}`.toLowerCase().includes(query);
+      const matchesSearch = !query || (task.searchString && task.searchString.includes(query));
       const matchesPriority = priority === 'All' || task.priority === priority;
       const matchesType = type === 'All' || task.type === type;
       return matchesSearch && matchesPriority && matchesType;
@@ -1543,9 +1855,9 @@ export class BoardComponent implements OnInit, OnChanges {
         if (oldStatus === 'review' && newStatus === 'done') {
           await this.pmAcceptReview(task);
         } else if (oldStatus === 'review' && newStatus === 'inProgress') {
-          this.openRejectModal(task);
+          this.openEditModal(task, 'reject');
         } else if (oldStatus === 'done' && newStatus === 'inProgress') {
-          this.openReopenModal(task);
+          this.openEditModal(task, 'reopen');
         } else {
           this.toastService.show(this.currentLang === 'ar' ? 'غير مسموح بهذا الإجراء' : 'This transition is not allowed for Project Managers.', 'error');
         }
@@ -1560,18 +1872,44 @@ export class BoardComponent implements OnInit, OnChanges {
         event.currentIndex
       );
 
+      // Notify signals IMMEDIATELY so the UI updates instantly without waiting for backend
+      this.todo.update(v => [...v]);
+      this.inProgress.update(v => [...v]);
+      this.review.update(v => [...v]);
+      this.done.update(v => [...v]);
+
       try {
         const statusEnum = this.mapColumnToEnum(newStatus);
-        await this.tasksService.updateTaskStatus(task.id, statusEnum);
+        const updatedTask = await this.tasksService.updateTaskStatus(task.id, statusEnum);
         this.toastService.show('Task status updated successfully.', 'success');
-        // Fetch updated data from backend to get the automatically calculated actualHours
-        await this.loadWorkspaceData();
+        
+        // Update actualHours if provided by backend
+        if (updatedTask && typeof updatedTask.actualHours === 'number') {
+          task.actualHours = updatedTask.actualHours;
+          // Update signals again only if hours changed
+          this.todo.update(v => [...v]);
+          this.inProgress.update(v => [...v]);
+          this.review.update(v => [...v]);
+          this.done.update(v => [...v]);
+        }
       } catch (err: any) {
         console.error('Failed to update task status in backend:', err);
         const errorMsg = err?.response?.data?.message || err?.response?.data?.error?.message || err?.message || 'Failed to update task status.';
         this.toastService.show(errorMsg, 'error');
-        // Rollback status visually by reloading
-        await this.loadWorkspaceData();
+        
+        // Rollback visually by moving item back
+        transferArrayItem(
+          event.container.data,
+          event.previousContainer.data,
+          event.currentIndex,
+          event.previousIndex
+        );
+        
+        // Notify signals of rollback
+        this.todo.update(v => [...v]);
+        this.inProgress.update(v => [...v]);
+        this.review.update(v => [...v]);
+        this.done.update(v => [...v]);
       }
     }
   }
@@ -1583,7 +1921,7 @@ export class BoardComponent implements OnInit, OnChanges {
     return TaskItemStatus.ToDo;
   }
 
-  openEditModal(task: Task) {
+  openEditModal(task: Task, defaultAction: 'reject' | 'reopen' | null = null) {
     this.isChatOpen.set(false);
     this.isEditing.set(true);
     if (this.todo().some(t => t.id === task.id)) this.originalColumn = 'todo';
@@ -1591,12 +1929,17 @@ export class BoardComponent implements OnInit, OnChanges {
     else if (this.review().some(t => t.id === task.id)) this.originalColumn = 'review';
     else if (this.done().some(t => t.id === task.id)) this.originalColumn = 'done';
 
+    this.inlineAction.set(defaultAction);
+    this.inlineReasonEn = '';
+    this.inlineReasonAr = '';
+
     this.modalTask.set({ ...task });
     this.showModal.set(true);
   }
 
   closeModal() {
     this.isChatOpen.set(false);
+    this.inlineAction.set(null);
     this.showModal.set(false);
   }
 
@@ -1692,23 +2035,39 @@ export class BoardComponent implements OnInit, OnChanges {
     }
   }
 
-  async completeSprintFromBoard(): Promise<void> {
+
+
+  async completeSprintBtnClicked(): Promise<void> {
+    if (this.todo().length > 0 || this.inProgress().length > 0 || this.review().length > 0) {
+      this.showCompleteSprintModal.set(true);
+    } else {
+      await this.completeSprintFromBoard();
+    }
+  }
+
+  async completeSprintFromBoard(reviewAction?: 'AcceptAll' | 'SendToBacklog'): Promise<void> {
     const projectId = this.projectState.selectedProjectId();
     const sprintId = this.activeSprintId();
     if (!projectId || !sprintId) return;
 
     try {
-      await this.sprintService.completeSprint(projectId, sprintId);
-      this.toastService.show('Sprint completed successfully', 'success');
+      await this.sprintService.completeSprint(projectId, sprintId, reviewAction);
+      this.toastService.show(this.currentLang === 'ar' ? 'تم إنهاء السبرنت بنجاح' : 'Sprint completed successfully', 'success');
+      this.showCompleteSprintModal.set(false);
       this.sprintStatusChanged.emit();
-    } catch {
-      this.toastService.show('Failed to complete sprint', 'error');
+    } catch (e: any) {
+      const errorCode = e?.response?.data?.errors?.[0]?.code || e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
+      if (errorCode === 'SPRINT_HAS_UNFINISHED_TASKS') {
+        this.showCompleteSprintModal.set(true);
+      } else {
+        this.toastService.show(this.currentLang === 'ar' ? 'فشل إنهاء السبرنت' : 'Failed to complete sprint', 'error');
+      }
     }
   }
+
+
+
+  goToTeam(): void {
+    this.router.navigate(['/dashboard', 'team']);
+  }
 }
-
-
-
-
-
-

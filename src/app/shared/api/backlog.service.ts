@@ -4,8 +4,24 @@ import { apiClient } from './axios.instance';
 export interface TaskItemDto {
   id: string;
   userStoryId: string;
+  title: string;
+  description?: string;
+  technicalSummary?: string;
+  acceptanceCriteria?: string;
+  estimatedHours: number;
+  effortSize: string;
+  type: string;
+  priority: string;
+  status: string;
+  assigneeId?: string;
+  assigneeName?: string;
+}
+
+export interface TaskDetailDto {
+  id: string;
+  userStoryId: string;
   titleEn: string;
-  titleAr?: string;
+  titleAr: string;
   descriptionEn?: string;
   descriptionAr?: string;
   technicalSummaryEn?: string;
@@ -22,22 +38,46 @@ export interface TaskItemDto {
 export interface UserStoryDto {
   id: string;
   projectId: string;
-  titleEn: string;
-  titleAr?: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  acceptanceCriteriaEn?: string;
-  acceptanceCriteriaAr?: string;
+  title: string;
+  description?: string;
+  acceptanceCriteria?: string;
   priority: string;
   status: string;
   tasks: TaskItemDto[];
 }
 
+export interface UserStoryDetailDto {
+  id: string;
+  projectId: string;
+  titleEn: string;
+  titleAr: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  acceptanceCriteriaEn?: string;
+  acceptanceCriteriaAr?: string;
+  priority: string;
+}
+
+export interface PaginatedUserStories {
+  items: UserStoryDto[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export interface BacklogDto {
   projectId: string;
-  projectNameEn: string;
-  projectNameAr: string;
+  projectName: string;
   userStories: UserStoryDto[];
+}
+
+export interface PaginatedBacklogDto {
+  projectId: string;
+  projectName: string;
+  userStories: PaginatedUserStories;
 }
 
 export interface ProjectDto {
@@ -160,24 +200,18 @@ export function mapEffortSizeToBackend(effortSize: string): number {
   providedIn: 'root',
 })
 export class BacklogService {
-  async getProjects(): Promise<ProjectDto[]> {
-    const { data } = await apiClient.get<any>('/Projects');
-    return data.data || [];
-  }
-
-  async getBacklog(projectId: string): Promise<BacklogDto> {
-    const { data } = await apiClient.get<any>(`/projects/${projectId}/backlog`);
+  async getBacklog(projectId: string, page: number = 1, pageSize: number = 7): Promise<PaginatedBacklogDto> {
+    const { data } = await apiClient.get<any>(`/projects/${projectId}/backlog?page=${page}&pageSize=${pageSize}`);
     return data.data;
   }
 
-  async createProject(nameEn: string, nameAr: string, descriptionEn: string, companyId: string, managerId: string): Promise<ProjectDto> {
+  async createProject(nameEn: string, nameAr: string, descriptionEn: string, companyId: string): Promise<ProjectDto> {
     const { data } = await apiClient.post<any>('/Projects', {
       nameEn,
       nameAr,
       descriptionEn,
       descriptionAr: descriptionEn,
       companyId,
-      managerId,
     });
     return data.data;
   }
@@ -192,6 +226,11 @@ export class BacklogService {
       acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
       priority: mapPriorityToBackend(story.priority),
     });
+    return data.data;
+  }
+
+  async getUserStory(storyId: string): Promise<UserStoryDetailDto> {
+    const { data } = await apiClient.get<any>(`/userstories/${storyId}`);
     return data.data;
   }
 
@@ -226,6 +265,11 @@ export class BacklogService {
       type: mapTypeToBackend(task.type),
       priority: mapPriorityToBackend(task.priority),
     });
+    return data.data;
+  }
+
+  async getTask(taskId: string): Promise<TaskDetailDto> {
+    const { data } = await apiClient.get<any>(`/tasks/${taskId}`);
     return data.data;
   }
 

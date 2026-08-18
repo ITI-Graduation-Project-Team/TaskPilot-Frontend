@@ -7,7 +7,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const role = getRoleFromToken();
 
   if (!role) {
-    return router.createUrlTree(['/login']);
+    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
   }
 
   // If user is Employee and hasn't uploaded their CV, force them to complete profile

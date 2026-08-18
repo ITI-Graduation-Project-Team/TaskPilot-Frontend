@@ -24,6 +24,9 @@ export class EmployeeDetailsComponent implements OnInit {
 
   // Deactivation Dialog State
   isDeactivateModalOpen = signal(false);
+  
+  // Termination Modal State
+  isTerminateModalOpen = signal(false);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -89,5 +92,18 @@ export class EmployeeDetailsComponent implements OnInit {
   onDeactivated() {
     this.closeDeactivateModal();
     this.loadEmployeeDetails(this.employeeId()); // Reload to show deactivated status
+  }
+
+  openTerminateModal() {
+    this.isTerminateModalOpen.set(true);
+  }
+
+  closeTerminateModal() {
+    this.isTerminateModalOpen.set(false);
+  }
+
+  onTerminated() {
+    this.closeTerminateModal();
+    this.router.navigate(['/employees']);
   }
 }

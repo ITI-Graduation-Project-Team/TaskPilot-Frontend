@@ -185,6 +185,8 @@ export class CompleteProfileComponent {
   }
 
   confirmAndSave() {
+    if (this.uploadState() === 'loading') return;
+
     if (this.skills().length === 0) {
       this.toastService.show('Please add at least one skill.', 'error');
       return;

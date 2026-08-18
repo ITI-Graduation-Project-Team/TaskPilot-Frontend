@@ -1,130 +1,210 @@
-<div class="h-full flex flex-col bg-surface/50 overflow-hidden border-r border-border">
-  
-  <!-- Search & Header Controls -->
-  <div class="p-4 border-b border-border bg-sidebar shrink-0 space-y-3">
-    <div class="flex items-center justify-between">
-      <h2 class="text-sm font-black text-text-primary uppercase tracking-wider flex items-center gap-2">
-        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        {{ currentLang === 'ar' ? 'مهام السبرينت' : 'Sprint Tasks' }}
-      </h2>
-      <span class="px-2 py-0.5 rounded-full text-[11px] font-black bg-primary/10 text-primary border border-primary/20">
-        {{ tasks.length }}
-      </span>
+<div class="h-full flex flex-col bg-sidebar/30 overflow-hidden">
+
+  <!-- ── Panel Header ── -->
+  <div class="px-4 pt-4 pb-3 border-b border-border/70 bg-sidebar shrink-0 space-y-3">
+
+    <!-- Title row -->
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+          <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <span class="text-xs font-black text-text-primary uppercase tracking-wider">
+          {{ currentLang === 'ar' ? 'مهام السبرينت' : 'Sprint Tasks' }}
+        </span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-5 h-5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center text-[10px] font-black">
+          {{ tasks.length }}
+        </span>
+      </div>
     </div>
 
-    <!-- Search Input -->
+    <!-- Search -->
     <div class="relative">
-      <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" 
-             [ngModel]="searchQuery()" 
-             (ngModelChange)="searchQuery.set($event)"
-             [placeholder]="currentLang === 'ar' ? 'البحث في المهام...' : 'Search tasks...'"
-             class="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-text-primary outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+      <svg class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary/70 pointer-events-none"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input type="text"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+        [placeholder]="currentLang === 'ar' ? 'ابحث في المهام...' : 'Search tasks...'"
+        class="w-full bg-background border border-border/70 rounded-xl pl-8 pr-3 py-2 text-[11px] font-medium text-text-primary placeholder:text-text-secondary/50 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all">
     </div>
 
-    <!-- Filter Tabs -->
-    <div class="grid grid-cols-3 gap-1 bg-background p-1 rounded-xl border border-border/60 text-[11px] font-bold">
-      <button type="button" 
-              (click)="filterTab.set('all')"
-              [class.bg-surface]="filterTab() === 'all'"
-              [class.text-primary]="filterTab() === 'all'"
-              [class.shadow-sm]="filterTab() === 'all'"
-              [class.text-text-secondary]="filterTab() !== 'all'"
-              class="py-1 rounded-lg transition-all text-center">
+    <!-- Filter tabs -->
+    <div class="grid grid-cols-3 p-0.5 bg-background rounded-xl border border-border/60 text-[10px] font-bold gap-0.5">
+      <button type="button" (click)="onFilterChange('all')"
+        class="py-1.5 rounded-lg transition-all text-center"
+        [ngClass]="filterTab() === 'all'
+          ? 'bg-surface text-primary shadow-sm border border-border/60'
+          : 'text-text-secondary hover:text-text-primary'">
         {{ currentLang === 'ar' ? 'الكل' : 'All' }}
+        <span *ngIf="filterTab() === 'all'" class="inline-block w-1 h-1 rounded-full bg-primary ml-1 align-middle"></span>
       </button>
-      <button type="button" 
-              (click)="filterTab.set('unassigned')"
-              [class.bg-surface]="filterTab() === 'unassigned'"
-              [class.text-amber-500]="filterTab() === 'unassigned'"
-              [class.shadow-sm]="filterTab() === 'unassigned'"
-              [class.text-text-secondary]="filterTab() !== 'unassigned'"
-              class="py-1 rounded-lg transition-all text-center">
-        {{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}
+      <button type="button" (click)="onFilterChange('unassigned')"
+        class="py-1.5 rounded-lg transition-all text-center"
+        [ngClass]="filterTab() === 'unassigned'
+          ? 'bg-surface text-amber-500 shadow-sm border border-amber-500/20'
+          : 'text-text-secondary hover:text-amber-500'">
+        {{ currentLang === 'ar' ? 'معلق' : 'Pending' }}
       </button>
-      <button type="button" 
-              (click)="filterTab.set('assigned')"
-              [class.bg-surface]="filterTab() === 'assigned'"
-              [class.text-emerald-500]="filterTab() === 'assigned'"
-              [class.shadow-sm]="filterTab() === 'assigned'"
-              [class.text-text-secondary]="filterTab() !== 'assigned'"
-              class="py-1 rounded-lg transition-all text-center">
-        {{ currentLang === 'ar' ? 'معين' : 'Assigned' }}
+      <button type="button" (click)="onFilterChange('assigned')"
+        class="py-1.5 rounded-lg transition-all text-center"
+        [ngClass]="filterTab() === 'assigned'
+          ? 'bg-surface text-emerald-500 shadow-sm border border-emerald-500/20'
+          : 'text-text-secondary hover:text-emerald-500'">
+        {{ currentLang === 'ar' ? 'مكتمل' : 'Done' }}
       </button>
     </div>
   </div>
 
-  <!-- Task Cards Feed -->
-  <div class="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-thin">
-    <div *ngFor="let task of filteredTasks()"
-         (click)="selectTask(task.taskId)"
-         class="p-4 bg-surface rounded-2xl cursor-pointer hover:border-primary/40 transition-all border border-border shadow-sm relative overflow-hidden group animate-[fadeIn_0.2s_ease_both]"
-         [ngClass]="{
-           'border-primary ring-2 ring-primary/20 bg-primary/5': selectedTaskId === task.taskId,
-           'border-border': selectedTaskId !== task.taskId
-         }">
-      
-      <!-- Selection Indicator Bar -->
-      <div *ngIf="selectedTaskId === task.taskId" class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+  <!-- ── Task List ── -->
+  <div class="flex-1 overflow-y-auto py-2.5 px-3 space-y-2 scrollbar-thin">
 
-      <div class="flex justify-between items-start gap-2 mb-2">
-        <h3 class="font-extrabold text-text-primary text-xs leading-snug group-hover:text-primary transition-colors line-clamp-2"
-            [title]="task.taskTitleEn || task.taskTitleAr">
+    <!-- Task card -->
+    <div *ngFor="let task of paginatedTasks()"
+      (click)="selectTask(task.taskId)"
+      class="group relative p-3.5 bg-surface rounded-2xl cursor-pointer border transition-all duration-200 shadow-sm hover:shadow-md overflow-hidden"
+      [ngClass]="{
+        'border-primary/50 ring-1 ring-primary/20 shadow-primary/10': selectedTaskId === task.taskId,
+        'border-border/70 hover:border-border': selectedTaskId !== task.taskId
+      }">
+
+      <!-- Selected accent bar -->
+      <div *ngIf="selectedTaskId === task.taskId"
+        class="absolute left-0 top-3 bottom-3 w-[3px] bg-gradient-to-b from-primary to-violet-500 rounded-full">
+      </div>
+
+      <!-- Assigned glow (subtle bg wash when assigned) -->
+      <div *ngIf="localAssignments[task.taskId]"
+        class="absolute inset-0 bg-gradient-to-br from-emerald-500/3 to-transparent pointer-events-none rounded-2xl">
+      </div>
+
+      <!-- Content -->
+      <div class="pl-1">
+        <!-- Task title -->
+        <h3 class="font-bold text-text-primary text-[12px] leading-snug mb-2.5 line-clamp-2 transition-colors"
+          [class.text-primary]="selectedTaskId === task.taskId">
           {{ currentLang === 'ar' ? task.taskTitleAr || task.taskTitleEn : task.taskTitleEn || task.taskTitleAr }}
         </h3>
-      </div>
 
-      <!-- Metadata Badges -->
-      <div class="flex items-center gap-1.5 flex-wrap mb-3">
-        <span class="px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded-md border"
-              [ngClass]="{
-                'bg-primary/10 text-primary border-primary/20': task.type === 'Feature',
-                'bg-error/10 text-error border-error/20': task.type === 'Bug',
-                'bg-warning/10 text-warning border-warning/20': task.type === 'Refactor'
-              }">
-          {{ currentLang === 'ar' ? (task.type === 'Feature' ? 'ميزة' : task.type === 'Bug' ? 'مشكلة' : 'تحسين') : task.type }}
-        </span>
-
-        <span class="px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded-md border"
-              [ngClass]="{
-                'bg-error/10 text-error border-error/20': task.priority === 'High',
-                'bg-warning/10 text-warning border-warning/20': task.priority === 'Medium',
-                'bg-emerald-500/10 text-emerald-600 border-emerald-500/20': task.priority === 'Low'
-              }">
-          {{ currentLang === 'ar' ? (task.priority === 'High' ? 'عالية' : task.priority === 'Medium' ? 'متوسطة' : 'منخفضة') : task.priority }}
-        </span>
-
-        <span class="px-2 py-0.5 text-[9px] font-bold rounded-md bg-background text-text-secondary border border-border/80 flex items-center gap-1">
-          <svg class="w-2.5 h-2.5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          {{ task.estimatedHours || 0 }}{{ currentLang === 'ar' ? 'س' : 'h' }}
-        </span>
-      </div>
-
-      <!-- Assignee Footer Pill -->
-      <div class="flex items-center justify-between pt-2.5 border-t border-border/60 text-xs">
-        <span class="text-[10px] font-bold text-text-secondary uppercase">{{ currentLang === 'ar' ? 'المعين' : 'Assignee' }}</span>
-        
-        <div *ngIf="localAssignments[task.taskId]" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[11px] font-bold">
-          <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black">
-            {{ getAssigneeInitials(task) }}
+        <!-- Badges row -->
+        <div class="flex items-center gap-1.5 flex-wrap mb-3">
+          <!-- Type badge -->
+          <span class="px-1.5 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded-md"
+            [ngClass]="{
+              'bg-primary/10 text-primary': task.type === 'Feature',
+              'bg-rose-500/10 text-rose-500': task.type === 'Bug',
+              'bg-amber-500/10 text-amber-600': task.type === 'Refactor'
+            }">
+            {{ currentLang === 'ar'
+              ? (task.type === 'Feature' ? 'ميزة' : task.type === 'Bug' ? 'خطأ' : 'تحسين')
+              : task.type }}
           </span>
-          <span class="truncate max-w-[120px]">{{ getAssigneeName(task) }}</span>
-          <span>✓</span>
+
+          <!-- Priority dot + label -->
+          <span class="flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold rounded-md"
+            [ngClass]="{
+              'bg-rose-500/8 text-rose-500': task.priority === 'High',
+              'bg-amber-500/8 text-amber-600': task.priority === 'Medium',
+              'bg-emerald-500/8 text-emerald-600': task.priority === 'Low'
+            }">
+            <span class="w-1.5 h-1.5 rounded-full"
+              [ngClass]="{
+                'bg-rose-500': task.priority === 'High',
+                'bg-amber-500': task.priority === 'Medium',
+                'bg-emerald-500': task.priority === 'Low'
+              }">
+            </span>
+            {{ currentLang === 'ar'
+              ? (task.priority === 'High' ? 'عالية' : task.priority === 'Medium' ? 'متوسطة' : 'منخفضة')
+              : task.priority }}
+          </span>
+
+          <!-- Hours -->
+          <span class="ml-auto flex items-center gap-0.5 text-[9px] text-text-secondary font-bold">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ task.estimatedHours || 0 }}{{ currentLang === 'ar' ? 'س' : 'h' }}
+          </span>
         </div>
 
-        <div *ngIf="!localAssignments[task.taskId]" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 border-dashed text-[11px] font-bold">
-          <span>{{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}</span>
+        <!-- Assignee row -->
+        <div class="flex items-center justify-between pt-2.5 border-t border-border/40">
+          <span class="text-[9px] font-extrabold text-text-secondary/60 uppercase tracking-widest">
+            {{ currentLang === 'ar' ? 'المسؤول' : 'Assignee' }}
+          </span>
+
+          <!-- Assigned state -->
+          <div *ngIf="localAssignments[task.taskId]"
+            class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[10px] font-bold">
+            <span class="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[8px] font-black shrink-0">
+              {{ getAssigneeInitials(task) }}
+            </span>
+            <span class="truncate max-w-[90px]">{{ getAssigneeName(task) }}</span>
+            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+
+          <!-- Unassigned state -->
+          <div *ngIf="!localAssignments[task.taskId] && !task.isUnassignable"
+            class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-amber-400/50 text-amber-500 text-[10px] font-bold">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            {{ currentLang === 'ar' ? 'غير معين' : 'Unassigned' }}
+          </div>
+
+          <!-- Unassignable state -->
+          <div *ngIf="task.isUnassignable"
+            class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-rose-400/50 text-rose-500 text-[10px] font-bold"
+            [title]="currentLang === 'ar' ? 'لا توجد سعة استيعابية باقية في الفريق لهذه المهمة' : 'No team capacity remaining for this task'">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            {{ currentLang === 'ar' ? 'السعة مستنفدة' : 'Capacity Exhausted' }}
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Empty Filter State -->
-    <div *ngIf="filteredTasks().length === 0" class="text-center p-8 text-text-secondary my-auto">
-      <div class="w-12 h-12 rounded-full bg-border/40 flex items-center justify-center mx-auto mb-3">
-        <svg class="w-6 h-6 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <!-- Empty state -->
+    <div *ngIf="filteredTasks().length === 0"
+      class="flex flex-col items-center justify-center py-16 text-center px-4 animate-[fadeIn_0.2s_ease]">
+      <div class="w-10 h-10 rounded-2xl bg-border/30 flex items-center justify-center mb-3">
+        <svg class="w-5 h-5 text-text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
       </div>
-      <p class="text-xs font-bold text-text-primary">{{ currentLang === 'ar' ? 'لا توجد مهام مطابقة' : 'No matching tasks' }}</p>
-      <p class="text-[11px] opacity-75 mt-0.5">{{ currentLang === 'ar' ? 'حاول مسح البحث أو تغيير علامة التبويب.' : 'Try clearing your search or changing the filter tab.' }}</p>
+      <p class="text-xs font-bold text-text-primary">{{ currentLang === 'ar' ? 'لا نتائج' : 'No results' }}</p>
+      <p class="text-[10px] text-text-secondary mt-0.5">{{ currentLang === 'ar' ? 'جرّب تغيير الفلتر.' : 'Try a different filter.' }}</p>
     </div>
+
   </div>
+
+  <!-- ── Pagination Controls ── -->
+  <div *ngIf="totalPages > 1" class="px-4 py-3 border-t border-border/70 bg-sidebar shrink-0 flex items-center justify-between text-[11px] font-bold">
+    <button (click)="prevPage()" [disabled]="currentPage() === 1"
+      class="px-3 py-1.5 rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary hover:border-border/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+      <svg class="w-3.5 h-3.5" [ngClass]="{'rotate-180': currentLang === 'ar'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      {{ currentLang === 'ar' ? 'السابق' : 'Prev' }}
+    </button>
+    
+    <span class="text-text-secondary">
+      {{ currentLang === 'ar' ? 'صفحة' : 'Page' }} <span class="text-text-primary">{{ currentPage() }}</span> {{ currentLang === 'ar' ? 'من' : 'of' }} <span class="text-text-primary">{{ totalPages }}</span>
+    </span>
+
+    <button (click)="nextPage()" [disabled]="currentPage() === totalPages"
+      class="px-3 py-1.5 rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary hover:border-border/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+      {{ currentLang === 'ar' ? 'التالي' : 'Next' }}
+      <svg class="w-3.5 h-3.5" [ngClass]="{'rotate-180': currentLang === 'ar'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
 </div>

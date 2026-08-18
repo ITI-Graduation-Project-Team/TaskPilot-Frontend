@@ -1,6 +1,6 @@
 import {
   Component, ChangeDetectionStrategy, signal, OnInit,
-  computed, inject, effect, DOCUMENT
+  computed, inject, effect, untracked, DOCUMENT
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
@@ -9,16 +9,18 @@ import { ThemeService } from '../../../../shared/services/theme.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AuthService } from '../../../../shared/api/auth.service';
 import { apiClient } from '../../../../shared/api/axios.instance';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
 import { BoardComponent } from '../../../../widgets/taskBoard/ui/board/board.component';
 import { CurrentProjects } from '../current-projects/current-projects';
 import { ProjectHistory } from '../project-history/project-history';
 import { MyProfileComponent } from '../my-profile/my-profile.component';
 import { CalendarViewComponent } from '../../../dashboardPage/ui/calendar-view/calendar-view.component';
+import { SettingsViewComponent } from '../../../dashboardPage/ui/settings-view/settings-view.component';
 import { NotificationBellComponent } from '../../../../shared/ui/notification-bell/notification-bell';
 import { CompanyPoliciesChatComponent } from '../company-policies-chat/company-policies-chat.component';
 import { ProjectPoliciesChatComponent } from '../../../../features/projectPolicies/ui/project-policies-chat/project-policies-chat.component';
 
-type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'policies-chat' | 'project-policies';
+type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile' | 'calendar' | 'settings' | 'policies-chat' | 'project-policies';
 
 @Component({
   selector: 'app-employee-dashboard',
@@ -33,13 +35,14 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
     ProjectHistory,
     MyProfileComponent,
     CalendarViewComponent,
+    SettingsViewComponent,
     NotificationBellComponent,
     CompanyPoliciesChatComponent,
     ProjectPoliciesChatComponent
   ],
   template: `
     <div
-      class="min-h-screen flex transition-colors duration-300 font-dashboard"
+      class="w-full overflow-x-hidden min-h-screen flex transition-colors duration-300 font-dashboard"
       style="background: var(--background); color: var(--text-primary);"
       [attr.dir]="isRtl() ? 'rtl' : 'ltr'"
     >
@@ -47,51 +50,65 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
       <!-- ══════════════════════════════════════════
            DESKTOP SIDEBAR — Glassmorphism
       ══════════════════════════════════════════ -->
-      <aside class="w-64 hidden md:flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto
-                    glass-sidebar transition-all duration-300 pb-4">
+      <aside class="bg-sidebar border-e border-border hidden md:flex flex-col shrink-0 sticky top-0 h-screen
+                    transition-all duration-300 relative z-50"
+                    [class.w-64]="!isSidebarCollapsed()" [class.w-20]="isSidebarCollapsed()">
+                    
+        <!-- Collapse Toggle Button -->
+        <button (click)="isSidebarCollapsed.update(v => !v)"
+                class="absolute -end-5 top-8 rounded-full p-1 shadow-sm z-10 transition-transform duration-200 border hover:scale-110"
+                style="background: var(--surface); border-color: var(--border); color: var(--text-secondary);"
+                [class.rotate-180]="isSidebarCollapsed()">
+          <svg class="w-4 h-4 rtl:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
 
+        <div class="flex-1 flex flex-col w-full overflow-y-auto pb-4 hide-scrollbar">
         <!-- Logo Block -->
-        <div class="p-5 pb-3">
-          <div class="flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-200 hover:shadow-md"
+        <div class="pb-3" [class.p-5]="!isSidebarCollapsed()" [class.px-1]="isSidebarCollapsed()" [class.py-5]="isSidebarCollapsed()">
+          <div class="flex flex-col gap-2 rounded-2xl border transition-all duration-200 hover:shadow-md"
+               [class.p-4]="!isSidebarCollapsed()" [class.p-2]="isSidebarCollapsed()"
                style="background: var(--surface); border-color: var(--border);">
             <img
               [src]="isDark() ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'"
               alt="TaskPilot"
-              class="h-8 mx-auto transition-transform hover:scale-105"
+              class="mx-auto transition-transform hover:scale-105"
+              [class.h-8]="!isSidebarCollapsed()" [class.h-4]="isSidebarCollapsed()"
             />
+            
+            @if (!isSidebarCollapsed()) {
+              <!-- Company Badge -->
+              @if (projectState.companyName()) {
+                <div class="text-center">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
+                               text-[10px] font-extrabold tracking-wide max-w-full truncate
+                               border border-primary/20"
+                        style="background: rgba(59,91,219,0.1); color: var(--primary);"
+                        [title]="projectState.companyName()">
+                    <!-- Building icon -->
+                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    {{ projectState.companyName() }}
+                  </span>
+                </div>
+              }
 
-            <!-- Company Badge -->
-            @if (projectState.companyName()) {
-              <div class="text-center">
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
-                             text-[10px] font-extrabold tracking-wide max-w-full truncate
-                             border border-primary/20"
-                      style="background: rgba(59,91,219,0.1); color: var(--primary);"
-                      [title]="projectState.companyName()">
-                  <!-- Building icon -->
-                  <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Active project chip -->
+              @if (projectState.selectedProject(); as sp) {
+                <div class="pt-2 border-t flex items-center gap-2" style="border-color: var(--border);">
+                  <svg class="w-3 h-3 shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                       style="color: var(--text-secondary);">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                      d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
                   </svg>
-                  {{ projectState.companyName() }}
-                </span>
-              </div>
-            }
-
-            <!-- Active project chip -->
-            @if (projectState.selectedProject(); as sp) {
-              <div class="pt-2 border-t flex items-center gap-2" style="border-color: var(--border);">
-                <svg class="w-3 h-3 shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                     style="color: var(--text-secondary);">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
-                </svg>
-                <span class="text-[10px] font-bold truncate"
-                      style="color: var(--text-secondary);"
-                      [title]="sp.nameEn">
-                  {{ sp.nameEn }}
-                </span>
-              </div>
+                  <span class="text-[10px] font-bold truncate"
+                        style="color: var(--text-secondary);"
+                        [title]="sp.nameEn">
+                    {{ sp.nameEn }}
+                  </span>
+                </div>
+              }
             }
           </div>
         </div>
@@ -103,7 +120,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Active Sprint -->
             <button
               [routerLink]="['/employee-dashboard', 'sprint']"
-              class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+              class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.sprint' | translate) : ''"
               [class.nav-item-active]="activeTab() === 'sprint'"
               [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
             >
@@ -112,10 +129,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"/>
               </svg>
-              <span class="flex-1 text-start">{{ 'employee.nav.sprintBoard' | translate }}</span>
+              <span [class.hidden]="isSidebarCollapsed()" class="flex-1 text-start">{{ 'employee.nav.sprintBoard' | translate }}</span>
               <!-- Live pulse when sprint is active -->
               @if (activeTab() === 'sprint' && hasActiveSprint()) {
-                <span class="w-2 h-2 rounded-full bg-success animate-pulse-dot shrink-0"
+                <span [class.hidden]="isSidebarCollapsed()" class="w-2 h-2 rounded-full bg-success animate-pulse-dot shrink-0"
                       style="background: var(--success);"></span>
               }
             </button>
@@ -124,7 +141,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Current Projects -->
           <button
             [routerLink]="['/employee-dashboard', 'current-projects']"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.currentProjects' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'current-projects'"
             [style.color]="activeTab() !== 'current-projects' ? 'var(--text-secondary)' : ''"
           >
@@ -133,13 +150,13 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             </svg>
-            <span class="text-start">{{ 'employee.nav.currentProjects' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'employee.nav.currentProjects' | translate }}</span>
           </button>
 
           <!-- Project History -->
           <button
             [routerLink]="['/employee-dashboard', 'project-history']"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.projectHistory' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'project-history'"
             [style.color]="activeTab() !== 'project-history' ? 'var(--text-secondary)' : ''"
           >
@@ -147,13 +164,13 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="text-start">{{ 'employee.nav.projectHistory' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'employee.nav.projectHistory' | translate }}</span>
           </button>
 
           <!-- Calendar -->
           <button
             [routerLink]="['/employee-dashboard', 'calendar']"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('calendar.title' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'calendar'"
             [style.color]="activeTab() !== 'calendar' ? 'var(--text-secondary)' : ''"
           >
@@ -161,39 +178,39 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            <span class="text-start">{{ 'calendar.title' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'calendar.title' | translate }}</span>
           </button>
 
           <!-- Policies Chat -->
           <button
-            (click)="activeTab.set('policies-chat')"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            [routerLink]="['/employee-dashboard', 'policies-chat']"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.policies' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'policies-chat'"
             [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
           >
             <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span class="text-start">{{ 'employee.nav.policies' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'employee.nav.policies' | translate }}</span>
           </button>
 
           <!-- Project Policies -->
           <button
-            (click)="activeTab.set('project-policies')"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            [routerLink]="['/employee-dashboard', 'project-policies']"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('PROJECT_POLICIES.PROJECT_POLICIES' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'project-policies'"
             [style.color]="activeTab() !== 'project-policies' ? 'var(--text-secondary)' : ''"
           >
             <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span class="text-start">{{ 'PROJECT_POLICIES.PROJECT_POLICIES' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'PROJECT_POLICIES.PROJECT_POLICIES' | translate }}</span>
           </button>
 
           <!-- My Profile -->
           <button
             [routerLink]="['/employee-dashboard', 'profile']"
-            class="group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('employee.nav.myProfile' | translate) : ''"
             [class.nav-item-active]="activeTab() === 'profile'"
             [style.color]="activeTab() !== 'profile' ? 'var(--text-secondary)' : ''"
           >
@@ -202,20 +219,44 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
-            <span class="text-start">{{ 'employee.nav.myProfile' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'employee.nav.myProfile' | translate }}</span>
           </button>
+
+          <!-- Settings -->
+          <button
+            [routerLink]="['/employee-dashboard', 'settings']"
+            class="group w-full flex items-center py-3 rounded-xl transition-all duration-200 text-sm" [class.px-4]="!isSidebarCollapsed()" [class.px-2]="isSidebarCollapsed()" [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()" [title]="isSidebarCollapsed() ? ('SIDEBAR.SETTINGS' | translate) : ''"
+            [class.nav-item-active]="activeTab() === 'settings'"
+            [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-start">{{ 'SIDEBAR.SETTINGS' | translate }}</span>
+          </button>
+
 
           <!-- Project Switcher (if multiple projects) -->
           @if (projectState.projects().length > 1) {
             <div class="pt-3 mt-2 border-t" style="border-color: var(--border);">
-              <p class="px-4 mb-2 text-[10px] font-extrabold uppercase tracking-widest"
+              <p class="mb-2 text-[10px] font-extrabold uppercase tracking-widest text-center"
+                 [class.px-4]="!isSidebarCollapsed()" [class.px-1]="isSidebarCollapsed()"
                  style="color: var(--text-secondary);">
-                {{ 'employee.nav.myProjects' | translate }}
+                @if (!isSidebarCollapsed()) {
+                  {{ 'employee.nav.myProjects' | translate }}
+                } @else {
+                  ...
+                }
               </p>
               @for (p of projectState.projects(); track p.id) {
                 <button
                   (click)="selectProject(p.id)"
-                  class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm"
+                  class="w-full flex items-center py-2.5 rounded-xl transition-all duration-200 text-sm"
+                  [class.px-3]="!isSidebarCollapsed()" [class.px-1]="isSidebarCollapsed()"
+                  [class.gap-2.5]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()"
+                  [title]="isSidebarCollapsed() ? getProjectName(p) : ''"
                   [class.bg-primary/10]="p.id === projectState.selectedProjectId()"
                   [style.color]="p.id === projectState.selectedProjectId() ? 'var(--primary)' : 'var(--text-secondary)'"
                 >
@@ -223,8 +264,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                        [style.background]="getProjectColor(p.id)">
                     {{ (getProjectName(p) || '?')[0].toUpperCase() }}
                   </div>
-                  <span class="text-start truncate flex-1 text-xs font-semibold">{{ getProjectName(p) }}</span>
-                  @if (p.id === projectState.selectedProjectId()) {
+                  <span [class.hidden]="isSidebarCollapsed()" class="text-start truncate flex-1 text-xs font-semibold">{{ getProjectName(p) }}</span>
+                  @if (!isSidebarCollapsed() && p.id === projectState.selectedProjectId()) {
                     <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                     </svg>
@@ -239,7 +280,9 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
         <div class="px-3 pt-3 border-t mt-3 space-y-2" style="border-color: var(--border);">
           <button
             [routerLink]="['/employee-dashboard', 'profile']"
-            class="w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 group"
+            class="w-full flex items-center rounded-xl border transition-all duration-200 group"
+            [class.p-3]="!isSidebarCollapsed()" [class.p-2]="isSidebarCollapsed()"
+            [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()"
             style="background: var(--surface); border-color: var(--border);"
           >
             <!-- Gradient avatar -->
@@ -248,7 +291,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                  [style.background]="avatarGradient()">
               {{ userInitial() }}
             </div>
-            <div class="min-w-0 flex-1 text-start">
+            <div class="min-w-0 flex-1 text-start" [class.hidden]="isSidebarCollapsed()">
               <p class="text-xs font-extrabold truncate transition-colors duration-200"
                  style="color: var(--text-primary);">{{ userName() }}</p>
               <p class="text-[10px] truncate mt-0.5" style="color: var(--text-secondary);">
@@ -256,12 +299,14 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               </p>
             </div>
             <!-- Online indicator -->
-            <div class="w-2 h-2 rounded-full shrink-0" style="background: var(--success);"></div>
+            <div [class.hidden]="isSidebarCollapsed()" class="w-2 h-2 rounded-full shrink-0" style="background: var(--success);"></div>
           </button>
           
           <button
             (click)="logout()"
-            class="w-full flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 group hover:bg-error/10"
+            class="w-full flex items-center rounded-xl border transition-all duration-200 group hover:bg-error/10"
+            [class.p-3]="!isSidebarCollapsed()" [class.p-2]="isSidebarCollapsed()"
+            [class.gap-3]="!isSidebarCollapsed()" [class.justify-center]="isSidebarCollapsed()"
             style="background: transparent; border-color: var(--border); color: var(--error);"
           >
             <div class="w-9 flex items-center justify-center shrink-0">
@@ -269,8 +314,9 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
               </svg>
             </div>
-            <span class="text-xs font-extrabold flex-1 text-start">{{ 'employee.header.logout' | translate }}</span>
+            <span [class.hidden]="isSidebarCollapsed()" class="text-xs font-extrabold flex-1 text-start">{{ 'employee.header.logout' | translate }}</span>
           </button>
+        </div>
         </div>
       </aside>
 
@@ -386,46 +432,98 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <!-- Notification Bell -->
             <app-notification-bell />
 
+            <!-- Desktop Utilities -->
+            <div class="hidden lg:flex items-center gap-1.5 sm:gap-2">
+              <!-- Language Toggle Button -->
+              <button (click)="toggleLanguage()" 
+                      [disabled]="isSwitchingLanguage()"
+                      class="p-1 sm:p-2 text-text-secondary hover:text-text-primary font-bold text-xs rounded-lg hover:bg-border transition-colors uppercase disabled:opacity-50 relative min-w-[36px] flex items-center justify-center"
+                      style="color: var(--text-secondary);">
+                @if (isSwitchingLanguage()) {
+                  <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                } @else {
+                  {{ currentLang() === 'en' ? 'AR' : 'EN' }}
+                }
+              </button>
 
-            <!-- Dark / Light Toggle -->
-            <button
-              (click)="toggleTheme()"
-              class="p-2 rounded-xl transition-all duration-200"
-              style="color: var(--text-secondary);"
-              [title]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-            >
-              @if (isDark()) {
-                <!-- Sun icon -->
-                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <!-- Dark / Light Toggle -->
+              <button
+                (click)="toggleTheme()"
+                [disabled]="isSwitchingTheme()"
+                class="p-1 sm:p-2 rounded-xl hover:bg-border transition-all duration-200 disabled:opacity-50 relative flex items-center justify-center"
+                style="color: var(--text-secondary);"
+                [title]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+              >
+                @if (isSwitchingTheme()) {
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                } @else if (isDark()) {
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                } @else {
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                  </svg>
+                }
+              </button>
+
+              <!-- Logout Button -->
+              <button
+                (click)="logout()"
+                class="p-1 sm:p-2 sm:px-3 rounded-xl hover:bg-error/10 transition-all duration-200 text-error flex items-center justify-center gap-1.5"
+                title="Logout"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
-              } @else {
-                <!-- Moon icon -->
-                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                </svg>
+                <span class="hidden md:inline text-xs font-bold">{{ 'employee.header.logout' | translate }}</span>
+              </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div class="lg:hidden relative">
+              <button (click)="isMobileMenuOpen.set(!isMobileMenuOpen())"
+                      class="p-2 text-text-secondary hover:text-text-primary rounded-xl hover:bg-border transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+
+              @if (isMobileMenuOpen()) {
+                <div class="fixed inset-0 z-40" (click)="isMobileMenuOpen.set(false)"></div>
+                <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both] flex flex-col p-2 gap-1">
+                  <!-- Language Toggle -->
+                  <button (click)="toggleLanguage(); isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-sidebar transition-colors rounded-lg">
+                    <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                    <span class="font-medium text-text-primary">{{ currentLang() === 'en' ? 'العربية' : 'English' }}</span>
+                  </button>
+                  <!-- Theme Toggle -->
+                  <button (click)="toggleTheme(); isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-sidebar transition-colors rounded-lg">
+                    @if (isDark()) {
+                      <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    } @else {
+                      <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    }
+                    <span class="font-medium text-text-primary">{{ isDark() ? 'Light Mode' : 'Dark Mode' }}</span>
+                  </button>
+                  <div class="border-t border-border my-1"></div>
+                  <!-- Logout -->
+                  <button (click)="logout()" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-error/10 transition-colors rounded-lg text-error">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span class="font-bold">{{ 'employee.header.logout' | translate }}</span>
+                  </button>
+                </div>
               }
-            </button>
+            </div>
 
-            <!-- Logout -->
-            <button
-              (click)="logout()"
-              class="p-2 rounded-xl transition-all duration-200"
-              style="color: var(--error);"
-              [title]="'employee.header.logout' | translate"
-            >
-              <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-              </svg>
-            </button>
 
-            <!-- Date -->
-            <span class="text-sm font-semibold hidden sm:inline" style="color: var(--text-secondary);">
-              {{ currentDate }}
-            </span>
+            <!-- Date Removed per user request -->
           </div>
         </header>
 
@@ -444,7 +542,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               </div>
             </div>
 
-          } @else if (projectState.projects().length === 0 && activeTab() !== 'profile') {
+          } @else if (projectState.projects().length === 0 && !['profile', 'policies-chat', 'settings'].includes(activeTab())) {
             <!-- No project assigned -->
             <div class="flex items-center justify-center h-full min-h-[50vh]">
               <div class="text-center max-w-md p-8 rounded-3xl border shadow-sm animate-[fadeUp_0.4s_ease_both]"
@@ -480,7 +578,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
             } @else if (activeTab() === 'current-projects') {
               <div class="animate-[fadeUp_0.3s_ease_both]">
-                <app-current-projects (viewBoard)="activeTab.set('sprint')"></app-current-projects>
+                <app-current-projects (viewBoard)="navigateToTab('sprint')"></app-current-projects>
               </div>
 
             } @else if (activeTab() === 'project-history') {
@@ -500,6 +598,10 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
               <div class="animate-[fadeUp_0.3s_ease_both]">
                 <app-my-profile></app-my-profile>
               </div>
+            } @else if (activeTab() === 'settings') {
+              <div class="animate-[fadeUp_0.3s_ease_both] h-full w-full">
+                <app-settings-view class="block w-full h-full"></app-settings-view>
+              </div>
             }
           }
         </main>
@@ -508,16 +610,14 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
       <!-- ══════════════════════════════════════════
            MOBILE BOTTOM NAVIGATION
       ══════════════════════════════════════════ -->
-      <div class="fixed bottom-3 start-3 end-3 z-40 md:hidden">
-        <div class="border rounded-2xl shadow-2xl flex items-center justify-around py-2 px-1
-                    backdrop-blur-xl"
-             style="background: color-mix(in srgb, var(--surface) 80%, transparent);
-                    border-color: var(--border);">
+      <div class="fixed bottom-2 start-2 end-2 z-40 lg:hidden">
+        <div class="border rounded-2xl shadow-2xl flex items-center justify-start overflow-x-auto flex-nowrap gap-1 py-1.5 px-3 backdrop-blur-xl hide-scrollbar [&>button]:shrink-0 [&>button]:min-w-[3.5rem]"
+             style="background: color-mix(in srgb, var(--surface) 80%, transparent); border-color: var(--border); scrollbar-width: none;">
 
           <!-- Sprint Board -->
           <button
             [routerLink]="['/employee-dashboard', 'sprint']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'sprint'"
             [style.color]="activeTab() !== 'sprint' ? 'var(--text-secondary)' : ''"
           >
@@ -531,7 +631,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- Current Projects -->
           <button
             [routerLink]="['/employee-dashboard', 'current-projects']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'current-projects'"
             [style.color]="activeTab() !== 'current-projects' ? 'var(--text-secondary)' : ''"
           >
@@ -542,10 +642,23 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
             <span class="text-[9px] font-bold">{{ 'employee.nav.current' | translate }}</span>
           </button>
 
+          <!-- Calendar -->
+          <button
+            [routerLink]="['/employee-dashboard', 'calendar']"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
+            [class.mobile-tab-active]="activeTab() === 'calendar'"
+            [style.color]="activeTab() !== 'calendar' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-[9px] font-bold">{{ 'calendar.title' | translate }}</span>
+          </button>
+
           <!-- Project History -->
           <button
             [routerLink]="['/employee-dashboard', 'project-history']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'project-history'"
             [style.color]="activeTab() !== 'project-history' ? 'var(--text-secondary)' : ''"
           >
@@ -557,8 +670,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Policies -->
           <button
-            (click)="activeTab.set('policies-chat')"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            [routerLink]="['/employee-dashboard', 'policies-chat']"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'policies-chat'"
             [style.color]="activeTab() !== 'policies-chat' ? 'var(--text-secondary)' : ''"
           >
@@ -570,8 +683,8 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
 
           <!-- Project Policies Chat Mobile -->
           <button
-            (click)="activeTab.set('project-policies')"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            [routerLink]="['/employee-dashboard', 'project-policies']"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'project-policies'"
             [style.color]="activeTab() !== 'project-policies' ? 'var(--text-secondary)' : ''"
           >
@@ -584,7 +697,7 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
           <!-- My Profile -->
           <button
             [routerLink]="['/employee-dashboard', 'profile']"
-            class="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
             [class.mobile-tab-active]="activeTab() === 'profile'"
             [style.color]="activeTab() !== 'profile' ? 'var(--text-secondary)' : ''"
           >
@@ -593,6 +706,20 @@ type EmployeeTab = 'sprint' | 'current-projects' | 'project-history' | 'profile'
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
             <span class="text-[9px] font-bold">{{ 'employee.nav.profile' | translate }}</span>
+          </button>
+
+          <!-- Settings -->
+          <button
+            [routerLink]="['/employee-dashboard', 'settings']"
+            class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 relative"
+            [class.mobile-tab-active]="activeTab() === 'settings'"
+            [style.color]="activeTab() !== 'settings' ? 'var(--text-secondary)' : ''"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="text-[9px] font-bold">Settings</span>
           </button>
         </div>
       </div>
@@ -605,10 +732,14 @@ export class EmployeeDashboardComponent implements OnInit {
   private router = inject(Router);
   public route = inject(ActivatedRoute);
   private doc = inject(DOCUMENT);
+
+  isSwitchingLanguage = signal(false);
+  isSwitchingTheme = signal(false);
   private theme = inject(ThemeService);
   private auth = inject(AuthService);
   private tr = inject(TranslateService);
   projectState = inject(ProjectStateService);
+  sprintService = inject(SprintPlanningService);
 
   // ── Signals ─────────────────────────────────
   activeTab = signal<EmployeeTab>('sprint');
@@ -617,7 +748,9 @@ export class EmployeeDashboardComponent implements OnInit {
   userJobTitle = signal('');
   activeSprintLabel = signal('');
   hasActiveSprint = signal(false);
+  isSidebarCollapsed = signal(true);
   isProjectDropdownOpen = signal(false);
+  isMobileMenuOpen = signal(false);
 
   currentDate: string = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -647,6 +780,7 @@ export class EmployeeDashboardComponent implements OnInit {
     if (tab === 'current-projects') return this.tr.instant('employee.pages.currentProjects');
     if (tab === 'project-history') return this.tr.instant('employee.pages.projectHistory');
     if (tab === 'calendar') return this.tr.instant('calendar.title');
+    if (tab === 'settings') return 'Settings';
     if (tab === 'project-policies') return this.tr.instant('PROJECT_POLICIES.PROJECT_POLICIES');
     if (tab === 'policies-chat') return this.tr.instant('employee.pages.policies');
     return this.tr.instant('employee.pages.myProfile');
@@ -656,14 +790,22 @@ export class EmployeeDashboardComponent implements OnInit {
   constructor() {
     this.route.paramMap.subscribe(params => {
       const tab = params.get('tab');
-      if (tab) {
-        this.activeTab.set(tab as any);
+      const validTabs: EmployeeTab[] = ['sprint', 'current-projects', 'project-history', 'profile', 'calendar', 'settings', 'policies-chat', 'project-policies'];
+      if (tab && validTabs.includes(tab as EmployeeTab)) {
+        this.activeTab.set(tab as EmployeeTab);
+        localStorage.setItem('employee_tab', tab);
+      } else if (tab) {
+        this.router.navigate(['/employee-dashboard', 'sprint'], { replaceUrl: true });
       }
     });
     // Reload sprint info when selected project changes
     effect(() => {
       const id = this.projectState.selectedProjectId();
-      if (id) this.loadActiveSprint(id);
+      if (id) {
+        untracked(() => {
+          this.loadActiveSprint(id);
+        });
+      }
     });
 
     // Apply RTL whenever language changes
@@ -679,26 +821,29 @@ export class EmployeeDashboardComponent implements OnInit {
     this.tr.use(saved);
     this.applyDirection(saved);
 
-    // Restore persisted tab
-    const savedTab = localStorage.getItem('employee_tab') as EmployeeTab | null;
-    if (savedTab && ['sprint', 'current-projects', 'project-history', 'profile', 'calendar',, 'policies-chat'].includes(savedTab)) {
-      this.router.navigate(['/employee-dashboard', savedTab]);
-    }
-
     this.loadUserProfile();
   }
 
   // ── Methods ─────────────────────────────────
 
-  setLanguage(lang: 'en' | 'ar') {
-    this.currentLang.set(lang);
-    localStorage.setItem('app_lang', lang);
-    this.tr.use(lang);
-    this.applyDirection(lang);
+  navigateToTab(tab: EmployeeTab): void {
+    this.router.navigate(['/employee-dashboard', tab]);
   }
 
-  toggleLanguage() {
+  setLanguage(lang: 'en' | 'ar') {
+    localStorage.setItem('app_lang', lang);
+    window.location.reload();
+  }
+
+  async toggleLanguage() {
+    if (this.isSwitchingLanguage()) return;
+    this.isSwitchingLanguage.set(true);
+
+    // Simulate async switch to feel premium like PM dashboard
+    await new Promise(r => setTimeout(r, 400));
+
     this.setLanguage(this.currentLang() === 'en' ? 'ar' : 'en');
+    this.isSwitchingLanguage.set(false);
   }
 
   getProjectName(p: any): string {
@@ -712,8 +857,15 @@ export class EmployeeDashboardComponent implements OnInit {
     this.doc.documentElement.setAttribute('lang', lang);
   }
 
-  toggleTheme() {
+  async toggleTheme() {
+    if (this.isSwitchingTheme()) return;
+    this.isSwitchingTheme.set(true);
+
+    // Simulate async switch to feel premium
+    await new Promise(r => setTimeout(r, 400));
+
     this.theme.toggle();
+    this.isSwitchingTheme.set(false);
   }
 
   logout() {
@@ -740,8 +892,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
   private async loadUserProfile() {
     try {
-      const { data } = await apiClient.get<any>('/employees/profile');
-      const p = data.data ?? data;
+      const p = await this.projectState.getProfile();
       if (p) {
         this.userName.set(`${p.firstName ?? ''} ${p.lastName ?? ''}`.trim());
         this.userJobTitle.set(p.jobTitle ?? '');
@@ -757,10 +908,10 @@ export class EmployeeDashboardComponent implements OnInit {
 
   private async loadActiveSprint(projectId: string) {
     try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/sprints/active`);
-      const s = data.data;
+      const data = await this.sprintService.getActiveSprint(projectId);
+      const s = data.data ?? data;
       if (s) {
-        const sprintName = this.currentLang() === 'ar' 
+        const sprintName = this.currentLang() === 'ar'
           ? (s.titleAr || s.titleEn || s.title || '')
           : (s.titleEn || s.titleAr || s.title || '');
         this.activeSprintLabel.set(sprintName);

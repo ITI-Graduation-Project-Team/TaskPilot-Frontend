@@ -27,6 +27,8 @@ export class TaskListComponent {
 
   searchQuery = signal('');
   filterTab = signal<'all' | 'unassigned' | 'assigned'>('all');
+  currentPage = signal(1);
+  pageSize = 5;
 
   filteredTasks(): AssignmentSuggestion[] {
     const q = this.searchQuery().trim().toLowerCase();
@@ -42,6 +44,38 @@ export class TaskListComponent {
 
       return matchesSearch && matchesTab;
     });
+  }
+
+  paginatedTasks(): AssignmentSuggestion[] {
+    const allFiltered = this.filteredTasks();
+    const startIndex = (this.currentPage() - 1) * this.pageSize;
+    return allFiltered.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredTasks().length / this.pageSize);
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
+  }
+
+  onFilterChange(tab: 'all' | 'unassigned' | 'assigned') {
+    this.filterTab.set(tab);
+    this.currentPage.set(1);
+  }
+
+  onSearchChange(q: string) {
+    this.searchQuery.set(q);
+    this.currentPage.set(1);
   }
 
   selectTask(taskId: string) {

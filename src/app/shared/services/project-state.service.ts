@@ -16,6 +16,11 @@ export interface ProjectInfo {
   platformTargets?: string[];
   projectType?: string;
   status?: string;
+  teamSize?: number;
+  totalUserStories?: number;
+  completedSprintsCount?: number;
+  activeSprintsCount?: number;
+  setupStatus?: string;
 }
 
 @Injectable({
@@ -41,9 +46,11 @@ export class ProjectStateService {
   readonly loading = this._loading.asReadonly();
   readonly projectEmployeeCount = this._projectEmployeeCount.asReadonly();
 
+
   readonly selectedProject = computed(() => {
     const id = this._selectedProjectId();
-    return this._projects().find(p => p.id === id) || null;
+    if (!id) return null;
+    return this._projects().find(p => String(p.id).toLowerCase() === String(id).toLowerCase()) || null;
   });
 
   constructor() {
@@ -52,22 +59,71 @@ export class ProjectStateService {
       if (stored) {
         try { this._localCompletedIds.set(JSON.parse(stored)); } catch (e) { }
       }
+      const savedProjectId = localStorage.getItem('selectedProjectId');
+      if (savedProjectId) {
+        this._selectedProjectId.set(savedProjectId);
+      }
     }
     this.initializeState();
   }
 
   private profilePromise: Promise<any> | null = null;
 
-  async getProfile(): Promise<any> {
+  async getProfile(forceRefresh = false): Promise<any> {
+    if (forceRefresh) {
+      this.profilePromise = null;
+    }
     if (!this.profilePromise) {
       this.profilePromise = apiClient.get<any>('/employees/profile')
-        .then(res => res.data?.data || res.data)
+        .then(res => {
+          const profile = res.data?.data || res.data;
+          // Update signals synchronously
+          const companyId = profile?.companyId || profile?.CompanyId || null;
+          this._userCompanyId.set(companyId);
+          return profile;
+        })
         .catch(err => {
           this.profilePromise = null;
           throw err;
         });
     }
     return this.profilePromise;
+  }
+
+  async loadProjectById(projectId: string) {
+    try {
+      const { data } = await apiClient.get<any>('/Projects/' + projectId);
+      const p = data.data || data;
+      if (p) {
+        const projectInfo: ProjectInfo = {
+          id: p.id,
+          name: p.name || p.nameEn || '',
+          nameEn: p.nameEn || p.name || '',
+          nameAr: p.nameAr || p.name || '',
+          description: p.description || p.descriptionEn || '',
+          descriptionEn: p.descriptionEn || p.description || '',
+          descriptionAr: p.descriptionAr || p.description || '',
+          companyId: p.companyId,
+          managerId: p.managerId,
+          techStack: p.techStack || [],
+          platformTargets: p.platformTargets || [],
+          projectType: p.projectType || '',
+          status: p.status || 'Active',
+          teamSize: p.teamSize || 0,
+          totalUserStories: p.totalUserStories || 0,
+          completedSprintsCount: p.completedSprintsCount || 0,
+          activeSprintsCount: p.activeSprintsCount || 0,
+          setupStatus: p.setupStatus || 'NeedsTechStack'
+        };
+        
+        this._projects.update(projects => {
+          if (projects.find(x => String(x.id).toLowerCase() === String(projectInfo.id).toLowerCase())) return projects;
+          return [...projects, projectInfo];
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to load single project:', e);
+    }
   }
 
   async initializeState() {
@@ -89,6 +145,9 @@ export class ProjectStateService {
         const companyName = profile.companyName || profile.CompanyName || '';
         this._companyName.set(companyName);
 
+        // Always load the complete accessible list. loadProjects() restores the
+        // saved selection after fetching, so a saved project must not short-circuit
+        // the dropdown to a single item.
         await this.loadProjects();
       }
     } catch (e) {
@@ -113,12 +172,9 @@ export class ProjectStateService {
       const { data } = await apiClient.get<any>(endpoint);
       const projects: any[] = data.data || [];
       
-      // Filter to ensure the PM only sees projects they actually manage
-      const accessibleProjects = isPM
-        ? projects.filter(p => p.managerId === userId)
-        : projects;
-
-      const filtered: ProjectInfo[] = accessibleProjects.map(p => ({
+      // The API enforces project access. Avoid filtering GUIDs again in the client,
+      // where casing differences could incorrectly hide valid PM projects.
+      const filtered: ProjectInfo[] = projects.map(p => ({
         id: p.id,
         name: p.name || p.nameEn || '',
         nameEn: p.nameEn || p.name || '',
@@ -131,16 +187,24 @@ export class ProjectStateService {
         techStack: p.techStack || [],
         platformTargets: p.platformTargets || [],
         projectType: p.projectType || '',
-        status: p.status || 'Active'
+        status: p.status || 'Active',
+        teamSize: p.teamSize || 0,
+        totalUserStories: p.totalUserStories || 0,
+        completedSprintsCount: p.completedSprintsCount || 0,
+        activeSprintsCount: p.activeSprintsCount || 0,
+        setupStatus: p.setupStatus || 'NeedsTechStack'
       }));
 
       this._projects.set(filtered);
 
       if (typeof localStorage !== 'undefined') {
         const savedId = localStorage.getItem('selectedProjectId');
-        if (savedId && filtered.some(p => p.id === savedId)) {
-          this.setSelectedProject(savedId);
-          return;
+        if (savedId) {
+          const matchingProject = filtered.find(p => String(p.id).toLowerCase() === String(savedId).toLowerCase());
+          if (matchingProject) {
+            this.setSelectedProject(matchingProject.id);
+            return;
+          }
         }
       }
 
@@ -154,8 +218,62 @@ export class ProjectStateService {
     }
   }
 
+  async loadProjectsPaged(page: number, pageSize: number, statusFilter: string = '', searchQuery: string = ''): Promise<{ projects: ProjectInfo[], totalCount: number }> {
+    const isPM = this._isProjectManager();
+    const userId = this._userId();
+    const companyId = this._userCompanyId();
+    if (!userId) return { projects: [], totalCount: 0 };
+
+    try {
+      const isProjectManagerRequest = isPM && !!companyId;
+      const endpointBase = isProjectManagerRequest
+        ? `/Projects/company/${companyId}/paged`
+        : `/employees/${userId}/projects/paged`;
+
+      let endpoint = `${endpointBase}?page=${page}&pageSize=${pageSize}`;
+      if (statusFilter) {
+        endpoint += `&statusFilter=${encodeURIComponent(statusFilter)}`;
+      }
+      if (searchQuery) {
+        endpoint += `&searchQuery=${encodeURIComponent(searchQuery)}`;
+      }
+
+      const { data } = await apiClient.get<any>(endpoint);
+      const items: any[] = data.data?.items || [];
+      const totalCount = data.data?.totalItems || 0;
+
+      const filtered: ProjectInfo[] = items.map(p => ({
+        id: p.id,
+        name: p.name || p.nameEn || '',
+        nameEn: p.nameEn || p.name || '',
+        nameAr: p.nameAr || p.name || '',
+        description: p.description || p.descriptionEn || '',
+        descriptionEn: p.descriptionEn || p.description || '',
+        descriptionAr: p.descriptionAr || p.description || '',
+        companyId: p.companyId,
+        managerId: p.managerId,
+        techStack: p.techStack || [],
+        platformTargets: p.platformTargets || [],
+        projectType: p.projectType || '',
+        status: p.status || 'Active',
+        teamSize: p.teamSize || 0,
+        totalUserStories: p.totalUserStories || 0,
+        completedSprintsCount: p.completedSprintsCount || 0,
+        activeSprintsCount: p.activeSprintsCount || 0,
+        setupStatus: p.setupStatus || 'NeedsTechStack'
+      }));
+
+      return { projects: filtered, totalCount };
+    } catch (e) {
+      console.warn('Failed to load paginated projects:', e);
+      return { projects: [], totalCount: 0 };
+    }
+  }
+
+
+
   setSelectedProject(projectId: string | null, force: boolean = false) {
-    if (!force && this._selectedProjectId() === projectId) {
+    if (!force && String(this._selectedProjectId()).toLowerCase() === String(projectId).toLowerCase()) {
       return;
     }
     this._selectedProjectId.set(projectId);
@@ -169,9 +287,8 @@ export class ProjectStateService {
 
   async loadProjectEmployeeCount(projectId: string): Promise<number> {
     try {
-      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees`);
-      const list = data.data || data || [];
-      const count = Array.isArray(list) ? list.length : 0;
+      const { data } = await apiClient.get<any>(`/projects/${projectId}/employees/count`);
+      const count = typeof data.data === 'number' ? data.data : (typeof data === 'number' ? data : 0);
       this._projectEmployeeCount.set(count);
       return count;
     } catch (e) {
@@ -185,22 +302,27 @@ export class ProjectStateService {
   }
 
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<boolean> {
-    const pmId = this._userId();
     const companyId = this._userCompanyId();
-    if (!pmId || !companyId) return false;
+    if (!companyId) return false;
 
     const descAr = descriptionAr || descriptionEn;
     try {
       this._loading.set(true);
+      const existingIds = this._projects().map(p => p.id);
+      
       await apiClient.post('/Projects', {
         nameEn,
         nameAr,
         descriptionEn,
         descriptionAr: descAr,
-        managerId: pmId,
         companyId: companyId
       });
       await this.loadProjects();
+
+      const newProject = this._projects().find(p => !existingIds.includes(p.id));
+      if (newProject) {
+        this.setSelectedProject(newProject.id);
+      }
       return true;
     } catch (e) {
       console.error('Failed to create project:', e);

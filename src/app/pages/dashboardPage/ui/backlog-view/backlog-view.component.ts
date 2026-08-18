@@ -1,15 +1,16 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit, effect, computed, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BacklogService, BacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
+import { BacklogService, BacklogDto, PaginatedBacklogDto, TaskItemDto, TaskPayload, UserStoryDto, UserStoryPayload } from '../../../../shared/api/backlog.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { AiRequirementsService } from '../../../../shared/api/ai-requirements.service';
 import { SprintPlanningModalComponent } from '../sprint-planning-modal/sprint-planning-modal.component';
-import { TechStackAdvisorModalComponent } from '../tech-stack-advisor-modal/tech-stack-advisor-modal.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { ProjectAiChatComponent } from '../../../../widgets/projectAiChat/project-ai-chat.component';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { AiActivityComponent, AiActivityPhase } from '../../../../shared/ui/ai-activity/ai-activity.component';
+import { Router } from '@angular/router';
 
 interface StoryFormModel extends UserStoryPayload {
   id?: string;
@@ -50,10 +51,16 @@ const EMPTY_TASK: TaskFormModel = {
   selector: 'app-backlog-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, TechStackAdvisorModalComponent, ProjectAiChatComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, SprintPlanningModalComponent, ProjectAiChatComponent, AiActivityComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
-      @if (projectState.loading() || isLoading()) {
+      @if (isGeneratingWbs()) {
+        <app-ai-activity
+          [title]="isArabic() ? 'بنجهز خطة عمل المشروع' : 'Building your project work plan'"
+          [description]="isArabic() ? 'بنحوّل نطاق المشروع إلى قصص مستخدم ومهام عملية، ثم بنراجع المهارات المطلوبة.' : 'Turning the project scope into actionable stories and tasks, then validating the skills required.'"
+          [phases]="wbsPhases()"
+        />
+      } @else if (projectState.loading() || isLoading()) {
         <div class="flex items-center justify-center rounded-2xl border border-border bg-surface p-12 shadow-sm">
           <div class="flex flex-col items-center gap-3">
             <div class="h-8 w-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
@@ -118,14 +125,14 @@ const EMPTY_TASK: TaskFormModel = {
 
           <div class="flex flex-wrap items-center gap-3">
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
-              @if ((backlog()?.userStories?.length || 0) > 0) {
+              @if ((backlog()?.userStories?.items?.length || 0) > 0) {
               }
               <button type="button" (click)="isChatOpen.set(true)" class="rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700">{{ 'BACKLOG.EDIT_BACKLOG' | translate }}</button>
             }
           </div>
         </header>
 
-        @if ((backlog()?.userStories?.length || 0) > 0) {
+        @if ((backlog()?.userStories?.items?.length || 0) > 0) {
           <section class="rounded-2xl border border-border bg-surface shadow-sm">
             <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
               <span>{{ label('story') }}</span>
@@ -135,17 +142,17 @@ const EMPTY_TASK: TaskFormModel = {
             </div>
 
             <div class="divide-y divide-border">
-              @for (story of backlog()?.userStories; track story.id) {
+              @for (story of backlog()?.userStories?.items; track story.id) {
                 <article>
                   <div class="grid grid-cols-[1fr_auto] gap-3 px-4 py-4 md:grid-cols-[1fr_90px_80px_150px] md:items-center">
                     <button type="button" (click)="toggleStory(story.id)" class="min-w-0 text-left">
                       <div class="flex flex-wrap items-center gap-2">
                         <h3 class="truncate text-sm font-extrabold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyTitle(story) }}</h3>
-                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ story.status }}</span>
+                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{{ localizedEnum(story.status) }}</span>
                       </div>
                       <p class="mt-1 line-clamp-1 text-xs text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ storyDescription(story) }}</p>
                     </button>
-                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ story.priority }}</span>
+                    <span class="hidden text-xs font-bold text-text-secondary sm:block">{{ localizedEnum(story.priority) }}</span>
                     <span class="hidden text-xs font-bold text-text-secondary md:block">{{ story.tasks.length }}</span>
                     @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
                       <div class="flex justify-end gap-2">
@@ -185,10 +192,10 @@ const EMPTY_TASK: TaskFormModel = {
                                   <p class="font-bold text-text-primary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskTitle(task) }}</p>
                                   <p class="mt-0.5 line-clamp-1 text-text-secondary" [attr.dir]="isArabic() ? 'rtl' : 'ltr'">{{ taskDescription(task) }}</p>
                                 </td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.status }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.type }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.priority }}</td>
-                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.effortSize }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.status) }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.type) }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.priority) }}</td>
+                                <td class="px-3 py-3 font-semibold text-text-secondary">{{ localizedEnum(task.effortSize) }}</td>
                                 <td class="px-3 py-3 font-semibold text-text-secondary">{{ task.estimatedHours }}</td>
                                 <td class="px-3 py-3">
                                   <div class="flex items-center justify-end gap-2">
@@ -211,6 +218,41 @@ const EMPTY_TASK: TaskFormModel = {
               }
             </div>
           </section>
+
+          <!-- Pagination Controls -->
+          @if ((backlog()?.userStories?.totalPages || 0) > 1) {
+            <div class="mt-6 flex items-center justify-center gap-2">
+              <button 
+                type="button" 
+                (click)="prevPage()"
+                [disabled]="!hasPreviousPage()"
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sidebar disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                ‹
+              </button>
+              
+              @for (p of [].constructor(totalPages()); track $index) {
+                <button 
+                  type="button" 
+                  (click)="goToPage($index + 1)"
+                  [class.bg-primary]="currentPage() === ($index + 1)"
+                  [class.text-white]="currentPage() === ($index + 1)"
+                  [class.font-bold]="currentPage() === ($index + 1)"
+                  [class.text-text-secondary]="currentPage() !== ($index + 1)"
+                  [class.hover:bg-sidebar]="currentPage() !== ($index + 1)"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-sm transition-colors">
+                  {{ $index + 1 }}
+                </button>
+              }
+
+              <button 
+                type="button"
+                (click)="nextPage()"
+                [disabled]="!hasNextPage()"
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary hover:bg-sidebar disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                ›
+              </button>
+            </div>
+          }
         } @else {
           <section class="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface p-12 text-center shadow-sm">
             <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-primary">Empty backlog</p>
@@ -219,8 +261,8 @@ const EMPTY_TASK: TaskFormModel = {
             @if (projectState.isProjectManager() && projectState.selectedProject()?.status !== 'Completed' && projectState.selectedProject()?.status !== 'Archived') {
               <div class="mt-5 flex flex-wrap justify-center gap-3">
                 <button type="button" (click)="openStoryModal()" class="rounded-xl border border-border px-4 py-2.5 text-xs font-bold hover:bg-sidebar">Add story manually</button>
-                <button type="button" (click)="generateWbs()" [disabled]="isGeneratingWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover disabled:opacity-50">
-                  {{ isGeneratingWbs() ? 'Generating backlog...' : 'Generate WBS with AI' }}
+                <button type="button" (click)="generateWbs()" class="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-primary-hover">
+                  Open project setup
                 </button>
               </div>
             }
@@ -339,9 +381,6 @@ const EMPTY_TASK: TaskFormModel = {
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description EN
                     <textarea name="taskDescriptionEn" rows="3" [(ngModel)]="taskForm().descriptionEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary EN
-                    <textarea name="technicalSummaryEn" rows="3" [(ngModel)]="taskForm().technicalSummaryEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
-                  </label>
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaEn') }}
                     <textarea name="taskAcceptanceCriteriaEn" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaEn" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
@@ -357,9 +396,6 @@ const EMPTY_TASK: TaskFormModel = {
                   </label>
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Description AR
                     <textarea name="taskDescriptionAr" rows="3" [(ngModel)]="taskForm().descriptionAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
-                  </label>
-                  <label class="block space-y-1.5 text-xs font-bold text-text-secondary">Technical summary AR
-                    <textarea name="technicalSummaryAr" rows="3" [(ngModel)]="taskForm().technicalSummaryAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
                   </label>
                   <label class="block space-y-1.5 text-xs font-bold text-text-secondary">{{ label('acceptanceCriteriaAr') }}
                     <textarea name="taskAcceptanceCriteriaAr" rows="3" [(ngModel)]="taskForm().acceptanceCriteriaAr" class="w-full resize-none rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20"></textarea>
@@ -400,11 +436,7 @@ const EMPTY_TASK: TaskFormModel = {
     }
 
     @if (isSprintPlanningModalOpen()) {
-      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)" (navigateToTeam)="navigateToTeam.emit()"></app-sprint-planning-modal>
-    }
-
-    @if (isTechStackAdvisorOpen() && projectState.selectedProjectId()) {
-      <app-tech-stack-advisor-modal [projectId]="projectState.selectedProjectId()!" (close)="isTechStackAdvisorOpen.set(false)" (completed)="onAdvisorCompleted($event)"></app-tech-stack-advisor-modal>
+      <app-sprint-planning-modal (close)="onSprintPlanningModalClose()" (sprintConfirmed)="fetchBacklog(projectState.selectedProjectId()!)"></app-sprint-planning-modal>
     }
 
     <app-project-ai-chat 
@@ -419,6 +451,7 @@ const EMPTY_TASK: TaskFormModel = {
 export class BacklogViewComponent implements OnInit {
   @Output() navigateToTeam = new EventEmitter<void>();
   private backlogService = inject(BacklogService);
+  private router = inject(Router);
   private aiRequirementsService = inject(AiRequirementsService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
@@ -426,16 +459,22 @@ export class BacklogViewComponent implements OnInit {
 
   isLoading = signal(false);
   isAssigned = signal(false);
-  backlog = signal<BacklogDto | null>(null);
+  backlog = signal<PaginatedBacklogDto | null>(null);
   isStoryModalOpen = signal(false);
   isTaskModalOpen = signal(false);
   isSprintPlanningModalOpen = signal(false);
-  isTechStackAdvisorOpen = signal(false);
   isGeneratingWbs = signal(false);
+  wbsPhases = signal<AiActivityPhase[]>([]);
   isChatOpen = signal(false);
   expandedStoryIds = signal<string[]>([]);
   storyForm = signal<StoryFormModel>({ ...EMPTY_STORY });
   taskForm = signal<TaskFormModel>({ ...EMPTY_TASK });
+  
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(7);
+  totalPages = signal<number>(1);
+  hasNextPage = signal<boolean>(false);
+  hasPreviousPage = signal<boolean>(false);
 
   private translate = inject(TranslateService);
 
@@ -489,38 +528,50 @@ export class BacklogViewComponent implements OnInit {
     return (this.isArabic() ? ar : en)[key] || key;
   }
 
+  localizedEnum(val: string | undefined): string {
+    if (!val) return '';
+    if (!this.isArabic()) return val;
+    const ar: Record<string, string> = {
+      'ToDo': 'قيد الانتظار',
+      'InProgress': 'قيد التنفيذ',
+      'Review': 'للمراجعة',
+      'Done': 'مكتمل',
+      'Technical': 'تقني',
+      'NonTechnical': 'غير تقني',
+      'Low': 'منخفض',
+      'Medium': 'متوسط',
+      'High': 'عالي',
+      'Small': 'صغير',
+      'Large': 'كبير'
+    };
+    return ar[val] || val;
+  }
+
   localizedProjectName(): string {
     const data = this.backlog();
     const project = this.projectState.selectedProject();
-    return this.isArabic()
-      ? (data?.projectNameAr || project?.nameAr || 'Backlog')
-      : (data?.projectNameEn || project?.nameEn || 'Backlog');
+    return data?.projectName || 
+           (this.isArabic() ? (project?.nameAr || 'Backlog') : (project?.nameEn || 'Backlog'));
   }
 
   storyTitle(story: UserStoryDto): string {
-    return this.isArabic() ? (story.titleAr || '') : (story.titleEn || '');
+    return story.title || '';
   }
 
   storyDescription(story: UserStoryDto): string {
-    return this.isArabic()
-      ? (story.descriptionAr || this.label('noDescription'))
-      : (story.descriptionEn || this.label('noDescription'));
+    return story.description || this.label('noDescription');
   }
-
 
   storyAcceptanceCriteria(story: UserStoryDto): string {
-    return this.isArabic()
-      ? (story.acceptanceCriteriaAr || this.label('notProvidedAr'))
-      : (story.acceptanceCriteriaEn || this.label('notProvided'));
+    return story.acceptanceCriteria || (this.isArabic() ? this.label('notProvidedAr') : this.label('notProvided'));
   }
+
   taskTitle(task: TaskItemDto): string {
-    return this.isArabic() ? (task.titleAr || '') : (task.titleEn || '');
+    return task.title || '';
   }
 
   taskDescription(task: TaskItemDto): string {
-    return this.isArabic()
-      ? (task.descriptionAr || task.technicalSummaryAr || this.label('noDescription'))
-      : (task.descriptionEn || task.technicalSummaryEn || this.label('noDescription'));
+    return task.description || this.label('noDescription');
   }
   selectedProjectHasStack = computed(() => {
     const project = this.projectState.selectedProject();
@@ -541,19 +592,44 @@ export class BacklogViewComponent implements OnInit {
 
   ngOnInit() { }
 
-  async fetchBacklog(projectId: string) {
+  async fetchBacklog(projectId: string, page: number = 1) {
     this.isLoading.set(true);
     this.isAssigned.set(true);
     try {
-      const data = await this.backlogService.getBacklog(projectId);
+      const data = await this.backlogService.getBacklog(projectId, page, this.pageSize());
       this.backlog.set(data);
-      const firstStory = data.userStories[0]?.id;
+      this.currentPage.set(data.userStories.page);
+      this.totalPages.set(data.userStories.totalPages);
+      this.hasNextPage.set(data.userStories.hasNextPage);
+      this.hasPreviousPage.set(data.userStories.hasPreviousPage);
+      const firstStory = data.userStories.items[0]?.id;
       this.expandedStoryIds.set(firstStory ? [firstStory] : []);
     } catch (e) {
       console.error('Failed to fetch backlog:', e);
       this.backlog.set(null);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  nextPage() {
+    const projId = this.projectState.selectedProjectId();
+    if (projId && this.hasNextPage()) {
+      this.fetchBacklog(projId, this.currentPage() + 1);
+    }
+  }
+
+  prevPage() {
+    const projId = this.projectState.selectedProjectId();
+    if (projId && this.hasPreviousPage()) {
+      this.fetchBacklog(projId, this.currentPage() - 1);
+    }
+  }
+
+  goToPage(page: number) {
+    const projId = this.projectState.selectedProjectId();
+    if (projId && page !== this.currentPage()) {
+      this.fetchBacklog(projId, page);
     }
   }
 
@@ -564,52 +640,52 @@ export class BacklogViewComponent implements OnInit {
   async generateWbs() {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
-
-    if (!this.selectedProjectHasStack()) {
-      this.isTechStackAdvisorOpen.set(true);
-      return;
-    }
-
-    this.isGeneratingWbs.set(true);
-    try {
-      await this.aiRequirementsService.generateWbs(projId);
-      this.toastService.show('AI WBS user stories and task items generated successfully.', 'success');
-      await this.fetchBacklog(projId);
-    } catch (e: any) {
-      if (e.message === 'Network Error' || e.code === 'ECONNABORTED' || e.code === 'ERR_NETWORK' || e.status === 504 || e.status === 0) {
-        this.toastService.show('The AI is taking longer than expected. Generation is continuing in the background. Please refresh in a minute.', 'info');
-      } else {
-        const message = e?.response?.data?.message || e?.response?.data?.error?.message || e?.message || 'Check backend API logs.';
-        this.toastService.show(`Failed to generate WBS: ${message}`, 'error');
-      }
-    } finally {
-      this.isGeneratingWbs.set(false);
-    }
+    await this.router.navigate(['/dashboard', 'projects', projId, 'setup']);
   }
 
-  async onAdvisorCompleted(projectId: string) {
-    this.isTechStackAdvisorOpen.set(false);
-    await this.projectState.loadProjects();
-    this.projectState.setSelectedProject(projectId);
-    await this.fetchBacklog(projectId);
+  private createWbsPhases(active: 'generating' | 'enriching' | 'loading' | 'complete'): AiActivityPhase[] {
+    const labels = this.isArabic()
+      ? ['تحليل نطاق المشروع', 'إنشاء القصص والمهام', 'مراجعة المهارات', 'تحميل خطة العمل']
+      : ['Analyze project scope', 'Create stories & tasks', 'Validate required skills', 'Load your work plan'];
+    const ids = ['scope', 'generating', 'enriching', 'loading'];
+    const activeIndex = active === 'complete' ? ids.length : ids.indexOf(active);
+
+    return ids.map((id, index) => ({
+      id,
+      label: labels[index],
+      status: index < activeIndex ? 'complete' : index === activeIndex ? 'active' : 'pending'
+    }));
   }
 
   toggleStory(storyId: string) {
     this.expandedStoryIds.update(ids => ids.includes(storyId) ? ids.filter(id => id !== storyId) : [...ids, storyId]);
   }
 
-  openStoryModal(story?: UserStoryDto) {
-    this.storyForm.set(story ? {
-      id: story.id,
-      titleEn: story.titleEn || '',
-      titleAr: story.titleAr || '',
-      descriptionEn: story.descriptionEn || '',
-      descriptionAr: story.descriptionAr || '',
-      acceptanceCriteriaEn: story.acceptanceCriteriaEn || '',
-      acceptanceCriteriaAr: story.acceptanceCriteriaAr || '',
-      priority: story.priority || 'Medium',
-    } : { ...EMPTY_STORY });
-    this.isStoryModalOpen.set(true);
+  async openStoryModal(story?: UserStoryDto) {
+    if (story) {
+      try {
+        this.isLoading.set(true);
+        const details = await this.backlogService.getUserStory(story.id);
+        this.storyForm.set({
+          id: details.id,
+          titleEn: details.titleEn || '',
+          titleAr: details.titleAr || '',
+          descriptionEn: details.descriptionEn || '',
+          descriptionAr: details.descriptionAr || '',
+          acceptanceCriteriaEn: details.acceptanceCriteriaEn || '',
+          acceptanceCriteriaAr: details.acceptanceCriteriaAr || '',
+          priority: details.priority || 'Medium',
+        });
+        this.isStoryModalOpen.set(true);
+      } catch (e: any) {
+        this.toastService.show(e?.response?.data?.message || 'Failed to load story details.', 'error');
+      } finally {
+        this.isLoading.set(false);
+      }
+    } else {
+      this.storyForm.set({ ...EMPTY_STORY });
+      this.isStoryModalOpen.set(true);
+    }
   }
 
   async saveStory(event: Event) {
@@ -629,7 +705,7 @@ export class BacklogViewComponent implements OnInit {
         this.toastService.show('User story created.', 'success');
       }
       this.isStoryModalOpen.set(false);
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to save user story.', 'error');
     } finally {
@@ -640,7 +716,7 @@ export class BacklogViewComponent implements OnInit {
   async deleteStory(story: UserStoryDto) {
     const confirmed = await this.confirmDialog.confirm({
       title: 'Delete user story',
-      message: `Delete "${story.titleEn}" and all of its tasks?`,
+      message: `Delete "${story.title}" and all of its tasks?`,
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
       type: 'danger',
@@ -652,31 +728,44 @@ export class BacklogViewComponent implements OnInit {
     try {
       await this.backlogService.deleteUserStory(story.id);
       this.toastService.show('User story deleted.', 'success');
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to delete user story.', 'error');
     }
   }
 
-  openTaskModal(story: UserStoryDto, task?: TaskItemDto) {
-    this.taskForm.set(task ? {
-      id: task.id,
-      userStoryId: story.id,
-      titleEn: task.titleEn || '',
-      titleAr: task.titleAr || '',
-      descriptionEn: task.descriptionEn || '',
-      descriptionAr: task.descriptionAr || '',
-      technicalSummaryEn: task.technicalSummaryEn || '',
-      technicalSummaryAr: task.technicalSummaryAr || '',
-      acceptanceCriteriaEn: task.acceptanceCriteriaEn || '',
-      acceptanceCriteriaAr: task.acceptanceCriteriaAr || '',
-      estimatedHours: Number(task.estimatedHours || 1),
-      effortSize: task.effortSize || 'Medium',
-      priority: task.priority || 'Medium',
-      type: task.type || 'Technical',
-      status: task.status || 'ToDo',
-    } : { ...EMPTY_TASK, userStoryId: story.id });
-    this.isTaskModalOpen.set(true);
+  async openTaskModal(story: UserStoryDto, task?: TaskItemDto) {
+    if (task) {
+      try {
+        this.isLoading.set(true);
+        const details = await this.backlogService.getTask(task.id);
+        this.taskForm.set({
+          id: details.id,
+          userStoryId: story.id,
+          titleEn: details.titleEn || '',
+          titleAr: details.titleAr || '',
+          descriptionEn: details.descriptionEn || '',
+          descriptionAr: details.descriptionAr || '',
+          technicalSummaryEn: details.technicalSummaryEn || '',
+          technicalSummaryAr: details.technicalSummaryAr || '',
+          acceptanceCriteriaEn: details.acceptanceCriteriaEn || '',
+          acceptanceCriteriaAr: details.acceptanceCriteriaAr || '',
+          estimatedHours: Number(details.estimatedHours || 1),
+          effortSize: details.effortSize || 'Medium',
+          priority: details.priority || 'Medium',
+          type: details.type || 'Technical',
+          status: details.status || 'ToDo',
+        });
+        this.isTaskModalOpen.set(true);
+      } catch (e: any) {
+        this.toastService.show(e?.response?.data?.message || 'Failed to load task details.', 'error');
+      } finally {
+        this.isLoading.set(false);
+      }
+    } else {
+      this.taskForm.set({ ...EMPTY_TASK, userStoryId: story.id });
+      this.isTaskModalOpen.set(true);
+    }
   }
 
   async saveTask(event: Event) {
@@ -695,7 +784,7 @@ export class BacklogViewComponent implements OnInit {
         this.toastService.show('Task created.', 'success');
       }
       this.isTaskModalOpen.set(false);
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
       this.expandedStoryIds.update(ids => ids.includes(task.userStoryId!) ? ids : [...ids, task.userStoryId!]);
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to save task.', 'error');
@@ -707,7 +796,7 @@ export class BacklogViewComponent implements OnInit {
   async deleteTask(task: TaskItemDto) {
     const confirmed = await this.confirmDialog.confirm({
       title: 'Delete task',
-      message: `Delete "${task.titleEn}"?`,
+      message: `Delete "${task.title}"?`,
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
       type: 'danger',
@@ -719,7 +808,7 @@ export class BacklogViewComponent implements OnInit {
     try {
       await this.backlogService.deleteTask(task.id);
       this.toastService.show('Task deleted.', 'success');
-      await this.fetchBacklog(projId);
+      await this.fetchBacklog(projId, this.currentPage());
     } catch (e: any) {
       this.toastService.show(e?.response?.data?.message || 'Failed to delete task.', 'error');
     }

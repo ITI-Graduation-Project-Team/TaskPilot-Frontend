@@ -1,9 +1,23 @@
 <div class="chat-drawer" [class.open]="isOpen">
   <div class="chat-header">
-    <h3>Backlog AI Assistant</h3>
-    <button class="close-btn" (click)="close()">&times;</button>
+    <div class="header-title">
+      <div class="icon-wrapper">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <div>
+        <h3>Backlog AI Assistant</h3>
+        <span class="status-dot">Online</span>
+      </div>
+    </div>
+    <button class="close-btn" (click)="close()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
   </div>
-  
+
   <div class="progress-section" *ngIf="!projectId">
     <div class="score-row">
       <span [dir]="detectTextDir(completenessLabel())">{{ completenessLabel() }}</span>
@@ -16,19 +30,32 @@
 
   <div class="chat-body" #scrollContainer>
     <div class="upload-section" *ngIf="messages().length === 0 && !projectId">
+      <div class="upload-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
       <p>Please upload your Business Requirement Document (BRD).</p>
-      <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.txt" [disabled]="isLoading()" />
+      <div class="file-input-wrapper">
+        <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.txt" [disabled]="isLoading()" />
+      </div>
     </div>
 
-    <div class="loading-spinner" *ngIf="isLoading() && messages().length === 0">Loading...</div>
-    <div class="message" *ngFor="let msg of messages()" [ngClass]="msg.role.toLowerCase()" [dir]="detectTextDir(msg.content)" [class.text-right]="detectTextDir(msg.content) === 'rtl'">
+    <div class="loading-spinner" *ngIf="isLoading() && messages().length === 0">
+      <div class="spinner"></div>
+      <span>Initializing AI...</span>
+    </div>
+
+    <div class="message" *ngFor="let msg of messages()" [ngClass]="msg.role.toLowerCase()"
+      [dir]="detectTextDir(msg.content)" [class.text-right]="detectTextDir(msg.content) === 'rtl'">
       <div class="bubble">
         <span class="role">{{ msg.role.toLowerCase() === 'user' ? 'You' : 'TaskPilot AI' }}</span>
         <p>{{ msg.content }}</p>
         <span class="time">{{ msg.timestamp | date:'shortTime' }}</span>
       </div>
     </div>
-    
+
     <div class="message assistant" *ngIf="isTyping()">
       <div class="bubble">
         <span class="role">TaskPilot AI</span>
@@ -46,20 +73,23 @@
   </div>
 
   <div class="chat-footer">
-    <div class="input-row">
-      <input 
-        type="text" 
-        [ngModel]="inputText()" 
-        (ngModelChange)="inputText.set($event)" 
-        (keyup.enter)="sendMessage()" 
+    <div class="input-wrapper">
+      <input type="text" [ngModel]="inputText()" (ngModelChange)="inputText.set($event)" (keyup.enter)="sendMessage()"
         [dir]="detectTextDir(inputText())"
-        placeholder="مثال: تطبيق توصيل طلبات مع تتبع فوري..." 
-        [disabled]="isLoading()"
-      />
-      <button (click)="sendMessage()" [disabled]="isLoading() || !inputText().trim()">Send</button>
+        [placeholder]="projectId ? 'e.g. &quot;Add 2FA&quot; or &quot;Edit checkout flow...&quot;' : 'e.g. &quot;Food delivery app with GPS tracking...&quot;'"
+        [disabled]="isLoading()" />
+      <button class="send-btn" (click)="sendMessage()" [disabled]="isLoading() || !inputText().trim()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg>
+      </button>
     </div>
+
     <div class="actions-row">
       <button class="confirm-btn" (click)="generateBacklog()" [disabled]="isLoading() || messages().length === 0">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="btn-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
         {{ projectId ? 'Confirm Backlog' : 'Generate Backlog' }}
       </button>
     </div>

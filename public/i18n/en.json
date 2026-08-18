@@ -15,7 +15,10 @@
     "createOne": "Create one",
     "signedIn": "Signed In!",
     "orContinueWith": "or continue with",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "brandingTitle1": "Manage your work,",
+    "brandingTitle2": "effortlessly.",
+    "brandingSubtitle": "Plan tasks, collaborate with your team, and hit every deadline — all in one place."
   },
   "register": {
     "welcome": "Welcome to TaskPilot",
@@ -39,7 +42,10 @@
     "createAccountBtn": "Create Account",
     "creatingAccount": "Creating Account…",
     "accountCreated": "Account Created!",
-    "redirecting": "Redirecting to email verification…"
+    "redirecting": "Redirecting to email verification…",
+    "brandingTitle1": "Join TaskPilot,",
+    "brandingTitle2": "Start planning today.",
+    "brandingSubtitle": "Create an account to manage your tasks, collaborate with your team, and achieve your goals."
   },
   "COMPANY_SETUP": {
     "DESCRIPTION": "Set up your workspace and bring your team on board to start managing tasks seamlessly.",
@@ -104,9 +110,12 @@
       "NEXT": "Next",
       "COMPLETE": "Complete Setup",
       "CONFIGURING": "Configuring..."
-    }
+    },
+    "STEP_CAPACITY": "Capacity Configuration"
   },
   "PROFILE": {
+    "VALIDATION_WARNING_TITLE": "Attention: Data Validation",
+    "VALIDATION_WARNING_BODY": "Please ensure your manually entered Job Title, Seniority Level, and Years of Experience match the contents of your newly uploaded CV. Your manager will review this data for consistency.",
     "LOADING": "Loading Profile Details...",
     "TEAM_MEMBER": "Team Member",
     "EDIT_PROFILE": "Edit Profile",
@@ -288,7 +297,7 @@
       },
       "step5": {
         "title": "Execution & Completion",
-        "desc": "Employee executes tasks, syncs them to the calendar, and marks them as completed or finished.",
+        "desc": "The employee tracks tasks via an interactive board, syncs deadlines with Google Calendar, and can chat with company policies and the Agile Coach for instant support to ensure a smooth workflow.",
         "role": "Employee"
       },
       "step6": {
@@ -496,7 +505,12 @@
     "NO_EMPLOYEES_MODAL_TITLE": "Employees Required for Sprint Planning",
     "NO_EMPLOYEES_MODAL_DESC": "Cannot perform sprint planning for a project with no assigned employees. Please assign team members to this project first.",
     "TOOLTIP_NO_EMPLOYEES": "At least one employee must be assigned to this project first.",
-    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint."
+    "TOOLTIP_NO_EMPLOYEES_START": "At least one employee must be assigned to this project before starting a sprint.",
+    "PLANNED_SPRINT_BANNER_TITLE": "Planned Sprint Exists",
+    "PLANNED_SPRINT_BANNER_DESC": "A sprint has already been planned for this project. You cannot plan or generate AI suggestions for another sprint until the existing planned sprint is started or removed.",
+    "TOOLTIP_PLANNED_SPRINT": "A sprint is already planned for this project. Start or delete the planned sprint before creating a new one.",
+    "VIEW_PLANNED_SPRINT": "View Planned Sprint",
+    "ERROR_ANOTHER_PLANNED": "A planned sprint already exists for this project."
   },
   "REQUIREMENTS": {
     "ALMOST_COMPLETE": "Almost Complete"
@@ -507,7 +521,6 @@
     "EMPTY": "No notifications yet"
   },
   "SIDEBAR": {
-
     "SWITCH": "Switch",
     "ALL_PROJECTS": "All Projects",
     "SPRINTS": "Sprints",
@@ -519,12 +532,15 @@
     "COMPANY_POLICIES": "Company Policies",
     "PROJECT_POLICIES": "Project Policies",
     "MY_PROFILE": "My Profile",
+    "SETTINGS": "Settings",
     "PROJECTS": "Projects",
     "SPRINT": "Sprint",
     "PLANNING": "Planning",
     "BACKLOG_SHORT": "Backlog",
     "TEAM": "Team",
-    "PROFILE": "Profile"
+    "PROFILE": "Profile",
+    "RETROSPECTIVE": "Retrospective",
+    "TASK_ASSIGNMENT": "Task Assignment"
   },
   "HEADER": {
     "PROJECTS_HUB": "Projects Hub",
@@ -560,6 +576,9 @@
     "NO_DESCRIPTION": "No description provided.",
     "COMPLETED": "Completed",
     "ARCHIVED": "Archived",
+    "ACTIVE": "Active",
+    "DRAFT": "Draft",
+    "COMPLETED_SPRINTS": "Completed Sprints",
     "NO_ACTIVE_SPRINT": "No Active Sprint",
     "MEMBERS": "Members",
     "TASKS": "Tasks",
@@ -567,7 +586,7 @@
     "BACKLOG": "Backlog"
   },
   "SPRINT_LIST": {
-    "TITLE": "Sprint Planning",
+    "TITLE": "Sprints",
     "SUBTITLE": "Plan and manage your project sprints here.",
     "STATUS": "Status",
     "ALL_STATUSES": "All Statuses",
@@ -597,9 +616,11 @@
     "UNDER_REVIEW": "Under Review",
     "COMPLETED": "Completed",
     "BACK_TO_SPRINTS": "Back to Sprints",
+    "CANCEL_SPRINT": "Cancel Sprint",
     "WORKSPACE": "Workspace",
     "MANAGE_MONITOR": "Manage and monitor",
     "ASSIGN_TASKS": "Assign Tasks",
+    "ASSIGNED": "Assigned",
     "ASSIGNED_TASKS": "Assigned Tasks",
     "START_SPRINT": "Start Sprint",
     "COMPLETE_SPRINT": "Complete Sprint",
@@ -643,7 +664,8 @@
     "NO_TASKS_TODO": "No tasks to do.",
     "DROP_TASKS_HERE": "Drop tasks here.",
     "DROP_TASKS_VALIDATION": "Drop tasks for validation.",
-    "NO_COMPLETED_TASKS": "No completed tasks."
+    "NO_COMPLETED_TASKS": "No completed tasks.",
+    "MY_TASK": "My Task"
   },
   "MODALS": {
     "EDIT_PROJECT_TITLE": "Edit Project Details",
@@ -684,7 +706,13 @@
     "SELECT_MEMBER": "Select Member",
     "CHOOSE_MEMBER": "-- Choose Member --",
     "ALREADY_ASSIGNED": "Already in another project",
-    "ALL_ASSIGNED": "All company members are already assigned to this project.",
+    "ALL_ASSIGNED": "All active company employees are already assigned to this project.",
+    "LOADING_COMPANY_EMPLOYEES": "Loading company employees...",
+    "LOAD_EMPLOYEES_FAILED": "Employees could not be loaded. Check your connection and try again.",
+    "RETRY": "Retry",
+    "NO_COMPANY_EMPLOYEES": "No employees have joined the company yet. Invite employees first.",
+    "NO_ACTIVE_COMPANY_EMPLOYEES": "The company has no active employees available for assignment.",
+    "NO_AVAILABLE_EMPLOYEES": "No employees are currently available. They may be assigned to other active projects.",
     "ROLE": "Role",
     "ROLES": {
       "DEVELOPER": "Developer",
@@ -696,7 +724,28 @@
     "ASSIGN_TO_PROJECT": "Assign to Project",
     "ASSIGNED_TEAM": "Assigned Project Team",
     "LOADING_TEAM": "Loading project team assignments...",
-    "NO_EMPLOYEES": "No employees are currently assigned to this project. Use the form above to add members."
+    "NO_EMPLOYEES": "No employees are currently assigned to this project. Use the form above to add members.",
+    "REMOVE_MEMBER": "Remove Employee",
+    "REMOVE_MEMBER_CONFIRM": "Are you sure you want to remove this employee from the project?",
+    "REMOVE": "Remove",
+    "REMOVED_SUCCESS": "Member removed successfully",
+    "REMOVE_FAILED": "Failed to remove member",
+    "PLANNED_SPRINTS_DETECTED": "Planned Sprints Detected",
+    "PLANNED_SPRINTS_SUGGESTION": "This project has planned sprints. Would you like to go to the Sprint Planning page to auto-replan them with this new employee included?",
+    "GO_TO_PLANNING": "Go to Planning",
+    "ASSIGN_SPRINT_MODAL_TITLE": "Planned Sprints Detected",
+    "ASSIGN_SPRINT_MODAL_DESC": "The following planned sprints were detected for this project:",
+    "ACTION_CANCEL_REPLAN": "Cancel & Auto-Replan sprint",
+    "ACTION_CANCEL_ONLY": "Cancel sprint (Return tasks to backlog)",
+    "ACTION_IGNORE": "Assign only (Leave sprint as-is)",
+    "ACTION_REMOVE_IGNORE": "Remove only (Leave sprint as-is)",
+    "ACTION_REACTIVATE_IGNORE": "Reactivate only (Leave sprint as-is)",
+    "CONFIRM_BTN": "Confirm",
+    "CANCEL_BTN": "Cancel",
+    "SETUP_STACK_TITLE": "Build the team-ready stack",
+    "SETUP_STACK_DESC": "Assign the employees who will deliver this project. TaskPilot will use only their recorded skills for the Team Skills Stack.",
+    "SETUP_NO_SKILLS": "The assigned team has no recorded skills. You can continue, but the Team Skills Stack will remain unavailable.",
+    "CONTINUE_TO_STACK": "Continue to stack setup"
   },
   "BACKLOG": {
     "ADD_USER_STORY": "Add user story",
@@ -735,7 +784,29 @@
     "GREETING_PM": "Tell me about the project you want to build. You can describe it in text, upload technical documentation, or specify platforms and stack you prefer.",
     "GREETING_DEV": "I can help you understand project requirements, explain tasks, or assist with any technical questions you have. How can I help you today?",
     "TITLE": "AI Project Assistant",
-    "SUBTITLE": "Describe your project requirements to generate WBS & user stories"
+    "SUBTITLE": "Describe your project requirements to generate WBS & user stories",
+    "THINKING": "Thinking...",
+    "JUST_NOW": "Just now",
+    "ATTACH": "Attach",
+    "ATTACH_DOC": "Attach Document",
+    "REMOVE": "Remove",
+    "GENERATE_DRAFT": "Generate Project",
+    "GENERATING": "Generating...",
+    "ANALYZING": "Analyzing requirements and creating project structure...",
+    "CLARIFYING_QUESTIONS": "Suggested questions to improve completeness",
+    "SEND_HINT": "Press Enter to send · Shift+Enter for new line",
+    "INPUT_PLACEHOLDER": "Describe your project requirements, goals, or preferred tech stack...",
+    "BACK": "Back",
+    "CONFIRM_SAVE": "Confirm & Save",
+    "CANCEL": "Cancel",
+    "CONFIGURE_TITLE": "Configure & Initialize Project Workspace",
+    "CONFIGURE_SUBTITLE": "Provide initial metadata and sprint settings to create the workspace.",
+    "PROJ_NAME_EN": "Project Name (English)",
+    "PROJ_NAME_AR": "اسم المشروع (عربي)",
+    "DESC_EN": "Description (English)",
+    "DESC_AR": "الوصف (عربي)",
+    "SPRINT_DAYS": "Sprint Duration (Days)",
+    "SPRINT_HOURS": "Target Sprint Hours"
   },
   "ORGANIZATION": {
     "TITLE_PM": "Organization Hub",
@@ -744,7 +815,7 @@
     "DESC_EMP": "Ask the AI Assistant questions about company policies, leave days, and general guidelines.",
     "TAB_SETTINGS": "General Settings",
     "TAB_KNOWLEDGE": "Knowledge Base",
-    "TAB_CHAT": "Policy Chat (Test)"
+    "TAB_CHAT": "Policy Chat"
   },
   "DEACTIVATION": {
     "TITLE": "Deactivate Employee",
@@ -766,7 +837,15 @@
     "ERROR_DEACTIVATE": "Failed to deactivate employee.",
     "DEACTIVATED": "Deactivated",
     "ACTIONS": "Actions",
-    "TOOLTIP": "Deactivate"
+    "TOOLTIP": "Deactivate",
+    "PLANNED_SPRINT_WARNING": "Employee capacity was allocated in planned sprints",
+    "PLANNED_SPRINT_DESC": "The following sprints will be affected:",
+    "ACTION_CANCEL_REPLAN": "Cancel & Auto-Replan sprint",
+    "RECOMMENDED": "Recommended",
+    "ACTION_CANCEL_ONLY": "Cancel sprint (Return tasks to backlog)",
+    "ACTION_IGNORE": "Deactivate only (Leave sprint as-is)",
+    "SUCCESS_REPLAN": "Employee deactivated and sprint replanned successfully.",
+    "TASKS_COUNT": "Tasks"
   },
   "EMPLOYEES": {
     "TITLE": "Employees Directory",
@@ -776,14 +855,41 @@
     "DEACTIVATED": "Deactivated",
     "AVAILABLE": "Available",
     "IN_PROJECTS": "In Projects",
-    "SEARCH": "Search by name, email or title...",
+    "SEARCH": "Search by name, email or job title...",
     "FILTER_ALL": "All",
     "FILTER_ACTIVE": "Active",
     "FILTER_DEACTIVATED": "Deactivated",
     "NO_RESULTS": "No employees found",
     "VIEW_DETAILS": "View Details",
     "DANGER_ZONE": "Danger Zone",
-    "DEACTIVATE_HINT": "This action can be reversed later."
+    "DEACTIVATE_HINT": "This action can be reversed later.",
+    "REACTIVATE": "Reactivate",
+    "REACTIVATE_HINT": "This action can be reversed later.",
+    "REACTIVATE_TITLE": "Reactivate Employee",
+    "REACTIVATE_DESC": "This will restore the employee's access to the system.",
+    "ANALYZING": "Analyzing employee records...",
+    "REACTIVATE_READY": "Ready to Reactivate",
+    "REACTIVATE_READY_DESC": "Employee's active status will be restored immediately.",
+    "RESTORE_PROJECTS": "Restore Project Access",
+    "RESTORE_PROJECTS_DESC": "Automatically restore access to the following active/draft projects:",
+    "SUCCESS_REACTIVATE": "Employee reactivated successfully.",
+    "ERROR_REACTIVATE": "Failed to reactivate employee.",
+    "ERROR_ANALYSIS": "Failed to load employee records.",
+    "STATUS": "Status",
+    "SKILLS": "Skills",
+    "ACTIONS": "Actions",
+    "EMAIL": "Email",
+    "INVITED_AT": "Invited At",
+    "EXPIRES_AT": "Expires At",
+    "PENDING": "Pending",
+    "EXPIRED": "Expired",
+    "ACCEPTED": "Accepted",
+    "STATUS_FILTER": "Status Filter:",
+    "INVITE_VIA_EMAIL": "Invite via Email",
+    "SEND_INVITE": "Send Invite",
+    "ALREADY_IN_COMPANY": "Already in company",
+    "INVITE": "Invite",
+    "SEARCH_USERS": "Search for existing users or invite new ones by email."
   },
   "PROJECT_POLICIES": {
     "PROJECT_POLICIES": "Project Policies",
@@ -814,5 +920,113 @@
     "CLEAR_CONFIRM": "Clear all chat history?",
     "NO_ANSWER": "I couldn't find an answer in the project documents.",
     "CHAT_ERROR": "Error communicating with AI."
+  },
+  "SETTINGS_VIEW": {
+    "TITLE": "Settings & Integrations",
+    "SUBTITLE": "Manage your external accounts and application preferences.",
+    "CONNECTED_ACCOUNTS": "Connected Accounts",
+    "GOOGLE_CALENDAR_TITLE": "Google Calendar",
+    "GOOGLE_CALENDAR_DESC": "Sync your project tasks and deadlines directly to your Google Calendar.",
+    "CONNECT_ACCOUNT": "Connect Account",
+    "CONNECTING": "Connecting..."
+  },
+  "EMPLOYEE_DETAILS": {
+    "TITLE": "Employee Details",
+    "SUBTITLE": "View comprehensive information about this team member.",
+    "LOADING": "Loading employee information...",
+    "ACTIVE": "Active",
+    "DEACTIVATED": "Deactivated",
+    "SKILLS_TITLE": "Skills & Expertise",
+    "NO_SKILLS": "No skills listed.",
+    "PROFESSIONAL_INFO": "Professional Information",
+    "JOB_TITLE": "Job Title",
+    "NOT_SPECIFIED": "Not specified",
+    "SENIORITY_LEVEL": "Seniority Level",
+    "CURRENT_WORKLOAD": "Current Workload",
+    "ACTIVE_PROJECTS": "Active Projects",
+    "ASSIGNED_TASKS": "Assigned Tasks",
+    "DEACTIVATION_INFO": "Deactivation Information",
+    "DEACTIVATED_ON": "Deactivated On",
+    "REASON": "Reason",
+    "NOT_FOUND_TITLE": "Employee Not Found",
+    "NOT_FOUND_DESC": "The employee you are looking for does not exist or you don't have access.",
+    "RETURN_DIR": "Return to Directory"
+  },
+  "COMPANY_CAPACITY": {
+    "TITLE": "Sprint Capacity Configuration",
+    "DESC": "Configure the default working schedule and sprint capacity logic for your company.",
+    "WORKING_HOURS": "Working Hours Per Day",
+    "WORKING_DAYS": "Working Days",
+    "DEFAULT_BUFFER": "Default Capacity Buffer (e.g. 0.8 for 80% focus factor)",
+    "SAVE": "Save Configuration",
+    "SAVING": "Saving...",
+    "SUCCESS": "Configuration saved successfully.",
+    "ERROR": "Failed to save configuration.",
+    "SUN": "Sun",
+    "MON": "Mon",
+    "TUE": "Tue",
+    "WED": "Wed",
+    "THU": "Thu",
+    "FRI": "Fri",
+    "SAT": "Sat"
+  },
+  "SPRINT_EDITOR": {
+    "REVIEW_BEFORE_CONFIRMING": "Review before confirming",
+    "EDIT_STORY": "Edit user story",
+    "EDIT_STORY_HELP": "Changes are saved to the backlog even if you do not confirm this sprint.",
+    "ADD_FROM_BACKLOG": "Add from backlog",
+    "ADJUST_SCOPE": "Adjust sprint scope",
+    "REMOVE_FROM_SPRINT": "Remove from sprint",
+    "SAVE_STORY": "Save story",
+    "SAVING": "Saving...",
+    "DISCARD_CHANGES": "Discard unsaved changes?",
+    "KEEP_EDITING": "Keep editing",
+    "UNDO": "Undo",
+    "SCOPE_EXCEEDS_CAPACITY": "Scope exceeds capacity",
+    "STORY_SAVED": "User story saved.",
+    "SAVE_FAILED": "Story could not be saved"
+  },
+  "TELEMETRY": {
+    "TITLE": "AI Telemetry",
+    "PM_DESC": "Monitor AI usage, token consumption, and costs across this project.",
+    "EMP_DESC": "Monitor your personal AI usage, token consumption, and estimated costs.",
+    "ROLE_PM": "Project Overview",
+    "ROLE_EMP": "My Usage",
+    "LOADING": "Loading telemetry data...",
+    "NO_PROJECT": "No Project Selected",
+    "NO_PROJECT_DESC": "Select a project from the sidebar to view its AI Telemetry.",
+    "METRIC_OPS": "Total Operations",
+    "METRIC_TOKENS": "Total Tokens",
+    "METRIC_COST": "Est. Cost (USD)",
+    "METRIC_LATENCY": "Avg Response Time",
+    "MODEL_USAGE": "Model Usage Breakdown",
+    "TEAM_USAGE": "Team Members Usage",
+    "OPS": "ops",
+    "NO_DATA": "No AI operations logged yet.",
+    "NO_TEAM_DATA": "No team members have used AI in this project yet."
+  },
+  "PROJECT_SETUP": {
+    "TEAM_STACK": "Team Skills Stack",
+    "IDEAL_STACK": "AI Ideal Stack",
+    "SELECTED": "Selected",
+    "TEAM_READY": "Ready for this team",
+    "IDEAL_FIT": "Best fit for the project",
+    "ADD_TEAM_TO_UNLOCK": "Add team skills to unlock",
+    "NO_TEAM_DESC": "Assign employees to this project so the recommendation reflects their real skills.",
+    "NO_SKILLS_DESC": "The assigned employees do not have recorded skills yet. Update their profiles to create a team-ready stack.",
+    "ADD_EMPLOYEES": "Add project employees",
+    "REVIEW_PROFILES": "Review employee profiles",
+    "GAP_TITLE": "Capability gaps to plan for",
+    "GAP_HELP": "These gaps compare the ideal architecture with current team capabilities. You can still confirm a different stack below.",
+    "NO_GAPS_TITLE": "The project team covers the ideal stack",
+    "NO_GAPS_DESC": "No capability gaps were identified from the recorded team skills.",
+    "CUSTOMIZE": "Customize stack",
+    "CLOSE_CUSTOMIZE": "Close customization"
+  },
+  "PAGINATION": {
+    "PAGE": "Page",
+    "OF": "of",
+    "PREV": "Prev",
+    "NEXT": "Next"
   }
 }

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GoogleCalendarService } from '../../shared/api/googleCalendar.service';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { getRoleFromToken } from '../../shared/lib/auth/cookie.helper';
 
 @Component({
   selector: 'app-calendar-callback-page',
@@ -40,7 +41,7 @@ export class CalendarCallbackPageComponent implements OnInit {
         this.verifyCallback(code, state);
       } else {
         // Missing parameters, redirect back
-        this.router.navigate(['/settings']);
+        this.navigateToSettings();
       }
     });
   }
@@ -55,9 +56,16 @@ export class CalendarCallbackPageComponent implements OnInit {
         }),
         finalize(() => {
           this.isLoading.set(false);
-          this.router.navigate(['/settings']);
+          this.navigateToSettings();
         })
       )
       .subscribe();
+  }
+
+  private navigateToSettings(): void {
+    const route = getRoleFromToken() === 'Employee'
+      ? ['/employee-dashboard', 'settings']
+      : ['/dashboard', 'settings'];
+    this.router.navigate(route, { replaceUrl: true });
   }
 }

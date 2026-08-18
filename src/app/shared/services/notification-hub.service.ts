@@ -33,7 +33,11 @@ export class NotificationHubService {
       // 1. Fetch initial state
       const res = await notificationApi.getNotifications(false); // get all or unread? let's fetch all recent
       if (res.data?.succeeded && res.data.data) {
-        this._notifications.set(res.data.data);
+        const notifications = res.data.data.map((n: NotificationDto) => ({
+          ...n,
+          createdAt: n.createdAt.endsWith('Z') ? n.createdAt : n.createdAt + 'Z'
+        }));
+        this._notifications.set(notifications);
       }
 
       // 2. Build connection
@@ -47,7 +51,11 @@ export class NotificationHubService {
 
       // 3. Register handlers
       this.hubConnection.on('ReceiveNotification', (notification: NotificationDto) => {
-        this._notifications.update(prev => [notification, ...prev]);
+        const n = {
+          ...notification,
+          createdAt: notification.createdAt.endsWith('Z') ? notification.createdAt : notification.createdAt + 'Z'
+        };
+        this._notifications.update(prev => [n, ...prev]);
       });
 
       // 4. Start connection

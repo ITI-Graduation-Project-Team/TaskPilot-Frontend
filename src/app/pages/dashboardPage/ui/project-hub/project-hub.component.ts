@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, input, computed, inject, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, input, computed, inject, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectInfo, ProjectStateService } from '../../../../shared/services/project-state.service';
@@ -15,25 +15,25 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, ProjectCardComponent, TranslatePipe],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-6 flex flex-col h-full min-h-[calc(100vh-12rem)]">
       <!-- Search & Filters -->
       @if (projects().length > 0) {
         <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-surface border border-border p-4 rounded-2xl shadow-sm">
           
           <!-- Tabs -->
-          <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto custom-scrollbar shrink-0">
-            <button (click)="activeTab.set('active')" 
+          <div class="flex bg-background border border-border p-1 rounded-xl overflow-x-auto hide-scrollbar shrink-0 w-full lg:w-auto">
+            <button (click)="onTabChange('active')" 
                     [class.bg-surface]="activeTab() === 'active'" [class.shadow-sm]="activeTab() === 'active'" [class.text-text-primary]="activeTab() === 'active'" [class.text-text-secondary]="activeTab() !== 'active'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ACTIVE_DRAFT' | translate }}</button>
-            <button (click)="activeTab.set('completed')" 
+            <button (click)="onTabChange('completed')" 
                     [class.bg-surface]="activeTab() === 'completed'" [class.shadow-sm]="activeTab() === 'completed'" [class.text-text-primary]="activeTab() === 'completed'" [class.text-text-secondary]="activeTab() !== 'completed'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.COMPLETED' | translate }}</button>
-            <button (click)="activeTab.set('archived')" 
+            <button (click)="onTabChange('archived')" 
                     [class.bg-surface]="activeTab() === 'archived'" [class.shadow-sm]="activeTab() === 'archived'" [class.text-text-primary]="activeTab() === 'archived'" [class.text-text-secondary]="activeTab() !== 'archived'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap min-w-[100px]">{{ 'PROJECT_HUB.ARCHIVED' | translate }}</button>
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1 justify-end">
+          <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center flex-1 justify-end w-full lg:w-auto">
             <div class="relative flex-1 sm:max-w-[280px]">
               <span class="absolute top-1/2 left-3.5 -translate-y-1/2 text-text-secondary pointer-events-none">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
               </span>
               <input type="text" 
                      [ngModel]="searchQuery()" 
-                     (ngModelChange)="searchQuery.set($event)"
+                     (ngModelChange)="onSearchChange($event)"
                      [placeholder]="'PROJECT_HUB.SEARCH_PLACEHOLDER' | translate" 
                      class="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-text-secondary/70" />
             </div>
@@ -59,9 +59,9 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
       }
 
       <!-- Projects Grid -->
-      @if (filteredProjects().length > 0) {
+      @if (paginatedProjects().length > 0) {
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          @for (p of filteredProjects(); track p.id) {
+          @for (p of paginatedProjects(); track p.id) {
             <app-project-card 
               [project]="p"
               [stats]="getStatsForProject(p.id)"
@@ -69,7 +69,49 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
             </app-project-card>
           }
         </div>
-      } @else if (projects().length > 0) {
+        
+        <!-- Pagination Controls -->
+        <div class="flex items-center justify-between px-6 py-4 !mt-auto border border-border bg-surface rounded-2xl shadow-sm"
+          *ngIf="totalProjects() > 0">
+          <div class="text-sm font-medium text-text-secondary hidden sm:block">
+            {{ 'PAGINATION.PAGE' | translate }} <span class="font-bold text-text-primary">{{ currentPage() }}</span> {{ 'PAGINATION.OF' | translate }} <span class="font-bold text-text-primary">{{ totalPages() }}</span>
+          </div>
+          
+          <div class="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-start">
+            <button (click)="prevPage()" [disabled]="currentPage() === 1"
+              class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all">
+              <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+              <span>{{ 'PAGINATION.PREV' | translate }}</span>
+            </button>
+            
+            <div class="flex items-center gap-1 px-2">
+              @for (page of pageNumbers(); track page) {
+                @if (page === -1) {
+                  <span class="px-2 py-1 text-text-secondary font-medium tracking-widest">...</span>
+                } @else {
+                  <button (click)="goToPage(page)"
+                    [class.bg-primary]="currentPage() === page"
+                    [class.text-white]="currentPage() === page"
+                    [class.shadow-md]="currentPage() === page"
+                    [class.shadow-primary/20]="currentPage() === page"
+                    [class.text-text-secondary]="currentPage() !== page"
+                    [class.hover:bg-background]="currentPage() !== page"
+                    [class.hover:text-text-primary]="currentPage() !== page"
+                    class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all">
+                    {{ page }}
+                  </button>
+                }
+              }
+            </div>
+
+            <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+              class="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-bold text-text-secondary hover:bg-background hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all">
+              <span>{{ 'PAGINATION.NEXT' | translate }}</span>
+              <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+        </div>
+      } @else if (totalProjects() > 0) {
         <!-- Search query matches nothing -->
         <div class="flex flex-col items-center justify-center p-12 bg-surface border border-border rounded-3xl text-center shadow-sm animate-[fadeIn_0.2s_ease_both]">
           <div class="w-16 h-16 rounded-2xl bg-sidebar flex items-center justify-center text-text-secondary/60 mb-4 animate-bounce">
@@ -79,7 +121,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           </div>
           <h3 class="text-base font-extrabold text-text-primary font-display">{{ 'PROJECT_HUB.NO_MATCHING' | translate }}</h3>
           <p class="text-xs text-text-secondary max-w-sm mt-1 mb-4">{{ 'PROJECT_HUB.NO_MATCHING_DESC' | translate: { query: searchQuery() } }}</p>
-          <button (click)="searchQuery.set('')" class="text-xs text-primary font-bold hover:underline">{{ 'PROJECT_HUB.CLEAR_SEARCH' | translate }}</button>
+          <button (click)="onSearchChange('')" class="text-xs text-primary font-bold hover:underline">{{ 'PROJECT_HUB.CLEAR_SEARCH' | translate }}</button>
         </div>
       } @else {
         <!-- Empty State -->
@@ -111,7 +153,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
     </div>
   `
 })
-export class ProjectHubComponent {
+export class ProjectHubComponent implements OnInit {
   router = inject(Router);
   dashboardService = inject(DashboardService);
   projectState = inject(ProjectStateService);
@@ -126,28 +168,91 @@ export class ProjectHubComponent {
 
 
 
-  filteredProjects = computed(() => {
-    const tab = this.activeTab();
-    const query = this.searchQuery().toLowerCase().trim();
+  paginatedProjects = signal<ProjectInfo[]>([]);
+  totalProjects = signal<number>(0);
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(6);
+  isLoading = signal<boolean>(false);
 
-    let result = this.projects();
+  Math = Math;
+  totalPages = computed(() => Math.ceil(this.totalProjects() / this.pageSize()));
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
 
-    if (tab === 'active') {
-      result = result.filter(p => p.status === 'Active' || p.status === 'Draft' || !p.status);
-    } else if (tab === 'completed') {
-      result = result.filter(p => p.status === 'Completed');
-    } else if (tab === 'archived') {
-      result = result.filter(p => p.status === 'Archived');
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push(-1);
+        pages.push(current - 1);
+        pages.push(current);
+        pages.push(current + 1);
+        pages.push(-1);
+        pages.push(total);
+      }
     }
-
-    if (!query) return result;
-
-    return result.filter(p =>
-      (p.nameEn || '').toLowerCase().includes(query) ||
-      (p.nameAr || '').toLowerCase().includes(query) ||
-      (p.description || '').toLowerCase().includes(query)
-    );
+    return pages;
   });
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages() && page !== this.currentPage()) {
+      this.currentPage.set(page);
+      this.loadPaginatedProjects();
+    }
+  }
+
+  ngOnInit() {
+    this.loadPaginatedProjects();
+  }
+
+  async loadPaginatedProjects() {
+    this.isLoading.set(true);
+    const tab = this.activeTab();
+    const query = this.searchQuery().trim();
+    
+    const { projects, totalCount } = await this.projectState.loadProjectsPaged(this.currentPage(), this.pageSize(), tab, query);
+
+    this.paginatedProjects.set(projects);
+    this.totalProjects.set(totalCount);
+    this.isLoading.set(false);
+  }
+
+  onSearchChange(val: string) {
+    this.searchQuery.set(val);
+    this.currentPage.set(1);
+    this.loadPaginatedProjects();
+  }
+
+  onTabChange(tab: 'active' | 'completed' | 'archived') {
+    this.activeTab.set(tab);
+    this.currentPage.set(1);
+    this.loadPaginatedProjects();
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.set(this.currentPage() + 1);
+      this.loadPaginatedProjects();
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.set(this.currentPage() - 1);
+      this.loadPaginatedProjects();
+    }
+  }
 
   getStatsForProject(projectId: string): ProjectStats | null {
     return this.projectStatsMap().get(projectId) || null;

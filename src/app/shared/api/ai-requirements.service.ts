@@ -23,6 +23,8 @@ export interface GeneratedProjectDTO {
   }>;
 }
 
+export type WbsGenerationPhase = 'generating' | 'enriching';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -62,14 +64,13 @@ export class AiRequirementsService {
     return data;
   }
 
-  async confirmProject(draft: GeneratedProjectDTO): Promise<any> {
-    const { data } = await apiClient.post('/aiproject/confirm', draft);
-    return data;
-  }
 
-  async generateWbs(projectId: string): Promise<any> {
-    const { data } = await apiClient.post(`/projects/${projectId}/wbs/generate`);
-    await apiClient.post(`/projects/${projectId}/wbs/enrich-skills`);
+
+  async generateWbs(projectId: string, onPhase?: (phase: WbsGenerationPhase) => void): Promise<any> {
+    onPhase?.('generating');
+    const { data } = await apiClient.post(`/projects/${projectId}/wbs/generation`, {}, {
+      headers: { 'X-Skip-Loader': 'true' }
+    });
     return data;
   }
 

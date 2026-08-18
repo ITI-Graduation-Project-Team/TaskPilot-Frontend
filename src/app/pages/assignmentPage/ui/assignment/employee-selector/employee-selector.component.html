@@ -1,166 +1,266 @@
-<div class="h-full flex flex-col bg-background p-6 overflow-y-auto scrollbar-thin">
+<div class="h-full flex flex-col bg-background overflow-y-auto scrollbar-thin">
 
-  <!-- Empty State: No Task Selected -->
+  <!-- ══ EMPTY STATE: No Task Selected ══ -->
   <div *ngIf="!selectedTask"
-    class="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-md mx-auto my-auto animate-[fadeIn_0.3s_ease_both]">
-    <div
-      class="w-16 h-16 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center mb-4 shadow-sm">
-      <svg class="w-8 h-8 text-primary animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-      </svg>
+    class="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-sm mx-auto animate-[fadeIn_0.3s_ease_both]">
+
+    <div class="relative mb-5">
+      <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 to-violet-500/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/5">
+        <svg class="w-9 h-9 text-primary/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <!-- Decorative rings -->
+      <div class="absolute inset-0 rounded-3xl border border-primary/10 scale-110 opacity-60"></div>
+      <div class="absolute inset-0 rounded-3xl border border-primary/5 scale-125 opacity-40"></div>
     </div>
-    <h3 class="text-base font-extrabold text-text-primary mb-1 font-display">{{ lang === 'ar' ? 'اختر مهمة للتعيين' : 'Select a Task to Assign' }}</h3>
-    <p class="text-xs text-text-secondary leading-relaxed mb-4">{{ lang === 'ar' ? 'انقر فوق أي مهمة من العمود الأيسر لعرض درجات تطابق الذكاء الاصطناعي وتوصيات المطورين المرشحين.' : 'Click on any task from the left column to view AI match scores and developer candidate recommendations.' }}</p>
-    <div
-      class="p-3 rounded-xl bg-surface border border-border/80 text-[11px] text-text-secondary flex items-center gap-2">
-      <span>💡</span>
-      <span><strong>{{ lang === 'ar' ? 'نصيحة:' : 'Pro Tip:' }}</strong> {{ lang === 'ar' ? 'انقر على "التعيين التلقائي لأفضل المطابقات" في العنوان لتعيين أفضل المرشحين بناءً على الذكاء الاصطناعي على الفور في جميع المهام!' : 'Click "Auto-Assign Top Matches" in the header to instantly assign top AI candidates across all tasks!' }}</span>
+
+    <h3 class="text-sm font-black text-text-primary mb-1.5 tracking-tight">
+      {{ lang === 'ar' ? 'اختر مهمة للتعيين' : 'Select a task to assign' }}
+    </h3>
+    <p class="text-[11px] text-text-secondary leading-relaxed mb-5 max-w-[240px]">
+      {{ lang === 'ar'
+          ? 'انقر على أي مهمة في القائمة لعرض المرشحين حسب المهارات والسعة.'
+          : 'Select a task to see candidates ranked by skills and capacity.' }}
+    </p>
+
+    <div class="flex items-start gap-2.5 p-3 rounded-2xl bg-surface border border-border/70 text-left shadow-sm w-full max-w-[260px]">
+      <span class="text-base leading-none shrink-0 mt-0.5">✦</span>
+      <p class="text-[10px] text-text-secondary leading-relaxed">
+        <strong class="text-text-primary">{{ lang === 'ar' ? 'نصيحة:' : 'Pro tip:' }}</strong>
+        {{ lang === 'ar'
+          ? ' اضغط "تعيين تلقائي" في شريط الأدوات لتعيين أفضل مرشح لكل مهمة دفعةً واحدة.'
+          : ' Hit "Auto-Assign Top" in the toolbar to fill all tasks at once with the best-matched developer.' }}
+      </p>
     </div>
   </div>
 
-  <!-- Task Selected: Developer Candidates View -->
-  <div *ngIf="selectedTask" class="flex flex-col space-y-6 animate-[fadeIn_0.25s_ease_both]">
+  <!-- ══ TASK SELECTED: Developer Panel ══ -->
+  <div *ngIf="selectedTask" class="flex flex-col p-5 space-y-5 animate-[fadeIn_0.25s_ease_both]">
 
-    <!-- Selected Task Summary Header Card -->
-    <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm relative overflow-hidden">
-      <div class="flex items-start justify-between gap-4 mb-3">
-        <div>
-          <div class="flex items-center gap-2 mb-1">
-            <span
-              class="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-              {{ lang === 'ar' ? 'المهمة المحددة' : 'Selected Task' }}
-            </span>
-            <span class="text-xs font-bold text-text-secondary flex items-center gap-1">
-              <svg class="w-3 h-3 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {{ lang === 'ar' ? selectedTask.estimatedHours + ' ساعات مقدرة' : selectedTask.estimatedHours + ' hours estimated' }}
-            </span>
-          </div>
-          <h2 class="text-lg font-black text-text-primary font-display leading-snug">
-            {{ lang === 'ar' ? selectedTask.taskTitleAr : selectedTask.taskTitleEn }}
-          </h2>
-        </div>
+    <!-- ── Selected Task Card ── -->
+    <div class="relative overflow-hidden rounded-2xl border border-border/70 bg-surface shadow-sm">
 
-        <div class="flex items-center gap-2 shrink-0">
-          <span class="px-2.5 py-1 text-xs uppercase font-extrabold rounded-lg border" [ngClass]="{
-                  'bg-error/10 text-error border-error/20': selectedTask.priority === 'High',
-                  'bg-warning/10 text-warning border-warning/20': selectedTask.priority === 'Medium',
-                  'bg-emerald-500/10 text-emerald-600 border-emerald-500/20': selectedTask.priority === 'Low'
-                }">
-            {{ lang === 'ar' ? 'أولوية ' + (selectedTask.priority === 'High' ? 'عالية' : selectedTask.priority === 'Medium' ? 'متوسطة' : 'منخفضة') : selectedTask.priority + ' Priority' }}
+      <!-- Subtle gradient accent top strip -->
+      <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
+
+      <div class="p-4">
+        <!-- Meta row -->
+        <div class="flex items-center gap-2 mb-2.5 flex-wrap">
+          <span class="text-[9px] uppercase font-extrabold tracking-widest px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/15">
+            {{ lang === 'ar' ? 'المهمة المختارة' : 'Selected Task' }}
+          </span>
+          <span class="text-[10px] text-text-secondary font-medium flex items-center gap-1 ml-auto">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ selectedTask.estimatedHours }} {{ lang === 'ar' ? 'ساعة' : 'h estimated' }}
+          </span>
+          <!-- Priority badge -->
+          <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border"
+            [ngClass]="{
+              'bg-rose-500/10 text-rose-500 border-rose-500/20': selectedTask.priority === 'High',
+              'bg-amber-500/10 text-amber-600 border-amber-500/20': selectedTask.priority === 'Medium',
+              'bg-emerald-500/10 text-emerald-600 border-emerald-500/20': selectedTask.priority === 'Low'
+            }">
+            {{ lang === 'ar'
+              ? (selectedTask.priority === 'High' ? 'أولوية عالية' : selectedTask.priority === 'Medium' ? 'أولوية متوسطة' : 'أولوية منخفضة')
+              : selectedTask.priority + ' Priority' }}
           </span>
         </div>
-      </div>
 
-    </div>
-
-    <!-- Candidate List Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-sm font-black text-text-primary uppercase tracking-wider flex items-center gap-2">
-          <span>🎯 {{ lang === 'ar' ? 'توصيات مطابقة المرشحين بالذكاء الاصطناعي' : 'AI Candidate Match Recommendations' }}</span>
-        </h3>
-        <p class="text-xs text-text-secondary">{{ lang === 'ar' ? 'مرتبة حسب صلة المهارة، التوافر، والسرعة التاريخية.' : 'Ranked by skill relevance, availability, and historical velocity.' }}</p>
+        <!-- Title -->
+        <h2 class="text-[15px] font-black text-text-primary leading-snug tracking-tight">
+          {{ lang === 'ar' ? selectedTask.taskTitleAr : selectedTask.taskTitleEn }}
+        </h2>
       </div>
     </div>
 
-    <!-- Developer Recommendation Cards -->
-    <div class="space-y-4">
-      <div *ngFor="let dev of selectedTask.rankedDevelopers"
-        class="bg-surface border rounded-2xl p-5 shadow-sm relative overflow-hidden flex flex-col transition-all group hover:border-primary/40 animate-[scaleUp_0.2s_ease_both]"
+    <!-- ── Candidates Section Header ── -->
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-[10px] font-extrabold text-text-primary uppercase tracking-widest">
+          {{ lang === 'ar' ? 'المرشحون المقترحون' : 'Recommended candidates' }}
+        </span>
+      </div>
+      <p class="text-[10px] text-text-secondary">
+        {{ lang === 'ar' ? 'مرتبة حسب صلة المهارة والتوافر.' : 'Ranked by skill relevance, availability & velocity.' }}
+      </p>
+    </div>
+
+    <!-- ── Developer Candidate Cards ── -->
+    <div class="space-y-3">
+      
+      <!-- Unassignable Error State -->
+      <div *ngIf="selectedTask.isUnassignable" class="p-4 mb-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 flex items-start gap-3">
+        <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-600 flex items-center justify-center shrink-0 font-bold">
+          ⚠️
+        </div>
+        <div>
+          <h4 class="text-sm font-extrabold">{{ lang === 'ar' ? 'السعة الاستيعابية للفريق غير كافية' : 'Team Capacity Exhausted' }}</h4>
+          <p class="text-[10px] mt-1 leading-relaxed">{{ lang === 'ar' ? 'لا يوجد أعضاء فريق متاحون لهذه المهمة.' : 'No active project team members are available for this task.' }}</p>
+        </div>
+      </div>
+      <div *ngFor="let dev of selectedTask.rankedDevelopers; let i = index"
+        class="relative overflow-hidden rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md group"
         [ngClass]="{
-             'border-primary ring-2 ring-primary/20 bg-primary/5': isAssigned(dev),
-             'border-border': !isAssigned(dev)
-           }">
+          'border-primary/40 bg-gradient-to-br from-primary/5 to-violet-500/3 shadow-primary/5': isAssigned(dev),
+          'border-border/70 bg-surface hover:border-border': !isAssigned(dev)
+        }"
+        [style.animation-delay]="i * 60 + 'ms'"
+        style="animation: fadeIn 0.25s ease both;">
 
-        <!-- Rank #1 Ribbon / Badge -->
+        <!-- Top-ranked ribbon -->
         <div *ngIf="dev.rank === 1"
-          class="absolute top-0 right-0 bg-gradient-to-l from-amber-500 to-amber-600 text-white text-[9px] font-black uppercase px-3 py-1 rounded-bl-xl shadow-sm tracking-wider flex items-center gap-1">
-          <span>🏆 {{ lang === 'ar' ? 'أفضل توصية للذكاء الاصطناعي' : 'Top AI Recommendation' }}</span>
+          class="absolute top-0 right-0 flex items-center gap-1 px-3 py-1 bg-gradient-to-l from-amber-500 to-amber-400 text-white text-[8px] font-extrabold uppercase tracking-widest rounded-bl-2xl shadow-sm">
+          {{ lang === 'ar' ? 'أفضل ملاءمة' : 'Best fit' }}
         </div>
 
-        <div class="flex justify-between items-start mb-4">
-          <div class="flex items-center gap-3">
-            <!-- Rank Trophy / Avatar -->
-            <div class="relative">
-              <div class="w-12 h-12 rounded-2xl font-black text-sm flex items-center justify-center border shadow-sm"
-                [ngClass]="dev.rank === 1 ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-primary/10 text-primary border-primary/20'">
+        <div class="p-4">
+          <!-- Dev header row -->
+          <div class="flex items-start gap-3 mb-3">
+
+            <!-- Avatar -->
+            <div class="relative shrink-0">
+              <div class="w-11 h-11 rounded-2xl font-black text-sm flex items-center justify-center border-2 shadow-sm transition-all group-hover:scale-105"
+                [ngClass]="dev.rank === 1
+                  ? 'bg-gradient-to-br from-amber-400/20 to-amber-500/10 text-amber-600 border-amber-400/30'
+                  : 'bg-gradient-to-br from-primary/15 to-violet-500/10 text-primary border-primary/20'">
                 {{ getDevInitials(dev.employeeName) }}
               </div>
-              <span class="absolute -bottom-1 -right-1 text-xs">
+              <!-- Medal overlay -->
+              <span *ngIf="dev.rank <= 3" class="absolute -bottom-1 -right-1 text-[11px] leading-none">
                 <ng-container *ngIf="dev.rank === 1">🥇</ng-container>
                 <ng-container *ngIf="dev.rank === 2">🥈</ng-container>
                 <ng-container *ngIf="dev.rank === 3">🥉</ng-container>
               </span>
             </div>
 
-            <div>
+            <!-- Name + rank -->
+            <div class="flex-1 min-w-0 pt-0.5">
               <h4
                 class="text-base font-extrabold text-text-primary group-hover:text-primary transition-colors flex items-center gap-2">
                 {{ dev.employeeName || 'Developer' }}
+                <!-- Live Capacity Indicator -->
+                <ng-container *ngIf="devCapacities[dev.employeeId] as capData">
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-mono border"
+                        [ngClass]="capData.remaining < 0 ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
+                                   capData.remaining <= (capData.capacity * 0.2) ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                                   'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'"
+                        title="{{ lang === 'ar' ? 'الساعات المعينة / القدرة الاستيعابية للسبرينت' : 'Assigned Hours / Sprint Capacity' }}">
+                    {{ capData.assigned }}h / {{ capData.capacity }}h
+                  </span>
+                </ng-container>
               </h4>
-              <p class="text-xs text-text-secondary">{{ lang === 'ar' ? 'المرشح رقم ' + dev.rank : 'Rank #' + dev.rank + ' Candidate' }}</p>
+              <p class="text-[10px] text-text-secondary mt-0.5 font-medium">
+                {{ dev.jobTitle || 'ID: ' + dev.employeeId.substring(0, 8) }}
+              </p>
+              <p class="text-[10px] text-text-secondary mt-1">
+                <ng-container *ngIf="getCloseMatchText(dev) as tieText; else rankText">
+                  <span class="text-amber-700 dark:text-amber-400 font-bold bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-amber-500/30 inline-flex items-center gap-1">
+                    💡 {{ tieText }}
+                  </span>
+                </ng-container>
+                <ng-template #rankText>
+                  {{ lang === 'ar' ? 'المرشح رقم ' + dev.rank : 'Rank #' + dev.rank }}
+                </ng-template>
+              </p>
+            </div>
+
+            <!-- Match score badge -->
+            <div class="shrink-0 text-right">
+              <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-extrabold border shadow-sm"
+                [ngClass]="getScoreColorClass(dev.score)">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                {{ getFitLabel(dev.score) }}
+              </div>
+              <p class="text-[9px] text-text-secondary mt-0.5 text-right">{{ lang === 'ar' ? 'درجة ' + dev.score : 'Score ' + dev.score }}</p>
             </div>
           </div>
 
-          <!-- Score Badge -->
-          <div class="text-right">
-            <div class="px-3 py-1 rounded-xl text-xs font-black border flex items-center gap-1 shadow-sm"
-              [ngClass]="getScoreColorClass(dev.score)">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>{{ lang === 'ar' ? 'نسبة التطابق ' + dev.score + '%' : dev.score + '% Match Score' }}</span>
+          <!-- Structured recommendation evidence -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+            <div class="p-2.5 bg-background rounded-lg border border-border/60">
+              <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'تطابق المهارات' : 'Skill match' }}</p>
+              <p class="text-[11px] font-extrabold text-text-primary mt-1">
+                {{ dev.requiredSkillsCount > 0 ? dev.matchedSkillsCount + '/' + dev.requiredSkillsCount : (lang === 'ar' ? 'لا توجد متطلبات' : 'No requirements') }}
+              </p>
+            </div>
+            <div class="p-2.5 bg-background rounded-lg border border-border/60 min-w-0">
+              <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'السعة بعد التعيين' : 'Capacity after assign' }}</p>
+              <p class="text-[11px] font-extrabold mt-1" [ngClass]="dev.remainingAfter < 0 ? 'text-rose-500' : 'text-text-primary'">
+                {{ dev.assignedAfter }}h / {{ dev.maxSprintHours }}h
+              </p>
+              <div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
+                <div class="h-full rounded-full transition-all" [ngClass]="getCapacityBarClass(dev)" [style.width.%]="getCapacityPercent(dev)"></div>
+              </div>
+              <p class="mt-1 text-[9px] font-bold" [ngClass]="dev.remainingAfter < 0 ? 'text-rose-500' : 'text-text-secondary'">
+                {{ dev.remainingAfter < 0 ? (lang === 'ar' ? 'تجاوز السعة' : 'Over capacity') : '+' + getTaskAddedHours(dev) + 'h ' + (lang === 'ar' ? 'من هذه المهمة' : 'from this task') }}
+              </p>
+            </div>
+            <div class="p-2.5 bg-background rounded-lg border border-border/60">
+              <p class="text-[9px] uppercase font-bold text-text-secondary">{{ lang === 'ar' ? 'الترشيح' : 'Recommendation' }}</p>
+              <p class="text-[11px] font-extrabold mt-1" [ngClass]="getFitTextClass(dev.score)">{{ getFitLabel(dev.score) }}</p>
+              <p class="mt-1 text-[9px] font-bold text-text-secondary">{{ lang === 'ar' ? 'درجة ' + dev.score : 'Score ' + dev.score }}</p>
             </div>
           </div>
-        </div>
 
-        <!-- AI Match Reason Quote Box -->
-        <div
-          class="p-3.5 bg-background rounded-xl border border-border/70 text-xs text-text-secondary leading-relaxed mb-4 font-medium flex items-start gap-2.5">
-          <span class="text-primary text-base leading-none">💡</span>
-          <p class="flex-1">{{ lang === 'ar' ? cleanReasonAr(dev.reasonAr) : dev.reasonEn }}</p>
-        </div>
-
-        <!-- Action Footer inside Card -->
-        <div class="mt-auto flex items-center justify-between pt-3 border-t border-border/60">
-          <div class="text-[11px] font-bold text-text-secondary flex items-center gap-1">
-            <span *ngIf="isAssigned(dev)" class="text-emerald-500 flex items-center gap-1 font-extrabold">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-              </svg>
-              {{ lang === 'ar' ? 'المرشح المعين حالياً' : 'Currently Assigned Candidate' }}
-            </span>
-            <span *ngIf="!isAssigned(dev)" class="text-text-secondary/70">
-              {{ lang === 'ar' ? 'متاح لتعيين السبرينت' : 'Available for sprint assignment' }}
-            </span>
+          <div *ngIf="dev.skillGaps.length > 0" class="mb-3 flex flex-wrap items-center gap-1.5 text-[10px]">
+            <span class="font-bold text-amber-600">{{ lang === 'ar' ? 'فجوات المهارات:' : 'Skill gaps:' }}</span>
+            <span *ngFor="let gap of dev.skillGaps" class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/20">{{ gap.skillName }}</span>
           </div>
 
-          <!-- Assign Button -->
-          <button (click)="onAssign(dev)"
-            class="px-5 py-2 rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
-            [ngClass]="{
-                    'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20': isAssigned(dev),
-                    'bg-primary hover:bg-primary-hover text-white shadow-primary/20': !isAssigned(dev)
-                  }">
-            <ng-container *ngIf="isAssigned(dev)">
-              <span>{{ lang === 'ar' ? 'تم التعيين ✓' : 'Assigned ✓' }}</span>
-              <span class="text-[10px] opacity-75 font-normal">{{ lang === 'ar' ? '(انقر لإلغاء التعيين)' : '(Click to unassign)' }}</span>
-            </ng-container>
-            <ng-container *ngIf="!isAssigned(dev)">
-              <span>{{ lang === 'ar' ? 'تعيين المرشح' : 'Assign Candidate' }}</span>
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </ng-container>
-          </button>
+          <!-- Footer action row -->
+          <div class="flex items-center justify-between pt-3 border-t border-border/40">
+            <!-- Status label -->
+            <div class="text-[10px] font-bold flex items-center gap-1.5">
+              <span *ngIf="isAssigned(dev)" class="text-emerald-500 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                </svg>
+                {{ lang === 'ar' ? 'معين حالياً' : 'Currently assigned' }}
+              </span>
+              <span *ngIf="!isAssigned(dev)" class="text-text-secondary/70">
+                {{ lang === 'ar' ? 'متاح للتعيين' : 'Available' }}
+              </span>
+            </div>
+
+            <!-- Assign / Unassign button -->
+            <button (click)="onAssign(dev)"
+              class="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[11px] font-extrabold transition-all active:scale-95 shadow-sm"
+              [ngClass]="{
+                'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20': isAssigned(dev),
+                'bg-gradient-to-r from-primary to-violet-600 hover:from-primary-hover hover:to-violet-700 text-white shadow-primary/20': !isAssigned(dev)
+              }">
+              <!-- Assigned state -->
+              <ng-container *ngIf="isAssigned(dev)">
+                <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span class="text-white">{{ lang === 'ar' ? 'تم التعيين' : 'Assigned' }}</span>
+                <div class="ml-0.5 flex items-center justify-center p-0.5 rounded-md hover:bg-error/20 transition-colors" [title]="lang === 'ar' ? 'إلغاء التعيين' : 'Undo assignment'">
+                  <svg class="w-3 h-3 text-error-light hover:text-error transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </div>
+              </ng-container>
+              <!-- Unassigned state -->
+              <ng-container *ngIf="!isAssigned(dev)">
+                <span>{{ lang === 'ar' ? 'تعيين' : 'Assign' }}</span>
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </ng-container>
+            </button>
+          </div>
         </div>
 
-      </div>
-    </div>
-  </div>
+      </div><!-- end *ngFor -->
+    </div><!-- end cards -->
+
+  </div><!-- end selectedTask -->
+
 </div>

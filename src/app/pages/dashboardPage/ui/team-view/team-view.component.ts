@@ -1,16 +1,45 @@
 import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TeamCollaborationService, EmployeeAssignmentDto, CompanyEmployee, ProjectEmployee } from '../../../../shared/api/team-collaboration.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SprintPlanningService } from '../../../../shared/api/sprint-planning.service';
+import { PlannedSprintAssignmentDialogComponent } from '../../../../features/planned-sprint-assignment-dialog/planned-sprint-assignment-dialog';
+
+export type EmployeePickerEmptyState = 'loading' | 'error' | 'noEmployees' | 'noActiveEmployees' | 'allAssigned' | 'noneAvailable' | null;
+
+export function resolveEmployeePickerEmptyState(
+  companyEmployees: CompanyEmployee[],
+  projectTeam: ProjectEmployee[],
+  loading: boolean,
+  loadError: boolean
+): EmployeePickerEmptyState {
+  if (loading) return 'loading';
+  if (loadError) return 'error';
+  if (companyEmployees.length === 0) return 'noEmployees';
+
+  const activeEmployees = companyEmployees.filter(employee => !employee.isDeactivated);
+  if (activeEmployees.length === 0) return 'noActiveEmployees';
+
+  const assignedIds = new Set(projectTeam.map(employee => employee.employeeId));
+  const unassignedEmployees = activeEmployees.filter(employee =>
+    !assignedIds.has(employee.employeeId || employee.id || ''));
+  if (unassignedEmployees.length === 0) return 'allAssigned';
+
+  const assignableEmployees = unassignedEmployees.filter(employee =>
+    !employee.availabilityStatus || employee.availabilityStatus === 'Available');
+  return assignableEmployees.length === 0 ? 'noneAvailable' : null;
+}
 
 @Component({
   selector: 'app-team-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, PlannedSprintAssignmentDialogComponent],
   template: `
     <div class="space-y-6">
       
@@ -20,71 +49,34 @@ import { ToastService } from '../../../../shared/services/toast.service';
         <p class="text-text-secondary text-sm">{{ 'TEAM.MANAGEMENT_DESC' | translate }}</p>
       </div>
 
-      <!-- Main Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left Side: Invitations -->
-        <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4">
-          <h3 class="font-bold text-text-primary text-base pb-2 border-b border-border">{{ 'TEAM.INVITE_MEMBERS' | translate }}</h3>
-          <p class="text-xs text-text-secondary">{{ 'TEAM.INVITE_MEMBERS_DESC' | translate }}</p>
-          
-          <form (submit)="onSendInvitations($event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">{{ 'TEAM.EMAILS' | translate }}</label>
-              
-              <!-- Chips Container simulating a textarea/input box -->
-              <div class="flex flex-wrap gap-2 w-full bg-background border border-border rounded-xl p-3 min-h-[110px] items-start align-content-start focus-within:ring-2 focus-within:ring-primary/20 transition-all cursor-text"
-                   (click)="emailField.focus()">
-                
-                @for (email of emailsList(); track email; let idx = $index) {
-                  <span [class.bg-red-500/10]="invalidEmailsMap()[email.toLowerCase()]"
-                        [class.border-red-500/20]="invalidEmailsMap()[email.toLowerCase()]"
-                        [class.text-red-500]="invalidEmailsMap()[email.toLowerCase()]"
-                        [class.bg-primary/10]="!invalidEmailsMap()[email.toLowerCase()]"
-                        [class.border-primary/25]="!invalidEmailsMap()[email.toLowerCase()]"
-                        [class.text-primary]="!invalidEmailsMap()[email.toLowerCase()]"
-                        class="inline-flex items-center gap-1.5 border px-3 py-1 rounded-full text-xs font-semibold animate-[scaleUp_0.15s_ease_both]">
-                    <span>{{ email }}</span>
-                    <button type="button" (click)="removeEmail(idx); $event.stopPropagation()"
-                            class="hover:bg-primary/20 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold transition-all">
-                      ✕
-                    </button>
-                  </span>
+      @if (isSetupFlow()) {
+        <section class="overflow-hidden rounded-2xl border border-primary/25 bg-primary/5" aria-labelledby="setup-team-title">
+          <div class="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-start gap-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <div>
+                <h3 id="setup-team-title" class="font-extrabold text-text-primary">{{ 'TEAM.SETUP_STACK_TITLE' | translate }}</h3>
+                <p class="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{{ 'TEAM.SETUP_STACK_DESC' | translate }}</p>
+                @if (projectTeam().length > 0 && membersWithSkillsCount() === 0) {
+                  <p class="mt-2 text-xs font-bold text-warning">{{ 'TEAM.SETUP_NO_SKILLS' | translate }}</p>
                 }
-                
-                <input type="email" [value]="currentEmailInput()" (input)="currentEmailInput.set(emailField.value)" #emailField
-                       (keydown)="onEmailInputKeydown($event)" (blur)="addEmail(emailField.value)"
-                       [placeholder]="'TEAM.EMAIL_PLACEHOLDER' | translate"
-                       class="flex-1 min-w-[180px] bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-text-secondary/50 py-1"
-                       autocomplete="off">
               </div>
-              @for (email of emailsList(); track email) {
-                @if (invalidEmailsMap()[email.toLowerCase()]) {
-                  <p class="text-[11px] text-red-500 font-semibold mt-1 flex items-center gap-1 animate-[fadeIn_0.2s_ease_both]">
-                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    {{ email }}: {{ invalidEmailsMap()[email.toLowerCase()] }}
-                  </p>
-                }
-              }
-              <p class="text-[10px] text-text-secondary mt-1.5" [innerHTML]="'TEAM.EMAIL_HINT' | translate"></p>
             </div>
-            
-            <button type="submit" 
-                    [disabled]="isInviting() || (emailsList().length === 0 && !currentEmailInput().trim())"
-                    class="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-md transition-all disabled:opacity-50">
-              @if (isInviting()) {
-                {{ 'TEAM.SENDING_INVITES' | translate }}
-              } @else {
-                {{ 'TEAM.SEND_INVITATIONS' | translate }}
-              }
+            <button type="button" (click)="continueToSetup()" [disabled]="projectTeam().length === 0"
+                    class="min-h-11 shrink-0 rounded-xl bg-primary px-5 text-sm font-extrabold text-white shadow-sm hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+              {{ 'TEAM.CONTINUE_TO_STACK' | translate }}
             </button>
-          </form>
-        </div>
+          </div>
+        </section>
+      }
 
+      <!-- Main Layout -->
+      <div class="gap-6">
+        
         <!-- Center: Assign Employees to Project -->
-        <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4 lg:col-span-2">
+        <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-2 border-b border-border flex-wrap gap-2">
             <h3 class="font-bold text-text-primary text-base">{{ 'TEAM.ACTIVE_ASSIGNMENT' | translate }}</h3>
             @if (projectState.selectedProjectId()) {
@@ -122,14 +114,19 @@ import { ToastService } from '../../../../shared/services/toast.service';
               <div class="relative">
                 <label class="block text-xs font-bold text-text-secondary mb-1.5">{{ 'TEAM.SELECT_MEMBER' | translate }}</label>
                 <!-- Custom Dropdown Trigger -->
-                <div (click)="isDropdownOpen.set(!isDropdownOpen())"
-                     class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all">
+                <button type="button" (click)="isDropdownOpen.set(!isDropdownOpen())"
+                     class="min-h-11 w-full bg-background border border-border rounded-xl px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:border-primary/50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                     [attr.aria-expanded]="isDropdownOpen()" aria-haspopup="listbox">
                   @if (selectedEmployeeId) {
                     @for (emp of companyEmployees(); track emp.employeeId) {
                       @if (emp.employeeId === selectedEmployeeId) {
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                             [style.background]="getAvatarColor(emp.email)">
-                          {{ getInitials(emp.fullName, emp.email) }}
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
+                             [style.background]="emp.avatarUrl ? 'transparent' : getAvatarColor(emp.email)">
+                          @if (emp.avatarUrl) {
+                            <img [src]="emp.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                          } @else {
+                            {{ getInitials(emp.fullName, emp.email) }}
+                          }
                         </div>
                         <div class="flex flex-col leading-tight min-w-0">
                           @if (emp.fullName && emp.fullName !== emp.email) {
@@ -149,7 +146,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                   </svg>
-                </div>
+                </button>
                 <!-- Dropdown List -->
                 @if (isDropdownOpen()) {
                   <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto animate-[fadeDown_0.15s_ease_both]">
@@ -157,9 +154,13 @@ import { ToastService } from '../../../../shared/services/toast.service';
                       <div (click)="selectEmployee(emp.employeeId)"
                            class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-sidebar transition-colors"
                            [class.bg-primary/10]="emp.employeeId === selectedEmployeeId">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                             [style.background]="getAvatarColor(emp.email)">
-                          {{ getInitials(emp.fullName, emp.email) }}
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden"
+                             [style.background]="emp.avatarUrl ? 'transparent' : getAvatarColor(emp.email)">
+                          @if (emp.avatarUrl) {
+                            <img [src]="emp.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                          } @else {
+                            {{ getInitials(emp.fullName, emp.email) }}
+                          }
                         </div>
                         <div class="flex flex-col leading-tight min-w-0">
                           @if (emp.fullName && emp.fullName !== emp.email) {
@@ -180,8 +181,20 @@ import { ToastService } from '../../../../shared/services/toast.service';
                         }
                       </div>
                     } @empty {
-                      <div class="p-4 text-center text-xs text-text-secondary">
-                        {{ 'TEAM.ALL_ASSIGNED' | translate }}
+                      <div class="p-4 text-center text-xs leading-5 text-text-secondary" [attr.role]="employeePickerEmptyState() === 'error' ? 'alert' : 'status'">
+                        @switch (employeePickerEmptyState()) {
+                          @case ('loading') {
+                            <span class="inline-flex items-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" aria-hidden="true"></span>{{ 'TEAM.LOADING_COMPANY_EMPLOYEES' | translate }}</span>
+                          }
+                          @case ('error') {
+                            <p>{{ 'TEAM.LOAD_EMPLOYEES_FAILED' | translate }}</p>
+                            <button type="button" (click)="retryCompanyEmployeesLoad()" class="mt-2 min-h-11 rounded-lg border border-error/30 px-4 font-bold text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40">{{ 'TEAM.RETRY' | translate }}</button>
+                          }
+                          @case ('noEmployees') { {{ 'TEAM.NO_COMPANY_EMPLOYEES' | translate }} }
+                          @case ('noActiveEmployees') { {{ 'TEAM.NO_ACTIVE_COMPANY_EMPLOYEES' | translate }} }
+                          @case ('allAssigned') { {{ 'TEAM.ALL_ASSIGNED' | translate }} }
+                          @case ('noneAvailable') { {{ 'TEAM.NO_AVAILABLE_EMPLOYEES' | translate }} }
+                        }
                       </div>
                     }
                   </div>
@@ -198,6 +211,12 @@ import { ToastService } from '../../../../shared/services/toast.service';
                   <option value="Product Owner">{{ 'TEAM.ROLES.PRODUCT_OWNER' | translate }}</option>
                   <option value="Designer">{{ 'TEAM.ROLES.DESIGNER' | translate }}</option>
                 </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5">Allocation %</label>
+                <input type="number" [(ngModel)]="assignedAllocationPercentage" name="allocationPercentage" min="1" max="100" required
+                       class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none">
               </div>
 
               <div class="flex items-end">
@@ -235,17 +254,32 @@ import { ToastService } from '../../../../shared/services/toast.service';
                         </div>
                       }
 
-                      <div class="relative z-10">
-                        <h5 class="text-sm font-bold text-text-primary flex items-center gap-2">
-                          {{ member.fullName }}
-                        </h5>
-                        <p class="text-xs text-text-secondary">{{ member.email }}</p>
+                      <div class="relative z-10 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden"
+                             [style.background]="member.avatarUrl ? 'transparent' : getAvatarColor(member.email)">
+                          @if (member.avatarUrl) {
+                            <img [src]="member.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                          } @else {
+                            {{ getInitials(member.fullName, member.email) }}
+                          }
+                        </div>
+                        <div>
+                          <h5 class="text-sm font-bold text-text-primary flex items-center gap-2">
+                            {{ member.fullName }}
+                          </h5>
+                          <p class="text-xs text-text-secondary">{{ member.email }}</p>
+                        </div>
                       </div>
                       
                       <div class="flex items-center gap-2 relative z-10">
                         <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full"
                               [ngClass]="member.isDeactivated ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-primary/10 text-primary border-primary/20'">
                           {{ member.role }}
+                        </span>
+
+                        <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full bg-surface text-text-secondary border-border"
+                              *ngIf="member.allocationPercentage">
+                          {{ member.allocationPercentage }}% Alloc.
                         </span>
                         
                         <!-- Actions -->
@@ -254,6 +288,19 @@ import { ToastService } from '../../../../shared/services/toast.service';
                             Deactivated
                           </span>
                         }
+                        
+                        <!-- Only allow remove if the employee is not deactivated or as a general action -->
+                        <button type="button" 
+                                (click)="removeEmployee(member.employeeId)"
+                                [disabled]="isRemoving() === member.employeeId || projectState.selectedProject()?.status === 'Completed' || projectState.selectedProject()?.status === 'Archived'"
+                                class="ml-2 w-7 h-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                [title]="'TEAM.REMOVE_MEMBER' | translate">
+                          @if (isRemoving() === member.employeeId) {
+                            <div class="w-3 h-3 rounded-full border-2 border-red-500 border-t-transparent animate-spin"></div>
+                          } @else {
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                          }
+                        </button>
                       </div>
                     </div>
                   }
@@ -265,12 +312,44 @@ import { ToastService } from '../../../../shared/services/toast.service';
 
       </div>
     </div>
+    
+    <app-planned-sprint-assignment-dialog
+      [isOpen]="showSprintAssignmentDialog()"
+      [projectId]="projectState.selectedProjectId()"
+      [sprintNames]="detectedSprintNames()"
+      [sprintIds]="detectedSprintIds()"
+      mode="assign"
+      (close)="showSprintAssignmentDialog.set(false)"
+      (actionCompleted)="showSprintAssignmentDialog.set(false)">
+    </app-planned-sprint-assignment-dialog>
+
+    <app-planned-sprint-assignment-dialog
+      [isOpen]="showSprintRemovalDialog()"
+      [projectId]="projectState.selectedProjectId()"
+      [sprintNames]="detectedSprintNames()"
+      [sprintIds]="detectedSprintIds()"
+      mode="remove"
+      [employeeName]="removedEmployeeName()"
+      (close)="showSprintRemovalDialog.set(false)"
+      (actionCompleted)="showSprintRemovalDialog.set(false)">
+    </app-planned-sprint-assignment-dialog>
   `
 })
 export class TeamViewComponent implements OnInit {
   private teamService = inject(TeamCollaborationService);
-  public projectState = inject(ProjectStateService);
+  projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
+  private confirmDialogService = inject(ConfirmDialogService);
+  private translate = inject(TranslateService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  // Feature 3: Smart Suggestion for Planned Sprints
+  showSprintAssignmentDialog = signal<boolean>(false);
+  showSprintRemovalDialog = signal<boolean>(false);
+  removedEmployeeName = signal<string>('');
+  detectedSprintNames = signal<string[]>([]);
+  detectedSprintIds = signal<string[]>([]);
 
   emailsList = signal<string[]>([]);
   currentEmailInput = signal('');
@@ -278,15 +357,28 @@ export class TeamViewComponent implements OnInit {
 
   companyEmployees = signal<CompanyEmployee[]>([]);
   projectTeam = signal<ProjectEmployee[]>([]);
-  
+  isLoadingCompanyEmployees = signal(false);
+  companyEmployeesLoadError = signal(false);
+  setupReturnUrl = signal<string | null>(null);
+  isSetupFlow = computed(() => !!this.setupReturnUrl());
+  membersWithSkillsCount = computed(() => this.projectTeam().filter(member => (member.skills?.length ?? 0) > 0 && !member.isDeactivated).length);
+
   readonly unassignedCompanyEmployees = computed(() => {
     const assignedIds = new Set(this.projectTeam().map(p => p.employeeId));
-    return this.companyEmployees().filter(emp => !emp.isDeactivated && !assignedIds.has(emp.employeeId || emp.id || ''));
+    return this.companyEmployees().filter(emp => {
+      const empId = emp.employeeId || emp.id || '';
+      const isAvailable = !emp.availabilityStatus || emp.availabilityStatus === 'Available';
+      return !emp.isDeactivated && !assignedIds.has(empId) && isAvailable;
+    });
   });
+  readonly employeePickerEmptyState = computed(() => resolveEmployeePickerEmptyState(
+    this.companyEmployees(), this.projectTeam(), this.isLoadingCompanyEmployees(), this.companyEmployeesLoadError()));
 
   selectedEmployeeId = '';
   assignedRole = 'Developer';
+  assignedAllocationPercentage = 100;
   isAssigning = signal(false);
+  isRemoving = signal<string | null>(null);
   isLoadingTeam = signal(false);
   isDropdownOpen = signal(false);
 
@@ -348,16 +440,44 @@ export class TeamViewComponent implements OnInit {
     });
   }
 
-  async ngOnInit() {}
+  async ngOnInit() {
+    const setupProjectId = this.route.snapshot.queryParamMap.get('setupProjectId');
+    const requestedReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (setupProjectId) this.projectState.setSelectedProject(setupProjectId);
+    if (requestedReturnUrl?.startsWith('/dashboard/projects/') && requestedReturnUrl.endsWith('/setup')) {
+      this.setupReturnUrl.set(requestedReturnUrl);
+    }
+  }
+
+  continueToSetup(): void {
+    const returnUrl = this.setupReturnUrl();
+    if (returnUrl && this.projectTeam().length > 0) void this.router.navigateByUrl(returnUrl);
+  }
 
   async loadCompanyEmployees(companyId: string) {
+    this.isLoadingCompanyEmployees.set(true);
+    this.companyEmployeesLoadError.set(false);
     try {
-      const res = await this.teamService.getCompanyEmployees(companyId);
-      const list = res.data || res || [];
+      const res: any = await this.teamService.getCompanyEmployees(companyId);
+      const rawList = res?.data?.items || res?.data || res?.items || res || [];
+      const list: CompanyEmployee[] = (Array.isArray(rawList) ? rawList : []).map((e: any) => ({
+        ...e,
+        employeeId: e.employeeId || e.id || '',
+        fullName: e.fullName || (e.firstName ? `${e.firstName} ${e.lastName || ''}`.trim() : e.email)
+      }));
       this.companyEmployees.set(list);
     } catch (e) {
+      this.companyEmployees.set([]);
+      this.companyEmployeesLoadError.set(true);
       console.warn('Failed to load company employees:', e);
+    } finally {
+      this.isLoadingCompanyEmployees.set(false);
     }
+  }
+
+  retryCompanyEmployeesLoad(): void {
+    const companyId = this.projectState.userCompanyId();
+    if (companyId) void this.loadCompanyEmployees(companyId);
   }
 
   async loadProjectTeam(projectId: string) {
@@ -370,9 +490,11 @@ export class TeamViewComponent implements OnInit {
         fullName: e.fullName || e.email,
         email: e.email,
         role: e.role || 'Contributor',
+        allocationPercentage: e.allocationPercentage,
         isDeactivated: e.isDeactivated,
         deactivationReason: e.deactivationReason,
-        deactivatedAt: e.deactivatedAt
+        deactivatedAt: e.deactivatedAt,
+        skills: e.skills || []
       }));
       this.projectTeam.set(mapped);
       this.projectState.setProjectEmployeeCount(mapped.length);
@@ -380,6 +502,42 @@ export class TeamViewComponent implements OnInit {
       console.warn('Failed to load project team:', e);
     } finally {
       this.isLoadingTeam.set(false);
+    }
+  }
+
+  async removeEmployee(employeeId: string) {
+    const projId = this.projectState.selectedProjectId();
+    if (!projId) return;
+
+    const emp = this.projectTeam().find(e => e.employeeId === employeeId);
+    if (!emp) return;
+
+    const confirmed = await this.confirmDialogService.confirm({
+      title: this.translate.instant('TEAM.REMOVE_MEMBER'),
+      message: this.translate.instant('TEAM.REMOVE_MEMBER_CONFIRM'),
+      confirmLabel: this.translate.instant('TEAM.REMOVE'),
+      type: 'danger'
+    });
+    if (!confirmed) return;
+
+    this.isRemoving.set(employeeId);
+    try {
+      const res = await this.teamService.removeProjectEmployee(projId, employeeId);
+      await this.loadProjectTeam(projId);
+
+      if (res && res.data && res.data.hasPlannedSprints) {
+        this.detectedSprintNames.set(res.data.plannedSprintNames || []);
+        this.detectedSprintIds.set(res.data.plannedSprintIds || []);
+        this.removedEmployeeName.set(emp.fullName || emp.email);
+        this.showSprintRemovalDialog.set(true);
+      } else {
+        this.toastService.show(this.translate.instant('TEAM.REMOVED_SUCCESS'), 'success');
+      }
+    } catch (e: any) {
+      const errorMsg = e?.response?.data?.errors?.[0]?.message || e?.response?.data?.message || this.translate.instant('TEAM.REMOVE_FAILED');
+      this.toastService.show(errorMsg, 'error');
+    } finally {
+      this.isRemoving.set(null);
     }
   }
 
@@ -396,7 +554,7 @@ export class TeamViewComponent implements OnInit {
   addEmail(email: string) {
     const cleanEmail = email.trim().replace(/,$/, '');
     if (!cleanEmail) return;
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(cleanEmail)) {
       const lowerEmail = cleanEmail.toLowerCase();
@@ -424,7 +582,7 @@ export class TeamViewComponent implements OnInit {
 
   async onSendInvitations(event: Event) {
     event.preventDefault();
-    
+
     // Add any remaining text in the input field as an email if valid
     const remaining = this.currentEmailInput().trim();
     if (remaining) {
@@ -449,7 +607,7 @@ export class TeamViewComponent implements OnInit {
       this.toastService.show('🎉 Invitations sent successfully to invited members!', 'success');
       this.emailsList.set([]);
       this.currentEmailInput.set('');
-      
+
       const compId = this.projectState.userCompanyId();
       if (compId) {
         await this.loadCompanyEmployees(compId);
@@ -468,14 +626,14 @@ export class TeamViewComponent implements OnInit {
     const skipped = data?.skippedEmployees || errResponse?.skippedEmployees || [];
     const errors = errResponse?.errors || [];
     const code = errResponse?.code;
-    
+
     const hasSkippedBelongs = skipped.some((s: any) => s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY');
     const isAlreadyBelongsError = hasSkippedBelongs || (code === 'USER_ALREADY_BELONGS_TO_COMPANY') ||
       errors.some((err: any) => err.code === 'USER_ALREADY_BELONGS_TO_COMPANY');
 
     if (isAlreadyBelongsError) {
       const failedEmails: string[] = [];
-      
+
       skipped.forEach((s: any) => {
         if (s.reason === 'USER_ALREADY_BELONGS_TO_COMPANY' && s.email) {
           failedEmails.push(s.email.toLowerCase().trim());
@@ -495,7 +653,7 @@ export class TeamViewComponent implements OnInit {
           }
         }
       });
-      
+
       if (failedEmails.length === 0 && emails.length === 1) {
         failedEmails.push(emails[0].toLowerCase().trim());
       }
@@ -532,7 +690,8 @@ export class TeamViewComponent implements OnInit {
     try {
       const assignment: EmployeeAssignmentDto = {
         employeeId: this.selectedEmployeeId,
-        role: this.assignedRole
+        role: this.assignedRole,
+        allocationPercentage: this.assignedAllocationPercentage
       };
       const res = await this.teamService.assignEmployees(projId, [assignment]);
       if (res && res.succeeded === false) {
@@ -542,6 +701,13 @@ export class TeamViewComponent implements OnInit {
       this.toastService.show('🎉 Member assigned successfully to the project!', 'success');
       this.selectedEmployeeId = '';
       await this.loadProjectTeam(projId);
+      
+      // Feature 3: Smart Suggestion for Planned Sprints
+      if (res.data && res.data.hasPlannedSprints) {
+        this.detectedSprintNames.set(res.data.plannedSprintNames || []);
+        this.detectedSprintIds.set(res.data.plannedSprintIds || []);
+        this.showSprintAssignmentDialog.set(true);
+      }
     } catch (e: any) {
       console.error(e);
       const errResponse = e?.response?.data || e;
@@ -560,14 +726,14 @@ export class TeamViewComponent implements OnInit {
     if (isAlreadyAssignedError) {
       this.assignError.set('One or more selected employees are already assigned to another active project.');
       this.toastService.show('One or more selected employees are already assigned to another active project.', 'error');
-      
+
       const failedIds: string[] = [];
       errors.forEach((err: any) => {
         if (err.code === 'EmployeeAlreadyAssignedToAnotherProject') {
           if (err.employeeId) {
             failedIds.push(err.employeeId);
           } else if (err.description) {
-            const found = this.companyEmployees().find(emp => 
+            const found = this.companyEmployees().find(emp =>
               (emp.employeeId && err.description.includes(emp.employeeId)) ||
               (emp.email && err.description.includes(emp.email)) ||
               (emp.fullName && err.description.includes(emp.fullName))

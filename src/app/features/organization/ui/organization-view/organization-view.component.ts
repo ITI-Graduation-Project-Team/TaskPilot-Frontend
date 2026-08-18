@@ -3,15 +3,16 @@ import { CommonModule } from '@angular/common';
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 import { KnowledgeBaseComponent } from '../knowledge-base/knowledge-base.component';
 import { PolicyChatComponent } from '../policy-chat/policy-chat.component';
+import { CompanySettingsComponent } from '../../../../pages/settings/company-settings.component';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { TranslatePipe } from '@ngx-translate/core';
 
-type OrgTab = 'settings' | 'knowledge' | 'chat';
+type OrgTab = 'settings' | 'capacity' | 'knowledge' | 'chat';
 
 @Component({
   selector: 'app-organization-view',
   standalone: true,
-  imports: [CommonModule, GeneralSettingsComponent, KnowledgeBaseComponent, PolicyChatComponent, TranslatePipe],
+  imports: [CommonModule, GeneralSettingsComponent, CompanySettingsComponent, KnowledgeBaseComponent, PolicyChatComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="h-full flex flex-col animate-[fadeIn_0.3s_ease_both]">
@@ -45,6 +46,14 @@ type OrgTab = 'settings' | 'knowledge' | 'chat';
                 {{ 'ORGANIZATION.TAB_SETTINGS' | translate }}
               </button>
               
+              <button (click)="currentTab.set('capacity')"
+                      [class.bg-primary]="currentTab() === 'capacity'" [class.text-white]="currentTab() === 'capacity'" [class.shadow-md]="currentTab() === 'capacity'"
+                      [class.bg-surface]="currentTab() !== 'capacity'" [class.text-text-secondary]="currentTab() !== 'capacity'" [class.hover:text-text-primary]="currentTab() !== 'capacity'" [class.hover:border-primary/40]="currentTab() !== 'capacity'"
+                      class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all border border-transparent whitespace-nowrap text-sm font-bold">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {{ 'COMPANY_CAPACITY.TITLE' | translate }}
+              </button>
+              
               <button (click)="currentTab.set('knowledge')"
                       [class.bg-primary]="currentTab() === 'knowledge'" [class.text-white]="currentTab() === 'knowledge'" [class.shadow-md]="currentTab() === 'knowledge'"
                       [class.bg-surface]="currentTab() !== 'knowledge'" [class.text-text-secondary]="currentTab() !== 'knowledge'" [class.hover:text-text-primary]="currentTab() !== 'knowledge'" [class.hover:border-primary/40]="currentTab() !== 'knowledge'"
@@ -67,6 +76,8 @@ type OrgTab = 'settings' | 'knowledge' | 'chat';
           <div class="flex-1 min-w-0">
             @if (currentTab() === 'settings') {
               <app-general-settings></app-general-settings>
+            } @else if (currentTab() === 'capacity') {
+              <app-company-settings></app-company-settings>
             } @else if (currentTab() === 'knowledge') {
               <app-knowledge-base></app-knowledge-base>
             } @else if (currentTab() === 'chat') {

@@ -3,6 +3,7 @@ import { roleGuard } from './shared/guards/role.guard';
 import { authGuard } from './shared/guards/auth.guard';
 import { authRedirectGuard } from './shared/guards/auth-redirect.guard';
 import { companySetupGuard } from './shared/guards/company-setup.guard';
+import { projectSetupGuard } from './shared/guards/project-setup.guard';
 
 export const routes: Routes = [
 
@@ -22,16 +23,19 @@ export const routes: Routes = [
       { path: '', redirectTo: 'projects', pathMatch: 'full' },
       { path: 'projects', loadComponent: () => import('./pages/dashboardPage/ui/project-hub/project-hub.component').then(m => m.ProjectHubComponent) },
       { path: 'create-project', loadComponent: () => import('./pages/dashboardPage/ui/create-project/create-project.component').then(m => m.CreateProjectComponent) },
-      { path: 'sprint', loadComponent: () => import('./pages/dashboardPage/ui/sprint-view/sprint-view.component').then(m => m.SprintViewComponent) },
-      { path: 'sprint-planning', loadComponent: () => import('./pages/dashboardPage/ui/sprint-planning-view/sprint-planning-view.component').then(m => m.SprintPlanningViewComponent) },
-      { path: 'retrospective', loadComponent: () => import('./pages/dashboardPage/ui/retrospective-view/retrospective-view.component').then(m => m.RetrospectiveViewComponent) },
-      { path: 'backlog', loadComponent: () => import('./pages/dashboardPage/ui/backlog-view/backlog-view.component').then(m => m.BacklogViewComponent) },
+      { path: 'projects/:projectId/setup', loadComponent: () => import('./pages/dashboardPage/ui/project-setup/project-setup.component').then(m => m.ProjectSetupComponent) },
+      { path: 'sprint', canActivate: [projectSetupGuard], loadComponent: () => import('./pages/dashboardPage/ui/sprint-view/sprint-view.component').then(m => m.SprintViewComponent) },
+      { path: 'sprint-planning', canActivate: [projectSetupGuard], loadComponent: () => import('./pages/dashboardPage/ui/sprint-planning-view/sprint-planning-view.component').then(m => m.SprintPlanningViewComponent) },
+      { path: 'retrospective', canActivate: [projectSetupGuard], loadComponent: () => import('./pages/dashboardPage/ui/retrospective-view/retrospective-view.component').then(m => m.RetrospectiveViewComponent) },
+      { path: 'backlog', canActivate: [projectSetupGuard], loadComponent: () => import('./pages/dashboardPage/ui/backlog-view/backlog-view.component').then(m => m.BacklogViewComponent) },
       { path: 'team', loadComponent: () => import('./pages/dashboardPage/ui/team-view/team-view.component').then(m => m.TeamViewComponent) },
       { path: 'profile', loadComponent: () => import('./pages/dashboardPage/ui/profile-view/profile-view.component').then(m => m.ProfileViewComponent) },
       { path: 'organization', loadComponent: () => import('./features/organization/ui/organization-view/organization-view.component').then(m => m.OrganizationViewComponent) },
       { path: 'employees', loadComponent: () => import('./pages/employeesPage/ui/employees/employees').then(m => m.EmployeesComponent) },
       { path: 'employees/:id', loadComponent: () => import('./pages/employeesPage/ui/employee-details/employee-details.component').then(m => m.EmployeeDetailsComponent) },
-      { path: 'project-policies', loadComponent: () => import('./features/projectPolicies/ui/project-policies-admin/project-policies-admin.component').then(m => m.ProjectPoliciesAdminComponent) }
+      { path: 'project-policies', loadComponent: () => import('./features/projectPolicies/ui/project-policies-admin/project-policies-admin.component').then(m => m.ProjectPoliciesAdminComponent) },
+      { path: 'settings', loadChildren: () => import('./pages/settings/settings.routes').then(m => m.settingsRoutes) },
+      { path: 'assignment/:sprintId', canActivate: [projectSetupGuard], loadComponent: () => import('./pages/assignmentPage/ui/assignment/assignment.component').then(m => m.AssignmentComponent) }
     ]
   },
   {
@@ -54,6 +58,15 @@ export const routes: Routes = [
       ),
     canActivate: [roleGuard, companySetupGuard],
     data: { roles: ['ProjectManager'] }
+  },
+  {
+    path: 'admin/subscription-plans',
+    loadComponent: () =>
+      import('./pages/subscriptionPage/ui/admin-coming-soon/admin-coming-soon.component').then(
+        (m) => m.AdminComingSoonComponent
+      ),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['Admin'] }
   },
   {
     path: 'payment/callback',
@@ -139,5 +152,18 @@ export const routes: Routes = [
       import('./pages/assignmentPage/ui/assignment/assignment.component').then(
         (m) => m.AssignmentComponent
       ),
+  },
+  {
+    path: 'calendar-callback',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/calendarCallback/calendarCallbackPage.component').then(
+        (m) => m.CalendarCallbackPageComponent
+      ),
+  },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent),
   },
 ];

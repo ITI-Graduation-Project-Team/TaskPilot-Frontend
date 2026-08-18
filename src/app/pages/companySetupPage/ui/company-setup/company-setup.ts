@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { CompanyService } from '../../../../shared/api/Company-api/company';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
 
 @Component({
   selector: 'app-company-setup',
@@ -24,12 +25,27 @@ export class CompanySetupComponent {
   submitSuccess = false;
 
   currentStep = 1;
-  maxStep = 4;
+  maxStep = 5;
+
+  // Sprint Capacity variables
+  workingHoursPerDay = 8.0;
+  workingDaysMask = 62; // Mon-Fri (2+4+8+16+32)
+  defaultCapacityBufferPercentage = 0.8;
+  daysOfWeek = [
+    { name: 'Sun', value: 1 },
+    { name: 'Mon', value: 2 },
+    { name: 'Tue', value: 4 },
+    { name: 'Wed', value: 8 },
+    { name: 'Thu', value: 16 },
+    { name: 'Fri', value: 32 },
+    { name: 'Sat', value: 64 },
+  ];
 
   private fb = inject(FormBuilder);
   private companyService = inject(CompanyService);
   public translate = inject(TranslateService);
   private router = inject(Router);
+  private projectState = inject(ProjectStateService);
 
   get isArabic(): boolean {
     const lang = typeof this.translate.currentLang === 'function' ? (this.translate.currentLang as any)() : this.translate.currentLang;
@@ -38,10 +54,11 @@ export class CompanySetupComponent {
 
   get setupProgress(): number {
     let progress = 0;
-    if (this.setupForm.get('CompanyName')?.value) progress += 25;
-    if (this.setupForm.get('PolicyTitleEn')?.value && this.setupForm.get('PolicyContentEn')?.value && this.setupForm.get('PolicyTitleAr')?.value && this.setupForm.get('PolicyContentAr')?.value) progress += 25;
-    if (this.selectedFile) progress += 25;
-    if (this.employeeEmails.length > 0) progress += 25;
+    if (this.hasCompanyName) progress += 20;
+    if (this.hasPolicies) progress += 20;
+    if (this.hasDocument) progress += 20;
+    if (this.hasCapacityConfig) progress += 20;
+    if (this.hasInvites) progress += 20;
     return progress;
   }
 
@@ -60,6 +77,22 @@ export class CompanySetupComponent {
 
   get hasInvites(): boolean {
     return this.employeeEmails.length > 0;
+  }
+
+  get hasCapacityConfig(): boolean {
+    return !!this.workingHoursPerDay && !!this.workingDaysMask && !!this.defaultCapacityBufferPercentage;
+  }
+
+  isDaySelected(dayValue: number): boolean {
+    return (this.workingDaysMask & dayValue) !== 0;
+  }
+
+  toggleDay(dayValue: number) {
+    if ((this.workingDaysMask & dayValue) !== 0) {
+      this.workingDaysMask = this.workingDaysMask & ~dayValue;
+    } else {
+      this.workingDaysMask = this.workingDaysMask | dayValue;
+    }
   }
 
   constructor() {
@@ -81,6 +114,8 @@ export class CompanySetupComponent {
       case 3:
         return this.hasDocument;
       case 4:
+        return this.hasCapacityConfig;
+      case 5:
         return true; // Inviting team members is optional
       default:
         return false;
@@ -200,13 +235,31 @@ export class CompanySetupComponent {
 
     try {
       const res = await this.companyService.setupCompany(formData, lang);
-      this.isSubmitting = false;
       if (res.succeeded) {
+        // Force refresh the profile so the guard allows us into the PM dashboard and we get companyId
+        await this.projectState.getProfile(true);
+
+        // Also update working config
+        try {
+          const companyId = this.projectState.userCompanyId();
+          if (companyId) {
+            await this.companyService.updateWorkingConfig(companyId, {
+              workingHoursPerDay: this.workingHoursPerDay,
+              workingDaysMask: this.workingDaysMask,
+              defaultCapacityBufferPercentage: this.defaultCapacityBufferPercentage
+            });
+          }
+        } catch (e) {
+          console.warn('Failed to save sprint capacity config during setup', e);
+        }
+
+        this.isSubmitting = false;
         this.submitSuccess = true;
         setTimeout(() => {
           this.router.navigate(['/dashboard']);
         }, 1500);
       } else {
+        this.isSubmitting = false;
         this.submitError = res.message || 'Setup failed. Please try again.';
       }
     } catch (err: any) {

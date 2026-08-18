@@ -1,6 +1,16 @@
 import { Injectable } from '@angular/core';
 import { apiClient } from './axios.instance';
 
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export interface PartiallyCompletedStory {
   userStoryId: string;
   titleEn: string;
@@ -143,6 +153,16 @@ export interface ConfirmSprintRequest {
   userStoryIds: string[];
 }
 
+export interface ConfirmSprintResult {
+  sprintId: string;
+  projectId: string;
+  titleEn: string;
+  startDate: string;
+  endDate: string;
+  userStoriesAssigned: number;
+  tasksAssigned: number;
+}
+
 export interface SprintListItem {
   sprintId: string;
   titleEn: string;
@@ -165,17 +185,36 @@ export class SprintPlanningService {
     return data;
   }
 
-  async confirmSprints(projectId: string, request: any): Promise<any> {
+  async confirmSprints(projectId: string, request: ConfirmSprintRequest): Promise<ConfirmSprintResult> {
     const { data } = await apiClient.post(`/projects/${projectId}/sprints/confirm`, request);
-    return data;
+    return data?.data || data;
   }
+
+  private activeSprintPromises = new Map<string, Promise<any>>();
 
   async getActiveSprint(projectId: string): Promise<any> {
-    const { data } = await apiClient.get(`/projects/${projectId}/sprints/active`);
-    return data;
+    if (!this.activeSprintPromises.has(projectId)) {
+      const promise = apiClient.get(`/projects/${projectId}/sprints/active`)
+        .then(res => {
+          // Clear cache after a short delay so future manual refreshes still work
+          setTimeout(() => this.activeSprintPromises.delete(projectId), 2000);
+          return res.data;
+        })
+        .catch(err => {
+          this.activeSprintPromises.delete(projectId);
+          throw err;
+        });
+      this.activeSprintPromises.set(projectId, promise);
+    }
+    return this.activeSprintPromises.get(projectId);
   }
 
-  async getPlannedSprint(projectId: string): Promise<{ sprintId: string; status: string } | null> {
+  async getPlannedSprint(projectId: string): Promise<{
+    sprintId: string;
+    status?: string;
+    titleEn?: string;
+    titleAr?: string;
+  } | null> {
     try {
       const { data } = await apiClient.get(`/projects/${projectId}/sprints/planned`);
       return data?.data || data || null;
@@ -212,21 +251,58 @@ export class SprintPlanningService {
     );
   }
 
-  async getAllSprints(projectId: string): Promise<SprintListItem[]> {
+  async cancelSprint(projectId: string, sprintId: string): Promise<void> {
+    await apiClient.post(
+      `/projects/${projectId}/sprints/${sprintId}/cancel`,
+      {}
+    );
+  }
+
+  async getAllSprints(
+    projectId: string,
+    page: number = 1,
+    pageSize: number = 10,
+    statusFilter?: string,
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<PagedResult<SprintListItem>> {
     try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+      if (statusFilter && statusFilter !== 'All') params.append('statusFilter', statusFilter);
+      if (dateFrom) params.append('dateFrom', dateFrom);
+      if (dateTo) params.append('dateTo', dateTo);
+
       const { data } = await apiClient.get(
-        `/projects/${projectId}/sprints`
+        `/projects/${projectId}/sprints?${params.toString()}`
       );
-      return data?.data || [];
+      return data?.data || {
+        items: [],
+        page,
+        pageSize,
+        totalItems: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false
+      };
     } catch {
-      return [];
+      return {
+        items: [],
+        page,
+        pageSize,
+        totalItems: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false
+      };
     }
   }
 
-  async completeSprint(projectId: string, sprintId: string): Promise<void> {
+  async completeSprint(projectId: string, sprintId: string, reviewAction?: 'AcceptAll' | 'SendToBacklog'): Promise<void> {
     await apiClient.post(
       `/projects/${projectId}/sprints/${sprintId}/complete`,
-      {}
+      { reviewAction }
     );
   }
 

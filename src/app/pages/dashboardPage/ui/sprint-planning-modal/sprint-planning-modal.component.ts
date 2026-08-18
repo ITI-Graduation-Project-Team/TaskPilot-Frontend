@@ -1,10 +1,12 @@
 import { Component, ChangeDetectionStrategy, signal, inject, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SprintPlanningService, SprintSuggestionDto } from '../../../../shared/api/sprint-planning.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { BacklogService } from '../../../../shared/api/backlog.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { parseApiError } from '../../../../shared/api/api-error';
 
 const LOADING_HINTS = [
   { en: 'Analyzing your backlog...', ar: 'جاري تحليل قائمة المهام...' },
@@ -63,7 +65,7 @@ const LOADING_HINTS = [
                 </div>
               </div>
               <button
-                (click)="close.emit(); navigateToTeam.emit()"
+                (click)="close.emit(); goToTeam()"
                 class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -130,7 +132,7 @@ const LOADING_HINTS = [
               <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed mb-6">
                 {{ currentLang() === 'ar'
                   ? 'تحتاج إلى وجود قصص مستخدمين غير معينة في قائمة المهام (Backlog) ليتمكن الذكاء الاصطناعي من تقسيم السبرينت وتوزيع القدرات.'
-                  : 'You need unassigned user stories in your project backlog to generate an AI sprint schedule. Add stories or refresh backlog data.' }}
+                  : 'You need unassigned user stories in your project backlog to generate an AI sprint schedule. Add stories.' }}
               </p>
 
               <!-- Status Info Cards -->
@@ -179,15 +181,7 @@ const LOADING_HINTS = [
 
               <!-- Action Buttons -->
               <div class="flex items-center justify-center gap-3 flex-wrap">
-                <button
-                  (click)="loadProjectBacklogStories()"
-                  [disabled]="isBacklogLoading()"
-                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-sidebar hover:bg-border border border-border text-text-primary font-bold rounded-xl shadow-xs transition-all text-xs disabled:opacity-50">
-                  <svg class="w-4 h-4 text-text-secondary" [class.animate-spin]="isBacklogLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                  {{ currentLang() === 'ar' ? 'تحديث قائمة المهام' : 'Refresh Backlog' }}
-                </button>
+
 
                 <button
                   (click)="loadSuggestions()"
@@ -313,7 +307,7 @@ const LOADING_HINTS = [
                 {{ currentLang() === 'ar' ? 'إلغاء' : 'Cancel' }}
               </button>
               <button
-                (click)="showNoEmployeesModal.set(false); close.emit(); navigateToTeam.emit()"
+                (click)="showNoEmployeesModal.set(false); close.emit(); goToTeam()"
                 class="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -337,12 +331,13 @@ const LOADING_HINTS = [
 export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() sprintConfirmed = new EventEmitter<void>();
-  @Output() navigateToTeam = new EventEmitter<void>();
+
 
   private sprintService = inject(SprintPlanningService);
   private backlogService = inject(BacklogService);
   public projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
+  private router = inject(Router);
 
   currentLang = signal<'en' | 'ar'>(typeof localStorage !== 'undefined' ? (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en' : 'en');
   showNoEmployeesModal = signal<boolean>(false);
@@ -394,8 +389,8 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
 
     this.isBacklogLoading.set(true);
     try {
-      const res = await this.backlogService.getBacklog(projId);
-      const stories = res?.userStories || [];
+      const res = await this.backlogService.getBacklog(projId, 1, 1000);
+      const stories = res?.userStories?.items || [];
       this.storiesMap.clear();
       stories.forEach((s: any) => {
         this.storiesMap.set(s.id, s.titleEn || s.title || 'Untitled Story');
@@ -455,13 +450,8 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
         ];
       }
       this.suggestions.set(mapped);
-    } catch (e: any) {
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
-      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
-        this.showNoEmployeesModal.set(true);
-      } else {
-        console.warn('Failed to load suggested sprints from AI:', e);
-      }
+    } catch (e: unknown) {
+      this.handleSprintError(e, 'Failed to load suggested sprints from AI.');
     } finally {
       this.isLoadingSuggestions.set(false);
       this.clearHintTimer();
@@ -475,7 +465,7 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
   async viewSnapshot(sprint: SprintSuggestionDto) {
     const projId = this.projectState.selectedProjectId();
     if (!projId) return;
-    
+
     // Simulate/retrieve active snapshots
     this.activeSnapshotSprintId.set(sprint.titleEn);
     try {
@@ -521,16 +511,53 @@ export class SprintPlanningModalComponent implements OnInit, OnDestroy {
       this.toastService.show('🎉 Sprints configured and saved successfully!', 'success');
       this.sprintConfirmed.emit();
       this.close.emit();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      const errorCode = e?.response?.data?.error?.code || e?.response?.data?.code || e?.error?.code || e?.code;
-      if (errorCode === 'NO_EMPLOYEES_ASSIGNED') {
-        this.showNoEmployeesModal.set(true);
-      } else {
-        this.toastService.show('Failed to save sprints configuration. Please try again.', 'error');
-      }
+      this.handleSprintError(e, 'Failed to save sprints configuration. Please try again.');
     } finally {
       this.isSaving.set(false);
     }
+  }
+
+  goToTeam(): void {
+    this.router.navigate(['/dashboard', 'team']);
+  }
+
+  private handleSprintError(error: unknown, fallbackMessage: string): void {
+    const parsed = parseApiError(error, fallbackMessage);
+    const isAr = this.currentLang() === 'ar';
+
+    if (parsed.code === 'NO_EMPLOYEES_ASSIGNED') {
+      this.showNoEmployeesModal.set(true);
+      return;
+    }
+
+    if (parsed.code === 'ANOTHER_SPRINT_ALREADY_PLANNED') {
+      this.toastService.show(
+        isAr ? 'يوجد سبرينت مخطط له بالفعل.' : 'A planned sprint already exists for this project.',
+        'warning',
+        6000,
+        {
+          label: isAr ? 'عرض السبرينت المخطط' : 'View planned sprint',
+          onClick: () => this.router.navigate(['/dashboard', 'sprint'], { queryParams: { sprintStatus: 'Planned' } }),
+        },
+      );
+      return;
+    }
+
+    if (parsed.code === 'ANOTHER_SPRINT_ALREADY_ACTIVE') {
+      this.toastService.show(
+        isAr ? 'يوجد سبرينت نشط بالفعل.' : 'An active sprint is already running for this project.',
+        'warning',
+        6000,
+        {
+          label: isAr ? 'عرض السبرينت النشط' : 'View active sprint',
+          onClick: () => this.router.navigate(['/dashboard', 'sprint'], { queryParams: { sprintStatus: 'Active' } }),
+        },
+      );
+      return;
+    }
+
+    this.toastService.show(parsed.message, parsed.status === 409 ? 'warning' : 'error');
   }
 }

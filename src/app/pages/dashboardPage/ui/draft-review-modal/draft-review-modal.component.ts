@@ -52,20 +52,10 @@ import { ToastService } from '../../../../shared/services/toast.service';
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
               <div>
                 <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Tech Stack</label>
                 <input type="text" [(ngModel)]="draft.techStack" required placeholder="e.g. Angular, Node.js"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Platform Targets</label>
-                <input type="text" [(ngModel)]="draft.platformTargets" required placeholder="e.g. Web, Mobile"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5 uppercase">Project Type</label>
-                <input type="text" [(ngModel)]="draft.projectType" required placeholder="e.g. Fitness Tracking"
                        class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all">
               </div>
             </div>
@@ -168,32 +158,11 @@ export class DraftReviewModalComponent implements OnInit {
   isSaving = signal(false);
 
   ngOnInit() {
-    // Fill in default placeholders if missing
-    if (!this.draft.techStack) this.draft.techStack = 'Not Specified';
-    if (!this.draft.platformTargets) this.draft.platformTargets = 'Web';
-    if (!this.draft.projectType) this.draft.projectType = 'Custom';
   }
 
   async onConfirmSave() {
     this.isSaving.set(true);
     try {
-      // Setup payload based on backend structure
-      const payload: any = {
-        nameEn: this.draft.nameEn,
-        nameAr: this.draft.nameAr,
-        descriptionEn: this.draft.descriptionEn,
-        descriptionAr: this.draft.descriptionAr,
-        techStack: this.draft.techStack.split(',').map(s => s.trim()),
-        platformTargets: this.draft.platformTargets.split(',').map(s => s.trim()),
-        projectType: this.draft.projectType,
-        companyId: this.projectState.userCompanyId(),
-        managerId: this.projectState.userId(),
-        requirementsSnapshot: this.chatId,
-        milestones: this.draft.milestones
-      };
-
-      await this.aiRequirements.confirmProject(payload);
-      
       // Force reload projects reactively
       await this.projectState.loadProjects();
       

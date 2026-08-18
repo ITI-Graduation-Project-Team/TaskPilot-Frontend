@@ -3,6 +3,9 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../shared/services/theme.service';
+import { AuthService } from '../../../../shared/api/auth.service';
+import { isProfileCompleted } from '../../../../shared/lib/auth/cookie.helper';
+import { getRedirectForRole } from '../../../../shared/lib/auth/role-redirect';
 
 @Component({
   selector: 'app-landing',
@@ -34,6 +37,17 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   private router = inject(Router);
+  private authService = inject(AuthService);
+
+  get buttonTextKey(): string {
+    return this.authService.isLoggedIn() ? 'landing.goToDashboard' : 'landing.getStarted';
+  }
+
+  get buttonLink(): string {
+    return this.authService.isLoggedIn()
+      ? getRedirectForRole(this.authService.getUserRole(), isProfileCompleted())
+      : '/register';
+  }
 
   constructor(
     private translate: TranslateService,
@@ -61,7 +75,7 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.quoteInterval = setInterval(() => {
       // Trigger fade out
       this.isFading.set(true);
-      
+
       // Wait for fade out animation to finish (e.g., 500ms), then change quote and fade in
       setTimeout(() => {
         this.currentQuoteIndex.update(idx => (idx + 1) % this.quotes.length);

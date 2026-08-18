@@ -105,22 +105,40 @@
               [class.group-hover:text-slate-200]="canGoToStep(3)">{{ 'COMPANY_SETUP.SIDEBAR.STEP3' | translate }}</span>
           </div>
 
-          <!-- Step 4 Link -->
+          <!-- Step 4 Link (Capacity Config) -->
           <div (click)="goToStep(4)" class="flex items-center gap-3 text-sm transition-all duration-300 group"
             [class.cursor-pointer]="canGoToStep(4)" [class.cursor-not-allowed]="!canGoToStep(4)"
             [class.text-indigo-400]="currentStep === 4" [class.text-slate-400]="currentStep !== 4">
             <span
               class="w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-xs font-bold"
-              [class.border-indigo-500]="currentStep === 4 || hasInvites" [class.bg-indigo-500]="hasInvites"
-              [class.text-white]="hasInvites" [class.border-slate-700]="currentStep !== 4 && !hasInvites"
-              [class.text-indigo-400]="currentStep === 4 && !hasInvites">
+              [class.border-indigo-500]="currentStep >= 4" [class.bg-indigo-500]="currentStep > 4"
+              [class.text-white]="currentStep > 4" [class.border-slate-700]="currentStep < 4"
+              [class.text-indigo-400]="currentStep === 4">
+              <svg class="w-3.5 h-3.5" *ngIf="currentStep > 4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span *ngIf="currentStep <= 4">4</span>
+            </span>
+            <span [class.font-bold]="currentStep === 4" [class.text-slate-200]="currentStep >= 4"
+              [class.group-hover:text-slate-200]="canGoToStep(4)">{{ 'COMPANY_SETUP.STEP_CAPACITY' | translate }}</span>
+          </div>
+
+          <!-- Step 5 Link -->
+          <div (click)="goToStep(5)" class="flex items-center gap-3 text-sm transition-all duration-300 group"
+            [class.cursor-pointer]="canGoToStep(5)" [class.cursor-not-allowed]="!canGoToStep(5)"
+            [class.text-indigo-400]="currentStep === 5" [class.text-slate-400]="currentStep !== 5">
+            <span
+              class="w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-300 text-xs font-bold"
+              [class.border-indigo-500]="currentStep === 5 || hasInvites" [class.bg-indigo-500]="hasInvites"
+              [class.text-white]="hasInvites" [class.border-slate-700]="currentStep !== 5 && !hasInvites"
+              [class.text-indigo-400]="currentStep === 5 && !hasInvites">
               <svg class="w-3.5 h-3.5" *ngIf="hasInvites" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
               </svg>
-              <span *ngIf="!hasInvites">4</span>
+              <span *ngIf="!hasInvites">5</span>
             </span>
-            <span [class.font-bold]="currentStep === 4" [class.text-slate-200]="currentStep === 4 || hasInvites"
-              [class.group-hover:text-slate-200]="canGoToStep(4)">{{ 'COMPANY_SETUP.SIDEBAR.STEP4' | translate }}</span>
+            <span [class.font-bold]="currentStep === 5" [class.text-slate-200]="currentStep === 5 || hasInvites"
+              [class.group-hover:text-slate-200]="canGoToStep(5)">{{ 'COMPANY_SETUP.SIDEBAR.STEP4' | translate }}</span>
           </div>
         </div>
       </div>
@@ -149,7 +167,8 @@
               <span *ngSwitchCase="1">{{ 'COMPANY_SETUP.STEP1.TITLE' | translate }}</span>
               <span *ngSwitchCase="2">{{ 'COMPANY_SETUP.STEP2.TITLE' | translate }}</span>
               <span *ngSwitchCase="3">{{ 'COMPANY_SETUP.STEP3.TITLE' | translate }}</span>
-              <span *ngSwitchCase="4">{{ 'COMPANY_SETUP.STEP4.TITLE' | translate }}</span>
+              <span *ngSwitchCase="4">{{ 'COMPANY_CAPACITY.TITLE' | translate }}</span>
+              <span *ngSwitchCase="5">{{ 'COMPANY_SETUP.STEP4.TITLE' | translate }}</span>
             </ng-container>
           </h3>
         </div>
@@ -345,7 +364,39 @@
                 </div>
               </div>
 
-              <!-- STEP 4: Invite Team -->
+              <!-- STEP 4: Capacity Config -->
+              <div class="w-full shrink-0 px-1 space-y-6">
+                <p class="text-slate-500 text-sm">{{ 'COMPANY_CAPACITY.DESC' | translate }}</p>
+
+                <!-- Working Hours -->
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ 'COMPANY_CAPACITY.WORKING_HOURS' | translate }}</label>
+                  <input type="number" [(ngModel)]="workingHoursPerDay" [ngModelOptions]="{standalone: true}" min="1" max="24" step="0.5"
+                    class="w-full max-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all">
+                </div>
+
+                <!-- Working Days -->
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ 'COMPANY_CAPACITY.WORKING_DAYS' | translate }}</label>
+                  <div class="flex flex-wrap gap-3 mt-2">
+                    <label *ngFor="let day of daysOfWeek" class="flex items-center space-x-2 cursor-pointer">
+                      <input type="checkbox" [checked]="isDaySelected(day.value)" (change)="toggleDay(day.value)"
+                        class="rounded border-slate-300 text-indigo-500 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        [class.ml-2]="isArabic" />
+                      <span class="text-sm text-slate-700 font-medium" [class.mr-2]="isArabic">{{ 'COMPANY_CAPACITY.' + day.name | uppercase | translate }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Capacity Buffer -->
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ 'COMPANY_CAPACITY.DEFAULT_BUFFER' | translate }}</label>
+                  <input type="number" [(ngModel)]="defaultCapacityBufferPercentage" [ngModelOptions]="{standalone: true}" min="0" max="1" step="0.05"
+                    class="w-full max-w-[200px] bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all">
+                </div>
+              </div>
+
+              <!-- STEP 5: Invite Team -->
               <div class="w-full shrink-0 px-1 space-y-4">
                 <p class="text-slate-500 text-sm">{{ 'COMPANY_SETUP.STEP4.DESCRIPTION' | translate }}</p>
 

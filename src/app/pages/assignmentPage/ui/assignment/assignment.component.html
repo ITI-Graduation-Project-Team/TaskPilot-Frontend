@@ -1,106 +1,179 @@
-<div class="h-screen flex flex-col bg-background text-text-primary overflow-hidden font-dashboard animate-[fadeIn_0.25s_ease_both]">
-  
+<div class="assign-shell flex flex-col overflow-hidden font-dashboard animate-[fadeIn_0.25s_ease_both] h-full">
+
   <!-- Loading Screen -->
   <div *ngIf="isLoadingPage()" class="flex-1 flex flex-col items-center justify-center p-12">
-    <div class="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4"></div>
-    <p class="text-sm font-semibold text-text-secondary animate-pulse">{{ currentLang === 'ar' ? 'جاري تحليل مهارات المطورين ومطابقة عبء عمل السبرينت...' : 'Analyzing developer skills and matching sprint workload...' }}</p>
+    <div class="relative mb-6">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
+        <svg class="w-7 h-7 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <div class="absolute inset-0 rounded-2xl border-2 border-primary/30 animate-ping opacity-50"></div>
+    </div>
+    <p class="text-sm font-bold text-text-primary mb-1">{{ currentLang === 'ar' ? 'جاري حساب توصيات التعيين...' : 'Calculating assignment recommendations...' }}</p>
+    <p class="text-xs text-text-secondary">{{ currentLang === 'ar' ? 'مراجعة المهارات وسعة الفريق' : 'Reviewing skills and team capacity' }}</p>
   </div>
 
   <ng-container *ngIf="!isLoadingPage()">
-    <!-- Top Header Bar -->
-    <header class="px-6 py-4 border-b border-border bg-sidebar shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-      <div class="flex items-center gap-4">
-        <button (click)="goBackToDashboard()" 
-                class="p-2 border border-border rounded-xl text-text-secondary hover:text-text-primary hover:bg-background transition-all flex items-center justify-center shrink-0"
-                title="Back to Dashboard">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+
+    <!-- ── Top Command Bar ── -->
+    <header class="px-5 py-3 border-b border-border bg-sidebar/60 backdrop-blur-sm shrink-0 flex items-center justify-between gap-4 shadow-sm">
+
+      <!-- Left: back + title -->
+      <div class="flex items-center gap-3 min-w-0">
+        <button (click)="goBackToDashboard()"
+          class="w-8 h-8 flex items-center justify-center rounded-xl border border-border text-text-secondary hover:text-text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0 group">
+          <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
           </svg>
         </button>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-xl font-black text-text-primary font-display tracking-tight">{{ currentLang === 'ar' ? 'تعيين مهام السبرينت' : 'Sprint Task Assignment' }}</h1>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/20 tracking-wider uppercase flex items-center gap-1">
-              ✨ {{ currentLang === 'ar' ? 'المطابقة التلقائية' : 'AI Auto-Match' }}
+
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base font-black text-text-primary tracking-tight truncate">
+              {{ currentLang === 'ar' ? 'تعيين مهام السبرينت' : 'Sprint Task Assignment' }}
+            </h1>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-gradient-to-r from-primary/15 to-violet-500/10 text-primary border border-primary/20 uppercase tracking-widest shrink-0">
+              {{ currentLang === 'ar' ? 'تخطيط السعة' : 'Capacity planning' }}
             </span>
           </div>
-          <p class="text-xs text-text-secondary mt-0.5">{{ currentLang === 'ar' ? 'راجع توصيات الذكاء الاصطناعي للمطورين، وقم بموازنة عبء العمل، وتعيين المهام.' : 'Review AI developer recommendations, balance workload, and assign tasks.' }}</p>
+          <p class="text-[10px] text-text-secondary mt-0.5 truncate hidden sm:block">
+            {{ currentLang === 'ar' ? 'راجع ملاءمة المهارات ووازن عبء العمل.' : 'Review skill fit, balance workload, and assign tasks.' }}
+          </p>
         </div>
       </div>
 
-      <!-- Header Metrics & Actions -->
-      <div class="flex items-center gap-3 flex-wrap">
-        <!-- Progress Bar Card -->
-        <div class="bg-surface border border-border px-4 py-2 rounded-xl flex items-center gap-3 min-w-[200px]">
-          <div class="flex-1">
-            <div class="flex items-center justify-between text-[11px] font-bold mb-1">
-              <span class="text-text-secondary uppercase">{{ currentLang === 'ar' ? 'التقدم' : 'Progress' }}</span>
-              <span class="text-primary font-black">{{ assignedCount() }}/{{ totalTasksCount() }} {{ currentLang === 'ar' ? 'مهام' : 'Tasks' }}</span>
+      <!-- Right: metrics + auto-assign -->
+      <div class="flex items-center gap-2.5 shrink-0 flex-wrap justify-end">
+
+        <!-- Progress pill -->
+        <div class="hidden sm:flex items-center gap-2.5 bg-surface border border-border/70 px-3 py-1.5 rounded-xl shadow-sm">
+          <div class="flex flex-col gap-0.5 min-w-[100px]">
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] font-extrabold text-text-secondary uppercase tracking-widest">{{ currentLang === 'ar' ? 'التقدم' : 'Progress' }}</span>
+              <span class="text-[9px] font-black text-primary">{{ assignedCount() }}/{{ totalTasksCount() }}</span>
             </div>
-            <div class="w-full h-2 bg-border/60 rounded-full overflow-hidden">
-              <div class="h-full bg-primary transition-all duration-500 rounded-full" [style.width.%]="completionPercentage()"></div>
+            <div class="h-1.5 bg-border/50 rounded-full overflow-hidden w-24">
+              <div class="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full transition-all duration-700 ease-out" [style.width.%]="completionPercentage()"></div>
             </div>
           </div>
-          <span class="text-xs font-black text-primary font-mono shrink-0">{{ completionPercentage() }}%</span>
+          <span class="text-sm font-black text-primary font-mono">{{ completionPercentage() }}%</span>
         </div>
 
-        <!-- Quick Auto Assign Button -->
-        <button (click)="autoAssignTopMatches()" 
-                [title]="currentLang === 'ar' ? 'التعيين التلقائي لأفضل المطابقات' : 'Automatically assign rank #1 AI matched candidate for unassigned tasks'"
-                class="px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
-          <svg class="w-4 h-4 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          {{ currentLang === 'ar' ? 'التعيين التلقائي لأفضل المطابقات' : 'Auto-Assign Top Matches' }}
+        <!-- Auto-Assign -->
+        <button (click)="autoAssignTopMatches()"
+          class="flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-extrabold rounded-xl border border-primary/30 bg-primary/8 hover:bg-primary/15 text-primary transition-all active:scale-95 shadow-sm hover:shadow-primary/10">
+          <svg class="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          {{ currentLang === 'ar' ? 'تعيين تلقائي' : 'Auto-Assign Top' }}
         </button>
       </div>
     </header>
 
     <!-- Main 2-Column Split Workspace -->
     <div class="flex-1 flex min-h-0 overflow-hidden">
-      
-      <!-- Left Column: Task List (38%) -->
-      <div class="w-full md:w-[38%] h-full flex flex-col border-r border-border bg-sidebar/30">
-        <app-task-list 
-          [tasks]="suggestions()"
+
+      <!-- Left: Task Feed (36%) -->
+      <div class="w-full md:w-[36%] h-full flex flex-col border-r border-border shrink-0">
+        <app-task-list
+          [tasks]="dynamicSuggestions()"
           [selectedTaskId]="selectedTaskId()"
           [localAssignments]="localAssignments()"
           (taskSelected)="onTaskSelected($event)"
-          class="flex-1 h-full overflow-hidden flex flex-col"
-        ></app-task-list>
+          class="flex-1 h-full overflow-hidden flex flex-col">
+        </app-task-list>
       </div>
 
-      <!-- Right Column: Developer Candidate Selector (62%) -->
-      <div class="w-full md:w-[62%] h-full flex flex-col bg-background">
+      <!-- Right: Developer Selector (64%) -->
+      <div class="flex-1 h-full flex flex-col bg-background/50 min-w-0">
         <app-employee-selector
           [selectedTask]="selectedTask()"
           [currentAssigneeId]="currentAssigneeId()"
+          [devCapacities]="developerRemainingHours()"
           (assignEmployee)="onAssignEmployee($event)"
           class="flex-1 h-full overflow-hidden flex flex-col"
         ></app-employee-selector>
       </div>
-
     </div>
 
-    <!-- Bottom Sticky Action Footer Bar -->
-    <footer class="px-6 py-3.5 border-t border-border bg-surface shrink-0 flex items-center justify-between shadow-lg relative z-20">
-      <div class="flex items-center gap-2 text-xs font-bold text-text-secondary">
-        <span class="w-2 h-2 rounded-full" [ngClass]="assignedCount() > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
-        <span>{{ assignedCount() }} {{ currentLang === 'ar' ? 'من' : 'of' }} {{ totalTasksCount() }} {{ currentLang === 'ar' ? 'مهام معينة' : 'tasks assigned' }}</span>
-        <span *ngIf="unassignedCount() > 0" class="text-text-secondary/60">({{ unassignedCount() }} {{ currentLang === 'ar' ? 'متبقية' : 'remaining' }})</span>
+    <!-- ── Bottom Footer Bar ── -->
+    <footer class="px-5 py-3 border-t border-border bg-sidebar/60 backdrop-blur-sm shrink-0 flex items-center justify-between gap-3 shadow-lg">
+
+      <!-- Status indicator -->
+      <div class="flex items-center gap-2 text-xs font-bold">
+        <span class="relative flex h-2 w-2 shrink-0">
+          <span *ngIf="assignedCount() > 0" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2" [ngClass]="assignedCount() > 0 ? 'bg-emerald-500' : 'bg-amber-400'"></span>
+        </span>
+        <span class="text-text-secondary">
+          <span class="text-text-primary font-extrabold">{{ assignedCount() }}</span>
+          {{ currentLang === 'ar' ? ' من ' : ' of ' }}
+          <span class="text-text-primary font-extrabold">{{ totalTasksCount() }}</span>
+          {{ currentLang === 'ar' ? ' مهام معينة' : ' tasks assigned' }}
+        </span>
+        <span *ngIf="unassignedCount() > 0" class="text-amber-500 text-[10px] font-bold">
+          · {{ unassignedCount() }} {{ currentLang === 'ar' ? 'متبقية' : 'remaining' }}
+        </span>
       </div>
 
-      <div class="flex items-center gap-3">
-        <button (click)="goBackToDashboard()" 
-                class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all">
+      <!-- Actions -->
+      <div class="flex items-center gap-2">
+        <button (click)="goBackToDashboard()"
+          class="px-4 py-2 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all hover:bg-surface active:scale-95">
           {{ currentLang === 'ar' ? 'إلغاء' : 'Cancel' }}
         </button>
+
         <button [disabled]="!canConfirm()"
-                (click)="confirmAssignments()"
-                class="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px active:translate-y-0 min-w-[180px] justify-center">
-          <div *ngIf="isConfirming()" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          <svg *ngIf="!isConfirming()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-          <span>{{ isConfirming() ? (currentLang === 'ar' ? 'جاري حفظ التعيينات...' : 'Saving Assignments...') : (currentLang === 'ar' ? 'تأكيد التعيينات' : 'Confirm Assignments') }}</span>
+          (click)="onConfirmClick()"
+          class="relative px-5 py-2 text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px active:translate-y-0 active:scale-95 min-w-[160px] justify-center overflow-hidden"
+          [ngClass]="canConfirm() ? 'bg-gradient-to-r from-primary to-violet-600 hover:from-primary-hover hover:to-violet-700 text-white shadow-primary/25' : 'bg-border text-text-secondary'">
+
+          <span *ngIf="canConfirm() && !isConfirming()" class="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></span>
+
+          <div *ngIf="isConfirming()" class="w-3.5 h-3.5 border-2 border-white/60 border-t-white rounded-full animate-spin"></div>
+          <svg *ngIf="!isConfirming() && canConfirm()" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          <svg *ngIf="!isConfirming() && !canConfirm()" class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <span>
+            {{ isConfirming()
+              ? (currentLang === 'ar' ? 'جاري الحفظ...' : 'Saving...')
+              : (currentLang === 'ar' ? 'حفظ التغييرات' : 'Save changes') }}
+          </span>
         </button>
       </div>
     </footer>
+
   </ng-container>
+
+  <!-- Over-Capacity Warning Modal -->
+  <div *ngIf="showOverCapacityModal()" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_out]">
+    <div class="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-[slideUp_0.3s_ease_out]">
+      <div class="p-6">
+        <div class="flex items-center gap-3 text-rose-500 mb-4">
+          <svg class="w-8 h-8 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <h2 class="text-lg font-black text-text-primary">{{ currentLang === 'ar' ? 'تحذير تجاوز القدرة الاستيعابية' : 'Over-Capacity Warning' }}</h2>
+        </div>
+        
+        <p class="text-sm text-text-secondary mb-4">
+          {{ currentLang === 'ar' ? 'تم تجاوز القدرة الاستيعابية للمطورين التاليين. هل ترغب في المتابعة على أي حال؟' : 'The following developers are assigned hours exceeding their sprint capacity. Continue anyway?' }}
+        </p>
+
+        <ul class="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2">
+          <li *ngFor="let dev of overCapacityDevsForModal()" class="flex items-center justify-between text-sm bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg text-rose-700 dark:text-rose-400 font-medium">
+            <span>{{ dev.name }}</span>
+            <span class="font-mono font-bold">{{ dev.assigned }}h / {{ dev.capacity }}h</span>
+          </li>
+        </ul>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-border mt-auto">
+          <button (click)="cancelOverCapacityModal()" class="px-5 py-2 rounded-xl text-sm font-bold text-text-secondary border border-border hover:bg-background hover:text-text-primary transition-all">
+            {{ currentLang === 'ar' ? 'إلغاء المراجعة' : 'Cancel & Review' }}
+          </button>
+          <button (click)="proceedWithOverCapacity()" class="px-5 py-2 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition-all">
+            {{ currentLang === 'ar' ? 'متابعة التعيين' : 'Proceed Anyway' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

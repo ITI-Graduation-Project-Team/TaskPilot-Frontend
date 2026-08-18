@@ -8,7 +8,7 @@ import {
   withInterceptors
 } from '@angular/common/http';
 
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { loadingInterceptor } from '../app/shared/api/interceptors/loading-interceptor';
@@ -23,7 +23,12 @@ import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
+      withViewTransitions({ skipInitialTransition: true })
+    ),
     provideHttpClient(
       withInterceptors([
         authInterceptor,   // الآن سيتعرف عليها Angular بلا مشاكل

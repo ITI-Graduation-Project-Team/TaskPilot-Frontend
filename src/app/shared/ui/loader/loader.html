@@ -1,29 +1,16 @@
-<div
-  class="fixed inset-0 bg-brandSecondary/70 backdrop-blur-md flex flex-col items-center justify-center z-50 transition-all duration-300">
-  <div class="relative flex items-center justify-center w-28 h-28">
-    <!-- Glowing background blur -->
-    <div class="absolute inset-0 bg-brandPrimary/30 rounded-full blur-2xl animate-pulse"></div>
-
-    <!-- Outer slow reverse-spinning ring -->
-    <div class="absolute -inset-3 rounded-full border border-dashed border-brandAccent/40 animate-spin-reverse"></div>
-
-    <!-- Inner fast spinning gradient ring -->
-    <div
-      class="absolute inset-0 rounded-full border-4 border-transparent border-t-brandPrimary border-r-brandPrimary animate-spin">
+<div class="loader-backdrop" role="status" aria-live="polite" aria-label="Loading">
+  <div class="loader-panel">
+    <div class="loader-mark" aria-hidden="true">
+      <span class="loader-ring loader-ring-outer"></span>
+      <span class="loader-ring loader-ring-inner"></span>
+      <span class="loader-logo">
+        <img src="/TaskPilotLogo.svg" alt="" />
+      </span>
     </div>
-
-    <!-- Center Logo Container -->
-    <div
-      class="relative w-20 h-20 bg-brandWhite rounded-full p-2.5 shadow-2xl flex items-center justify-center border border-brandAccent/20">
-      <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="w-full h-full object-contain select-none" />
+    <div class="loader-copy">
+      <span class="loader-eyebrow">TaskPilot</span>
+      <span class="loader-title">{{ 'common.loading' | translate }}</span>
+      <span class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></span>
     </div>
-  </div>
-
-  <!-- Creative Loading text -->
-  <div class="mt-8 flex items-center gap-1">
-    <span class="text-brandWhite/90 font-medium tracking-widest text-xs uppercase animate-pulse">{{ 'common.loading' | translate }}</span>
-    <span class="w-1.5 h-1.5 bg-brandPrimary rounded-full animate-bounce" style="animation-delay: 0s;"></span>
-    <span class="w-1.5 h-1.5 bg-brandPrimary rounded-full animate-bounce" style="animation-delay: 0.15s;"></span>
-    <span class="w-1.5 h-1.5 bg-brandPrimary rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
   </div>
 </div>

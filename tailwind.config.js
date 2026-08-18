@@ -11,6 +11,7 @@ module.exports = {
         primary: 'var(--primary)',
         'primary-hover': 'var(--primary-hover)',
         'primary-dark': 'var(--primary-dark)',
+        'primary-soft': 'var(--primary-soft)',
         secondary: 'var(--secondary)',
         accent: 'var(--accent)',
         background: 'var(--background)',
@@ -18,6 +19,7 @@ module.exports = {
         card: 'var(--card)',
         sidebar: 'var(--sidebar)',
         border: 'var(--border)',
+        'border-strong': 'var(--border-strong)',
         'text-primary': 'var(--text-primary)',
         'text-secondary': 'var(--text-secondary)',
         
