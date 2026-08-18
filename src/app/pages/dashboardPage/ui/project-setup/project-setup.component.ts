@@ -283,9 +283,9 @@ type StackChoice = 'primary' | 'ideal';
           <p class="mt-1 text-sm text-text-secondary">{{ 'PROJECT_SETUP.SKILLS_HINT' | translate }}</p>
           @if (setup.skills.status === 'Queued' || setup.skills.status === 'Running') {
             <p class="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm font-bold text-text-primary" role="status">{{ 'PROJECT_SETUP.ENRICHING_TASKS' | translate }}</p>
-          } @else if (setup.skills.status === 'Succeeded') {
-            <p class="mt-5 rounded-2xl border border-success/25 bg-success/5 p-4 text-sm font-bold text-success">{{ 'PROJECT_SETUP.SKILL_MAPPING_COMPLETE' | translate: { count: setup.skills.itemsCreated } }}</p>
-          } @else if (setup.skills.status === 'Failed' || setup.skills.status === 'PartiallySucceeded') {
+          } @else if (setup.skills.status === 'Succeeded' && setup.skills.itemsSkipped === 0) {
+            <p class="mt-5 rounded-2xl border border-success/25 bg-success/5 p-4 text-sm font-bold text-success">{{ 'PROJECT_SETUP.SKILL_MAPPING_COMPLETE' | translate }}</p>
+          } @else if (setup.skills.status === 'Failed' || setup.skills.status === 'PartiallySucceeded' || setup.skills.itemsSkipped > 0) {
             <div class="mt-5 flex flex-col gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 sm:flex-row sm:items-center sm:justify-between">
               <p class="text-sm text-text-primary">{{ 'PROJECT_SETUP.SKILL_MAPPING_WARNING' | translate }}</p>
               <button type="button" (click)="retrySkills()" [disabled]="store.isBusy()" class="min-h-11 rounded-xl border border-warning/40 px-4 text-sm font-extrabold text-text-primary disabled:opacity-50">{{ 'PROJECT_SETUP.RETRY_SKILLS' | translate }}</button>

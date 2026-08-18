@@ -43,7 +43,7 @@ describe('ProjectStateService', () => {
     expect(getSpy).not.toHaveBeenCalledWith(`/Projects/${savedProjectId}`);
   });
 
-  it('loads the requested page from the ownership-filtered PM endpoint', async () => {
+  it('loads the requested page from the project-manager paged endpoint', async () => {
     const projects = Array.from({ length: 12 }, (_, index) => ({
       id: `project-${index + 1}`,
       name: `Project ${index + 1}`,
@@ -51,7 +51,12 @@ describe('ProjectStateService', () => {
       managerId
     }));
     const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
-      data: { data: { items: projects.slice(5, 10), totalItems: projects.length } }
+      data: {
+        data: {
+          items: projects.slice(5, 10),
+          totalItems: projects.length,
+        },
+      },
     } as any);
 
     const service = new ProjectStateService();
