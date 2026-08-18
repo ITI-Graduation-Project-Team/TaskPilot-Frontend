@@ -163,8 +163,15 @@ export class CreateProjectComponent {
   async onDraftGenerated(event: { projectId: string; draft: any; chatId: string }) {
     this.aiChatState.clearChat();
     try {
-      await this.projectState.loadProjects();
-      this.projectState.setSelectedProject(event.projectId);
+      this.projectState.registerSavedProject({
+        id: event.projectId,
+        nameEn: event.draft.nameEn || event.draft.projectName,
+        nameAr: event.draft.nameAr,
+        descriptionEn: event.draft.descriptionEn,
+        descriptionAr: event.draft.descriptionAr,
+        status: event.draft.status,
+        setupStatus: event.draft.setupStatus,
+      });
       this.toastService.show('Project created. Continue with the architecture setup.', 'success');
       await this.router.navigate(['/dashboard', 'projects', event.projectId, 'setup']);
     } catch (e) {

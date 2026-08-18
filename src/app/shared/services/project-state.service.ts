@@ -29,6 +29,16 @@ export interface ProjectInfo {
   setupStatus?: string;
 }
 
+export interface SavedProjectInfo {
+  id: string;
+  nameEn: string;
+  nameAr?: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  status?: string;
+  setupStatus?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -307,6 +317,40 @@ export class ProjectStateService {
     this._projectEmployeeCount.set(count);
   }
 
+  registerSavedProject(project: SavedProjectInfo): void {
+    const nameAr = project.nameAr || project.nameEn;
+    const descriptionEn = project.descriptionEn || '';
+    const descriptionAr = project.descriptionAr || descriptionEn;
+    const projectInfo: ProjectInfo = {
+      id: project.id,
+      name: project.nameEn,
+      nameEn: project.nameEn,
+      nameAr,
+      description: descriptionEn,
+      descriptionEn,
+      descriptionAr,
+      companyId: this._userCompanyId() || '',
+      managerId: this._userId() || '',
+      status: project.status || 'Draft',
+      setupStatus: project.setupStatus || 'NeedsTechStack',
+      techStack: [],
+      platformTargets: [],
+      teamSize: 0,
+      totalUserStories: 0,
+      completedSprintsCount: 0,
+      activeSprintsCount: 0,
+    };
+
+    this._projects.update(projects => {
+      const index = projects.findIndex(existing =>
+        String(existing.id).toLowerCase() === String(project.id).toLowerCase());
+      if (index === -1) return [projectInfo, ...projects];
+      return projects.map((existing, currentIndex) =>
+        currentIndex === index ? { ...existing, ...projectInfo } : existing);
+    });
+    this.setSelectedProject(project.id);
+  }
+
   async createNewProject(nameEn: string, nameAr: string, descriptionEn: string, descriptionAr?: string): Promise<ProjectMutationResult> {
     const companyId = this._userCompanyId();
     if (!companyId) {
@@ -321,18 +365,29 @@ export class ProjectStateService {
       this._loading.set(true);
       const existingIds = this._projects().map(p => p.id);
       
-      await apiClient.post('/Projects', {
+      const { data } = await apiClient.post<any>('/Projects', {
         nameEn,
         nameAr,
         descriptionEn,
         descriptionAr: descAr,
         companyId: companyId
       });
-      await this.loadProjects();
-
-      const newProject = this._projects().find(p => !existingIds.includes(p.id));
-      if (newProject) {
-        this.setSelectedProject(newProject.id);
+      const created = data?.data || data;
+      if (created?.id) {
+        this.registerSavedProject({
+          id: created.id,
+          nameEn,
+          nameAr,
+          descriptionEn,
+          descriptionAr: descAr,
+          status: created.status,
+          setupStatus: created.setupStatus,
+        });
+      } else {
+        // Compatibility fallback for older API responses that do not return the created id.
+        await this.loadProjects();
+        const newProject = this._projects().find(p => !existingIds.includes(p.id));
+        if (newProject) this.setSelectedProject(newProject.id);
       }
       return { succeeded: true };
     } catch (e) {
@@ -353,7 +408,18 @@ export class ProjectStateService {
         descriptionEn,
         descriptionAr
       });
-      await this.loadProjects();
+      this._projects.update(projects => projects.map(project =>
+        String(project.id).toLowerCase() === String(projectId).toLowerCase()
+          ? {
+              ...project,
+              name: nameEn,
+              nameEn,
+              nameAr,
+              description: descriptionEn,
+              descriptionEn,
+              descriptionAr,
+            }
+          : project));
       return { succeeded: true };
     } catch (e) {
       console.error('Failed to update project:', e);
