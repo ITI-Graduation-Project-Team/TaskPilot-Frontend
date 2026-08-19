@@ -1324,18 +1324,43 @@ export class SprintPlanningViewComponent implements OnInit, OnDestroy {
   }
 
   calcHours(card: SprintCard): number {
+    const visibleStoryIds = card.sprint.userStoryIds.filter(
+      id => !card.removedStoryIds.has(id)
+    );
+
+    if (visibleStoryIds.length === 0) return 0;
+
     let total = 0;
-    for (const id of card.sprint.userStoryIds) {
-      if (!card.removedStoryIds.has(id)) {
-        const story = this.getStory(id);
-        if (story) total += this.storyHours(story);
+    let hasPerStoryHours = false;
+
+    for (const id of visibleStoryIds) {
+      const story = this.getStory(id);
+      const taskHours = story ? this.storyHours(story) : 0;
+
+      if (taskHours > 0) {
+        total += taskHours;
+        hasPerStoryHours = true;
+        continue;
+      }
+
+      const suggestedHours = this.getStoryMeta(id)?.estimatedHours;
+      if (suggestedHours !== undefined) {
+        total += Number(suggestedHours) || 0;
+        hasPerStoryHours = true;
       }
     }
 
-    // If backlog tasks have no estimated hours (0), fall back to the AI API total
-    if (total === 0 && this.apiTotalHours() > 0) {
+    if (hasPerStoryHours) return total;
+
+    // The API total describes the original suggestion only. It cannot be used
+    // after its scope has changed because it includes removed stories.
+    if (
+      visibleStoryIds.length === card.sprint.userStoryIds.length
+      && this.apiTotalHours() > 0
+    ) {
       return this.apiTotalHours();
     }
+
     return total;
   }
 
