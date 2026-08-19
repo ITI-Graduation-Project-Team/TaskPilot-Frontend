@@ -125,7 +125,7 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
         </div>
       } @else {
         <!-- Empty State -->
-        <div class="flex flex-col items-center justify-center py-20 px-6 bg-surface border border-border rounded-3xl text-center shadow-sm max-w-2xl mx-auto space-y-6 animate-[fadeIn_0.25s_ease_both]">
+        <div class="flex flex-col items-center justify-center py-20 px-6 w-full min-h-[380px] bg-surface border border-border rounded-3xl text-center shadow-sm max-w-2xl mx-auto space-y-6 animate-[fadeIn_0.25s_ease_both]">
           <div class="w-20 h-20 rounded-3xl bg-primary/5 text-primary flex items-center justify-center animate-pulse">
             <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
@@ -133,21 +133,35 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           </div>
           
           <div class="space-y-2">
-            <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'PROJECT_HUB.NO_PROJECTS' | translate }}</h2>
-            <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
-              {{ 'PROJECT_HUB.NO_PROJECTS_DESC' | translate }}
-            </p>
+            @if (activeTab() === 'completed') {
+              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">No completed projects yet</h2>
+              <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
+                Projects that you finish will appear here.
+              </p>
+            } @else if (activeTab() === 'archived') {
+              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">No archived projects yet</h2>
+              <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
+                Archived projects will be stored here for future reference.
+              </p>
+            } @else {
+              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'PROJECT_HUB.NO_PROJECTS' | translate }}</h2>
+              <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
+                {{ 'PROJECT_HUB.NO_PROJECTS_DESC' | translate }}
+              </p>
+            }
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-3 pt-2">
-            <button (click)="dashboardService.openAiProjectFlow()" 
-                    class="bg-primary hover:bg-primary-hover text-white text-sm font-bold px-5 py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group">
-              <svg class="w-4 h-4 animate-pulse text-yellow-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-              <span>{{ 'PROJECT_HUB.GENERATE_WITH_AI' | translate }}</span>
-            </button>
-          </div>
+          @if (activeTab() === 'active') {
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+              <button (click)="dashboardService.openAiProjectFlow()" 
+                      class="bg-primary hover:bg-primary-hover text-white text-sm font-bold px-5 py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 group">
+                <svg class="w-4 h-4 animate-pulse text-yellow-300" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>{{ 'PROJECT_HUB.GENERATE_WITH_AI' | translate }}</span>
+              </button>
+            </div>
+          }
         </div>
       }
     </div>

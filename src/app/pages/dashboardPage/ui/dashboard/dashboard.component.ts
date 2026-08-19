@@ -400,13 +400,6 @@ import { getProjectErrorMessage } from '../../../../shared/api/project-error';
 
             <!-- Desktop Utilities -->
             <div class="hidden lg:flex items-center gap-1.5 sm:gap-2">
-              <!-- Subscription button -->
-              <button routerLink="/subscription"
-                 class="p-2 sm:px-4 sm:py-2 bg-surface hover:bg-primary/10 border border-border text-text-primary text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                <span class="hidden md:inline">{{ 'HEADER.SUBSCRIPTION' | translate }}</span>
-              </button>
-
               <!-- Language Toggle Button -->
               <button (click)="toggleLanguage()" class="p-2 text-text-secondary hover:text-text-primary font-bold text-xs rounded-lg hover:bg-border transition-colors uppercase">
                 {{ currentLang() === 'en' ? 'AR' : 'EN' }}
@@ -443,11 +436,6 @@ import { getProjectErrorMessage } from '../../../../shared/api/project-error';
               @if (isMobileMenuOpen()) {
                 <div class="fixed inset-0 z-40" (click)="isMobileMenuOpen.set(false)"></div>
                 <div class="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden min-w-[200px] animate-[fadeDown_0.15s_ease_both] flex flex-col p-2 gap-1">
-                  <!-- Subscription -->
-                  <button routerLink="/subscription" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-sidebar transition-colors rounded-lg">
-                    <svg class="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    <span class="font-medium text-text-primary">{{ 'HEADER.SUBSCRIPTION' | translate }}</span>
-                  </button>
                   <!-- Language Toggle -->
                   <button (click)="toggleLanguage(); isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-sidebar transition-colors rounded-lg">
                     <svg class="w-4 h-4 text-text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>

@@ -13,7 +13,10 @@ import { apiClient } from '../../../../shared/api/axios.instance';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
-  templateUrl: './task-discussion.component.html'
+  templateUrl: './task-discussion.component.html',
+  host: {
+    class: 'block h-full'
+  }
 })
 export class TaskDiscussionComponent implements OnInit {
   taskId = input.required<string>();

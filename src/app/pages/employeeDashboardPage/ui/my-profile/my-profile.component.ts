@@ -1,5 +1,5 @@
 import {
-  Component, ChangeDetectionStrategy, signal, computed, inject, OnInit
+  Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -279,8 +279,9 @@ interface EmployeeProfile {
       }
 
       <!-- ── EDIT PROFILE MODAL ── -->
-      @if (showModal()) {
-        <div class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+      <div #profileModalPortal>
+        @if (showModal()) {
+          <div class="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 sm:p-6 animate-fade-in">
           <div class="bg-surface border border-border w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col">
             
             <div class="flex items-center justify-between p-5 border-b border-border shrink-0">
@@ -425,7 +426,7 @@ interface EmployeeProfile {
                         <p class="text-xs text-success font-semibold mt-1">File attached successfully</p>
                       </div>
                     } @else {
-                      <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                      <div class="flex flex-col items-center justify-center w-full h-full">
                         <svg class="w-8 h-8 text-primary/70 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                         <p class="mb-1 text-sm text-text-secondary"><span class="font-semibold text-primary">Click to upload</span> or drag and drop</p>
                         <p class="text-xs text-text-secondary">PDF files only (Max 10MB)</p>
@@ -513,7 +514,8 @@ interface EmployeeProfile {
             </div>
           </div>
         </div>
-      }
+        }
+      </div>
 
     </section>
   `,
@@ -525,7 +527,7 @@ interface EmployeeProfile {
     .dir-rtl { direction: rtl; }
   `]
 })
-export class MyProfileComponent implements OnInit {
+export class MyProfileComponent implements OnInit, AfterViewInit, OnDestroy {
   private tr = inject(TranslateService);
   private toastService = inject(ToastService);
   private profileService = inject(ProfileService);
@@ -560,7 +562,23 @@ export class MyProfileComponent implements OnInit {
     return `${p.firstName.charAt(0)}${p.lastName.charAt(0)}`.toUpperCase();
   });
 
+  @ViewChild('profileModalPortal') private profileModalPortal?: ElementRef<HTMLElement>;
+
   ngOnInit() { this.loadProfile(); }
+
+  ngAfterViewInit() {
+    if (this.profileModalPortal && typeof document !== 'undefined') {
+      document.body.appendChild(this.profileModalPortal.nativeElement);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.profileModalPortal && typeof document !== 'undefined') {
+      if (this.profileModalPortal.nativeElement.parentNode) {
+        this.profileModalPortal.nativeElement.parentNode.removeChild(this.profileModalPortal.nativeElement);
+      }
+    }
+  }
 
   private async loadProfile() {
     try {

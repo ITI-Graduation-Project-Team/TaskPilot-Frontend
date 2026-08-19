@@ -10,6 +10,8 @@ import {
   ElementRef,
   ViewChild,
   AfterViewChecked,
+  AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { detectTextDir } from '../../../../shared/utils/text-direction.util';
 import { CommonModule } from '@angular/common';
@@ -350,8 +352,9 @@ import { getProjectErrorMessage, PROJECT_NAME_ALREADY_EXISTS } from '../../../..
     <!-- ═══════════════════════════════════════════════════════════
          CONFIGURE PROJECT MODAL (shared)
     ═══════════════════════════════════════════════════════════ -->
-    @if (showNamePrompt()) {
-      <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-6 animate-[fadeIn_0.2s_ease_both]"
+    <div #projectModalPortal>
+      @if (showNamePrompt()) {
+        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-6 animate-[fadeIn_0.2s_ease_both]"
            role="dialog" aria-modal="true" aria-labelledby="configure-project-title"
            (keydown.escape)="!isGeneratingDraft() && showNamePrompt.set(false)">
         <div class="project-modal-card flex w-full max-w-2xl flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-2xl animate-[scaleUp_0.25s_ease_both]">
@@ -455,7 +458,8 @@ import { getProjectErrorMessage, PROJECT_NAME_ALREADY_EXISTS } from '../../../..
           </form>
         </div>
       </div>
-    }
+      }
+    </div>
   `,
   styles: [`
     :host {
@@ -571,12 +575,13 @@ import { getProjectErrorMessage, PROJECT_NAME_ALREADY_EXISTS } from '../../../..
     @keyframes fadeUp  { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   `],
 })
-export class AiChatModalComponent implements AfterViewChecked {
+export class AiChatModalComponent implements AfterViewChecked, AfterViewInit, OnDestroy {
   embedded = input(false);
   @Output() close = new EventEmitter<void>();
   @Output() draftGenerated = new EventEmitter<{ projectId: string; chatId: string; draft: any }>();
 
   @ViewChild('chatScrollContainer') private chatScrollContainer!: ElementRef;
+  @ViewChild('projectModalPortal') private projectModalPortal?: ElementRef<HTMLElement>;
 
   private aiRequirements = inject(AiRequirementsService);
   private aiChatState = inject(AiChatStateService);
@@ -633,6 +638,20 @@ export class AiChatModalComponent implements AfterViewChecked {
   projectNameError = signal<string | null>(null);
 
   private _shouldScroll = false;
+
+  ngAfterViewInit() {
+    if (this.projectModalPortal && typeof document !== 'undefined') {
+      document.body.appendChild(this.projectModalPortal.nativeElement);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.projectModalPortal && typeof document !== 'undefined') {
+      if (this.projectModalPortal.nativeElement.parentNode) {
+        this.projectModalPortal.nativeElement.parentNode.removeChild(this.projectModalPortal.nativeElement);
+      }
+    }
+  }
 
   ngAfterViewChecked() {
     if (this._shouldScroll) {
