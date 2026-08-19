@@ -5,6 +5,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ProjectPoliciesService } from '../../../../shared/api/project-policies.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { PolicyChatCacheService } from '../../../../shared/services/policy-chat-cache.service';
 
 interface ChatMessage {
   id: string;
@@ -128,6 +129,7 @@ export class ProjectPoliciesChatComponent implements AfterViewChecked {
   private projectState = inject(ProjectStateService);
   private toastService = inject(ToastService);
   private translate = inject(TranslateService);
+  private chatCache = inject(PolicyChatCacheService);
 
   messages = signal<ChatMessage[]>([]);
   isTyping = signal(false);
@@ -140,9 +142,10 @@ export class ProjectPoliciesChatComponent implements AfterViewChecked {
   constructor() {
     effect(() => {
       const id = this.projectState.selectedProjectId();
-      if (id) {
-        this.messages.set([]);
-      }
+      const userId = this.projectState.userId();
+      this.messages.set(id && userId
+        ? this.chatCache.load('project', id, userId)
+        : []);
     });
   }
 
@@ -211,9 +214,17 @@ export class ProjectPoliciesChatComponent implements AfterViewChecked {
   }
 
   private addMessage(sender: 'user' | 'ai', text: string) {
-    this.messages.update(msgs => [
-      ...msgs, 
-      { id: Date.now().toString() + Math.random().toString(), sender, text, timestamp: new Date() }
-    ]);
+    this.messages.update(msgs => {
+      const next = [
+        ...msgs,
+        { id: crypto.randomUUID(), sender, text, timestamp: new Date() }
+      ];
+      const projectId = this.projectState.selectedProjectId();
+      const userId = this.projectState.userId();
+      if (projectId && userId) {
+        this.chatCache.save('project', projectId, userId, next);
+      }
+      return next;
+    });
   }
 }

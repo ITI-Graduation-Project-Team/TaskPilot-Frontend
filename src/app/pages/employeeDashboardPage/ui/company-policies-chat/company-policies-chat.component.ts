@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AiChatService } from '../../../../shared/api/ai-chat.service';
+import { ProjectStateService } from '../../../../shared/services/project-state.service';
+import { PolicyChatCacheService } from '../../../../shared/services/policy-chat-cache.service';
 
 interface ChatMessage {
   id: string;
@@ -124,10 +126,22 @@ export class CompanyPoliciesChatComponent implements AfterViewChecked {
 
   private aiChatService = inject(AiChatService);
   private translate = inject(TranslateService);
+  private projectState = inject(ProjectStateService);
+  private chatCache = inject(PolicyChatCacheService);
 
   messages = signal<ChatMessage[]>([]);
   isTyping = signal(false);
   currentInput = signal('');
+
+  constructor() {
+    effect(() => {
+      const companyId = this.projectState.userCompanyId();
+      const userId = this.projectState.userId();
+      this.messages.set(companyId && userId
+        ? this.chatCache.load('company', companyId, userId)
+        : []);
+    });
+  }
 
   isRtl() {
     return this.translate.currentLang() === 'ar';
@@ -189,9 +203,17 @@ export class CompanyPoliciesChatComponent implements AfterViewChecked {
   }
 
   private addMessage(sender: 'user' | 'ai', text: string) {
-    this.messages.update(msgs => [
-      ...msgs, 
-      { id: Date.now().toString() + Math.random().toString(), sender, text, timestamp: new Date() }
-    ]);
+    this.messages.update(msgs => {
+      const next = [
+        ...msgs,
+        { id: crypto.randomUUID(), sender, text, timestamp: new Date() }
+      ];
+      const companyId = this.projectState.userCompanyId();
+      const userId = this.projectState.userId();
+      if (companyId && userId) {
+        this.chatCache.save('company', companyId, userId, next);
+      }
+      return next;
+    });
   }
 }
