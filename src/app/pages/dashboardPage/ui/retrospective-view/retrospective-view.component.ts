@@ -457,7 +457,6 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                         </div>
                         <div>
                           <p class="text-xs font-extrabold text-text-primary">{{ dev.fullName }}</p>
-                          <p class="text-[10px] text-text-secondary font-semibold">Velocity: {{ (dev.velocityRatio || 1.0) | number:'1.1-2' }}x</p>
                         </div>
                       </div>
 
