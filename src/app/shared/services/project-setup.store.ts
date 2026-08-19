@@ -15,6 +15,7 @@ export class ProjectSetupStore {
   private _error = signal<string | null>(null);
   private projectId: string | null = null;
   private pollingHandle: ReturnType<typeof setInterval> | null = null;
+  private pollingIntervalMs: number | null = null;
   private refreshInFlight: Promise<void> | null = null;
   private refreshProjectId: string | null = null;
   private refreshQueued = false;
@@ -40,6 +41,11 @@ export class ProjectSetupStore {
       const connectionRevision = this.notificationHub.connectionRevision();
       if (connectionRevision > 0 && this.projectId) void this.refresh();
     });
+
+    effect(() => {
+      this.notificationHub.connectionState();
+      this.syncPolling();
+    });
   }
 
   async start(projectId: string): Promise<void> {
@@ -62,6 +68,7 @@ export class ProjectSetupStore {
   stop(): void {
     if (this.pollingHandle) clearInterval(this.pollingHandle);
     this.pollingHandle = null;
+    this.pollingIntervalMs = null;
     this.projectId = null;
     this.refreshQueued = false;
   }
@@ -134,12 +141,22 @@ export class ProjectSetupStore {
   }
 
   private syncPolling(): void {
-    if (this.isBackgroundActive() && !this.pollingHandle) {
-      this.pollingHandle = setInterval(() => void this.refresh(), 15000);
-    } else if (!this.isBackgroundActive() && this.pollingHandle) {
-      clearInterval(this.pollingHandle);
+    if (!this.isBackgroundActive()) {
+      if (this.pollingHandle) clearInterval(this.pollingHandle);
       this.pollingHandle = null;
+      this.pollingIntervalMs = null;
+      return;
     }
+
+    const intervalMs = this.notificationHub.connectionState() === 'connected' ? 60_000 : 15_000;
+    if (this.pollingHandle && this.pollingIntervalMs === intervalMs) return;
+
+    if (this.pollingHandle) {
+      clearInterval(this.pollingHandle);
+    }
+
+    this.pollingIntervalMs = intervalMs;
+    this.pollingHandle = setInterval(() => void this.refresh(), intervalMs);
   }
 
   private requireProjectId(): string {

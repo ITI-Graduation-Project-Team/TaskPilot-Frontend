@@ -4,12 +4,13 @@ import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProjectSetupApi, ProjectSetupDto } from '../api/project-setup.api';
 import { ProjectSetupStatusChangedDto } from '../models/notification.model';
-import { NotificationHubService } from './notification-hub.service';
+import { NotificationHubConnectionState, NotificationHubService } from './notification-hub.service';
 import { ProjectSetupStore } from './project-setup.store';
 
 describe('ProjectSetupStore realtime synchronization', () => {
   const statusChange = signal<ProjectSetupStatusChangedDto | null>(null);
   const connectionRevision = signal(0);
+  const connectionState = signal<NotificationHubConnectionState>('disconnected');
   const setup: ProjectSetupDto = {
     projectId: 'project-1',
     projectName: 'Project One',
@@ -31,6 +32,7 @@ describe('ProjectSetupStore realtime synchronization', () => {
   beforeEach(() => {
     statusChange.set(null);
     connectionRevision.set(0);
+    connectionState.set('disconnected');
     api = {
       get: vi.fn(() => of({ succeeded: true, data: setup })),
     };
@@ -43,6 +45,7 @@ describe('ProjectSetupStore realtime synchronization', () => {
           useValue: {
             latestProjectSetupStatusChange: statusChange.asReadonly(),
             connectionRevision: connectionRevision.asReadonly(),
+            connectionState: connectionState.asReadonly(),
           },
         },
       ],
@@ -77,5 +80,23 @@ describe('ProjectSetupStore realtime synchronization', () => {
     await vi.waitFor(() => expect(api.get).toHaveBeenCalledTimes(2));
 
     store.stop();
+  });
+
+  it('uses a longer watchdog interval while SignalR is connected', async () => {
+    const intervalSpy = vi.spyOn(globalThis, 'setInterval');
+    api.get.mockReturnValue(of({
+      succeeded: true,
+      data: { ...setup, wbs: { ...setup.wbs, status: 'Running' as const } },
+    }));
+
+    await store.start('project-1');
+    expect(intervalSpy).toHaveBeenLastCalledWith(expect.any(Function), 15_000);
+
+    connectionState.set('connected');
+    TestBed.flushEffects();
+    expect(intervalSpy).toHaveBeenLastCalledWith(expect.any(Function), 60_000);
+
+    store.stop();
+    intervalSpy.mockRestore();
   });
 });
