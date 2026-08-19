@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { CompanyPoliciesService, PolicyDocument } from '../../../../shared/api/company-policies.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-knowledge-base',
@@ -87,7 +89,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
           </div>
         } @else {
           <div class="grid gap-3">
-            @for (doc of documents(); track doc.id) {
+            @for (doc of documents(); track doc.documentId) {
               <div class="flex items-center justify-between p-4 bg-background border border-border rounded-2xl hover:border-primary/30 transition-colors group">
                 <div class="flex items-center gap-4 min-w-0">
                   <div class="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center shrink-0">
@@ -103,9 +105,9 @@ import { ToastService } from '../../../../shared/services/toast.service';
                   </div>
                 </div>
                 
-                <button (click)="deleteDocument(doc.id)" [disabled]="isDeleting() === doc.id"
+                <button (click)="deleteDocument(doc.documentId)" [disabled]="isDeleting() === doc.documentId"
                         class="p-2 text-text-secondary hover:text-error hover:bg-error/10 rounded-lg transition-colors shrink-0 disabled:opacity-50">
-                  @if (isDeleting() === doc.id) {
+                  @if (isDeleting() === doc.documentId) {
                     <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   } @else {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +127,8 @@ export class KnowledgeBaseComponent implements OnInit {
   policyService = inject(CompanyPoliciesService);
   projectState = inject(ProjectStateService);
   toastService = inject(ToastService);
+  confirmDialog = inject(ConfirmDialogService);
+  translate = inject(TranslateService);
 
   documents = signal<PolicyDocument[]>([]);
   isLoading = signal(true);
@@ -214,8 +218,15 @@ export class KnowledgeBaseComponent implements OnInit {
     const companyId = this.projectState.userCompanyId();
     if (!companyId) return;
 
-    const msg = this.currentLang === 'ar' ? 'هل أنت متأكد من حذف هذا المستند؟ لن يتمكن الذكاء الاصطناعي من معرفة محتوياته بعد الآن.' : 'Are you sure you want to delete this document? The AI will no longer know about its contents.';
-    if (!confirm(msg)) {
+    const confirmed = await this.confirmDialog.confirm({
+      title: this.translate.instant('COMPANY_POLICIES.DELETE_TITLE'),
+      message: this.translate.instant('COMPANY_POLICIES.DELETE_CONFIRM'),
+      confirmLabel: this.translate.instant('COMPANY_POLICIES.DELETE_BTN'),
+      cancelLabel: this.translate.instant('COMPANY_POLICIES.CANCEL_BTN'),
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -223,7 +234,7 @@ export class KnowledgeBaseComponent implements OnInit {
       this.isDeleting.set(docId);
       await this.policyService.deleteDocument(companyId, docId);
       this.toastService.show(this.currentLang === 'ar' ? 'تم حذف المستند' : 'Document deleted', 'success');
-      this.documents.update(docs => docs.filter(d => d.id !== docId));
+      this.documents.update(docs => docs.filter(d => d.documentId !== docId));
     } catch (error) {
       console.error('Delete error:', error);
       this.toastService.show(this.currentLang === 'ar' ? 'فشل حذف المستند' : 'Failed to delete document', 'error');

@@ -19,10 +19,21 @@ const reconnectPolicy: IRetryPolicy = {
   }
 };
 
+const initialRetryDelays = [1_000, 2_000, 5_000, 10_000, 30_000];
+
+export type NotificationHubConnectionState =
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'disconnected';
+
 @Injectable({ providedIn: 'root' })
 export class NotificationHubService {
   private hubConnection: HubConnection | null = null;
   private connectionPromise: Promise<void> | null = null;
+  private initialRetryHandle: ReturnType<typeof setTimeout> | null = null;
+  private initialRetryCount = 0;
+  private stopping = false;
 
   private _notifications = signal<NotificationDto[]>([]);
   readonly notifications = this._notifications.asReadonly();
@@ -36,9 +47,13 @@ export class NotificationHubService {
   private _connectionRevision = signal(0);
   readonly connectionRevision = this._connectionRevision.asReadonly();
 
+  private _connectionState = signal<NotificationHubConnectionState>('disconnected');
+  readonly connectionState = this._connectionState.asReadonly();
+
   readonly unreadCount = computed(() => this._notifications().filter(notification => !notification.isRead).length);
 
   startConnection(): Promise<void> {
+    this.stopping = false;
     if (this.hubConnection?.state === HubConnectionState.Connected
       || this.hubConnection?.state === HubConnectionState.Reconnecting) {
       return Promise.resolve();
@@ -51,8 +66,15 @@ export class NotificationHubService {
       return Promise.resolve();
     }
 
+    this.clearInitialRetry();
+    this._connectionState.set('connecting');
     this.connectionPromise = this.connect()
-      .catch(error => console.error('Error connecting to NotificationHub:', error))
+      .then(() => { this.initialRetryCount = 0; })
+      .catch(error => {
+        this._connectionState.set('disconnected');
+        console.error('Error connecting to NotificationHub:', error);
+        this.scheduleInitialRetry();
+      })
       .finally(() => { this.connectionPromise = null; });
 
     return this.connectionPromise;
@@ -62,6 +84,7 @@ export class NotificationHubService {
     const connection = this.ensureConnection();
     if (connection.state === HubConnectionState.Disconnected) {
       await connection.start();
+      this._connectionState.set('connected');
       console.log('SignalR NotificationHub connected.');
     }
 
@@ -90,13 +113,43 @@ export class NotificationHubService {
     });
 
     connection.onreconnected(() => {
+      this._connectionState.set('connected');
       void this.syncNotifications().finally(() => {
         this._connectionRevision.update(revision => revision + 1);
       });
     });
 
+    connection.onreconnecting(() => {
+      this._connectionState.set('reconnecting');
+    });
+
+    connection.onclose(error => {
+      this._connectionState.set('disconnected');
+      if (error) console.error('SignalR NotificationHub disconnected:', error);
+      this.scheduleInitialRetry();
+    });
+
     this.hubConnection = connection;
     return connection;
+  }
+
+  private scheduleInitialRetry(): void {
+    if (this.stopping || this.initialRetryHandle || !getAccessToken()) return;
+
+    const delay = initialRetryDelays[
+      Math.min(this.initialRetryCount, initialRetryDelays.length - 1)
+    ];
+    this.initialRetryCount += 1;
+    this.initialRetryHandle = setTimeout(() => {
+      this.initialRetryHandle = null;
+      void this.startConnection();
+    }, delay);
+  }
+
+  private clearInitialRetry(): void {
+    if (!this.initialRetryHandle) return;
+    clearTimeout(this.initialRetryHandle);
+    this.initialRetryHandle = null;
   }
 
   private async syncNotifications(): Promise<void> {
@@ -151,6 +204,8 @@ export class NotificationHubService {
   }
 
   async stopConnection(): Promise<void> {
+    this.stopping = true;
+    this.clearInitialRetry();
     if (this.connectionPromise) await this.connectionPromise;
 
     if (this.hubConnection) {
@@ -158,6 +213,8 @@ export class NotificationHubService {
       this.hubConnection = null;
     }
 
+    this.initialRetryCount = 0;
+    this._connectionState.set('disconnected');
     this._notifications.set([]);
     this._latestNotification.set(null);
     this._latestProjectSetupStatusChange.set(null);
