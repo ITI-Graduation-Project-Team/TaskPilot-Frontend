@@ -269,7 +269,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
 
-        @if (projectState.isProjectManager() && activeSprintId()) {
+        @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
           <div class="mt-6 mb-6">
             <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
           </div>
