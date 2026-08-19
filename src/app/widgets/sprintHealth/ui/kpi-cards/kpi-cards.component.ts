@@ -1,118 +1,138 @@
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardKpisDto } from '../../data/sprint-health.models';
-import { TranslatePipe } from '@ngx-translate/core';
+import { SprintHealthSummaryDto } from '../../data/sprint-health.models';
 
 @Component({
   selector: 'app-sprint-kpi-cards',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule],
   template: `
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <section class="bg-surface border rounded-2xl p-5 shadow-sm" [ngClass]="getStatusBorder(summary().deliveryStatus)">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">Delivery Status</p>
+            <h3 class="mt-2 text-2xl font-black text-text-primary">{{ summary().deliveryStatus }}</h3>
+          </div>
+          <span class="rounded-full px-2.5 py-1 text-[11px] font-black" [ngClass]="getStatusBadge(summary().deliveryStatus)">
+            {{ getStatusLabel(summary().deliveryStatus) }}
+          </span>
+        </div>
+        <p class="mt-4 text-xs leading-5 text-text-secondary">
+          {{ getDeliveryReason() }}
+        </p>
+      </section>
 
-      <!-- Sprint Progress -->
-      <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3 group">
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-sm">
         <div class="flex items-center justify-between">
-          <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
-            {{ 'DASHBOARD.ACTIVE_PROJECTS' | translate }}
-          </p>
-          <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">Progress</p>
+          <span class="text-sm font-black text-primary">{{ summary().effortProgressPercent }}%</span>
+        </div>
+        <h3 class="mt-2 text-3xl font-black text-text-primary">{{ summary().doneTasks }} / {{ summary().totalTasks }}</h3>
+        <p class="mt-1 text-xs text-text-secondary">tasks completed</p>
+        <div class="mt-4 space-y-2">
+          <div>
+            <div class="mb-1 flex items-center justify-between text-[11px] font-bold text-text-secondary">
+              <span>Task progress</span>
+              <span>{{ summary().progressPercent }}%</span>
+            </div>
+            <div class="h-1.5 overflow-hidden rounded-full bg-border">
+              <div class="h-full rounded-full bg-primary transition-all duration-300" [style.width.%]="summary().progressPercent"></div>
+            </div>
+          </div>
+          <div>
+            <div class="mb-1 flex items-center justify-between text-[11px] font-bold text-text-secondary">
+              <span>Work completed</span>
+              <span>{{ summary().completedEstimatedHours }}h / {{ summary().totalEstimatedHours }}h</span>
+            </div>
+            <div class="h-1.5 overflow-hidden rounded-full bg-border">
+              <div class="h-full rounded-full bg-success transition-all duration-300" [style.width.%]="summary().effortProgressPercent"></div>
+            </div>
           </div>
         </div>
-        <div>
-          <h3 class="text-3xl font-black text-text-primary tracking-tight">{{ kpis().sprintProgressValue }}</h3>
-          <p class="text-xs text-text-secondary mt-1">{{ kpis().sprintProgressSubtext }}</p>
-        </div>
-        <div class="h-1 bg-border rounded-full overflow-hidden">
-          <div class="h-full bg-primary rounded-full transition-all duration-700" [style.width]="getProgressPercent()"></div>
-        </div>
-      </div>
+      </section>
 
-      <!-- Sprint Velocity -->
-      <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3 group">
+      <section class="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+        <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">Remaining Work</p>
+        <div class="mt-2 flex items-end gap-2">
+          <h3 class="text-3xl font-black text-text-primary">{{ summary().remainingHours }}h</h3>
+          <span class="pb-1 text-xs font-bold text-text-secondary">estimated left</span>
+        </div>
+        <p class="mt-1 text-xs text-text-secondary">{{ summary().workingDaysLeft }} working days left</p>
+        <p class="mt-1 text-xs text-text-secondary">Needs about {{ formatDays(summary().estimatedWorkingDaysNeeded) }} working days at current team capacity</p>
+        <div class="mt-4 flex gap-2 text-[11px] font-bold text-text-secondary">
+          <span class="rounded-lg bg-background px-2 py-1">{{ summary().stuckTasksCount }} stuck</span>
+          <span class="rounded-lg bg-background px-2 py-1">{{ summary().estimateExceededCount }} over estimate</span>
+        </div>
+      </section>
+
+      <section class="bg-surface border rounded-2xl p-5 shadow-sm"
+               [ngClass]="summary().capacityUsagePercent > 100 ? 'border-error/40' : 'border-border'">
         <div class="flex items-center justify-between">
-          <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
-            {{ 'DASHBOARD.SPRINT_VELOCITY' | translate }}
-          </p>
-          <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
+          <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">Team Capacity</p>
+          <span class="text-sm font-black" [ngClass]="summary().capacityUsagePercent > 100 ? 'text-error' : 'text-success'">
+            {{ summary().capacityUsagePercent }}%
+          </span>
         </div>
-        <div>
-          <h3 class="text-3xl font-black text-text-primary tracking-tight">
-            {{ kpis().sprintVelocityValue }}<span class="text-base font-semibold text-text-secondary ml-1">pts</span>
-          </h3>
-          <p class="text-xs text-text-secondary mt-1">{{ kpis().sprintVelocitySubtext }}</p>
+        <h3 class="mt-2 text-3xl font-black text-text-primary">
+          {{ summary().remainingHours }}h needed / {{ summary().teamRemainingCapacity }}h available
+        </h3>
+        <p class="mt-1 text-xs text-text-secondary">
+          {{ formatSpareCapacity(summary().spareCapacityHours) }} · {{ summary().overloadedCount }} overloaded members
+        </p>
+        <div class="mt-4 h-2 overflow-hidden rounded-full bg-border">
+          <div class="h-full rounded-full transition-all duration-300"
+               [ngClass]="summary().capacityUsagePercent > 100 ? 'bg-error' : 'bg-success'"
+               [style.width.%]="clamp(summary().capacityUsagePercent)"></div>
         </div>
-      </div>
-
-      <!-- Sprint Health -->
-      <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3 group"
-           [class.border-error]="kpis().sprintHealthValue < 70"
-           [class.border-success]="kpis().sprintHealthValue >= 70">
-        <div class="flex items-center justify-between">
-          <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
-            {{ 'DASHBOARD.SPRINT_HEALTH' | translate }}
-          </p>
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
-               [ngClass]="kpis().sprintHealthValue >= 70 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-          </div>
-        </div>
-        <div>
-          <h3 class="text-3xl font-black tracking-tight"
-              [ngClass]="kpis().sprintHealthValue >= 70 ? 'text-success' : 'text-error'">
-            {{ kpis().sprintHealthValue }}%
-          </h3>
-          <p class="text-xs text-text-secondary mt-1">{{ kpis().sprintHealthSubtext }}</p>
-        </div>
-        <div class="h-1.5 bg-border rounded-full overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-700"
-               [ngClass]="kpis().sprintHealthValue >= 70 ? 'bg-success' : 'bg-error'"
-               [style.width.%]="kpis().sprintHealthValue"></div>
-        </div>
-      </div>
-
-      <!-- Team Burnout Risk -->
-      <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3 group"
-           [class.border-error]="kpis().teamBurnoutRiskValue > 50">
-        <div class="flex items-center justify-between">
-          <p class="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
-            {{ 'DASHBOARD.TEAM_BURNOUT_RISK' | translate }}
-          </p>
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
-               [ngClass]="kpis().teamBurnoutRiskValue > 50 ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-          </div>
-        </div>
-        <div>
-          <h3 class="text-3xl font-black tracking-tight"
-              [ngClass]="kpis().teamBurnoutRiskValue > 50 ? 'text-error' : kpis().teamBurnoutRiskValue > 25 ? 'text-warning' : 'text-text-primary'">
-            {{ kpis().teamBurnoutRiskValue }}%
-          </h3>
-          <p class="text-xs text-text-secondary mt-1">{{ kpis().teamBurnoutRiskSubtext }}</p>
-        </div>
-        <div class="h-1.5 bg-border rounded-full overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-700"
-               [ngClass]="kpis().teamBurnoutRiskValue > 50 ? 'bg-error' : 'bg-warning'"
-               [style.width.%]="kpis().teamBurnoutRiskValue"></div>
-        </div>
-      </div>
-
+      </section>
     </div>
   `
 })
 export class SprintKpiCardsComponent {
-  kpis = input.required<DashboardKpisDto>();
+  summary = input.required<SprintHealthSummaryDto>();
 
-  getProgressPercent(): string {
-    const val = this.kpis().sprintProgressValue; // e.g. "1 / 3"
-    const parts = val.split('/').map(s => parseFloat(s.trim()));
-    if (parts.length === 2 && parts[1] > 0) {
-      return `${Math.round((parts[0] / parts[1]) * 100)}%`;
-    }
-    return '0%';
+  clamp(value: number): number {
+    return Math.max(0, Math.min(value || 0, 100));
+  }
+
+  formatDays(value: number): string {
+    if (!value) return '0';
+    return `${Math.round(value * 10) / 10}`;
+  }
+
+  formatSpareCapacity(value: number): string {
+    if (value >= 0) return `${value}h spare capacity`;
+    return `${Math.abs(value)}h over capacity`;
+  }
+
+  getStatusLabel(status: string): string {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'critical') return 'Critical';
+    if (normalized === 'at risk') return 'At Risk';
+    return 'On Track';
+  }
+
+  getStatusBorder(status: string): string {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'critical') return 'border-error/50';
+    if (normalized === 'at risk') return 'border-warning/50';
+    return 'border-success/40';
+  }
+
+  getStatusBadge(status: string): string {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'critical') return 'bg-error/10 text-error';
+    if (normalized === 'at risk') return 'bg-warning/10 text-warning';
+    return 'bg-success/10 text-success';
+  }
+
+  getDeliveryReason(): string {
+    const s = this.summary();
+    if (s.remainingHours <= 0) return 'All sprint work is completed.';
+    if (s.capacityUsagePercent > 100) return 'Remaining work is higher than the team capacity left.';
+    if (s.stuckTasksCount > 0) return `${s.stuckTasksCount} task(s) may be stuck in progress.`;
+    return 'Progress, workload, and capacity are aligned.';
   }
 }
