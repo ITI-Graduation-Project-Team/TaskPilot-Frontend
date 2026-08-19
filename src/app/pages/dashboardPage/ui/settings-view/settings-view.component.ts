@@ -2,14 +2,13 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { GoogleCalendarService } from '../../../../shared/api/googleCalendar.service';
 import { finalize } from 'rxjs/operators';
-import { TranslatePipe } from '@ngx-translate/core';
 import { AiTelemetryComponent } from '../../../settings/ui/ai-telemetry/ai-telemetry.component';
 
 @Component({
   selector: 'app-settings-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe, AiTelemetryComponent],
+  imports: [CommonModule, AiTelemetryComponent],
   template: `
     <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fade-in">
       
