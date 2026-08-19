@@ -208,12 +208,6 @@ type ColumnPageSnapshot = {
           </div>
         </div>
 
-        @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
-          <div class="mt-6 mb-6">
-            <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
-          </div>
-        }
-
         <!-- Tabs Navigation -->
         <div class="flex items-center gap-6 border-b border-border mb-6">
           <button (click)="activeTab.set('board')"
@@ -233,6 +227,12 @@ type ColumnPageSnapshot = {
         </div>
 
         @if (activeTab() === 'board') {
+          @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
+            <div class="mb-6">
+              <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
+            </div>
+          }
+
           <!-- Metrics overview -->
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
