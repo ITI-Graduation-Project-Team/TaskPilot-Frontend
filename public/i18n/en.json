@@ -993,6 +993,8 @@
   },
   "TELEMETRY": {
     "TITLE": "AI Telemetry",
+    "ALL_PROJECTS_TITLE": "All Projects Usage",
+    "ALL_PROJECTS_DESC": "Combined AI usage, token consumption, and estimated costs across all your projects.",
     "PM_DESC": "Monitor AI usage, token consumption, and costs across this project.",
     "EMP_DESC": "Monitor your personal AI usage, token consumption, and estimated costs.",
     "ROLE_PM": "Project Overview",
@@ -1008,7 +1010,10 @@
     "TEAM_USAGE": "Team Members Usage",
     "OPS": "ops",
     "NO_DATA": "No AI operations logged yet.",
-    "NO_TEAM_DATA": "No team members have used AI in this project yet."
+    "NO_TEAM_DATA": "No team members have used AI in this project yet.",
+    "ALL_PROJECTS_ERROR": "All-project usage could not be loaded. Try again.",
+    "DETAIL_ERROR": "Project telemetry could not be loaded. Try again.",
+    "RETRY": "Retry"
   },
   "PROJECT_SETUP": {
     "TEAM_STACK": "Team Skills Stack",

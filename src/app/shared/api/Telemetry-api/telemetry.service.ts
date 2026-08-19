@@ -47,6 +47,13 @@ export interface ProjectAiSummaryDto {
   modelUsageCounts: Record<string, number>;
 }
 
+export interface ManagedProjectsAiSummaryDto {
+  totalOperations: number;
+  totalTokens: number;
+  totalCostUsd: number;
+  averageResponseTimeMs: number;
+}
+
 export interface ProjectMemberAiUsageDto {
   userId: string;
   email: string;
@@ -74,6 +81,11 @@ export class TelemetryService {
   }
 
   // Project Manager Endpoints
+  async getManagedProjectsSummary(): Promise<{ succeeded: boolean; data: ManagedProjectsAiSummaryDto; message?: string }> {
+    const response = await apiClient.get('/ai-telemetry/projects/summary');
+    return response.data;
+  }
+
   async getProjectSummary(projectId: string): Promise<{ succeeded: boolean; data: ProjectAiSummaryDto; message?: string }> {
     const response = await apiClient.get(`/ai-telemetry/projects/${projectId}/summary`);
     return response.data;
