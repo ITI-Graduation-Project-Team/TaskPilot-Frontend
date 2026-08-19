@@ -194,9 +194,14 @@ type StackChoice = 'primary' | 'ideal';
                     </li>
                   }
                 </ul>
-                <p class="px-5 py-3 text-xs leading-5 text-text-secondary">
-                  {{ 'PROJECT_SETUP.GAP_HELP' | translate }}
-                </p>
+                <div class="border-t border-warning/20 bg-warning/10 px-5 py-4">
+                  <p class="inline-flex items-start gap-2 rounded-xl border border-warning/30 bg-surface px-4 py-3 text-xs font-bold leading-5 text-text-primary shadow-sm">
+                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z"/>
+                    </svg>
+                    <span>{{ 'PROJECT_SETUP.GAP_HELP' | translate }}</span>
+                  </p>
+                </div>
               </aside>
             }
 

@@ -26,6 +26,7 @@ import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { SprintBoardTaskDto, TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
 import { getProjectErrorMessage } from '../../../../shared/api/project-error';
+import { NotificationHubService } from '../../../../shared/services/notification-hub.service';
 import {
   TaskAssigneePickerComponent,
   TaskAssignmentChangedEvent
@@ -59,6 +60,15 @@ interface Task {
 }
 
 type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
+type EmployeeTaskScope = 'mine' | 'all';
+type BoardRefreshOptions = { silent?: boolean };
+type ColumnPageSnapshot = {
+  column: ColumnKey;
+  tasks: Task[];
+  page: number;
+  totalItems: number;
+  hasNextPage: boolean;
+};
 
 @Component({
   selector: 'app-board',
@@ -141,6 +151,69 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       } @else {
         
+        <!-- Action buttons & Board Title -->
+        <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
+          <div>
+            @if (projectState.isProjectManager()) {
+              <div class="flex items-center gap-3 mb-1">
+                <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  {{ 'BOARD.BACK_TO_SPRINTS' | translate }}
+                </button>
+              </div>
+            }
+            <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} {{ 'BOARD.WORKSPACE' | translate }}</h2>
+            <p class="text-text-secondary text-sm mt-1">{{ 'BOARD.MANAGE_MONITOR' | translate }}</p>
+          </div>
+          
+          <div class="flex items-center flex-wrap gap-3">
+            @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
+              @if (hasUnassignedTasks()) {
+                <button (click)="goToAssignment()" 
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                  👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
+                </button>
+              } @else {
+                <button (click)="goToAssignment()"
+                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                  👥 {{ currentLang === 'ar' ? 'إعادة التعيين' : 'Reassign Tasks' }}
+                </button>
+              }
+              <button (click)="cancelSprintClicked()" 
+                      class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                ❌ {{ 'BOARD.CANCEL_SPRINT' | translate }}
+              </button>
+              <button (click)="startSprint()" 
+                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
+                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
+                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                ▶ {{ 'BOARD.START_SPRINT' | translate }}
+              </button>
+            }
+
+            @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
+              <button (click)="completeSprintBtnClicked()" 
+                      class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                {{ 'BOARD.COMPLETE_SPRINT' | translate }}
+              </button>
+            }
+            @if (projectState.isProjectManager() && sprintStatus() === 'Completed') {
+              <button (click)="openRetrospectivePage()" 
+                      class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
+                📋 {{ 'BOARD.SPRINT_RETRO' | translate }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
+          <div class="mt-6 mb-6">
+            <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
+          </div>
+        }
+
         <!-- Tabs Navigation -->
         <div class="flex items-center gap-6 border-b border-border mb-6">
           <button (click)="activeTab.set('board')"
@@ -212,69 +285,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
 
-        <!-- Action buttons & Board Title -->
-        <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
-          <div>
-            @if (projectState.isProjectManager()) {
-              <div class="flex items-center gap-3 mb-1">
-                <button (click)="backToSprints.emit()" class="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  {{ 'BOARD.BACK_TO_SPRINTS' | translate }}
-                </button>
-              </div>
-            }
-            <h2 class="text-2xl font-bold text-text-primary">{{ projectName() }} {{ 'BOARD.WORKSPACE' | translate }}</h2>
-            <p class="text-text-secondary text-sm mt-1">{{ 'BOARD.MANAGE_MONITOR' | translate }}</p>
-          </div>
-          
-          <div class="flex items-center flex-wrap gap-3">
-            @if (projectState.isProjectManager() && sprintStatus() === 'Planned') {
-              @if (hasUnassignedTasks()) {
-                <button (click)="goToAssignment()" 
-                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                  👥 {{ 'BOARD.ASSIGN_TASKS' | translate }}
-                </button>
-              } @else {
-                <button (click)="goToAssignment()"
-                        class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                  👥 {{ currentLang === 'ar' ? 'إعادة التعيين' : 'Reassign Tasks' }}
-                </button>
-              }
-              <button (click)="cancelSprintClicked()" 
-                      class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                ❌ {{ 'BOARD.CANCEL_SPRINT' | translate }}
-              </button>
-              <button (click)="startSprint()" 
-                      [disabled]="projectState.projectEmployeeCount() === 0 || hasUnassignedTasks()"
-                      [title]="projectState.projectEmployeeCount() === 0 ? (currentLang === 'ar' ? 'يجب تعيين موظف واحد على الأقل لهذا المشروع قبل بدء السبرنت' : 'At least one employee must be assigned to this project before starting a sprint') : (hasUnassignedTasks() ? (currentLang === 'ar' ? 'لا يمكن بدء السبرنت. تأكد من تعيين جميع المهام للموظفين أولاً.' : 'Cannot start sprint. Make sure all tasks are assigned to employees first.') : '')"
-                      class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                ▶ {{ 'BOARD.START_SPRINT' | translate }}
-              </button>
-            }
-
-            @if (projectState.isProjectManager() && sprintStatus() === 'Active') {
-              <button (click)="completeSprintBtnClicked()" 
-                      class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                {{ 'BOARD.COMPLETE_SPRINT' | translate }}
-              </button>
-            }
-            @if (projectState.isProjectManager() && sprintStatus() === 'Completed') {
-              <button (click)="openRetrospectivePage()" 
-                      class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:-translate-y-px active:translate-y-0 text-sm">
-                📋 {{ 'BOARD.SPRINT_RETRO' | translate }}
-              </button>
-            }
-          </div>
-        </div>
-
-        @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
-          <div class="mt-6 mb-6">
-            <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
-          </div>
-        }
-
         <!-- Board controls -->
         <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm">
           <div class="grid grid-cols-1 xl:grid-cols-[minmax(220px,1fr)_auto_auto_auto] gap-3 items-end">
@@ -291,7 +301,43 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   [placeholder]="'BOARD.SEARCH_PLACEHOLDER' | translate"
                   class="w-full h-11 bg-background border border-border rounded-xl pl-9 pr-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
-            </label>
+          </label>
+
+            @if (!projectState.isProjectManager()) {
+              <div class="block min-w-56">
+                <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">
+                  {{ currentLang === 'ar' ? 'نطاق المهام' : 'Task scope' }}
+                </span>
+                <div class="grid grid-cols-2 rounded-xl border border-border bg-background p-1">
+                  <button
+                    type="button"
+                    (click)="setEmployeeTaskScope('mine')"
+                    [disabled]="isScopeSwitching()"
+                    class="h-9 rounded-lg px-3 text-xs font-black transition-all"
+                    [class.bg-surface]="employeeTaskScope() === 'mine'"
+                    [class.text-primary]="employeeTaskScope() === 'mine'"
+                    [class.shadow-sm]="employeeTaskScope() === 'mine'"
+                    [class.text-text-secondary]="employeeTaskScope() !== 'mine'"
+                    [class.opacity-60]="isScopeSwitching()"
+                    [class.cursor-wait]="isScopeSwitching()">
+                    {{ currentLang === 'ar' ? 'مهامي' : 'My tasks' }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setEmployeeTaskScope('all')"
+                    [disabled]="isScopeSwitching()"
+                    class="h-9 rounded-lg px-3 text-xs font-black transition-all"
+                    [class.bg-surface]="employeeTaskScope() === 'all'"
+                    [class.text-primary]="employeeTaskScope() === 'all'"
+                    [class.shadow-sm]="employeeTaskScope() === 'all'"
+                    [class.text-text-secondary]="employeeTaskScope() !== 'all'"
+                    [class.opacity-60]="isScopeSwitching()"
+                    [class.cursor-wait]="isScopeSwitching()">
+                    {{ currentLang === 'ar' ? 'كل المهام' : 'All tasks' }}
+                  </button>
+                </div>
+              </div>
+            }
 
             <label class="block min-w-40">
               <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">{{ 'BOARD.PRIORITY' | translate }}</span>
@@ -1202,6 +1248,7 @@ export class BoardComponent implements OnInit, OnChanges {
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private tasksService = inject(TasksService);
+  private notificationHub = inject(NotificationHubService);
   public tr = inject(TranslateService);
 
   // Loading and assignment status signals
@@ -1384,6 +1431,8 @@ export class BoardComponent implements OnInit, OnChanges {
   );
 
   readonly boardPageSize = 8;
+  employeeTaskScope = signal<EmployeeTaskScope>('mine');
+  isScopeSwitching = signal(false);
   boardSearch = signal('');
   priorityFilter = signal<'All' | Task['priority']>('All');
   typeFilter = signal<'All' | Task['type']>('All');
@@ -1455,6 +1504,8 @@ export class BoardComponent implements OnInit, OnChanges {
   hasAssignments = signal(false);
   hasUnassignedTasks = signal(false);
   originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
+  private lastRealtimeTaskStatusChangeKey: string | null = null;
+  private realtimeBoardRefreshQueued = false;
 
   constructor() {
     // Automatically trigger reload when the active selected project changes
@@ -1465,6 +1516,27 @@ export class BoardComponent implements OnInit, OnChanges {
         this.loadWorkspaceData()
           .catch(err => console.error('Error loading backlog data:', err))
           .finally(() => this.isLoading.set(false));
+      });
+    });
+
+    effect(() => {
+      const change = this.notificationHub.latestTaskStatusChange();
+      if (!change) return;
+
+      const visibleSprintId = this.overrideSprintId || this.activeSprintId() || this.plannedSprintId() || this.completedSprintId();
+      if (!visibleSprintId || change.sprintId !== visibleSprintId) return;
+
+      const changeKey = `${change.taskId}:${change.previousStatus}:${change.newStatus}:${change.occurredAt}`;
+      if (changeKey === this.lastRealtimeTaskStatusChangeKey || this.realtimeBoardRefreshQueued) return;
+
+      this.lastRealtimeTaskStatusChangeKey = changeKey;
+      this.realtimeBoardRefreshQueued = true;
+      queueMicrotask(() => {
+        this.loadWorkspaceData({ silent: true })
+          .catch(err => console.error('Error refreshing board after task status change:', err))
+          .finally(() => {
+            this.realtimeBoardRefreshQueued = false;
+          });
       });
     });
   }
@@ -1614,7 +1686,7 @@ export class BoardComponent implements OnInit, OnChanges {
     });
   }
 
-  public async loadWorkspaceData() {
+  public async loadWorkspaceData(options: BoardRefreshOptions = {}) {
     const projectId = this.projectState.selectedProjectId();
     if (!projectId) {
       this.isAssignedToProject.set(false);
@@ -1721,7 +1793,7 @@ export class BoardComponent implements OnInit, OnChanges {
       this.resetBoardTaskState();
     } else {
       try {
-        await this.loadInitialSprintTaskPages(sprintId);
+        await this.loadInitialSprintTaskPages(sprintId, options);
       } catch (err) {
         console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
@@ -1744,7 +1816,28 @@ export class BoardComponent implements OnInit, OnChanges {
     this.hasUnassignedTasks.set(false);
   }
 
-  private async loadInitialSprintTaskPages(sprintId: string): Promise<void> {
+  private async loadInitialSprintTaskPages(sprintId: string, options: BoardRefreshOptions = {}): Promise<void> {
+    if (options.silent) {
+      const snapshots = await Promise.all([
+        this.fetchColumnPage('todo', sprintId, 1),
+        this.fetchColumnPage('inProgress', sprintId, 1),
+        this.fetchColumnPage('review', sprintId, 1),
+        this.fetchColumnPage('done', sprintId, 1)
+      ]);
+
+      for (const snapshot of snapshots) {
+        this.applyColumnPageSnapshot(snapshot, true);
+      }
+
+      if (this.projectState.isProjectManager()) {
+        const firstTask = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()][0];
+        this.activeUserStoryId = firstTask?.userStoryId || '';
+      }
+
+      this.refreshAssignmentFlagsFromLoadedTasks();
+      return;
+    }
+
     this.resetBoardTaskState();
     await Promise.all([
       this.loadColumnPage('todo', sprintId, 1, true),
@@ -1761,6 +1854,39 @@ export class BoardComponent implements OnInit, OnChanges {
     this.refreshAssignmentFlagsFromLoadedTasks();
   }
 
+  private async fetchColumnPage(column: ColumnKey, sprintId: string, page: number): Promise<ColumnPageSnapshot> {
+    const response = await this.tasksService.getSprintTasksPage(
+      this.activeProjectId,
+      sprintId,
+      this.statusForColumn(column),
+      page,
+      this.boardPageSize,
+      !this.projectState.isProjectManager() && this.employeeTaskScope() === 'mine'
+    );
+
+    return {
+      column,
+      tasks: response.items.map(task => this.mapSprintBoardTask(task)),
+      page: response.page,
+      totalItems: response.totalItems,
+      hasNextPage: response.hasNextPage
+    };
+  }
+
+  private applyColumnPageSnapshot(snapshot: ColumnPageSnapshot, replace: boolean): void {
+    const taskSignal = this.taskSignalFor(snapshot.column);
+
+    taskSignal.update(current => {
+      const next = replace ? snapshot.tasks : [...current, ...snapshot.tasks];
+      const unique = new Map(next.map(task => [task.id, task]));
+      return Array.from(unique.values()).sort(this.sortTasksOwnedByCurrentUser.bind(this));
+    });
+
+    this.columnPages.update(state => ({ ...state, [snapshot.column]: snapshot.page }));
+    this.columnTotals.update(state => ({ ...state, [snapshot.column]: snapshot.totalItems }));
+    this.columnHasNext.update(state => ({ ...state, [snapshot.column]: snapshot.hasNextPage }));
+  }
+
   private async loadNextColumnPage(column: ColumnKey): Promise<void> {
     const sprintId = this.overrideSprintId
       || this.activeSprintId()
@@ -1775,26 +1901,8 @@ export class BoardComponent implements OnInit, OnChanges {
   private async loadColumnPage(column: ColumnKey, sprintId: string, page: number, replace: boolean): Promise<void> {
     this.columnLoading.update(state => ({ ...state, [column]: true }));
     try {
-      const response = await this.tasksService.getSprintTasksPage(
-        this.activeProjectId,
-        sprintId,
-        this.statusForColumn(column),
-        page,
-        this.boardPageSize
-      );
-
-      const mappedTasks = response.items.map(task => this.mapSprintBoardTask(task));
-      const taskSignal = this.taskSignalFor(column);
-
-      taskSignal.update(current => {
-        const next = replace ? mappedTasks : [...current, ...mappedTasks];
-        const unique = new Map(next.map(task => [task.id, task]));
-        return Array.from(unique.values()).sort(this.sortTasksOwnedByCurrentUser.bind(this));
-      });
-
-      this.columnPages.update(state => ({ ...state, [column]: response.page }));
-      this.columnTotals.update(state => ({ ...state, [column]: response.totalItems }));
-      this.columnHasNext.update(state => ({ ...state, [column]: response.hasNextPage }));
+      const snapshot = await this.fetchColumnPage(column, sprintId, page);
+      this.applyColumnPageSnapshot(snapshot, replace);
     } catch (error) {
       console.error(`Failed to load ${column} tasks page:`, error);
     } finally {
@@ -1896,6 +2004,18 @@ export class BoardComponent implements OnInit, OnChanges {
     this.boardSearch.set('');
     this.priorityFilter.set('All');
     this.typeFilter.set('All');
+  }
+
+  async setEmployeeTaskScope(scope: EmployeeTaskScope): Promise<void> {
+    if (this.employeeTaskScope() === scope || this.isScopeSwitching()) return;
+
+    this.employeeTaskScope.set(scope);
+    this.isScopeSwitching.set(true);
+    try {
+      await this.loadWorkspaceData({ silent: true });
+    } finally {
+      this.isScopeSwitching.set(false);
+    }
   }
 
   emptyColumnMessage(column: ColumnKey): string {

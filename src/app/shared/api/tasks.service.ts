@@ -93,12 +93,13 @@ export class TasksService {
     sprintId: string,
     status: TaskItemStatus,
     page: number = 1,
-    pageSize: number = 8
+    pageSize: number = 8,
+    assignedToMe: boolean = false
   ): Promise<PagedSprintBoardTasksDto> {
     const { data } = await apiClient.get<any>(
       `/projects/${projectId}/sprints/${sprintId}/tasks/paged`,
       {
-        params: { status: TaskItemStatus[status], page, pageSize },
+        params: { status: TaskItemStatus[status], page, pageSize, assignedToMe },
         headers: { 'X-Skip-Loader': 'true' }
       }
     );
