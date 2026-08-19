@@ -1,18 +1,11 @@
 <div class="assign-shell flex flex-col overflow-hidden font-dashboard animate-[fadeIn_0.25s_ease_both] h-full">
 
   <!-- Loading Screen -->
-  <div *ngIf="isLoadingPage()" class="flex-1 flex flex-col items-center justify-center p-12">
-    <div class="relative mb-6">
-      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg">
-        <svg class="w-7 h-7 text-primary animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      </div>
-      <div class="absolute inset-0 rounded-2xl border-2 border-primary/30 animate-ping opacity-50"></div>
-    </div>
-    <p class="text-sm font-bold text-text-primary mb-1">{{ currentLang === 'ar' ? 'جاري حساب توصيات التعيين...' : 'Calculating assignment recommendations...' }}</p>
-    <p class="text-xs text-text-secondary">{{ currentLang === 'ar' ? 'مراجعة المهارات وسعة الفريق' : 'Reviewing skills and team capacity' }}</p>
-  </div>
+  @if (isLoadingPage()) {
+    <app-loader />
+  }
 
-  <ng-container *ngIf="!isLoadingPage()">
+  @if (!isLoadingPage()) {
 
     <!-- ── Top Command Bar ── -->
     <header class="px-5 py-3 border-b border-border bg-sidebar/60 backdrop-blur-sm shrink-0 flex items-center justify-between gap-4 shadow-sm">
@@ -154,7 +147,7 @@
       </div>
     </footer>
 
-  </ng-container>
+  }
 
   <!-- Over-Capacity Warning Modal -->
   <div *ngIf="showOverCapacityModal()" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease_out]">
