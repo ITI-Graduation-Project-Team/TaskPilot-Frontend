@@ -674,7 +674,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
         }
-        @if (activeTab() === 'health' && healthSprintId()) {
+        @if (activeTab() === 'health' && showSprintHealthTab() && healthSprintId()) {
           <app-sprint-health-dashboard [sprintId]="healthSprintId()!"></app-sprint-health-dashboard>
         }
       }
@@ -1377,7 +1377,11 @@ export class BoardComponent implements OnInit, OnChanges {
 
   activeTab = signal<'board' | 'health'>('board');
   healthSprintId = computed(() => this.activeSprintId() || this.completedSprintId());
-  showSprintHealthTab = computed(() => this.sprintStatus() !== 'Planned' && Boolean(this.healthSprintId()));
+  showSprintHealthTab = computed(() =>
+    this.projectState.isProjectManager() &&
+    this.sprintStatus() === 'Active' &&
+    Boolean(this.healthSprintId())
+  );
 
   readonly boardPageSize = 8;
   boardSearch = signal('');
