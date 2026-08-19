@@ -4,7 +4,7 @@
   <!-- Header / Navbar -->
   <header
     class="border-b border-border backdrop-blur-md sticky top-0 z-50 bg-background/85 transition-colors duration-300">
-    <div class="flex items-center justify-between px-6 py-4 md:px-12 md:py-5 max-w-7xl mx-auto w-full">
+    <div class="flex items-center justify-between px-6 py-4 md:px-12 md:py-5 max-w-[85rem] mx-auto w-full">
       <!-- Logo -->
       <a routerLink="/" class="flex items-center gap-2">
         <img [src]="theme() === 'dark' ? '/TaskPilotDarkMode.svg' : '/TaskPilotLogo.svg'" alt="TaskPilot Logo"
@@ -15,7 +15,7 @@
       <div class="flex items-center gap-3 md:gap-5">
         <!-- Language Switcher -->
         <button (click)="toggleLanguage()"
-          class="px-2 sm:px-3 py-1.5 rounded-lg border border-border text-xs md:text-sm font-semibold hover:bg-surface text-text-secondary hover:text-text-primary transition-colors uppercase cursor-pointer"
+          class="px-3 sm:px-4 py-2 rounded-xl border border-border/60 bg-surface/30 backdrop-blur-sm text-xs md:text-sm font-semibold hover:bg-surface hover:border-border text-text-secondary hover:text-text-primary transition-all duration-300 uppercase cursor-pointer shadow-sm hover:shadow"
           title="Switch Language">
           <span class="hidden sm:inline">{{ currentLang() === 'en' ? 'العربية' : 'English' }}</span>
           <span class="sm:hidden">{{ currentLang() === 'en' ? 'AR' : 'EN' }}</span>
@@ -23,7 +23,7 @@
 
         <!-- Theme Toggler -->
         <button (click)="toggleTheme()"
-          class="p-2 rounded-lg border border-border hover:bg-surface text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+          class="p-2 sm:p-2.5 rounded-xl border border-border/60 bg-surface/30 backdrop-blur-sm hover:bg-surface hover:border-border text-text-secondary hover:text-text-primary transition-all duration-300 cursor-pointer shadow-sm hover:shadow flex items-center justify-center"
           aria-label="Toggle Theme">
           <!-- Moon Icon (Light Mode) -->
           <svg *ngIf="theme() === 'light'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -41,7 +41,7 @@
 
         <!-- Go To Dashboard Button -->
         <a [routerLink]="buttonLink"
-          class="px-3 sm:px-4 py-1.5 sm:py-2 bg-primary text-white font-bold text-[10px] sm:text-xs md:text-sm rounded-lg hover:bg-primary-hover transition-all duration-200 whitespace-nowrap shadow-sm no-underline hover:scale-[1.02] cursor-pointer">
+          class="px-5 sm:px-6 py-2.5 bg-primary text-white font-bold text-[10px] sm:text-xs md:text-sm rounded-xl hover:bg-primary-hover transition-all duration-300 whitespace-nowrap shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 no-underline cursor-pointer flex items-center justify-center">
           {{ buttonTextKey | translate }}
         </a>
       </div>
