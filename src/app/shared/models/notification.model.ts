@@ -44,3 +44,15 @@ export interface ProjectSetupStatusChangedDto {
   status: ProjectSetupBackgroundStatus;
   occurredAt: string;
 }
+
+export type TaskItemStatus = 'ToDo' | 'InProgress' | 'Review' | 'Done';
+
+export interface TaskStatusChangedDto {
+  projectId: string;
+  sprintId: string;
+  taskId: string;
+  taskTitle: string;
+  previousStatus: TaskItemStatus;
+  newStatus: TaskItemStatus;
+  occurredAt: string;
+}

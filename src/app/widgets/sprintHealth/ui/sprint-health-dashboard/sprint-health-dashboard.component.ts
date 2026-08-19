@@ -1,10 +1,11 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject, signal, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, signal, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SprintHealthService } from '../../data/sprint-health.service';
 import { ActivityFeedItemDto, TeamPulseDto } from '../../data/sprint-health.models';
 import { SprintKpiCardsComponent } from '../kpi-cards/kpi-cards.component';
 import { SprintTeamPulseGridComponent } from '../team-pulse-grid/team-pulse-grid.component';
 import { SprintLiveActivityFeedComponent } from '../live-activity-feed/live-activity-feed.component';
+import { NotificationHubService } from '../../../../shared/services/notification-hub.service';
 
 @Component({
   selector: 'app-sprint-health-dashboard',
@@ -130,12 +131,27 @@ export class SprintHealthDashboardComponent implements OnInit {
   sprintId = input.required<string>();
 
   private sprintHealthService = inject(SprintHealthService);
+  private notificationHub = inject(NotificationHubService);
+  private lastRealtimeChangeKey: string | null = null;
 
   data = signal<TeamPulseDto | null>(null);
   activities = signal<ActivityFeedItemDto[]>([]);
   isLoading = signal<boolean>(true);
   isActivityLoading = signal<boolean>(false);
   error = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const change = this.notificationHub.latestTaskStatusChange();
+      if (!change || change.sprintId !== this.sprintId()) return;
+
+      const changeKey = `${change.taskId}:${change.previousStatus}:${change.newStatus}:${change.occurredAt}`;
+      if (changeKey === this.lastRealtimeChangeKey) return;
+
+      this.lastRealtimeChangeKey = changeKey;
+      queueMicrotask(() => this.fetchData());
+    });
+  }
 
   ngOnInit() {
     this.fetchData();
