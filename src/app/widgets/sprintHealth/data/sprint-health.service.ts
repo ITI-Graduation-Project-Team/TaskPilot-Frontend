@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { TeamPulseDto } from './sprint-health.models';
+import { ActivityFeedItemDto, TeamPulseDto } from './sprint-health.models';
 export interface CustomResponse<T> {
   isSuccess: boolean;
   value?: T;
@@ -24,6 +24,12 @@ export class SprintHealthService {
   getFullAuditLog(sprintId: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${sprintId}/audit-log`).pipe(
       map(res => res?.value)
+    );
+  }
+
+  getRecentActivity(sprintId: string): Observable<ActivityFeedItemDto[]> {
+    return this.http.get<CustomResponse<ActivityFeedItemDto[]>>(`${this.apiUrl}/${sprintId}/recent-activity`).pipe(
+      map(res => res?.value || [])
     );
   }
 }

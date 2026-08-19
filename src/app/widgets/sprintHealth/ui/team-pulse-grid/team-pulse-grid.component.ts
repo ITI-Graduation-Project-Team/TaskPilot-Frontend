@@ -1,265 +1,239 @@
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TeamPulseMemberDto } from '../../data/sprint-health.models';
-import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sprint-team-pulse-grid',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule],
   template: `
-    <div class="bg-surface border border-border rounded-2xl p-5 shadow-sm">
-      <!-- Header -->
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <section class="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+      <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 class="text-base font-extrabold text-text-primary flex items-center gap-2">
-            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            {{ 'DASHBOARD.TEAM_PULSE' | translate }}
-          </h2>
-          <p class="text-xs text-text-secondary mt-0.5">
-            {{ members().length }} {{ 'DASHBOARD.MEMBERS' | translate }} · {{ 'DASHBOARD.HOVER_FOR_DETAILS' | translate }}
+          <h2 class="text-base font-extrabold text-text-primary">Team Pulse</h2>
+          <p class="mt-1 text-xs text-text-secondary">
+            Workload by member: assigned estimate, remaining capacity, active work, and execution pressure.
           </p>
         </div>
 
-        <!-- Legend -->
-        <div class="flex items-center gap-4 text-xs text-text-secondary">
-          <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-success"></span>
-            <span>Healthy</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-warning"></span>
-            <span>At Risk</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-error"></span>
-            <span>High Risk</span>
-          </div>
+        <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold text-text-secondary">
+          <span class="flex items-center gap-1.5"><i class="h-2.5 w-2.5 rounded-full bg-slate-300"></i>Underused</span>
+          <span class="flex items-center gap-1.5"><i class="h-2.5 w-2.5 rounded-full bg-emerald-500"></i>Available</span>
+          <span class="flex items-center gap-1.5"><i class="h-2.5 w-2.5 rounded-full bg-blue-500"></i>Healthy</span>
+          <span class="flex items-center gap-1.5"><i class="h-2.5 w-2.5 rounded-full bg-amber-500"></i>Near limit</span>
+          <span class="flex items-center gap-1.5"><i class="h-2.5 w-2.5 rounded-full bg-red-500"></i>Overloaded</span>
         </div>
       </div>
 
-      <!-- Grid -->
-      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-2.5">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         @for (member of members(); track member.employeeId) {
-          <div class="group relative">
-            <!-- The Cell -->
-            <div class="aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-                 [ngClass]="getRiskBg(member.riskLevel)">
-              <span class="text-base font-black tracking-wide" [ngClass]="getRiskText(member.riskLevel)">
-                {{ member.initials }}
-              </span>
-            </div>
-
-            <!-- Rich Tooltip -->
-            <div class="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-[272px] z-[9999]
-                        opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                        transition-all duration-200 scale-95 group-hover:scale-100 origin-bottom
-                        pointer-events-none">
-
-              <div class="bg-surface border border-border rounded-2xl shadow-2xl shadow-black/20 overflow-hidden relative">
-
-                <!-- Arrow at the Bottom -->
-                <div class="absolute -bottom-[7px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-surface border-b border-r border-border rotate-45 z-10"></div>
-
-                <div class="relative z-20 bg-surface">
-                  <!-- Tooltip Header -->
-                  <div class="p-4 pb-3 border-b border-border flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
-                         [ngClass]="getRiskBg(member.riskLevel)">
-                      <span [ngClass]="getRiskText(member.riskLevel)">{{ member.initials }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h4 class="text-sm font-bold text-text-primary truncate">{{ member.name }}</h4>
-                      <p class="text-[11px] text-text-secondary">{{ member.jobTitle }}</p>
-                    </div>
-                    <span class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide flex-shrink-0"
-                          [ngClass]="getRiskBadge(member.riskLevel)">
-                      {{ member.riskLevel }}
-                    </span>
+          <article class="group relative rounded-xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-within:shadow-md"
+                   [ngClass]="getCardClasses(member)">
+            <button type="button" class="block w-full text-left outline-none">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex min-w-0 items-center gap-3">
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-base font-black"
+                       [ngClass]="getAvatarClasses(member)">
+                    {{ member.initials }}
                   </div>
-
-                  <!-- Burnout Score -->
-                  <div class="px-4 pt-3 pb-2">
-                    <div class="flex items-center justify-between text-xs mb-1.5">
-                      <span class="font-bold text-text-secondary uppercase tracking-wider text-[10px]">{{ 'DASHBOARD.BURNOUT_RISK_SCORE' | translate }}</span>
-                      <span class="font-black text-sm" [ngClass]="getScoreColor(member.burnoutScore)">{{ member.burnoutScore }}%</span>
-                    </div>
-                    <div class="w-full bg-border rounded-full h-2">
-                      <div class="h-2 rounded-full transition-all duration-700"
-                           [ngClass]="getScoreBg(member.burnoutScore)"
-                           [style.width.%]="member.burnoutScore"></div>
-                    </div>
-                  </div>
-
-                  <!-- Risk Factors -->
-                  <div class="px-4 pt-1 pb-3 space-y-2.5">
-                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">{{ 'DASHBOARD.RISK_FACTORS' | translate }}</p>
-
-                    <!-- Workload -->
-                    <div>
-                      <div class="flex justify-between text-xs mb-1">
-                        <span class="flex items-center gap-1.5 text-text-secondary font-medium">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                          {{ 'DASHBOARD.WORKLOAD' | translate }}
-                        </span>
-                        <span class="font-bold" [ngClass]="getFactorColor(member.riskFactors.workload)">{{ member.riskFactors.workload }}%</span>
-                      </div>
-                      <div class="w-full bg-border rounded-full h-1.5">
-                        <div class="h-1.5 rounded-full" [ngClass]="getFactorBg(member.riskFactors.workload)" [style.width.%]="member.riskFactors.workload"></div>
-                      </div>
-                    </div>
-
-                    <!-- Pace -->
-                    <div>
-                      <div class="flex justify-between text-xs mb-1">
-                        <span class="flex items-center gap-1.5 text-text-secondary font-medium">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                          {{ 'DASHBOARD.PACE' | translate }}
-                        </span>
-                        <span class="font-bold" [ngClass]="getFactorColor(member.riskFactors.pace)">{{ member.riskFactors.pace }}%</span>
-                      </div>
-                      <div class="w-full bg-border rounded-full h-1.5">
-                        <div class="h-1.5 rounded-full" [ngClass]="getFactorBg(member.riskFactors.pace)" [style.width.%]="member.riskFactors.pace"></div>
-                      </div>
-                    </div>
-
-                    <!-- Engagement -->
-                    <div>
-                      <div class="flex justify-between text-xs mb-1">
-                        <span class="flex items-center gap-1.5 text-text-secondary font-medium">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                          {{ 'DASHBOARD.ENGAGEMENT' | translate }}
-                        </span>
-                        <span class="font-bold" [ngClass]="getFactorColor(member.riskFactors.engagement)">{{ member.riskFactors.engagement }}%</span>
-                      </div>
-                      <div class="w-full bg-border rounded-full h-1.5">
-                        <div class="h-1.5 rounded-full" [ngClass]="getFactorBg(member.riskFactors.engagement)" [style.width.%]="member.riskFactors.engagement"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 7-Day Trend -->
-                  <div class="px-4 pb-3 border-t border-border pt-3">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">{{ 'DASHBOARD.7_DAY_TREND' | translate }}</span>
-                      <span class="text-[11px] font-bold"
-                            [ngClass]="getTrendColor(member.trendDirection)">
-                        {{ getTrendLabel(member.trendDirection) }}
-                      </span>
-                    </div>
-                    <!-- Mini Sparkline SVG -->
-                    <svg [attr.viewBox]="'0 0 200 40'" class="w-full h-8" preserveAspectRatio="none">
-                      <polyline
-                        [attr.points]="getSparklinePoints(member.history)"
-                        fill="none"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        [attr.stroke]="getTrendStroke(member.trendDirection)"/>
-                    </svg>
-                  </div>
-
-                  <!-- Footer -->
-                  <div class="px-4 py-2 bg-background border-t border-border flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
-                      {{ member.jobTitle }}
-                    </span>
-                    <span class="text-[10px] font-semibold text-text-secondary">{{ 'DASHBOARD.ANALYZED_BY' | translate }}</span>
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-extrabold text-text-primary" [title]="member.name">{{ member.name }}</p>
+                    <p class="mt-0.5 truncate text-[11px] text-text-secondary" [title]="member.jobTitle">{{ member.jobTitle }}</p>
                   </div>
                 </div>
 
+                <div class="flex shrink-0 items-center gap-2">
+                  <span class="rounded-full px-2.5 py-1 text-[10px] font-black" [ngClass]="getBadgeClasses(member)">
+                    {{ getDisplayStatus(member) }}
+                  </span>
+                  @if (shouldPulse(member)) {
+                    <span class="relative flex h-3 w-3 shrink-0">
+                      <span class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" [ngClass]="getPulseClasses(member)"></span>
+                      <span class="relative inline-flex h-3 w-3 rounded-full" [ngClass]="getPulseClasses(member)"></span>
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <div class="mt-5 flex items-end justify-between gap-4">
+                <div>
+                  <p class="text-[10px] font-black uppercase tracking-wider text-text-secondary">Load</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">
+                    {{ formatHours(member.assignedRemainingHours) }} / {{ formatHours(member.availableRemainingHours) }}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="text-[10px] font-black uppercase tracking-wider text-text-secondary">Pressure</p>
+                  <p class="mt-1 text-2xl font-black tabular-nums" [ngClass]="getPercentClass(member)">
+                    {{ member.workloadPressurePercent }}%
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-3 h-2 overflow-hidden rounded-full bg-border">
+                <div class="h-full rounded-full transition-all duration-300"
+                     [ngClass]="getBarClasses(member)"
+                     [style.width.%]="clamp(member.workloadPressurePercent)"></div>
+              </div>
+
+              <div class="mt-4 grid grid-cols-3 gap-2">
+                <div class="rounded-lg bg-white/55 px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Active</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.activeTasksCount }}</p>
+                </div>
+                <div class="rounded-lg bg-white/55 px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Review</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.reviewTasksCount }}</p>
+                </div>
+                <div class="rounded-lg bg-white/55 px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Free</p>
+                  <p class="mt-1 truncate text-sm font-black" [ngClass]="getDeltaClass(member)">
+                    {{ formatCapacityDelta(member.remainingCapacityDeltaHours) }}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <div class="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-30 w-72 -translate-x-1/2 rounded-xl border border-border bg-surface p-4 text-left opacity-0 shadow-2xl shadow-black/15 transition-all duration-150 group-hover:translate-y-1 group-hover:opacity-100 group-focus-within:translate-y-1 group-focus-within:opacity-100">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="truncate text-sm font-extrabold text-text-primary" [title]="member.name">{{ member.name }}</h3>
+                  <p class="mt-0.5 truncate text-[11px] text-text-secondary" [title]="member.jobTitle">{{ member.jobTitle }}</p>
+                </div>
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black" [ngClass]="getBadgeClasses(member)">
+                  {{ getDisplayStatus(member) }}
+                </span>
+              </div>
+
+              <div class="mt-4 grid grid-cols-2 gap-2">
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Load</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ formatHours(member.assignedRemainingHours) }} / {{ formatHours(member.availableRemainingHours) }}</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Capacity</p>
+                  <p class="mt-1 text-sm font-black" [ngClass]="getDeltaClass(member)">{{ formatCapacityDelta(member.remainingCapacityDeltaHours) }}</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Active</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.activeTasksCount }} tasks</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Done</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ formatHours(member.completedEstimatedHours) }}</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">High</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.highPriorityTasksCount }}</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Review</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.reviewTasksCount }}</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Stuck</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.stuckTasksCount }}</p>
+                </div>
+                <div class="rounded-lg bg-background px-3 py-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Over est.</p>
+                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.estimateExceededTasksCount }}</p>
+                </div>
               </div>
             </div>
-          </div>
+          </article>
         }
       </div>
-    </div>
+    </section>
   `
 })
 export class SprintTeamPulseGridComponent {
   members = input.required<TeamPulseMemberDto[]>();
 
-  getRiskBg(level: string): string {
-    const l = (level || '').toLowerCase();
-    if (l === 'high' || l === 'critical') return 'bg-[#fee2e2] border border-[#f87171]/30 animate-[pulse_3s_ease-in-out_infinite]';
-    if (l === 'warning' || l === 'atrisk' || l === 'medium') return 'bg-[#ffedd5] border border-[#fb923c]/30';
-    return 'bg-[#dcfce7] border border-[#4ade80]/30';
+  clamp(value: number): number {
+    return Math.max(0, Math.min(value || 0, 100));
   }
 
-  getRiskText(level: string): string {
-    const l = (level || '').toLowerCase();
-    if (l === 'high' || l === 'critical') return 'text-[#991b1b]';
-    if (l === 'warning' || l === 'atrisk' || l === 'medium') return 'text-[#9a3412]';
-    return 'text-[#166534]';
+  formatHours(value: number): string {
+    return `${Math.round((value || 0) * 10) / 10}h`;
   }
 
-  getRiskBadge(level: string): string {
-    const l = (level || '').toLowerCase();
-    if (l === 'high' || l === 'critical') return 'bg-error/10 text-error border border-error/20';
-    if (l === 'warning' || l === 'atrisk' || l === 'medium') return 'bg-warning/10 text-warning border border-warning/20';
-    return 'bg-success/10 text-success border border-success/20';
+  formatCapacityDelta(value: number): string {
+    const rounded = Math.round((value || 0) * 10) / 10;
+    if (rounded > 0) return `${rounded}h free`;
+    if (rounded < 0) return `${Math.abs(rounded)}h over`;
+    return 'At capacity';
   }
 
-  getScoreColor(score: number): string {
-    if (score >= 70) return 'text-error';
-    if (score >= 40) return 'text-warning';
-    return 'text-success';
+  getDisplayStatus(member: TeamPulseMemberDto): string {
+    const status = (member.loadStatus || member.riskLevel || '').toLowerCase();
+    if (status === 'overloaded') return 'Overloaded';
+    if (status === 'nearlimit') return 'Near limit';
+    if (status === 'healthy') return 'Healthy';
+    if (status === 'underused') return 'Underused';
+    return 'Available';
   }
 
-  getScoreBg(score: number): string {
-    if (score >= 70) return 'bg-error';
-    if (score >= 40) return 'bg-warning';
+  getCardClasses(member: TeamPulseMemberDto): string {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    if (status === 'overloaded') return 'border-error/40 bg-gradient-to-br from-error/15 to-error/5';
+    if (status === 'near limit') return 'border-warning/40 bg-gradient-to-br from-warning/15 to-warning/5';
+    if (status === 'healthy') return 'border-blue-200 bg-gradient-to-br from-blue-100 to-blue-50';
+    if (status === 'underused') return 'border-border bg-background';
+    return 'border-success/35 bg-gradient-to-br from-success/15 to-success/5';
+  }
+
+  getAvatarClasses(member: TeamPulseMemberDto): string {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    if (status === 'overloaded') return 'bg-error/10 text-error';
+    if (status === 'near limit') return 'bg-warning/10 text-warning';
+    if (status === 'healthy') return 'bg-blue-100 text-blue-700';
+    if (status === 'underused') return 'bg-slate-100 text-slate-600';
+    return 'bg-success/10 text-success';
+  }
+
+  getBadgeClasses(member: TeamPulseMemberDto): string {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    if (status === 'overloaded') return 'bg-error/10 text-error';
+    if (status === 'near limit') return 'bg-warning/10 text-warning';
+    if (status === 'healthy') return 'bg-blue-100 text-blue-700';
+    if (status === 'underused') return 'bg-slate-100 text-slate-600';
+    return 'bg-success/10 text-success';
+  }
+
+  getBarClasses(member: TeamPulseMemberDto): string {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    if (status === 'overloaded') return 'bg-error';
+    if (status === 'near limit') return 'bg-warning';
+    if (status === 'healthy') return 'bg-blue-500';
+    if (status === 'underused') return 'bg-slate-300';
     return 'bg-success';
   }
 
-  getFactorColor(score: number): string {
-    if (score >= 70) return 'text-error';
-    if (score >= 40) return 'text-warning';
+  getPercentClass(member: TeamPulseMemberDto): string {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    if (status === 'overloaded') return 'text-error';
+    if (status === 'near limit') return 'text-warning';
+    if (status === 'healthy') return 'text-blue-700';
+    if (status === 'underused') return 'text-slate-600';
     return 'text-success';
   }
 
-  getFactorBg(score: number): string {
-    if (score >= 70) return 'bg-error';
-    if (score >= 40) return 'bg-warning';
-    return 'bg-success';
+  getDeltaClass(member: TeamPulseMemberDto): string {
+    const value = member.remainingCapacityDeltaHours || 0;
+    if (value < 0) return 'text-error';
+    if (value <= 4 && member.assignedRemainingHours > 0) return 'text-warning';
+    return 'text-success';
   }
 
-  getTrendColor(direction: string): string {
-    const d = (direction || '').toLowerCase();
-    if (d === 'improving' || d === 'down') return 'text-success';
-    if (d === 'rising' || d === 'up' || d === 'worsening') return 'text-error';
-    return 'text-text-secondary';
+  shouldPulse(member: TeamPulseMemberDto): boolean {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    return status === 'overloaded' || status === 'near limit';
   }
 
-  getTrendStroke(direction: string): string {
-    const d = (direction || '').toLowerCase();
-    if (d === 'improving' || d === 'down') return '#22c55e';
-    if (d === 'rising' || d === 'up' || d === 'worsening') return '#ef4444';
-    return '#94a3b8';
-  }
-
-  getTrendLabel(direction: string): string {
-    const d = (direction || '').toLowerCase();
-    if (d === 'improving' || d === 'down') return '↘ improving';
-    if (d === 'rising' || d === 'up' || d === 'worsening') return '↗ rising';
-    return '→ stable';
-  }
-
-  getSparklinePoints(history: number[]): string {
-    if (!history || history.length < 2) return '0,20 200,20';
-    const max = Math.max(...history, 1);
-    const min = Math.min(...history, 0);
-    const range = max - min || 1;
-    const width = 200;
-    const height = 40;
-    const step = width / (history.length - 1);
-    return history.map((v, i) => {
-      const x = i * step;
-      const y = height - ((v - min) / range) * height;
-      return `${x},${y}`;
-    }).join(' ');
+  getPulseClasses(member: TeamPulseMemberDto): string {
+    const status = this.getDisplayStatus(member).toLowerCase();
+    if (status === 'overloaded') return 'bg-error';
+    return 'bg-warning';
   }
 }

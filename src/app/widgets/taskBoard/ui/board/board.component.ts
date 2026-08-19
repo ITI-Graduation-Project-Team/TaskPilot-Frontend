@@ -20,6 +20,7 @@ import { AgileCoachChatComponent } from '../agile-coach-chat/agile-coach-chat.co
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { SprintRiskListComponent } from '../../../sprintRisks';
+import { SprintHealthDashboardComponent } from '../../../sprintHealth/ui/sprint-health-dashboard/sprint-health-dashboard.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { SprintBoardTaskDto, TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
@@ -63,7 +64,7 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
   selector: 'app-board',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, TaskDiscussionComponent, TaskAssigneePickerComponent, TranslatePipe],
+  imports: [CommonModule, FormsModule, DragDropModule, RetrospectiveModalComponent, AgileCoachChatComponent, SprintRiskListComponent, SprintHealthDashboardComponent, TaskDiscussionComponent, TaskAssigneePickerComponent, TranslatePipe],
   template: `
     <div class="space-y-6">
       
@@ -148,6 +149,14 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
             {{ 'BOARD.KANBAN_BOARD' | translate }}
           </button>
+          @if (showSprintHealthTab()) {
+            <button (click)="activeTab.set('health')"
+                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
+                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
+                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
+              {{ currentLang === 'ar' ? 'صحة السبرينت' : 'Sprint Health' }}
+            </button>
+          }
         </div>
 
         @if (activeTab() === 'board') {
@@ -664,6 +673,9 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
             </div>
           </div>
         </div>
+        }
+        @if (activeTab() === 'health' && healthSprintId()) {
+          <app-sprint-health-dashboard [sprintId]="healthSprintId()!"></app-sprint-health-dashboard>
         }
       }
     
@@ -1364,6 +1376,8 @@ export class BoardComponent implements OnInit, OnChanges {
   totalTasksCount = computed(() => Object.values(this.columnTotals()).reduce((sum, count) => sum + count, 0));
 
   activeTab = signal<'board' | 'health'>('board');
+  healthSprintId = computed(() => this.activeSprintId() || this.completedSprintId());
+  showSprintHealthTab = computed(() => this.sprintStatus() !== 'Planned' && Boolean(this.healthSprintId()));
 
   readonly boardPageSize = 8;
   boardSearch = signal('');
@@ -1683,6 +1697,10 @@ export class BoardComponent implements OnInit, OnChanges {
       this.plannedSprintId.set(null);
       this.completedSprintId.set(null);
       this.sprintStatus.set(null);
+    }
+
+    if (!this.showSprintHealthTab() && this.activeTab() === 'health') {
+      this.activeTab.set('board');
     }
 
     // 4. Load the first page for each board column.
