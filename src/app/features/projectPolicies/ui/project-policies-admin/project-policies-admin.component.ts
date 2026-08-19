@@ -63,7 +63,7 @@ interface ChatMessage {
               </div>
             } @else {
               <div class="space-y-3">
-                @for (doc of documents(); track doc.id) {
+                @for (doc of documents(); track doc.policyId) {
                   <div class="flex items-center justify-between p-3.5 bg-background border border-border rounded-xl hover:border-primary/30 transition-colors">
                     <div class="flex items-center gap-3 min-w-0">
                       <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
@@ -73,10 +73,10 @@ interface ChatMessage {
                       </div>
                       <div class="min-w-0">
                         <p class="text-sm font-bold text-text-primary truncate" [title]="doc.fileName">{{ doc.fileName }}</p>
-                        <p class="text-[10px] text-text-secondary">{{ doc.uploadedAt | date:'mediumDate' }}</p>
+                        <p class="text-[10px] text-text-secondary">{{ doc.uploadDate | date:'mediumDate' }}</p>
                       </div>
                     </div>
-                    <button (click)="deleteDocument(doc.id)" class="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/10 rounded-lg transition-colors shrink-0" [title]="'PROJECT_POLICIES.DELETE' | translate">
+                    <button (click)="deleteDocument(doc.policyId)" class="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-error hover:bg-error/10 rounded-lg transition-colors shrink-0" [title]="'PROJECT_POLICIES.DELETE' | translate">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -304,8 +304,15 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
     }
   }
 
-  clearChat() {
-    if (confirm(this.translate.instant('PROJECT_POLICIES.CLEAR_CONFIRM'))) {
+  async clearChat() {
+    const confirmed = await this.confirmDialog.confirm({
+      title: this.translate.instant('PROJECT_POLICIES.CLEAR_TITLE'),
+      message: this.translate.instant('PROJECT_POLICIES.CLEAR_CONFIRM'),
+      confirmLabel: this.translate.instant('PROJECT_POLICIES.CLEAR_BTN'),
+      cancelLabel: this.translate.instant('PROJECT_POLICIES.CANCEL_BTN'),
+      type: 'danger'
+    });
+    if (confirmed) {
       this.messages.set([]);
     }
   }

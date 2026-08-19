@@ -1119,5 +1119,20 @@
     "OF": "of",
     "PREV": "Prev",
     "NEXT": "Next"
+  },
+  "COMPANY_POLICIES": {
+    "DELETE_TITLE": "Delete Document",
+    "DELETE_CONFIRM": "Are you sure you want to delete this document? The AI will no longer know about its contents.",
+    "DELETE_BTN": "Delete",
+    "CANCEL_BTN": "Cancel"
+  },
+  "PROJECT_POLICIES": {
+    "DELETE_TITLE": "Delete Document",
+    "DELETE_CONFIRM": "Are you sure you want to delete this document? The AI will no longer know about its contents.",
+    "DELETE_BTN": "Delete",
+    "CLEAR_TITLE": "Clear Chat",
+    "CLEAR_CONFIRM": "Are you sure you want to clear the chat history?",
+    "CLEAR_BTN": "Clear",
+    "CANCEL_BTN": "Cancel"
   }
 }
