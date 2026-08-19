@@ -135,11 +135,11 @@ const EMPTY_TASK: TaskFormModel = {
 
         @if ((backlog()?.userStories?.items?.length || 0) > 0) {
           <section class="rounded-2xl border border-border bg-surface shadow-sm">
-            <div class="grid grid-cols-[1fr_auto_auto_auto] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
+            <div class="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_90px_80px_150px] gap-3 border-b border-border bg-sidebar px-4 py-3 text-[11px] font-extrabold uppercase tracking-wider text-text-secondary">
               <span>{{ label('story') }}</span>
               <span class="hidden sm:block">{{ label('priority') }}</span>
               <span class="hidden md:block">{{ label('tasks') }}</span>
-              <span>{{ label('actions') }}</span>
+              <span class="text-right">{{ label('actions') }}</span>
             </div>
 
             <div class="divide-y divide-border">

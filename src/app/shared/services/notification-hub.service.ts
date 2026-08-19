@@ -8,7 +8,7 @@ import {
   RetryContext
 } from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
-import { NotificationDto, ProjectSetupStatusChangedDto } from '../models/notification.model';
+import { NotificationDto, ProjectSetupStatusChangedDto, TaskStatusChangedDto } from '../models/notification.model';
 import { notificationApi } from '../api/notification.api';
 import { getAccessToken } from '../lib/auth/cookie.helper';
 
@@ -43,6 +43,9 @@ export class NotificationHubService {
 
   private _latestProjectSetupStatusChange = signal<ProjectSetupStatusChangedDto | null>(null);
   readonly latestProjectSetupStatusChange = this._latestProjectSetupStatusChange.asReadonly();
+
+  private _latestTaskStatusChange = signal<TaskStatusChangedDto | null>(null);
+  readonly latestTaskStatusChange = this._latestTaskStatusChange.asReadonly();
 
   private _connectionRevision = signal(0);
   readonly connectionRevision = this._connectionRevision.asReadonly();
@@ -110,6 +113,10 @@ export class NotificationHubService {
 
     connection.on('ProjectSetupStatusChanged', (change: ProjectSetupStatusChangedDto) => {
       this._latestProjectSetupStatusChange.set(this.normalizeProjectSetupStatusChange(change));
+    });
+
+    connection.on('TaskStatusChanged', (change: TaskStatusChangedDto) => {
+      this._latestTaskStatusChange.set(this.normalizeTaskStatusChange(change));
     });
 
     connection.onreconnected(() => {
@@ -203,6 +210,28 @@ export class NotificationHubService {
     };
   }
 
+  private normalizeTaskStatusChange(change: TaskStatusChangedDto): TaskStatusChangedDto {
+    const source = change as TaskStatusChangedDto & {
+      ProjectId?: string;
+      SprintId?: string;
+      TaskId?: string;
+      TaskTitle?: string;
+      PreviousStatus?: TaskStatusChangedDto['previousStatus'];
+      NewStatus?: TaskStatusChangedDto['newStatus'];
+      OccurredAt?: string;
+    };
+    const occurredAt = source.occurredAt ?? source.OccurredAt ?? new Date().toISOString();
+    return {
+      projectId: source.projectId ?? source.ProjectId ?? '',
+      sprintId: source.sprintId ?? source.SprintId ?? '',
+      taskId: source.taskId ?? source.TaskId ?? '',
+      taskTitle: source.taskTitle ?? source.TaskTitle ?? '',
+      previousStatus: source.previousStatus ?? source.PreviousStatus ?? 'ToDo',
+      newStatus: source.newStatus ?? source.NewStatus ?? 'ToDo',
+      occurredAt: occurredAt.endsWith('Z') ? occurredAt : `${occurredAt}Z`,
+    };
+  }
+
   async stopConnection(): Promise<void> {
     this.stopping = true;
     this.clearInitialRetry();
@@ -218,6 +247,7 @@ export class NotificationHubService {
     this._notifications.set([]);
     this._latestNotification.set(null);
     this._latestProjectSetupStatusChange.set(null);
+    this._latestTaskStatusChange.set(null);
   }
 
   async markAsRead(id: string): Promise<void> {

@@ -26,6 +26,7 @@ import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { SprintBoardTaskDto, TasksService, TaskItemStatus } from '../../../../shared/api/tasks.service';
 import { TaskDiscussionComponent } from '../task-discussion/task-discussion.component';
 import { getProjectErrorMessage } from '../../../../shared/api/project-error';
+import { NotificationHubService } from '../../../../shared/services/notification-hub.service';
 import {
   TaskAssigneePickerComponent,
   TaskAssignmentChangedEvent
@@ -59,6 +60,15 @@ interface Task {
 }
 
 type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
+type EmployeeTaskScope = 'mine' | 'all';
+type BoardRefreshOptions = { silent?: boolean };
+type ColumnPageSnapshot = {
+  column: ColumnKey;
+  tasks: Task[];
+  page: number;
+  totalItems: number;
+  hasNextPage: boolean;
+};
 
 @Component({
   selector: 'app-board',
@@ -141,77 +151,6 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
         </div>
       } @else {
         
-        <!-- Tabs Navigation -->
-        <div class="flex items-center gap-6 border-b border-border mb-6">
-          <button (click)="activeTab.set('board')"
-                  [class.border-primary]="activeTab() === 'board'" [class.text-primary]="activeTab() === 'board'"
-                  [class.border-transparent]="activeTab() !== 'board'" [class.text-text-secondary]="activeTab() !== 'board'"
-                  class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
-            {{ 'BOARD.KANBAN_BOARD' | translate }}
-          </button>
-          @if (showSprintHealthTab()) {
-            <button (click)="activeTab.set('health')"
-                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
-                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
-                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
-              {{ currentLang === 'ar' ? 'صحة السبرينت' : 'Sprint Health' }}
-            </button>
-          }
-        </div>
-
-        @if (activeTab() === 'board') {
-          <!-- Metrics overview -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
-            <div>
-              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.TOTAL_TASKS' | translate }}</p>
-              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ totalTasksCount() }}</h3>
-            </div>
-            <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
-            <div>
-              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.IN_PROGRESS' | translate }}</p>
-              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ inProgress().length }}</h3>
-            </div>
-            <div class="w-10 h-10 bg-warning/10 text-warning rounded-xl flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
-            <div>
-              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.UNDER_REVIEW' | translate }}</p>
-              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ review().length }}</h3>
-            </div>
-            <div class="w-10 h-10 bg-info/10 text-info rounded-xl flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
-          </div>
-
-          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
-            <div>
-              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.COMPLETED' | translate }}</p>
-              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ done().length }}</h3>
-            </div>
-            <div class="w-10 h-10 bg-success/10 text-success rounded-xl flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
         <!-- Action buttons & Board Title -->
         <div class="flex items-center justify-between flex-wrap gap-4 mt-8">
           <div>
@@ -269,11 +208,82 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
           </div>
         </div>
 
-        @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
-          <div class="mt-6 mb-6">
-            <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
+        <!-- Tabs Navigation -->
+        <div class="flex items-center gap-6 border-b border-border mb-6">
+          <button (click)="activeTab.set('board')"
+                  [class.border-primary]="activeTab() === 'board'" [class.text-primary]="activeTab() === 'board'"
+                  [class.border-transparent]="activeTab() !== 'board'" [class.text-text-secondary]="activeTab() !== 'board'"
+                  class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
+            {{ 'BOARD.KANBAN_BOARD' | translate }}
+          </button>
+          @if (showSprintHealthTab()) {
+            <button (click)="activeTab.set('health')"
+                    [class.border-primary]="activeTab() === 'health'" [class.text-primary]="activeTab() === 'health'"
+                    [class.border-transparent]="activeTab() !== 'health'" [class.text-text-secondary]="activeTab() !== 'health'"
+                    class="pb-3 border-b-2 font-bold text-sm transition-colors hover:text-text-primary">
+              {{ currentLang === 'ar' ? 'صحة السبرينت' : 'Sprint Health' }}
+            </button>
+          }
+        </div>
+
+        @if (activeTab() === 'board') {
+          @if (projectState.isProjectManager() && sprintStatus() === 'Active' && activeSprintId()) {
+            <div class="mb-6">
+              <app-sprint-risk-list [sprintId]="activeSprintId()!"></app-sprint-risk-list>
+            </div>
+          }
+
+          <!-- Metrics overview -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
+            <div>
+              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.TOTAL_TASKS' | translate }}</p>
+              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ totalTasksCount() }}</h3>
+            </div>
+            <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
           </div>
-        }
+
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
+            <div>
+              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.IN_PROGRESS' | translate }}</p>
+              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ inProgress().length }}</h3>
+            </div>
+            <div class="w-10 h-10 bg-warning/10 text-warning rounded-xl flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
+            <div>
+              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.UNDER_REVIEW' | translate }}</p>
+              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ review().length }}</h3>
+            </div>
+            <div class="w-10 h-10 bg-info/10 text-info rounded-xl flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="bg-surface border border-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-200">
+            <div>
+              <p class="text-text-secondary text-sm font-medium">{{ 'BOARD.COMPLETED' | translate }}</p>
+              <h3 class="text-text-primary text-2xl font-bold mt-1">{{ done().length }}</h3>
+            </div>
+            <div class="w-10 h-10 bg-success/10 text-success rounded-xl flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
 
         <!-- Board controls -->
         <div class="bg-surface border border-border rounded-2xl p-4 shadow-sm">
@@ -291,7 +301,43 @@ type ColumnKey = 'todo' | 'inProgress' | 'review' | 'done';
                   [placeholder]="'BOARD.SEARCH_PLACEHOLDER' | translate"
                   class="w-full h-11 bg-background border border-border rounded-xl pl-9 pr-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
-            </label>
+          </label>
+
+            @if (!projectState.isProjectManager()) {
+              <div class="block min-w-56">
+                <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">
+                  {{ currentLang === 'ar' ? 'نطاق المهام' : 'Task scope' }}
+                </span>
+                <div class="grid grid-cols-2 rounded-xl border border-border bg-background p-1">
+                  <button
+                    type="button"
+                    (click)="setEmployeeTaskScope('mine')"
+                    [disabled]="isScopeSwitching()"
+                    class="h-9 rounded-lg px-3 text-xs font-black transition-all"
+                    [class.bg-surface]="employeeTaskScope() === 'mine'"
+                    [class.text-primary]="employeeTaskScope() === 'mine'"
+                    [class.shadow-sm]="employeeTaskScope() === 'mine'"
+                    [class.text-text-secondary]="employeeTaskScope() !== 'mine'"
+                    [class.opacity-60]="isScopeSwitching()"
+                    [class.cursor-wait]="isScopeSwitching()">
+                    {{ currentLang === 'ar' ? 'مهامي' : 'My tasks' }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setEmployeeTaskScope('all')"
+                    [disabled]="isScopeSwitching()"
+                    class="h-9 rounded-lg px-3 text-xs font-black transition-all"
+                    [class.bg-surface]="employeeTaskScope() === 'all'"
+                    [class.text-primary]="employeeTaskScope() === 'all'"
+                    [class.shadow-sm]="employeeTaskScope() === 'all'"
+                    [class.text-text-secondary]="employeeTaskScope() !== 'all'"
+                    [class.opacity-60]="isScopeSwitching()"
+                    [class.cursor-wait]="isScopeSwitching()">
+                    {{ currentLang === 'ar' ? 'كل المهام' : 'All tasks' }}
+                  </button>
+                </div>
+              </div>
+            }
 
             <label class="block min-w-40">
               <span class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-1.5">{{ 'BOARD.PRIORITY' | translate }}</span>
@@ -1202,6 +1248,7 @@ export class BoardComponent implements OnInit, OnChanges {
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private tasksService = inject(TasksService);
+  private notificationHub = inject(NotificationHubService);
   public tr = inject(TranslateService);
 
   // Loading and assignment status signals
@@ -1384,6 +1431,8 @@ export class BoardComponent implements OnInit, OnChanges {
   );
 
   readonly boardPageSize = 8;
+  employeeTaskScope = signal<EmployeeTaskScope>('mine');
+  isScopeSwitching = signal(false);
   boardSearch = signal('');
   priorityFilter = signal<'All' | Task['priority']>('All');
   typeFilter = signal<'All' | Task['type']>('All');
@@ -1455,6 +1504,8 @@ export class BoardComponent implements OnInit, OnChanges {
   hasAssignments = signal(false);
   hasUnassignedTasks = signal(false);
   originalColumn: 'todo' | 'inProgress' | 'review' | 'done' = 'todo';
+  private lastRealtimeTaskStatusChangeKey: string | null = null;
+  private realtimeBoardRefreshQueued = false;
 
   constructor() {
     // Automatically trigger reload when the active selected project changes
@@ -1465,6 +1516,27 @@ export class BoardComponent implements OnInit, OnChanges {
         this.loadWorkspaceData()
           .catch(err => console.error('Error loading backlog data:', err))
           .finally(() => this.isLoading.set(false));
+      });
+    });
+
+    effect(() => {
+      const change = this.notificationHub.latestTaskStatusChange();
+      if (!change) return;
+
+      const visibleSprintId = this.overrideSprintId || this.activeSprintId() || this.plannedSprintId() || this.completedSprintId();
+      if (!visibleSprintId || change.sprintId !== visibleSprintId) return;
+
+      const changeKey = `${change.taskId}:${change.previousStatus}:${change.newStatus}:${change.occurredAt}`;
+      if (changeKey === this.lastRealtimeTaskStatusChangeKey || this.realtimeBoardRefreshQueued) return;
+
+      this.lastRealtimeTaskStatusChangeKey = changeKey;
+      this.realtimeBoardRefreshQueued = true;
+      queueMicrotask(() => {
+        this.loadWorkspaceData({ silent: true })
+          .catch(err => console.error('Error refreshing board after task status change:', err))
+          .finally(() => {
+            this.realtimeBoardRefreshQueued = false;
+          });
       });
     });
   }
@@ -1614,7 +1686,7 @@ export class BoardComponent implements OnInit, OnChanges {
     });
   }
 
-  public async loadWorkspaceData() {
+  public async loadWorkspaceData(options: BoardRefreshOptions = {}) {
     const projectId = this.projectState.selectedProjectId();
     if (!projectId) {
       this.isAssignedToProject.set(false);
@@ -1721,7 +1793,7 @@ export class BoardComponent implements OnInit, OnChanges {
       this.resetBoardTaskState();
     } else {
       try {
-        await this.loadInitialSprintTaskPages(sprintId);
+        await this.loadInitialSprintTaskPages(sprintId, options);
       } catch (err) {
         console.error('Failed to load sprint tasks:', err);
         this.activeUserStoryId = '';
@@ -1744,7 +1816,28 @@ export class BoardComponent implements OnInit, OnChanges {
     this.hasUnassignedTasks.set(false);
   }
 
-  private async loadInitialSprintTaskPages(sprintId: string): Promise<void> {
+  private async loadInitialSprintTaskPages(sprintId: string, options: BoardRefreshOptions = {}): Promise<void> {
+    if (options.silent) {
+      const snapshots = await Promise.all([
+        this.fetchColumnPage('todo', sprintId, 1),
+        this.fetchColumnPage('inProgress', sprintId, 1),
+        this.fetchColumnPage('review', sprintId, 1),
+        this.fetchColumnPage('done', sprintId, 1)
+      ]);
+
+      for (const snapshot of snapshots) {
+        this.applyColumnPageSnapshot(snapshot, true);
+      }
+
+      if (this.projectState.isProjectManager()) {
+        const firstTask = [...this.todo(), ...this.inProgress(), ...this.review(), ...this.done()][0];
+        this.activeUserStoryId = firstTask?.userStoryId || '';
+      }
+
+      this.refreshAssignmentFlagsFromLoadedTasks();
+      return;
+    }
+
     this.resetBoardTaskState();
     await Promise.all([
       this.loadColumnPage('todo', sprintId, 1, true),
@@ -1761,6 +1854,39 @@ export class BoardComponent implements OnInit, OnChanges {
     this.refreshAssignmentFlagsFromLoadedTasks();
   }
 
+  private async fetchColumnPage(column: ColumnKey, sprintId: string, page: number): Promise<ColumnPageSnapshot> {
+    const response = await this.tasksService.getSprintTasksPage(
+      this.activeProjectId,
+      sprintId,
+      this.statusForColumn(column),
+      page,
+      this.boardPageSize,
+      !this.projectState.isProjectManager() && this.employeeTaskScope() === 'mine'
+    );
+
+    return {
+      column,
+      tasks: response.items.map(task => this.mapSprintBoardTask(task)),
+      page: response.page,
+      totalItems: response.totalItems,
+      hasNextPage: response.hasNextPage
+    };
+  }
+
+  private applyColumnPageSnapshot(snapshot: ColumnPageSnapshot, replace: boolean): void {
+    const taskSignal = this.taskSignalFor(snapshot.column);
+
+    taskSignal.update(current => {
+      const next = replace ? snapshot.tasks : [...current, ...snapshot.tasks];
+      const unique = new Map(next.map(task => [task.id, task]));
+      return Array.from(unique.values()).sort(this.sortTasksOwnedByCurrentUser.bind(this));
+    });
+
+    this.columnPages.update(state => ({ ...state, [snapshot.column]: snapshot.page }));
+    this.columnTotals.update(state => ({ ...state, [snapshot.column]: snapshot.totalItems }));
+    this.columnHasNext.update(state => ({ ...state, [snapshot.column]: snapshot.hasNextPage }));
+  }
+
   private async loadNextColumnPage(column: ColumnKey): Promise<void> {
     const sprintId = this.overrideSprintId
       || this.activeSprintId()
@@ -1775,26 +1901,8 @@ export class BoardComponent implements OnInit, OnChanges {
   private async loadColumnPage(column: ColumnKey, sprintId: string, page: number, replace: boolean): Promise<void> {
     this.columnLoading.update(state => ({ ...state, [column]: true }));
     try {
-      const response = await this.tasksService.getSprintTasksPage(
-        this.activeProjectId,
-        sprintId,
-        this.statusForColumn(column),
-        page,
-        this.boardPageSize
-      );
-
-      const mappedTasks = response.items.map(task => this.mapSprintBoardTask(task));
-      const taskSignal = this.taskSignalFor(column);
-
-      taskSignal.update(current => {
-        const next = replace ? mappedTasks : [...current, ...mappedTasks];
-        const unique = new Map(next.map(task => [task.id, task]));
-        return Array.from(unique.values()).sort(this.sortTasksOwnedByCurrentUser.bind(this));
-      });
-
-      this.columnPages.update(state => ({ ...state, [column]: response.page }));
-      this.columnTotals.update(state => ({ ...state, [column]: response.totalItems }));
-      this.columnHasNext.update(state => ({ ...state, [column]: response.hasNextPage }));
+      const snapshot = await this.fetchColumnPage(column, sprintId, page);
+      this.applyColumnPageSnapshot(snapshot, replace);
     } catch (error) {
       console.error(`Failed to load ${column} tasks page:`, error);
     } finally {
@@ -1896,6 +2004,18 @@ export class BoardComponent implements OnInit, OnChanges {
     this.boardSearch.set('');
     this.priorityFilter.set('All');
     this.typeFilter.set('All');
+  }
+
+  async setEmployeeTaskScope(scope: EmployeeTaskScope): Promise<void> {
+    if (this.employeeTaskScope() === scope || this.isScopeSwitching()) return;
+
+    this.employeeTaskScope.set(scope);
+    this.isScopeSwitching.set(true);
+    try {
+      await this.loadWorkspaceData({ silent: true });
+    } finally {
+      this.isScopeSwitching.set(false);
+    }
   }
 
   emptyColumnMessage(column: ColumnKey): string {

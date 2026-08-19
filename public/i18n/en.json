@@ -998,7 +998,7 @@
     "SAVE_FAILED": "Story could not be saved"
   },
   "TELEMETRY": {
-    "TITLE": "AI Telemetry",
+    "TITLE": "Project Usage",
     "ALL_PROJECTS_TITLE": "All Projects Usage",
     "ALL_PROJECTS_DESC": "Combined AI usage, token consumption, and estimated costs across all your projects.",
     "PM_DESC": "Monitor AI usage, token consumption, and costs across this project.",

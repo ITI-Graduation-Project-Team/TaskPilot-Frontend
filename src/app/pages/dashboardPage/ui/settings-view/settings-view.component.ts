@@ -2,7 +2,6 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { GoogleCalendarService } from '../../../../shared/api/googleCalendar.service';
 import { finalize } from 'rxjs/operators';
-import { TranslatePipe } from '@ngx-translate/core';
 import { AiTelemetryComponent } from '../../../settings/ui/ai-telemetry/ai-telemetry.component';
 
 @Component({

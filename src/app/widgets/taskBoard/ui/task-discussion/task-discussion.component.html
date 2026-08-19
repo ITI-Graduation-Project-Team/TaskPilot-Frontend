@@ -15,9 +15,8 @@
     </div>
   </div>
 
-  <div class="flex-1 overflow-hidden flex flex-col min-h-[350px] max-h-[500px]">
-    <!-- Feed Section -->
-    <div #commentsContainer class="flex-1 overflow-y-auto p-5 space-y-5 bg-background/30 scrollbar-thin">
+  <!-- Feed Section -->
+  <div #commentsContainer class="flex-1 min-h-0 overflow-y-auto p-5 space-y-5 bg-background/30 scrollbar-thin">
       @if (isLoading()) {
       <div class="flex justify-center p-8">
         <div class="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin"></div>
@@ -95,8 +94,6 @@
       }
       }
     </div>
-  </div>
-
   <!-- Input Area -->
   <div class="p-4 border-t border-border bg-surface shrink-0">
     @if (isReadonly()) {

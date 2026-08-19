@@ -69,34 +69,23 @@ export class AgileCoachChatComponent implements OnDestroy {
       this.summaryAttempted.set(true);
       this.summaryFailed.set(false);
 
-      const history = await this.agileCoachService.getChatHistory(this.taskItemId());
-      
-      if (this.loadInitialSummary()) {
-        await this.loadSummary();
+      const [history, summaryRes] = await Promise.all([
+        this.agileCoachService.getChatHistory(this.taskItemId()),
+        this.loadInitialSummary()
+          ? this.agileCoachService.getSummary(this.taskItemId())
+          : Promise.resolve(null),
+      ]);
+
+      if (summaryRes) {
+        this.summary.set({
+          content: summaryRes.content || 'Summary is ready. Ask me anything about this task!'
+        });
       }
 
       if (history && history.length > 0) {
         this.messages.set(history);
         this.scrollToBottom();
       }
-    } catch {
-      this.summaryFailed.set(true);
-    } finally {
-      this.isLoadingSummary.set(false);
-    }
-  }
-
-  private async loadSummary(): Promise<void> {
-    try {
-      this.isLoadingSummary.set(true);
-      this.summaryFailed.set(false);
-
-      const summaryRes = await this.agileCoachService.getSummary(this.taskItemId());
-
-      this.summary.set({
-        content: summaryRes.content || 'Summary is ready. Ask me anything about this task!'
-      });
-      this.scrollToBottom();
     } catch {
       this.summaryFailed.set(true);
     } finally {
