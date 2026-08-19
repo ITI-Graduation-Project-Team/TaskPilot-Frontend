@@ -95,52 +95,6 @@ import { TeamPulseMemberDto } from '../../data/sprint-health.models';
               </div>
             </button>
 
-            <div class="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-30 w-72 -translate-x-1/2 rounded-xl border border-border bg-surface p-4 text-left opacity-0 shadow-2xl shadow-black/15 transition-all duration-150 group-hover:translate-y-1 group-hover:opacity-100 group-focus-within:translate-y-1 group-focus-within:opacity-100">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <h3 class="truncate text-sm font-extrabold text-text-primary" [title]="member.name">{{ member.name }}</h3>
-                  <p class="mt-0.5 truncate text-[11px] text-text-secondary" [title]="member.jobTitle">{{ member.jobTitle }}</p>
-                </div>
-                <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black" [ngClass]="getBadgeClasses(member)">
-                  {{ getDisplayStatus(member) }}
-                </span>
-              </div>
-
-              <div class="mt-4 grid grid-cols-2 gap-2">
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Load</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ formatHours(member.assignedRemainingHours) }} / {{ formatHours(member.availableRemainingHours) }}</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Capacity</p>
-                  <p class="mt-1 text-sm font-black" [ngClass]="getDeltaClass(member)">{{ formatCapacityDelta(member.remainingCapacityDeltaHours) }}</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Active</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.activeTasksCount }} tasks</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Done</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ formatHours(member.completedEstimatedHours) }}</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">High</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.highPriorityTasksCount }}</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Review</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.reviewTasksCount }}</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Stuck</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.stuckTasksCount }}</p>
-                </div>
-                <div class="rounded-lg bg-background px-3 py-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Over est.</p>
-                  <p class="mt-1 text-sm font-black text-text-primary">{{ member.estimateExceededTasksCount }}</p>
-                </div>
-              </div>
-            </div>
           </article>
         }
       </div>
