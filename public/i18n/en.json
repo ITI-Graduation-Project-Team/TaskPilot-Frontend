@@ -909,6 +909,7 @@
     "CHAT_SUB": "Ask questions about project policies and guidelines.",
     "CHAT_EMP_SUB": "Ask me anything about this project's rules.",
     "CLEAR": "Clear Chat",
+    "CLEAR_TITLE": "Clear Chat",
     "CHAT_EMPTY_TITLE": "How can I help?",
     "CHAT_EMPTY_DESC": "Ask me any question regarding the documents uploaded for this project.",
     "ASK_PLACEHOLDER": "Type your question here...",

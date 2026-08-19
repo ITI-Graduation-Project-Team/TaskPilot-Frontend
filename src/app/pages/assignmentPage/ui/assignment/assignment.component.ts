@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TaskListComponent } from './task-list/task-list.component';
 import { EmployeeSelectorComponent } from './employee-selector/employee-selector.component';
+import { LoaderComponent } from '../../../../shared/ui/loader/loader';
 import { AssignmentService } from '../../../../shared/api/assignment.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -14,7 +15,8 @@ import { AssignmentSuggestion, DeveloperSuggestion, ScoringWeights } from '../..
   imports: [
     CommonModule, 
     TaskListComponent, 
-    EmployeeSelectorComponent
+    EmployeeSelectorComponent,
+    LoaderComponent
   ],
   templateUrl: './assignment.component.html',
   styleUrls: ['./assignment.component.scss']
