@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -7,6 +7,7 @@ import { ProjectStateService } from '../../../../shared/services/project-state.s
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
 import { TranslateService } from '@ngx-translate/core';
+import { PolicyChatCacheMessage, PolicyChatCacheService } from '../../../../shared/services/policy-chat-cache.service';
 
 interface ChatMessage {
   id: string;
@@ -173,6 +174,7 @@ export class PolicyChatComponent implements AfterViewChecked, OnInit {
   toastService = inject(ToastService);
   confirmDialog = inject(ConfirmDialogService);
   translate = inject(TranslateService);
+  chatCache = inject(PolicyChatCacheService);
 
   messages = signal<ChatMessage[]>([]);
   currentInput = '';
@@ -183,6 +185,22 @@ export class PolicyChatComponent implements AfterViewChecked, OnInit {
 
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';
+  }
+
+  constructor() {
+    effect(() => {
+      const companyId = this.projectState.userCompanyId();
+      const userId = this.projectState.userId();
+      const cached = companyId && userId
+        ? this.chatCache.load('company', companyId, userId)
+        : [];
+      this.messages.set(cached.map(message => ({
+        id: message.id,
+        role: message.sender === 'user' ? 'user' : 'assistant',
+        content: message.text,
+        timestamp: message.timestamp
+      })));
+    });
   }
 
   async ngOnInit() {
@@ -231,6 +249,11 @@ export class PolicyChatComponent implements AfterViewChecked, OnInit {
     });
     if (confirmed) {
       this.messages.set([]);
+      const companyId = this.projectState.userCompanyId();
+      const userId = this.projectState.userId();
+      if (companyId && userId) {
+        this.chatCache.clear('company', companyId, userId);
+      }
     }
   }
 
@@ -256,6 +279,7 @@ export class PolicyChatComponent implements AfterViewChecked, OnInit {
       timestamp: new Date()
     };
     this.messages.update(m => [...m, userMsg]);
+    this.saveMessages();
     this.currentInput = '';
     this.isTyping.set(true);
 
@@ -280,6 +304,7 @@ export class PolicyChatComponent implements AfterViewChecked, OnInit {
       };
       
       this.messages.update(m => [...m, aiMsg]);
+      this.saveMessages();
     } catch (error) {
       console.error('Chat error:', error);
       const errorMsg: ChatMessage = {
@@ -289,8 +314,23 @@ export class PolicyChatComponent implements AfterViewChecked, OnInit {
         timestamp: new Date()
       };
       this.messages.update(m => [...m, errorMsg]);
+      this.saveMessages();
     } finally {
       this.isTyping.set(false);
     }
+  }
+
+  private saveMessages(): void {
+    const companyId = this.projectState.userCompanyId();
+    const userId = this.projectState.userId();
+    if (!companyId || !userId) return;
+
+    const cached: PolicyChatCacheMessage[] = this.messages().map(message => ({
+      id: message.id,
+      sender: message.role === 'user' ? 'user' : 'ai',
+      text: message.content,
+      timestamp: message.timestamp
+    }));
+    this.chatCache.save('company', companyId, userId, cached);
   }
 }
