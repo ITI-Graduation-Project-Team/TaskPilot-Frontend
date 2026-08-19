@@ -159,18 +159,27 @@ interface ChatMessage {
         </div>
 
         <div class="p-4 bg-surface border-t border-border shrink-0">
+          <!-- Inline Hint -->
+          @if (documents().length === 0) {
+            <div class="mb-3 px-3 py-2 bg-warning/10 border border-warning/20 rounded-xl flex items-center gap-2">
+              <svg class="w-4 h-4 text-warning shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <span class="text-xs font-semibold text-warning-dark">{{ 'PROJECT_POLICIES.HINT_EMPTY' | translate }}</span>
+            </div>
+          }
+          
           <form (submit)="sendMessage($event)" class="relative flex items-end gap-2">
             <textarea
               [(ngModel)]="currentInput"
               name="chatInput"
               rows="1"
-              [placeholder]="'PROJECT_POLICIES.ASK_PLACEHOLDER' | translate"
+              [disabled]="documents().length === 0"
+              [placeholder]="(documents().length === 0 ? 'PROJECT_POLICIES.ASK_PLACEHOLDER_EMPTY' : 'PROJECT_POLICIES.ASK_PLACEHOLDER') | translate"
               (keydown.enter)="onEnterPressed($event)"
-              class="w-full bg-background border border-border rounded-xl pl-4 pr-12 py-3 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[44px]"
+              class="w-full bg-background border border-border rounded-xl pl-4 pr-12 py-3 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[44px] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-sidebar"
               [attr.dir]="isRtl() ? 'rtl' : 'ltr'"
             ></textarea>
             
-            <button type="submit" [disabled]="!currentInput.trim() || isTyping()"
+            <button type="submit" [disabled]="!currentInput.trim() || isTyping() || documents().length === 0"
                     class="absolute end-2 bottom-2 w-8 h-8 flex items-center justify-center bg-primary hover:bg-primary-hover disabled:bg-sidebar disabled:text-text-secondary text-white rounded-lg transition-all shadow-sm">
               <svg class="w-4 h-4 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
             </button>

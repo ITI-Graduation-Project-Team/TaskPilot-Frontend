@@ -917,9 +917,14 @@
     "UPLOAD_SUCCESS": "Document uploaded successfully.",
     "UPLOAD_ERROR": "Failed to upload document.",
     "DELETE_TITLE": "Delete Document",
-    "DELETE_CONFIRM": "Are you sure you want to delete this document?",
+    "DELETE_CONFIRM": "Are you sure you want to delete this document? The AI will no longer know about its contents.",
     "DELETE_BTN": "Delete",
     "CANCEL_BTN": "Cancel",
+    "CLEAR_TITLE": "Clear Chat",
+    "CLEAR_CONFIRM": "Are you sure you want to clear the chat history?",
+    "CLEAR_BTN": "Clear",
+    "ASK_PLACEHOLDER_EMPTY": "Please upload a policy document first...",
+    "HINT_EMPTY": "Upload a policy document to start chatting.",
     "DELETE_SUCCESS": "Document deleted successfully.",
     "DELETE_ERROR": "Failed to delete document.",
     "CLEAR_CONFIRM": "Clear all chat history?",
@@ -1124,15 +1129,12 @@
     "DELETE_TITLE": "Delete Document",
     "DELETE_CONFIRM": "Are you sure you want to delete this document? The AI will no longer know about its contents.",
     "DELETE_BTN": "Delete",
-    "CANCEL_BTN": "Cancel"
-  },
-  "PROJECT_POLICIES": {
-    "DELETE_TITLE": "Delete Document",
-    "DELETE_CONFIRM": "Are you sure you want to delete this document? The AI will no longer know about its contents.",
-    "DELETE_BTN": "Delete",
+    "CANCEL_BTN": "Cancel",
     "CLEAR_TITLE": "Clear Chat",
     "CLEAR_CONFIRM": "Are you sure you want to clear the chat history?",
     "CLEAR_BTN": "Clear",
-    "CANCEL_BTN": "Cancel"
+    "ASK_PLACEHOLDER": "Ask about company policies...",
+    "ASK_PLACEHOLDER_EMPTY": "Please upload a policy document first...",
+    "HINT_EMPTY": "Upload a policy document to start chatting."
   }
 }

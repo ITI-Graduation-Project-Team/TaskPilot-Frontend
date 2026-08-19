@@ -1,9 +1,12 @@
-import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, ViewChild, ElementRef, AfterViewChecked, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { CompanyPoliciesService } from '../../../../shared/api/company-policies.service';
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 
 interface ChatMessage {
   id: string;
@@ -15,7 +18,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-policy-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-[650px] max-h-[75vh] bg-surface rounded-3xl border border-border shadow-sm overflow-hidden relative">
@@ -54,17 +57,19 @@ interface ChatMessage {
               {{ currentLang === 'ar' ? 'لقد قرأت جميع سياسات الشركة. اسألني عن الإجازات، العمل عن بعد، أو قواعد السلوك.' : 'I have read all the company policies uploaded by your manager. Ask me anything about vacations, remote work, or code of conduct.' }}
             </p>
             
-            <div class="flex flex-wrap justify-center gap-2">
-              <button (click)="suggestQuestion(currentLang === 'ar' ? 'كم عدد أيام الإجازة المتاحة لي؟' : 'How many vacation days do I have?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
-                {{ currentLang === 'ar' ? 'أيام الإجازة' : 'Vacation days' }}
-              </button>
-              <button (click)="suggestQuestion(currentLang === 'ar' ? 'ما هي سياسة العمل عن بعد؟' : 'What is the remote work policy?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
-                {{ currentLang === 'ar' ? 'العمل عن بعد' : 'Remote work' }}
-              </button>
-              <button (click)="suggestQuestion(currentLang === 'ar' ? 'كيف يمكنني طلب تحديث للمعدات؟' : 'How do I request an equipment upgrade?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
-                {{ currentLang === 'ar' ? 'تحديث المعدات' : 'Equipment upgrade' }}
-              </button>
-            </div>
+            @if (hasDocuments()) {
+              <div class="flex flex-wrap justify-center gap-2">
+                <button (click)="suggestQuestion(currentLang === 'ar' ? 'كم عدد أيام الإجازة المتاحة لي؟' : 'How many vacation days do I have?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
+                  {{ currentLang === 'ar' ? 'أيام الإجازة' : 'Vacation days' }}
+                </button>
+                <button (click)="suggestQuestion(currentLang === 'ar' ? 'ما هي سياسة العمل عن بعد؟' : 'What is the remote work policy?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
+                  {{ currentLang === 'ar' ? 'العمل عن بعد' : 'Remote work' }}
+                </button>
+                <button (click)="suggestQuestion(currentLang === 'ar' ? 'كيف يمكنني طلب تحديث للمعدات؟' : 'How do I request an equipment upgrade?')" class="px-4 py-2 bg-surface border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-primary transition-all">
+                  {{ currentLang === 'ar' ? 'تحديث المعدات' : 'Equipment upgrade' }}
+                </button>
+              </div>
+            }
           </div>
         }
 
@@ -109,20 +114,30 @@ interface ChatMessage {
 
       <!-- Input Area -->
       <div class="p-4 bg-surface border-t border-border shrink-0">
+        <!-- Inline Hint -->
+        @if (!hasDocuments()) {
+          <div class="mb-3 px-3 py-2 bg-warning/10 border border-warning/20 rounded-xl flex items-center gap-2 max-w-4xl mx-auto">
+            <svg class="w-4 h-4 text-warning shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span class="text-xs font-semibold text-warning-dark">{{ 'COMPANY_POLICIES.HINT_EMPTY' | translate }}</span>
+          </div>
+        }
+        
         <form (submit)="sendMessage($event)" class="relative flex items-end gap-2 max-w-4xl mx-auto">
           <textarea
             #chatInput
             [(ngModel)]="currentInput"
             name="chatInput"
             rows="1"
-            [placeholder]="currentLang === 'ar' ? '...اسأل عن سياسات الشركة' : 'Ask about company policies...'"
+            [disabled]="!hasDocuments()"
+            [placeholder]="(!hasDocuments() ? 'COMPANY_POLICIES.ASK_PLACEHOLDER_EMPTY' : 'COMPANY_POLICIES.ASK_PLACEHOLDER') | translate"
             (keydown.enter)="onEnterPressed($event)"
-            class="w-full bg-background border border-border rounded-2xl pl-5 pr-14 py-3.5 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[52px]"
+            class="w-full bg-background border border-border rounded-2xl pl-5 pr-14 py-3.5 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all resize-none max-h-32 min-h-[52px] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-sidebar"
+            [attr.dir]="currentLang === 'ar' ? 'rtl' : 'ltr'"
           ></textarea>
           
-          <button type="submit" [disabled]="!currentInput.trim() || isTyping()"
+          <button type="submit" [disabled]="!currentInput.trim() || isTyping() || !hasDocuments()"
                   class="absolute right-2 bottom-2 w-9 h-9 flex items-center justify-center bg-primary hover:bg-primary-hover disabled:bg-sidebar disabled:text-text-secondary text-white rounded-xl transition-all shadow-sm group">
-            <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
           </button>
         </form>
         <div class="text-center mt-2">
@@ -150,21 +165,36 @@ interface ChatMessage {
     }
   `]
 })
-export class PolicyChatComponent implements AfterViewChecked {
+export class PolicyChatComponent implements AfterViewChecked, OnInit {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
   
   policyService = inject(CompanyPoliciesService);
   projectState = inject(ProjectStateService);
   toastService = inject(ToastService);
+  confirmDialog = inject(ConfirmDialogService);
+  translate = inject(TranslateService);
 
   messages = signal<ChatMessage[]>([]);
   currentInput = '';
   isTyping = signal(false);
+  hasDocuments = signal(true); // default to true to avoid initial flash
 
   userInitial = () => 'U'; // Could fetch from actual user profile if available in projectState
 
   get currentLang(): string {
     return localStorage?.getItem('app_lang') || 'en';
+  }
+
+  async ngOnInit() {
+    const companyId = this.projectState.userCompanyId();
+    if (companyId) {
+      try {
+        const docs = await this.policyService.getDocuments(companyId);
+        this.hasDocuments.set(docs.length > 0);
+      } catch (err) {
+        console.error('Failed to fetch company documents for chat state', err);
+      }
+    }
   }
 
   ngAfterViewChecked() {
@@ -191,9 +221,15 @@ export class PolicyChatComponent implements AfterViewChecked {
     }
   }
 
-  clearChat() {
-    const msg = this.currentLang === 'ar' ? 'هل تريد مسح سجل المحادثة؟' : 'Clear chat history?';
-    if (confirm(msg)) {
+  async clearChat() {
+    const confirmed = await this.confirmDialog.confirm({
+      title: this.translate.instant('COMPANY_POLICIES.CLEAR_TITLE'),
+      message: this.translate.instant('COMPANY_POLICIES.CLEAR_CONFIRM'),
+      confirmLabel: this.translate.instant('COMPANY_POLICIES.CLEAR_BTN'),
+      cancelLabel: this.translate.instant('COMPANY_POLICIES.CANCEL_BTN'),
+      type: 'danger'
+    });
+    if (confirmed) {
       this.messages.set([]);
     }
   }
