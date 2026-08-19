@@ -9,7 +9,7 @@ import { AiTelemetryComponent } from '../../../settings/ui/ai-telemetry/ai-telem
   selector: 'app-settings-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe, AiTelemetryComponent],
+  imports: [CommonModule, AiTelemetryComponent],
   template: `
     <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fade-in">
       
