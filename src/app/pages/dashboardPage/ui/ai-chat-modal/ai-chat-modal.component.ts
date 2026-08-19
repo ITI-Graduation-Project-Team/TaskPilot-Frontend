@@ -351,72 +351,108 @@ import { getProjectErrorMessage, PROJECT_NAME_ALREADY_EXISTS } from '../../../..
          CONFIGURE PROJECT MODAL (shared)
     ═══════════════════════════════════════════════════════════ -->
     @if (showNamePrompt()) {
-      <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-[fadeIn_0.2s_ease_both]">
-        <div class="bg-surface border border-border rounded-3xl w-full max-w-2xl p-6 shadow-2xl flex flex-col gap-5 animate-[scaleUp_0.25s_ease_both] overflow-hidden">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center text-lg">📂</div>
-            <div>
-              <h4 class="text-base font-bold text-text-primary">{{ 'AI_CHAT.CONFIGURE_TITLE' | translate }}</h4>
-              <p class="text-xs text-text-secondary">{{ 'AI_CHAT.CONFIGURE_SUBTITLE' | translate }}</p>
+      <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-6 animate-[fadeIn_0.2s_ease_both]"
+           role="dialog" aria-modal="true" aria-labelledby="configure-project-title"
+           (keydown.escape)="!isGeneratingDraft() && showNamePrompt.set(false)">
+        <div class="project-modal-card flex w-full max-w-2xl flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-2xl animate-[scaleUp_0.25s_ease_both]">
+          <header class="relative flex items-start gap-4 border-b border-border/70 px-5 py-5 sm:px-7 sm:py-6">
+            <div class="project-modal-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-primary" aria-hidden="true">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 7.5h5l1.5 2h10v8.75A1.75 1.75 0 0118.5 20h-13a1.75 1.75 0 01-1.75-1.75V7.5z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 7.5V5.75A1.75 1.75 0 015.5 4h4l1.5 2h7.5a1.75 1.75 0 011.75 1.75V9.5"/>
+              </svg>
             </div>
-          </div>
-          <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.PROJ_NAME_EN' | translate }}</label>
-                <input type="text" [value]="projectNameInput()" (input)="projectNameInput.set(nameEnField.value); projectNameError.set(null)" #nameEnField
-                       [disabled]="isGeneratingDraft()"
-                       [class.border-red-500]="projectNameError()"
-                       [attr.aria-invalid]="projectNameError() ? 'true' : null"
-                       [attr.aria-describedby]="projectNameError() ? 'project-name-error' : null"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50"
-                       placeholder="e.g. E-Commerce App"/>
-                @if (projectNameError()) {
-                  <p id="project-name-error" role="alert" class="mt-1.5 text-xs font-semibold text-red-500">
-                    {{ projectNameError() }}
-                  </p>
+            <div class="min-w-0 flex-1 pt-0.5">
+              <h4 id="configure-project-title" class="text-lg font-extrabold tracking-tight text-text-primary sm:text-xl">
+                {{ 'AI_CHAT.CONFIGURE_TITLE' | translate }}
+              </h4>
+              <p class="mt-1 max-w-lg text-xs leading-5 text-text-secondary sm:text-sm">
+                {{ 'AI_CHAT.CONFIGURE_SUBTITLE' | translate }}
+              </p>
+            </div>
+            <button type="button" (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
+                    [attr.aria-label]="'AI_CHAT.CANCEL' | translate"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-transparent text-text-secondary transition-colors hover:border-border hover:bg-background hover:text-text-primary disabled:opacity-50">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </header>
+
+          <form (submit)="$event.preventDefault(); submitFinalization()" class="flex min-h-0 flex-col">
+            <div class="project-modal-body max-h-[62vh] overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+              <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div class="project-field-group">
+                  <label for="project-name-en" class="project-field-label">{{ 'AI_CHAT.PROJ_NAME_EN' | translate }}</label>
+                  <div class="project-field" [class.project-field--error]="projectNameError()">
+                    <input id="project-name-en" type="text" [value]="projectNameInput()"
+                           (input)="projectNameInput.set(nameEnField.value); projectNameError.set(null)" #nameEnField
+                           [disabled]="isGeneratingDraft()"
+                           [attr.aria-invalid]="projectNameError() ? 'true' : null"
+                           [attr.aria-describedby]="projectNameError() ? 'project-name-error' : null"
+                           class="project-control font-semibold" placeholder="e.g. E-Commerce App"/>
+                  </div>
+                  @if (projectNameError()) {
+                    <p id="project-name-error" role="alert" class="mt-2 flex items-start gap-1.5 text-xs font-semibold text-error">
+                      <svg class="mt-px h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.8L2.2 18a2 2 0 001.74 3h16.12a2 2 0 001.74-3L13.7 3.8a2 2 0 00-3.4 0z"/>
+                      </svg>
+                      {{ projectNameError() }}
+                    </p>
+                  }
+                </div>
+
+                <div class="project-field-group">
+                  <label for="project-name-ar" class="project-field-label">{{ 'AI_CHAT.PROJ_NAME_AR' | translate }}</label>
+                  <div class="project-field">
+                    <input id="project-name-ar" type="text" [value]="projectNameArInput()"
+                           (input)="projectNameArInput.set(nameArField.value)" #nameArField
+                           dir="rtl" [disabled]="isGeneratingDraft()"
+                           class="project-control text-right font-semibold" placeholder="مثال: تطبيق التجارة الإلكترونية"/>
+                  </div>
+                </div>
+
+                <div class="project-field-group">
+                  <label for="project-description-en" class="project-field-label">{{ 'AI_CHAT.DESC_EN' | translate }}</label>
+                  <div class="project-field project-field--textarea">
+                    <textarea id="project-description-en" [value]="projectDescriptionEnInput()"
+                              (input)="projectDescriptionEnInput.set(descEnField.value)" #descEnField
+                              rows="4" [disabled]="isGeneratingDraft()" class="project-control resize-none"
+                              placeholder="Describe the project goal, features, and audience..."></textarea>
+                  </div>
+                </div>
+
+                <div class="project-field-group">
+                  <label for="project-description-ar" class="project-field-label">{{ 'AI_CHAT.DESC_AR' | translate }}</label>
+                  <div class="project-field project-field--textarea">
+                    <textarea id="project-description-ar" [value]="projectDescriptionArInput()"
+                              (input)="projectDescriptionArInput.set(descArField.value)" #descArField
+                              rows="4" dir="rtl" [disabled]="isGeneratingDraft()"
+                              class="project-control resize-none text-right" placeholder="اكتب وصف المشروع..."></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <footer class="flex flex-col-reverse gap-2.5 border-t border-border/70 bg-sidebar/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-7">
+              <button type="button" (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
+                      class="min-h-11 rounded-xl border border-border bg-surface px-5 py-2.5 text-sm font-bold text-text-secondary transition-colors hover:border-border-strong hover:text-text-primary disabled:opacity-50">
+                {{ 'AI_CHAT.CANCEL' | translate }}
+              </button>
+              <button type="submit" [disabled]="isGeneratingDraft()"
+                      class="inline-flex min-h-11 min-w-[160px] items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-lg disabled:opacity-50">
+                @if (isGeneratingDraft()) {
+                  <span class="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                  <span>{{ 'AI_CHAT.GENERATING' | translate }}</span>
+                } @else {
+                  <span>{{ 'AI_CHAT.CONFIRM_SAVE' | translate }}</span>
+                  <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M5 12h14m-5-5l5 5-5 5"/>
+                  </svg>
                 }
-              </div>
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.PROJ_NAME_AR' | translate }}</label>
-                <input type="text" [value]="projectNameArInput()" (input)="projectNameArInput.set(nameArField.value)" #nameArField
-                       dir="rtl" [disabled]="isGeneratingDraft()"
-                       class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all font-semibold disabled:opacity-50 text-right"
-                       placeholder="مثال: تطبيق التجارة الإلكترونية"/>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.DESC_EN' | translate }}</label>
-                <textarea [value]="projectDescriptionEnInput()" (input)="projectDescriptionEnInput.set(descEnField.value)" #descEnField
-                          rows="3" [disabled]="isGeneratingDraft()"
-                          class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all disabled:opacity-50"
-                          placeholder="Describe the project goal, features, and audience..."></textarea>
-              </div>
-              <div>
-                <label class="block text-[11px] font-extrabold text-text-secondary mb-1 uppercase tracking-wider">{{ 'AI_CHAT.DESC_AR' | translate }}</label>
-                <textarea [value]="projectDescriptionArInput()" (input)="projectDescriptionArInput.set(descArField.value)" #descArField
-                          rows="3" dir="rtl" [disabled]="isGeneratingDraft()"
-                          class="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none transition-all disabled:opacity-50 text-right"
-                          placeholder="اكتب وصف المشروع..."></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center justify-end gap-2.5 mt-2 border-t border-border/60 pt-4 shrink-0">
-            <button (click)="showNamePrompt.set(false)" [disabled]="isGeneratingDraft()"
-                    class="px-4 py-2.5 border border-border text-text-secondary hover:text-text-primary text-xs font-bold rounded-xl transition-all disabled:opacity-50">
-              {{ 'AI_CHAT.CANCEL' | translate }}
-            </button>
-            <button (click)="submitFinalization()" [disabled]="isGeneratingDraft()"
-                    class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5 min-w-[140px] justify-center">
-              @if (isGeneratingDraft()) {
-                <span class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin inline-block"></span>
-                <span>{{ 'AI_CHAT.GENERATING' | translate }}</span>
-              } @else {
-                <span>{{ 'AI_CHAT.CONFIRM_SAVE' | translate }}</span>
-              }
-            </button>
-          </div>
+              </button>
+            </footer>
+          </form>
         </div>
       </div>
     }
@@ -428,6 +464,93 @@ import { getProjectErrorMessage, PROJECT_NAME_ALREADY_EXISTS } from '../../../..
       width: 100%;
       height: 100%;
       overflow: hidden;
+    }
+    .project-modal-card {
+      box-shadow: 0 28px 80px color-mix(in srgb, #020617 38%, transparent);
+    }
+    .project-modal-icon {
+      border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+      background:
+        linear-gradient(145deg, color-mix(in srgb, var(--primary) 16%, var(--surface)), var(--surface));
+      box-shadow: 0 8px 22px color-mix(in srgb, var(--primary) 14%, transparent);
+    }
+    .project-modal-body {
+      scrollbar-gutter: stable;
+    }
+    .project-field-group {
+      min-width: 0;
+    }
+    .project-field-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      line-height: 1.25rem;
+      text-transform: uppercase;
+      transition: color var(--motion-fast) var(--ease-standard);
+    }
+    .project-field-group:focus-within .project-field-label {
+      color: var(--primary);
+    }
+    .project-field {
+      display: flex;
+      min-height: 3rem;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      border-radius: 0.875rem;
+      background: color-mix(in srgb, var(--background) 72%, var(--surface));
+      box-shadow: inset 0 1px 2px color-mix(in srgb, var(--primary-dark) 5%, transparent);
+      transition:
+        border-color var(--motion-fast) var(--ease-standard),
+        background-color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
+    }
+    .project-field:hover {
+      border-color: color-mix(in srgb, var(--primary) 38%, var(--border-strong));
+    }
+    .project-field:focus-within {
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow:
+        inset 0 0 0 1px var(--primary),
+        0 0 0 3px var(--focus-ring);
+    }
+    .project-field--error {
+      border-color: var(--error);
+    }
+    .project-field--error:focus-within {
+      border-color: var(--error);
+      box-shadow:
+        inset 0 0 0 1px var(--error),
+        0 0 0 3px color-mix(in srgb, var(--error) 18%, transparent);
+    }
+    .project-field--textarea {
+      min-height: 7.75rem;
+    }
+    .project-control {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      padding: 0.75rem 0.875rem;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
+    .project-control:focus,
+    .project-control:focus-visible {
+      outline: 0;
+    }
+    .project-control::placeholder {
+      color: color-mix(in srgb, var(--text-secondary) 70%, transparent);
+      font-weight: 400;
+    }
+    .project-control:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
     }
     /* Typing dots — needs keyframe, can't be Tailwind */
     .typing-dot {
