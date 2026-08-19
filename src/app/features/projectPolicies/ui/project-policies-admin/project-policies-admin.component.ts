@@ -6,6 +6,7 @@ import { ProjectPoliciesService, ProjectPolicyDocument } from '../../../../share
 import { ProjectStateService } from '../../../../shared/services/project-state.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog.service';
+import { PolicyChatCacheMessage, PolicyChatCacheService } from '../../../../shared/services/policy-chat-cache.service';
 
 interface ChatMessage {
   id: string;
@@ -213,6 +214,7 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
   private toastService = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
   private translate = inject(TranslateService);
+  private chatCache = inject(PolicyChatCacheService);
 
   documents = signal<ProjectPolicyDocument[]>([]);
   isLoadingDocs = signal(false);
@@ -231,8 +233,21 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
       const id = this.projectState.selectedProjectId();
       if (id) {
         this.loadDocuments(id);
-        this.messages.set([]);
       }
+    });
+
+    effect(() => {
+      const id = this.projectState.selectedProjectId();
+      const userId = this.projectState.userId();
+      const cached = id && userId
+        ? this.chatCache.load('project', id, userId)
+        : [];
+      this.messages.set(cached.map(message => ({
+        id: message.id,
+        role: message.sender === 'user' ? 'user' : 'assistant',
+        content: message.text,
+        timestamp: message.timestamp
+      })));
     });
   }
 
@@ -323,6 +338,11 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
     });
     if (confirmed) {
       this.messages.set([]);
+      const projectId = this.projectState.selectedProjectId();
+      const userId = this.projectState.userId();
+      if (projectId && userId) {
+        this.chatCache.clear('project', projectId, userId);
+      }
     }
   }
 
@@ -346,6 +366,7 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
     };
     
     this.messages.update(m => [...m, userMsg]);
+    this.saveMessages(projectId);
     this.currentInput = '';
     this.isTyping.set(true);
 
@@ -369,6 +390,7 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
       };
       
       this.messages.update(m => [...m, aiMsg]);
+      this.saveMessages(projectId);
     } catch (error) {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -377,8 +399,22 @@ export class ProjectPoliciesAdminComponent implements AfterViewChecked {
         timestamp: new Date()
       };
       this.messages.update(m => [...m, errorMsg]);
+      this.saveMessages(projectId);
     } finally {
       this.isTyping.set(false);
     }
+  }
+
+  private saveMessages(projectId: string): void {
+    const userId = this.projectState.userId();
+    if (!userId) return;
+
+    const cached: PolicyChatCacheMessage[] = this.messages().map(message => ({
+      id: message.id,
+      sender: message.role === 'user' ? 'user' : 'ai',
+      text: message.content,
+      timestamp: message.timestamp
+    }));
+    this.chatCache.save('project', projectId, userId, cached);
   }
 }
