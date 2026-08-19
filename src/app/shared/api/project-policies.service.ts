@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { apiClient } from './axios.instance';
 
 export interface ProjectPolicyDocument {
-  id: string;
+  policyId: string;
   fileName: string;
   fileSize?: number;
-  uploadedAt: string;
+  uploadDate: string;
 }
 
 export interface ProjectPolicyQuestionRequest {
