@@ -605,12 +605,20 @@ export class RetrospectiveViewComponent implements OnInit {
       return trimmed;
     };
 
-    const whatWentWellEn = cleanStr(analysis?.whatWentWellEn ?? raw.whatWentWellEn);
-    const whatWentWellAr = cleanStr(analysis?.whatWentWellAr ?? raw.whatWentWellAr);
+    // Older cached retrospectives may still mention velocity in these two
+    // qualitative sections. Keep the UI clean even before they are regenerated.
+    const withoutVelocityDetails = (val: any): string => cleanStr(val)
+      .split(/(?<=[.!?؟])\s+|\n+/)
+      .filter(sentence => !/(?:velocity\s*ratio|velocity|نسبة\s*السرعة|معدل\s*السرعة)/i.test(sentence))
+      .join('\n')
+      .trim();
+
+    const whatWentWellEn = withoutVelocityDetails(analysis?.whatWentWellEn ?? raw.whatWentWellEn);
+    const whatWentWellAr = withoutVelocityDetails(analysis?.whatWentWellAr ?? raw.whatWentWellAr);
     const challengesEn = cleanStr(analysis?.challengesEn ?? raw.challengesEn);
     const challengesAr = cleanStr(analysis?.challengesAr ?? raw.challengesAr);
-    const teamSentimentSummaryEn = cleanStr(analysis?.summaryEn ?? raw.teamSentimentSummaryEn ?? analysis?.teamSentiment);
-    const teamSentimentSummaryAr = cleanStr(analysis?.summaryAr ?? raw.teamSentimentSummaryAr);
+    const teamSentimentSummaryEn = withoutVelocityDetails(analysis?.summaryEn ?? raw.teamSentimentSummaryEn ?? analysis?.teamSentiment);
+    const teamSentimentSummaryAr = withoutVelocityDetails(analysis?.summaryAr ?? raw.teamSentimentSummaryAr);
     const actionItemsEn = cleanStr(raw.actionItemsEn);
     const actionItemsAr = cleanStr(raw.actionItemsAr);
 
