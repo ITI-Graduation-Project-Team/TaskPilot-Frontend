@@ -157,7 +157,7 @@ type StackChoice = 'primary' | 'ideal';
               </button>
             </div>
 
-            @if (setup.teamContext.teamStackAvailable && suggestion.gapAnalysis.length > 0) {
+            @if (selectedChoice() !== 'primary' && setup.teamContext.teamStackAvailable && suggestion.gapAnalysis.length > 0) {
               <aside class="mt-5 overflow-hidden rounded-2xl border border-warning/30 bg-warning/10" aria-labelledby="gap-analysis-heading">
                 <div class="flex flex-col gap-2 border-b border-warning/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
