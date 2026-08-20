@@ -134,14 +134,14 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
           
           <div class="space-y-2">
             @if (activeTab() === 'completed') {
-              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">No completed projects yet</h2>
+              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'PROJECT_HUB.NO_COMPLETED_PROJECTS' | translate }}</h2>
               <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
-                Projects that you finish will appear here.
+                {{ 'PROJECT_HUB.NO_COMPLETED_PROJECTS_DESC' | translate }}
               </p>
             } @else if (activeTab() === 'archived') {
-              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">No archived projects yet</h2>
+              <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'PROJECT_HUB.NO_ARCHIVED_PROJECTS' | translate }}</h2>
               <p class="text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
-                Archived projects will be stored here for future reference.
+                {{ 'PROJECT_HUB.NO_ARCHIVED_PROJECTS_DESC' | translate }}
               </p>
             } @else {
               <h2 class="text-xl font-extrabold text-text-primary tracking-tight font-display">{{ 'PROJECT_HUB.NO_PROJECTS' | translate }}</h2>

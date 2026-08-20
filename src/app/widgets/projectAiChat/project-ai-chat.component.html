@@ -7,8 +7,8 @@
         </svg>
       </div>
       <div>
-        <h3>Backlog AI Assistant</h3>
-        <span class="status-dot">Online</span>
+        <h3>{{ 'AI_CHAT.TITLE' | translate }}</h3>
+        <span class="status-dot">{{ 'AI_CHAT.ONLINE' | translate }}</span>
       </div>
     </div>
     <button class="close-btn" (click)="close()">
@@ -36,7 +36,7 @@
             d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
-      <p>Please upload your Business Requirement Document (BRD).</p>
+      <p>{{ 'AI_CHAT.UPLOAD_BRD' | translate }}</p>
       <div class="file-input-wrapper">
         <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.txt" [disabled]="isLoading()" />
       </div>
@@ -44,13 +44,13 @@
 
     <div class="loading-spinner" *ngIf="isLoading() && messages().length === 0">
       <div class="spinner"></div>
-      <span>Initializing AI...</span>
+      <span>{{ 'AI_CHAT.INITIALIZING' | translate }}</span>
     </div>
 
     <div class="message" *ngFor="let msg of messages()" [ngClass]="msg.role.toLowerCase()"
       [dir]="detectTextDir(msg.content)" [class.text-right]="detectTextDir(msg.content) === 'rtl'">
       <div class="bubble">
-        <span class="role">{{ msg.role.toLowerCase() === 'user' ? 'You' : 'TaskPilot AI' }}</span>
+        <span class="role">{{ msg.role.toLowerCase() === 'user' ? ('AI_CHAT.YOU' | translate) : 'TaskPilot AI' }}</span>
         <p>{{ msg.content }}</p>
         <span class="time">{{ msg.timestamp | date:'shortTime' }}</span>
       </div>
@@ -67,7 +67,7 @@
 
     <div class="message assistant" *ngIf="isLoading() && !isTyping() && messages().length > 0">
       <div class="bubble typing">
-        <p>Thinking...</p>
+        <p>{{ 'AI_CHAT.THINKING' | translate }}</p>
       </div>
     </div>
   </div>
@@ -76,7 +76,7 @@
     <div class="input-wrapper">
       <input type="text" [ngModel]="inputText()" (ngModelChange)="inputText.set($event)" (keyup.enter)="sendMessage()"
         [dir]="detectTextDir(inputText())"
-        [placeholder]="projectId ? 'e.g. &quot;Add 2FA&quot; or &quot;Edit checkout flow...&quot;' : 'e.g. &quot;Food delivery app with GPS tracking...&quot;'"
+        [placeholder]="projectId ? ('AI_CHAT.PLACEHOLDER_EXISTING' | translate) : ('AI_CHAT.PLACEHOLDER_NEW' | translate)"
         [disabled]="isLoading()" />
       <button class="send-btn" (click)="sendMessage()" [disabled]="isLoading() || !inputText().trim()">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="btn-icon">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
         </svg>
-        {{ projectId ? 'Confirm Backlog' : 'Generate Backlog' }}
+        {{ projectId ? ('AI_CHAT.CONFIRM_BACKLOG' | translate) : ('AI_CHAT.GENERATE_BACKLOG' | translate) }}
       </button>
     </div>
   </div>

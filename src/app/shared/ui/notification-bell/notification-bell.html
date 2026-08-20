@@ -78,8 +78,7 @@
     </div>
     <div class="ml-3 w-0 flex-1">
       <p class="text-sm text-gray-900" [class.font-semibold]="!notification.isRead">
-        <!-- Assuming English for now, ideally use ngx-translate based on lang -->
-        {{ notification.messageEn }}
+        {{ currentLang() === 'ar' ? (notification.messageAr || notification.messageEn) : (notification.messageEn || notification.messageAr) }}
       </p>
       <p class="mt-1 text-xs text-gray-500">
         {{ notification.createdAt | date:'short' }}

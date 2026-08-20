@@ -1,7 +1,7 @@
 import { Component, inject, computed, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { NotificationHubService } from '../../services/notification-hub.service';
 import { NotificationDto } from '../../models/notification.model';
 import { AuthService } from '../../api/auth.service';
@@ -22,6 +22,9 @@ export class NotificationBellComponent {
   private projectState = inject(ProjectStateService);
   private sprintService = inject(SprintPlanningService);
   public notificationHubService = inject(NotificationHubService);
+  public translateService = inject(TranslateService);
+
+  currentLang = computed(() => this.translateService.currentLang() || 'en');
   
   isOpen = signal(false);
 

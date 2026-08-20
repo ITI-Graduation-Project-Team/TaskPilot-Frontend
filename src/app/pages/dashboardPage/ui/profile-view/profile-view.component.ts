@@ -59,10 +59,10 @@ interface EmployeeProfile {
               </div>
               <div class="text-center sm:text-left space-y-1.5">
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">{{ profile()?.firstName }} {{ profile()?.lastName }}</h2>
-                <p class="text-primary text-sm font-bold">{{ profile()?.jobTitle || ('PROFILE.TEAM_MEMBER' | translate) }}</p>
+                <p class="text-primary text-sm font-bold">{{ profile()?.jobTitle ? (profile()?.jobTitle | translate) : ('PROFILE.TEAM_MEMBER' | translate) }}</p>
                 <div class="flex items-center gap-2.5 justify-center sm:justify-start pt-2 flex-wrap">
                   <span class="px-3 py-1 text-[11px] font-extrabold tracking-widest uppercase bg-primary/10 text-primary border border-primary/20 rounded-full shadow-sm">
-                    {{ profile()?.seniorityLevel }}
+                    {{ profile()?.seniorityLevel ? ('PROFILE.LEVELS.' + (profile()?.seniorityLevel | uppercase) | translate) : '' }}
                   </span>
                   <span class="px-3 py-1 text-xs font-semibold bg-background text-text-secondary border border-border rounded-full flex items-center gap-1.5 shadow-sm">
                     <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v10a2 2 0 002 2z"/></svg>
@@ -106,13 +106,13 @@ interface EmployeeProfile {
                   <!-- Job Title Box -->
                   <div class="p-4 rounded-2xl bg-background border border-border/60 shadow-sm flex flex-col justify-center">
                     <span class="block text-[10px] uppercase font-extrabold tracking-wider text-text-secondary mb-1.5">{{ 'PROFILE.JOB_TITLE' | translate }}</span>
-                    <span class="text-text-primary font-bold text-sm">{{ profile()?.jobTitle || ('PROFILE.NA' | translate) }}</span>
+                    <span class="text-text-primary font-bold text-sm">{{ profile()?.jobTitle ? (profile()?.jobTitle | translate) : ('PROFILE.NA' | translate) }}</span>
                   </div>
 
                   <!-- Seniority Box -->
                   <div class="p-4 rounded-2xl bg-background border border-border/60 shadow-sm flex flex-col justify-center">
                     <span class="block text-[10px] uppercase font-extrabold tracking-wider text-text-secondary mb-1.5">{{ 'PROFILE.SENIORITY' | translate }}</span>
-                    <span class="text-primary font-bold text-sm">{{ profile()?.seniorityLevel || ('PROFILE.NA' | translate) }}</span>
+                    <span class="text-primary font-bold text-sm">{{ profile()?.seniorityLevel ? ('PROFILE.LEVELS.' + (profile()?.seniorityLevel | uppercase) | translate) : ('PROFILE.NA' | translate) }}</span>
                   </div>
 
                   @if (profile()?.isEmployee) {
@@ -204,16 +204,16 @@ interface EmployeeProfile {
                 </label>
               </div>
               <div>
-                <h4 class="font-bold text-text-primary text-sm">Profile Picture</h4>
-                <p class="text-xs text-text-secondary mt-1">Upload a new avatar (JPEG, PNG). Max size 2MB.</p>
+                <h4 class="font-bold text-text-primary text-sm">{{ 'PROFILE.PROFILE_PICTURE' | translate }}</h4>
+                <p class="text-xs text-text-secondary mt-1">{{ 'PROFILE.UPLOAD_AVATAR_HELP' | translate }}</p>
                 @if (avatarFile()) {
-                  <p class="text-xs text-primary font-medium mt-1">Selected: {{ avatarFile()?.name }}</p>
+                  <p class="text-xs text-primary font-medium mt-1">{{ 'PROFILE.SELECTED' | translate }} {{ avatarFile()?.name }}</p>
                 }
 
                 <div class="mt-2 flex items-center gap-3">
                   <button (click)="removeAvatar()" class="text-xs font-semibold text-danger hover:text-danger/80 transition-colors flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    Remove Avatar
+                    {{ 'PROFILE.REMOVE_AVATAR' | translate }}
                   </button>
                 </div>
               </div>
@@ -221,26 +221,26 @@ interface EmployeeProfile {
 
             <!-- Personal Info Section -->
             <div class="space-y-4">
-              <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">Personal Info</h4>
+              <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">{{ 'PROFILE.PERSONAL_INFO' | translate }}</h4>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-text-secondary mb-1">First Name (English)</label>
+                  <label class="block text-xs font-semibold text-text-secondary mb-1">{{ 'PROFILE.FIRST_NAME_EN' | translate }}</label>
                   <input type="text" [(ngModel)]="editForm().firstNameEn" class="w-full px-3 py-2 text-sm border border-border bg-background text-text-primary rounded-lg focus:border-primary outline-none" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-text-secondary mb-1">Last Name (English)</label>
+                  <label class="block text-xs font-semibold text-text-secondary mb-1">{{ 'PROFILE.LAST_NAME_EN' | translate }}</label>
                   <input type="text" [(ngModel)]="editForm().lastNameEn" class="w-full px-3 py-2 text-sm border border-border bg-background text-text-primary rounded-lg focus:border-primary outline-none" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-text-secondary mb-1">الاسم الأول (عربي)</label>
+                  <label class="block text-xs font-semibold text-text-secondary mb-1">{{ 'PROFILE.FIRST_NAME_AR' | translate }}</label>
                   <input type="text" [(ngModel)]="editForm().firstNameAr" class="w-full px-3 py-2 text-sm border border-border bg-background text-text-primary rounded-lg focus:border-primary outline-none dir-rtl" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-text-secondary mb-1">الاسم الأخير (عربي)</label>
+                  <label class="block text-xs font-semibold text-text-secondary mb-1">{{ 'PROFILE.LAST_NAME_AR' | translate }}</label>
                   <input type="text" [(ngModel)]="editForm().lastNameAr" class="w-full px-3 py-2 text-sm border border-border bg-background text-text-primary rounded-lg focus:border-primary outline-none dir-rtl" />
                 </div>
                 <div class="sm:col-span-2">
-                  <label class="block text-xs font-semibold text-text-secondary mb-1">Phone Number</label>
+                  <label class="block text-xs font-semibold text-text-secondary mb-1">{{ 'PROFILE.PHONE_NUMBER' | translate }}</label>
                   <input type="tel" [(ngModel)]="editForm().phoneNumber" class="w-full px-3 py-2 text-sm border border-border bg-background text-text-primary rounded-lg focus:border-primary outline-none" placeholder="+1234567890" />
                 </div>
               </div>
@@ -248,7 +248,7 @@ interface EmployeeProfile {
 
             <!-- Professional Info Section -->
             <div class="space-y-4">
-              <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">Professional Info</h4>
+              <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">{{ 'PROFILE.PROFESSIONAL_INFO' | translate }}</h4>
               
               <div>
                 <label class="block text-xs font-semibold text-text-secondary mb-1">{{ 'PROFILE.JOB_TITLE' | translate }}</label>
@@ -277,7 +277,7 @@ interface EmployeeProfile {
             <!-- CV Upload Section -->
             @if (profile()?.isEmployee) {
               <div class="space-y-4">
-                <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">Resume / CV</h4>
+                <h4 class="font-bold text-text-primary text-sm border-b border-border pb-2 uppercase tracking-wider">{{ 'PROFILE.RESUME_CV' | translate }}</h4>
                 <div class="flex items-center justify-center w-full">
                   <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-xl cursor-pointer bg-background hover:bg-surface transition-colors relative">
                     <input type="file" class="hidden" accept="application/pdf" (change)="onCvSelected($event)" />
@@ -291,13 +291,13 @@ interface EmployeeProfile {
                            <svg class="w-6 h-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
                         <p class="text-sm font-bold text-text-primary truncate w-full px-4">{{ cvFile()?.name }}</p>
-                        <p class="text-xs text-success font-semibold mt-1">File attached successfully</p>
+                        <p class="text-xs text-success font-semibold mt-1">{{ 'PROFILE.FILE_ATTACHED_SUCCESS' | translate }}</p>
                       </div>
                     } @else {
                       <div class="flex flex-col items-center justify-center w-full h-full">
                         <svg class="w-8 h-8 text-primary/70 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                        <p class="mb-1 text-sm text-text-secondary"><span class="font-semibold text-primary">Click to upload</span> or drag and drop</p>
-                        <p class="text-xs text-text-secondary">PDF files only (Max 10MB)</p>
+                        <p class="mb-1 text-sm text-text-secondary"><span class="font-semibold text-primary">{{ 'PROFILE.CLICK_TO_UPLOAD' | translate }}</span> {{ 'PROFILE.OR_DRAG_DROP' | translate }}</p>
+                        <p class="text-xs text-text-secondary">{{ 'PROFILE.PDF_ONLY' | translate }}</p>
                       </div>
                     }
                   </label>

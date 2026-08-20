@@ -267,8 +267,8 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                   {{ activeRetro()?.totalTasks ?? 0 }}
                 </p>
                 <div class="flex items-center justify-between text-xs font-semibold text-text-secondary pt-1 border-t border-border/60">
-                  <span class="text-emerald-500">Done: {{ activeRetro()?.completedTasks ?? 0 }}</span>
-                  <span class="text-text-secondary">Unfinished: {{ activeRetro()?.unfinishedTasks ?? 0 }}</span>
+                  <span class="text-emerald-500">{{ currentLang() === 'ar' ? 'مكتمل:' : 'Done:' }} {{ activeRetro()?.completedTasks ?? 0 }}</span>
+                  <span class="text-text-secondary">{{ currentLang() === 'ar' ? 'غير مكتمل:' : 'Unfinished:' }} {{ activeRetro()?.unfinishedTasks ?? 0 }}</span>
                 </div>
               </div>
             </div>
@@ -289,7 +289,7 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                     {{ activeRetro()?.totalActualHours ?? 0 }}h
                   </p>
                   <span class="text-xs font-bold text-text-secondary">
-                    / {{ activeRetro()?.totalEstimatedHours ?? 0 }}h est.
+                    / {{ activeRetro()?.totalEstimatedHours ?? 0 }}h {{ currentLang() === 'ar' ? 'تقدير' : 'est.' }}
                   </span>
                 </div>
                 <p class="text-[11px] font-semibold text-text-secondary mt-1">
@@ -410,7 +410,7 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
                             [class.text-warning]="imp.priority === 'Medium'"
                             [class.bg-primary/10]="imp.priority === 'Low'"
                             [class.text-primary]="imp.priority === 'Low'">
-                        {{ imp.priority }} Priority · {{ imp.category }}
+                        {{ currentLang() === 'ar' ? 'أولوية ' + (imp.priority === 'High' ? 'عالية' : (imp.priority === 'Medium' ? 'متوسطة' : 'منخفضة')) : imp.priority + ' Priority' }} · {{ translateCategory(imp.category) }}
                       </span>
 
                       @if (imp.targetEmployeeId) {
@@ -467,11 +467,11 @@ import { AiActivityComponent } from '../../../../shared/ui/ai-activity/ai-activi
 
                     <div class="space-y-1.5 text-xs text-text-secondary pt-2 border-t border-border/60">
                       <div class="flex justify-between">
-                        <span>Assigned / Done:</span>
-                        <strong class="text-text-primary">{{ dev.assignedTasks ?? 0 }} / {{ dev.completedTasks ?? 0 }} tasks</strong>
+                        <span>{{ currentLang() === 'ar' ? 'المسند / المكتمل:' : 'Assigned / Done:' }}</span>
+                        <strong class="text-text-primary">{{ dev.assignedTasks ?? 0 }} / {{ dev.completedTasks ?? 0 }} {{ currentLang() === 'ar' ? 'مهام' : 'tasks' }}</strong>
                       </div>
                       <div class="flex justify-between">
-                        <span>Est / Actual Hours:</span>
+                        <span>{{ currentLang() === 'ar' ? 'التقدير / الفعلي (ساعات):' : 'Est / Actual Hours:' }}</span>
                         <strong class="text-text-primary">{{ dev.estimatedHours ?? 0 }}h / {{ dev.actualHours ?? 0 }}h</strong>
                       </div>
                     </div>
@@ -570,6 +570,23 @@ export class RetrospectiveViewComponent implements OnInit {
   selectedSprint = computed(() => {
     return this.sprints().find(s => s.sprintId === this.selectedSprintId()) || null;
   });
+
+  translateCategory(category: string): string {
+    if (this.currentLang() !== 'ar') return category;
+    
+    const catMap: Record<string, string> = {
+      'CAPACITY': 'السعة (الحمل)',
+      'TASK MANAGEMENT': 'إدارة المهام',
+      'EFFICIENCY': 'الكفاءة',
+      'QUALITY': 'الجودة',
+      'COLLABORATION': 'التعاون',
+      'PLANNING': 'التخطيط',
+      'ESTIMATION': 'التقدير الزمنـي'
+    };
+    
+    const upper = category?.toUpperCase() || '';
+    return catMap[upper] || category;
+  }
 
   activeRetro = computed(() => {
     const raw: any = this.retro();
