@@ -214,7 +214,7 @@ export function resolveEmployeePickerEmptyState(
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-text-secondary mb-1.5">Allocation %</label>
+                <label class="block text-xs font-bold text-text-secondary mb-1.5">{{ 'TEAM.ALLOCATION_PERCENTAGE' | translate }}</label>
                 <input type="number" [(ngModel)]="assignedAllocationPercentage" name="allocationPercentage" min="1" max="100" required
                        class="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm outline-none">
               </div>
@@ -274,18 +274,18 @@ export function resolveEmployeePickerEmptyState(
                       <div class="flex items-center gap-2 relative z-10">
                         <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full"
                               [ngClass]="member.isDeactivated ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-primary/10 text-primary border-primary/20'">
-                          {{ member.role }}
+                          {{ getRoleTranslationKey(member.role) | translate }}
                         </span>
 
                         <span class="px-2.5 py-1 text-[10px] font-bold border rounded-full bg-surface text-text-secondary border-border"
                               *ngIf="member.allocationPercentage">
-                          {{ member.allocationPercentage }}% Alloc.
+                          {{ member.allocationPercentage }}{{ 'TEAM.ALLOC_SHORT' | translate }}
                         </span>
                         
                         <!-- Actions -->
                         @if (member.isDeactivated) {
                           <span class="px-2.5 py-1 text-[10px] font-bold text-slate-500 border border-slate-200 bg-slate-100 rounded-lg shadow-sm">
-                            Deactivated
+                            {{ 'TEAM.DEACTIVATED' | translate }}
                           </span>
                         }
                         
@@ -753,5 +753,14 @@ export class TeamViewComponent implements OnInit {
       this.assignError.set(errorMsg);
       this.toastService.show(errorMsg, 'error');
     }
+  }
+
+  getRoleTranslationKey(role: string): string {
+    if (!role) return 'TEAM.ROLES.DEVELOPER';
+    const normalized = role.toUpperCase().replace(/\s+/g, '_');
+    if (['DEVELOPER', 'QA', 'SCRUM_MASTER', 'PRODUCT_OWNER', 'DESIGNER'].includes(normalized)) {
+      return `TEAM.ROLES.${normalized}`;
+    }
+    return `TEAM.ROLES.DEVELOPER`; // fallback
   }
 }

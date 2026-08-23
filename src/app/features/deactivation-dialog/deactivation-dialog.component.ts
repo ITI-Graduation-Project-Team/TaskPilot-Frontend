@@ -18,11 +18,11 @@ import { ProjectStateService } from '../../shared/services/project-state.service
       <div class="relative bg-brandWhite w-full max-w-lg rounded-3xl shadow-2xl p-6 flex flex-col gap-4 transform transition-all">
         
         <div class="flex items-center justify-between">
-          <h3 class="text-xl font-bold text-brandNavy flex items-center gap-2">
+          <h3 class="text-xl font-bold text-text-primary flex items-center gap-2">
             <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
             </svg>
-            {{ mode === 'terminate' ? 'Terminate Employee?' : ('DEACTIVATION.TITLE' | translate) }}
+            {{ mode === 'terminate' ? ('DEACTIVATION.TERMINATE_TITLE' | translate) : ('DEACTIVATION.TITLE' | translate) }}
           </h3>
           <button (click)="close()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="text-sm text-slate-500 font-medium">{{ mode === 'terminate' ? 'Analyzing dependencies...' : ('DEACTIVATION.ANALYZING' | translate) }}</p>
+          <p class="text-sm text-slate-500 font-medium">{{ mode === 'terminate' ? ('DEACTIVATION.TERMINATING_ANALYZING' | translate) : ('DEACTIVATION.ANALYZING' | translate) }}</p>
         </div>
 
         <div *ngIf="!isLoading() && analysisResult()" class="flex flex-col gap-4">
@@ -45,9 +45,9 @@ import { ProjectStateService } from '../../shared/services/project-state.service
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h4 class="text-sm font-bold text-emerald-800">{{ mode === 'terminate' ? 'Ready to Terminate' : ('DEACTIVATION.READY_TITLE' | translate) }}</h4>
+              <h4 class="text-sm font-bold text-emerald-800">{{ mode === 'terminate' ? ('DEACTIVATION.READY_TERMINATE_TITLE' | translate) : ('DEACTIVATION.READY_TITLE' | translate) }}</h4>
               <p *ngIf="mode === 'deactivate'" class="text-xs text-emerald-600 mt-1">{{ 'DEACTIVATION.READY_DESC' | translate }}</p>
-              <p *ngIf="mode === 'terminate'" class="text-xs text-emerald-600 mt-1">Are you absolutely sure you want to permanently terminate <strong>{{ employeeName }}</strong>? This will remove them from the company and cannot be undone.</p>
+              <p *ngIf="mode === 'terminate'" class="text-xs text-emerald-600 mt-1" [innerHTML]="'DEACTIVATION.READY_TERMINATE_DESC' | translate: { employeeName: employeeName }"></p>
             </div>
           </div>
 
@@ -69,7 +69,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
                     <input type="radio" name="action" value="cancelAndReplan" [(ngModel)]="selectedAction" class="text-brandPrimary focus:ring-brandPrimary">
                     <div class="flex flex-col">
-                      <span class="font-bold text-brandNavy flex items-center gap-2">
+                      <span class="font-bold text-text-primary flex items-center gap-2">
                         {{ 'DEACTIVATION.ACTION_CANCEL_REPLAN' | translate }}
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">{{ 'DEACTIVATION.RECOMMENDED' | translate }}</span>
                       </span>
@@ -105,7 +105,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
                 <div *ngIf="block.$type === 'ActiveTasks'">
                   <div class="flex items-center gap-2 mb-1">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" [ngClass]="getSeverityClass(block.severity)">{{block.severity}}</span>
-                    <span class="text-sm font-bold text-brandNavy">{{ 'DEACTIVATION.ACTIVE_TASKS' | translate }}</span>
+                    <span class="text-sm font-bold text-text-primary">{{ 'DEACTIVATION.ACTIVE_TASKS' | translate }}</span>
                   </div>
                   <ul class="list-disc list-inside text-xs text-slate-600 ml-1">
                     <li *ngFor="let task of block.tasks">{{ task.title }} ({{ task.status }})</li>
@@ -116,7 +116,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
                 <div *ngIf="block.$type === 'ProjectManager'">
                   <div class="flex items-center gap-2 mb-1">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" [ngClass]="getSeverityClass(block.severity)">{{block.severity}}</span>
-                    <span class="text-sm font-bold text-brandNavy">{{ 'DEACTIVATION.PROJECT_MANAGER' | translate }}</span>
+                    <span class="text-sm font-bold text-text-primary">{{ 'DEACTIVATION.PROJECT_MANAGER' | translate }}</span>
                   </div>
                   <ul class="list-disc list-inside text-xs text-slate-600 ml-1">
                     <li *ngFor="let p of block.managedProjects">{{ p.name }}</li>
@@ -129,8 +129,8 @@ import { ProjectStateService } from '../../shared/services/project-state.service
           </div>
 
           <div class="flex flex-col gap-1 mt-2">
-            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ mode === 'terminate' ? 'Reason for Termination' : ('DEACTIVATION.REASON_LABEL' | translate) }}</label>
-            <textarea [(ngModel)]="reason" rows="3" [placeholder]="mode === 'terminate' ? 'E.g., Resigned, Contract ended...' : ('DEACTIVATION.REASON_PLACEHOLDER' | translate)" 
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ mode === 'terminate' ? ('DEACTIVATION.REASON_TERMINATE_LABEL' | translate) : ('DEACTIVATION.REASON_LABEL' | translate) }}</label>
+            <textarea [(ngModel)]="reason" rows="3" [placeholder]="mode === 'terminate' ? ('DEACTIVATION.REASON_TERMINATE_PLACEHOLDER' | translate) : ('DEACTIVATION.REASON_PLACEHOLDER' | translate)" 
               class="w-full px-3 py-2 bg-brandLight border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"></textarea>
           </div>
         </div>
@@ -147,7 +147,7 @@ import { ProjectStateService } from '../../shared/services/project-state.service
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>{{ mode === 'terminate' ? 'Terminate' : ('DEACTIVATION.CONFIRM_BTN' | translate) }}</span>
+            <span>{{ mode === 'terminate' ? ('DEACTIVATION.TERMINATE_BTN' | translate) : ('DEACTIVATION.CONFIRM_BTN' | translate) }}</span>
           </button>
         </div>
       </div>
@@ -232,7 +232,7 @@ export class DeactivationDialogComponent implements OnInit {
           try {
             const projectId = sprints[0].projectId;
             this.projectState.setSelectedProject(projectId);
-            this.toastService.show(this.mode === 'terminate' ? 'Employee terminated successfully. Replanning sprint...' : this.translateService.instant('DEACTIVATION.SUCCESS_REPLAN'), 'success');
+            this.toastService.show(this.mode === 'terminate' ? this.translateService.instant('DEACTIVATION.SUCCESS_TERMINATE_REPLAN') : this.translateService.instant('DEACTIVATION.SUCCESS_REPLAN'), 'success');
             this.deactivated.emit();
             this.router.navigate([`/dashboard/sprint-planning`], { queryParams: { autoReplan: true } });
             return;
@@ -242,7 +242,7 @@ export class DeactivationDialogComponent implements OnInit {
         }
       }
       
-      this.toastService.show(this.mode === 'terminate' ? 'Employee terminated successfully.' : this.translateService.instant('DEACTIVATION.SUCCESS'), 'success');
+      this.toastService.show(this.mode === 'terminate' ? this.translateService.instant('DEACTIVATION.SUCCESS_TERMINATE') : this.translateService.instant('DEACTIVATION.SUCCESS'), 'success');
       this.deactivated.emit();
     } catch (e: any) {
       console.error(e);

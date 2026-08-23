@@ -112,9 +112,10 @@ import { AiChatStateService } from '../../services/ai-chat-state.service';
       </section>
     }
 
-    <!-- ─── FULL-PAGE CHAT ─── -->
+    <!-- ─── INLINE CHAT CARD ─── -->
     @if (isLocalAiChatOpen()) {
-      <div class="absolute -inset-6 md:-inset-8 z-10 bg-background flex flex-col overflow-hidden" style="animation: fadeIn 0.2s ease both;">
+      <!-- [PM Dashboard Task] - تم تعديل الواجهة لتكون بطاقة عادية (Inline Card) داخل مساحة الصفحة وليست Modal عائم -->
+      <div class="mx-auto max-w-4xl w-full h-[80vh] min-h-[600px] mt-4 mb-8 bg-surface rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border flex flex-col overflow-hidden" style="animation: fadeIn 0.3s ease both;">
         <app-ai-chat-modal
           [embedded]="false"
           (close)="onAiChatClose()"

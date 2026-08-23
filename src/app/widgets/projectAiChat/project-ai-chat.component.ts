@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, computed, inject, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AiProjectService } from '../../shared/api/ai-project.service';
 import { ProjectChatApi } from '../../shared/api/projectChat.api';
 import { AiChatMessageDto, SendAiMessageDto } from '../../shared/models/ai-chat.models';
@@ -9,7 +10,7 @@ import { detectTextDir } from '../../shared/utils/text-direction.util';
 @Component({
   selector: 'app-project-ai-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './project-ai-chat.component.html',
   styleUrls: ['./project-ai-chat.component.scss']
 })

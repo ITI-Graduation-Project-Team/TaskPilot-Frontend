@@ -3,7 +3,7 @@ import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { CompanyService, CompanyEmployeeModel } from '../../../../shared/api/Company-api/company';
 import { ToastService } from '../../../../shared/services/toast.service';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { DeactivationDialogComponent } from '../../../../features/deactivation-dialog/deactivation-dialog.component';
 
@@ -160,30 +160,30 @@ import { DeactivationDialogComponent } from '../../../../features/deactivation-d
           <!-- Danger Zone -->
           <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-red-200 dark:border-red-900/50 transition-all hover:shadow-md mt-6 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
-            <h3 class="text-sm font-black text-red-600 dark:text-red-400 uppercase tracking-widest mb-2">{{ 'EMPLOYEES.DANGER_ZONE' | translate }}</h3>
+            <h3 class="text-sm font-black text-error uppercase tracking-widest mb-2">{{ 'EMPLOYEES.DANGER_ZONE' | translate }}</h3>
             
             <div class="flex flex-col gap-4 mt-4">
               <!-- Deactivate Section -->
               <div *ngIf="!employee()!.isDeactivated" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-red-100 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20">
                 <div>
-                  <h4 class="font-bold text-red-700 dark:text-red-400 text-sm">Deactivate Employee</h4>
-                  <p class="text-xs text-red-600/70 dark:text-red-400/70 mt-1">Suspend login access and active assignments. Can be reversed later.</p>
+                  <h4 class="font-bold text-red-700 dark:text-red-400 text-sm">{{ 'EMPLOYEE_DETAILS.DEACTIVATE_EMPLOYEE' | translate }}</h4>
+                  <p class="text-xs text-red-600/70 dark:text-red-400/70 mt-1">{{ 'EMPLOYEE_DETAILS.DEACTIVATE_DESC' | translate }}</p>
                 </div>
                 <button (click)="openDeactivateModal()" 
                         class="shrink-0 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-red-600 text-red-600 dark:text-red-400 hover:text-white border border-red-200 dark:border-red-500/30 font-bold rounded-lg transition-all text-sm">
-                  Deactivate
+                  {{ 'EMPLOYEE_DETAILS.DEACTIVATE_BTN' | translate }}
                 </button>
               </div>
 
               <!-- Terminate Section -->
               <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-red-200 bg-red-100 dark:bg-red-900/30 dark:border-red-800/50">
                 <div>
-                  <h4 class="font-bold text-red-800 dark:text-red-300 text-sm">Terminate Employee</h4>
-                  <p class="text-xs text-red-700/80 dark:text-red-300/80 mt-1">Permanently remove employee from the company. This action is irreversible.</p>
+                  <h4 class="font-bold text-red-800 dark:text-red-300 text-sm">{{ 'EMPLOYEE_DETAILS.TERMINATE_EMPLOYEE' | translate }}</h4>
+                  <p class="text-xs text-red-700/80 dark:text-red-300/80 mt-1">{{ 'EMPLOYEE_DETAILS.TERMINATE_DESC' | translate }}</p>
                 </div>
                 <button (click)="openTerminateModal()" 
                         class="shrink-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md shadow-red-500/20 transition-all text-sm">
-                  Terminate
+                  {{ 'EMPLOYEE_DETAILS.TERMINATE_BTN' | translate }}
                 </button>
               </div>
             </div>
@@ -234,6 +234,7 @@ export class EmployeeDetailsComponent implements OnInit {
   router = inject(Router);
   companyService = inject(CompanyService);
   toastService = inject(ToastService);
+  translateService = inject(TranslateService);
 
   employee = signal<CompanyEmployeeModel | null>(null);
   isLoading = signal<boolean>(true);
@@ -309,7 +310,7 @@ export class EmployeeDetailsComponent implements OnInit {
       this.router.navigate(['/organization-hub']);
     } catch (e: any) {
       console.error(e);
-      const msg = e?.response?.data?.message || 'Failed to terminate employee.';
+      const msg = e?.response?.data?.message || this.translateService.instant('EMPLOYEE_DETAILS.TERMINATE_FAIL');
       this.toastService.show(msg, 'error');
     } finally {
       this.isTerminating.set(false);
