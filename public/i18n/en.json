@@ -19,7 +19,10 @@
     "continueWithGoogle": "Continue with Google",
     "brandingTitle1": "Manage your work,",
     "brandingTitle2": "effortlessly.",
-    "brandingSubtitle": "Plan tasks, collaborate with your team, and hit every deadline — all in one place."
+    "brandingSubtitle": "Plan tasks, collaborate with your team, and hit every deadline — all in one place.",
+    "testAsProjectManager": "Test as Project Manager",
+    "signingInAsProjectManager": "Signing in as Project Manager...",
+    "quickDemoAccess": "Quick demo access — Project Manager"
   },
   "register": {
     "welcome": "Welcome to TaskPilot",

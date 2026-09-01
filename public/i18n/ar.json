@@ -19,7 +19,10 @@
     "continueWithGoogle": "المتابعة عبر جوجل",
     "brandingTitle1": "أدر عملك،",
     "brandingTitle2": "بكل سهولة.",
-    "brandingSubtitle": "خطط لمهامك، وتعاون مع فريقك، وحقق كل المواعيد النهائية — كل ذلك في مكان واحد."
+    "brandingSubtitle": "خطط لمهامك، وتعاون مع فريقك، وحقق كل المواعيد النهائية — كل ذلك في مكان واحد.",
+    "testAsProjectManager": "تجربة الدخول كمدير مشروع",
+    "signingInAsProjectManager": "جارٍ تسجيل الدخول كمدير مشروع...",
+    "quickDemoAccess": "دخول سريع للتجربة"
   },
   "register": {
     "welcome": "مرحباً بك في تاسك بايلوت",
