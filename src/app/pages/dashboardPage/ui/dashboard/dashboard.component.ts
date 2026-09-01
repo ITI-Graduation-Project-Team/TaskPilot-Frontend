@@ -465,7 +465,7 @@ import { getProjectErrorMessage } from '../../../../shared/api/project-error';
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 min-h-0"
+        <main class="flex-1 min-h-0 flex flex-col"
           [class.overflow-y-auto]="currentTab() !== 'assignment'"
           [class.overflow-hidden]="currentTab() === 'assignment'"
           [class.p-6]="currentTab() !== 'assignment'"

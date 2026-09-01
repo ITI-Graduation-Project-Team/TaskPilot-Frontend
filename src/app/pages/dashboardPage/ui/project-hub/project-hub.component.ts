@@ -14,8 +14,11 @@ import { ConfirmDialogService } from '../../../../shared/services/confirm-dialog
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, ProjectCardComponent, TranslatePipe],
+  host: {
+    class: 'flex-1 flex flex-col min-h-0'
+  },
   template: `
-    <div class="space-y-6 flex flex-col h-full min-h-[calc(100vh-12rem)]">
+    <div class="space-y-4 flex flex-col flex-1">
       <!-- Search & Filters -->
       @if (projects().length > 0) {
         <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-surface border border-border p-4 rounded-2xl shadow-sm">
