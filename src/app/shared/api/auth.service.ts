@@ -26,8 +26,8 @@ export class AuthService {
 
   logout(): void {
     clearTokens();
-    // Force a full page reload to clear all in-memory Angular singleton states (Signals, etc.)
-    window.location.href = '/login';
+    // Prefer Angular Router navigation instead of full page reload if possible
+    this.router.navigate(['/login']);
   }
 
   getUserRole(): string | null {
