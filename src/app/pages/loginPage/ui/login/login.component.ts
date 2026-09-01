@@ -14,6 +14,13 @@ import { LoadingService } from '../../../../shared/services/loading.service';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
+export const DEMO_CREDENTIALS = {
+  PROJECT_MANAGER: {
+    email: 'xerofiy922@neplis.com',
+    password: 'Asd@123'
+  }
+};
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -26,6 +33,7 @@ export class LoginComponent implements AfterViewInit, OnInit {
   password = signal('');
   showPassword = signal(false);
   rememberMe = signal(false);
+  isDemoLoading = signal(false);
   state = signal<PageState>('idle');
   errorMessage = signal('');
   successMessage = signal('');
@@ -169,6 +177,20 @@ export class LoginComponent implements AfterViewInit, OnInit {
   get isLoading() { return this.state() === 'loading'; }
 
   togglePassword() { this.showPassword.update((v) => !v); }
+
+  async testAsProjectManager() {
+    if (this.isLoading || this.isDemoLoading()) return;
+    this.isDemoLoading.set(true);
+    
+    this.email.set(DEMO_CREDENTIALS.PROJECT_MANAGER.email);
+    this.password.set(DEMO_CREDENTIALS.PROJECT_MANAGER.password);
+    
+    try {
+      await this.onSubmit();
+    } finally {
+      this.isDemoLoading.set(false);
+    }
+  }
 
   async onSubmit() {
     if (!this.email().trim() || !this.password()) {
