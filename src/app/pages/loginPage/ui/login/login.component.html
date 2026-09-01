@@ -44,15 +44,15 @@
     <!-- Right Card Column -->
     <div class="flex items-center justify-center w-full lg:w-auto lg:min-w-[480px]">
       <div
-        class="w-full max-w-md bg-surface border border-border rounded-3xl p-7 sm:p-10 shadow-2xl shadow-brandPrimary/10 animate-[fadeUp_0.45s_ease_both]">
+        class="w-full max-w-md bg-surface border border-border rounded-3xl p-6 sm:p-8 shadow-2xl shadow-brandPrimary/10 animate-[fadeUp_0.45s_ease_both]">
 
         <!-- Brand (visible only on mobile) -->
-        <div class="flex items-center gap-2.5 mb-8 lg:hidden">
+        <div class="flex items-center gap-2.5 mb-6 lg:hidden">
           <img src="/TaskPilotLogo.svg" alt="TaskPilot Logo" class="h-10" />
         </div>
 
         <!-- Heading -->
-        <div class="mb-7">
+        <div class="mb-5">
           <h1 class="text-[1.65rem] font-bold text-brandSecondary tracking-tight mb-1">{{ 'login.welcomeBack' |
             translate
             }}</h1>
@@ -75,7 +75,7 @@
         </div>
 
         <!-- Form -->
-        <form class="flex flex-col gap-5" (ngSubmit)="onSubmit()" novalidate>
+        <form class="flex flex-col gap-4" (ngSubmit)="onSubmit()" novalidate>
 
           <!-- Email -->
           <div class="flex flex-col gap-1.5">
@@ -91,7 +91,7 @@
                 </svg>
               </span>
               <input id="login-email" name="email" type="email" [ngModel]="email()" (ngModelChange)="email.set($event)"
-                [disabled]="isLoading" placeholder="you@example.com" autocomplete="email" class="w-full py-3.5 bg-background border border-border rounded-xl
+                [disabled]="isLoading" placeholder="you@example.com" autocomplete="email" class="w-full py-2.5 bg-background border border-border rounded-xl
                           text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                           placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
                           focus:bg-surface focus:border-brandPrimary focus:ring-4 focus:ring-brandPrimary/10"
@@ -121,7 +121,7 @@
               </span>
               <input id="login-password" name="password" [type]="showPassword() ? 'text' : 'password'"
                 [ngModel]="password()" (ngModelChange)="password.set($event)" [disabled]="isLoading"
-                placeholder="******" autocomplete="current-password" class="w-full px-11 py-3.5 bg-background border border-border rounded-xl
+                placeholder="******" autocomplete="current-password" class="w-full px-11 py-2.5 bg-background border border-border rounded-xl
                           text-[0.9375rem] text-brandSecondary outline-none transition-all duration-200 font-[inherit]
                           placeholder:text-gray-400 disabled:opacity-60 disabled:cursor-not-allowed
                           focus:bg-surface focus:border-brandPrimary focus:ring-4 focus:ring-brandPrimary/10"
@@ -155,7 +155,7 @@
           </label>
 
           <!-- Submit -->
-          <button type="submit" [disabled]="isLoading" class="flex items-center justify-center gap-2 w-full py-4 bg-brandPrimary text-white
+          <button type="submit" [disabled]="isLoading" class="flex items-center justify-center gap-2 w-full py-3 bg-brandPrimary text-white
                        rounded-xl text-base font-bold shadow-lg shadow-brandPrimary/30 transition-all duration-200
                        hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0
                        disabled:opacity-65 disabled:cursor-not-allowed disabled:transform-none">
@@ -172,7 +172,7 @@
           </div>
 
           <button type="button" (click)="testAsProjectManager()" [disabled]="isLoading || isDemoLoading()" 
-            class="flex items-center justify-center gap-2 w-full py-3 bg-transparent border-2 border-brandPrimary text-brandPrimary
+            class="flex items-center justify-center gap-2 w-full py-2.5 bg-transparent border-2 border-brandPrimary text-brandPrimary
                    rounded-xl text-[0.95rem] font-bold transition-all duration-200
                    hover:bg-brandPrimary/5 hover:-translate-y-0.5 active:translate-y-0
                    disabled:opacity-65 disabled:cursor-not-allowed disabled:transform-none">
@@ -217,7 +217,7 @@
         </form>
 
         <!-- Footer -->
-        <p class="text-center mt-5 text-sm text-gray-500">
+        <p class="text-center mt-4 text-sm text-gray-500">
           {{ 'login.noAccount' | translate }}
           <a routerLink="/register"
             class="text-brandPrimary font-semibold no-underline hover:opacity-75 transition-opacity duration-200"
